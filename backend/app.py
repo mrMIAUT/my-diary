@@ -97,6 +97,17 @@ def init():
             expires_at TIMESTAMP, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS weekly_checkins(
+            id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION DEFAULT 0,
+            sleep INTEGER DEFAULT 0,energy INTEGER DEFAULT 0,appetite INTEGER DEFAULT 0,
+            stress INTEGER DEFAULT 0,steps INTEGER DEFAULT 0,body TEXT DEFAULT '',
+            trainer_reply TEXT DEFAULT '',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS exercise_targets(
+            id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER UNIQUE,
+            target_weight DOUBLE PRECISION DEFAULT 0,target_reps TEXT DEFAULT '',
+            target_rir TEXT DEFAULT '',note TEXT DEFAULT '',updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
             anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
             with c.cursor() as cur:
@@ -138,6 +149,12 @@ class NotificationReadIn(BaseModel):
     recipient:str
 class CommentIn(BaseModel):
     client_id:int; day:str; program_id:int=0; exercise:str=""; author:str; body:str
+class CheckinIn(BaseModel):
+    client_id:int; weight:float=0; sleep:int=0; energy:int=0; appetite:int=0; stress:int=0; steps:int=0; body:str=""
+class CheckinReplyIn(BaseModel):
+    reply:str=""
+class ExerciseTargetIn(BaseModel):
+    client_id:int; target_weight:float=0; target_reps:str=""; target_rir:str=""; note:str=""
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:str; kcal:int; protein:int; fat:int; carbs:int
 class HistoricalSetIn(BaseModel):
@@ -195,8 +212,14 @@ def password_reset_confirm(x:ResetConfirmIn):
 def clients():
     return rows("""SELECT c.*, CASE WHEN EXISTS(
         SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
-    ) THEN 'Тренується' ELSE c.status END AS live_status
-    FROM clients c WHERE c.status<>'Видалений' ORDER BY c.id DESC""")
+    ) THEN 'Тренується' ELSE c.status END AS live_status,
+    (SELECT COUNT(*) FROM notifications n WHERE n.client_id=c.id AND n.recipient='trainer' AND n.is_read=FALSE) AS unread_count,
+    (SELECT COUNT(*) FROM workout_sessions w WHERE w.client_id=c.id AND w.status='finished' AND COALESCE(w.trainer_reviewed,FALSE)=FALSE) AS review_count,
+    (SELECT MAX(w.started_at) FROM workout_sessions w WHERE w.client_id=c.id) AS last_workout
+    FROM clients c WHERE c.status<>'Видалений' ORDER BY
+      ((SELECT COUNT(*) FROM notifications n WHERE n.client_id=c.id AND n.recipient='trainer' AND n.is_read=FALSE) +
+       (SELECT COUNT(*) FROM workout_sessions w WHERE w.client_id=c.id AND w.status='finished' AND COALESCE(w.trainer_reviewed,FALSE)=FALSE)) DESC,
+      c.id DESC""")
 @app.post("/api/clients")
 def add_client(x:ClientIn):
     try:
@@ -230,13 +253,51 @@ def client(cid:int):
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,)),
             "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,)),
-            "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,))}
+            "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,)),
+            "checkins":rows("SELECT * FROM weekly_checkins WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
+            "exercise_targets":rows("SELECT * FROM exercise_targets WHERE client_id=? ORDER BY id DESC",(cid,))}
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
     run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,cid))
     return one("SELECT * FROM clients WHERE id=?",(cid,))
+
+@app.post("/api/checkins")
+def add_checkin(x:CheckinIn):
+    require_active_client(x.client_id)
+    today=str(date.today())
+    if one("SELECT id FROM weekly_checkins WHERE client_id=? AND day=?",(x.client_id,today,)):
+        raise HTTPException(400,"Check-in за сьогодні вже заповнений")
+    i=run("""INSERT INTO weekly_checkins(client_id,day,weight,sleep,energy,appetite,stress,steps,body)
+             VALUES(?,?,?,?,?,?,?,?,?)""",(x.client_id,today,x.weight,x.sleep,x.energy,x.appetite,x.stress,x.steps,x.body.strip()))
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
+        (x.client_id,"trainer","checkin","Клієнт заповнив новий щотижневий Check-in"))
+    return one("SELECT * FROM weekly_checkins WHERE id=?",(i,))
+
+@app.patch("/api/checkins/{checkin_id}/reply")
+def reply_checkin(checkin_id:int,x:CheckinReplyIn):
+    c=one("SELECT * FROM weekly_checkins WHERE id=?",(checkin_id,))
+    if not c: raise HTTPException(404,"Check-in не знайдено")
+    run("UPDATE weekly_checkins SET trainer_reply=? WHERE id=?",(x.reply.strip(),checkin_id))
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
+        (c["client_id"],"client","checkin_reply","Тренер відповів на ваш Check-in: "+x.reply.strip()))
+    return {"ok":True}
+
+@app.put("/api/program/{pid}/target")
+def save_exercise_target(pid:int,x:ExerciseTargetIn):
+    if not one("SELECT id FROM program WHERE id=? AND client_id=?",(pid,x.client_id)):
+        raise HTTPException(404,"Вправу не знайдено")
+    existing=one("SELECT id FROM exercise_targets WHERE program_id=?",(pid,))
+    if existing:
+        run("""UPDATE exercise_targets SET target_weight=?,target_reps=?,target_rir=?,note=?,updated_at=CURRENT_TIMESTAMP
+               WHERE program_id=?""",(x.target_weight,x.target_reps.strip(),x.target_rir.strip(),x.note.strip(),pid))
+    else:
+        run("""INSERT INTO exercise_targets(client_id,program_id,target_weight,target_reps,target_rir,note)
+               VALUES(?,?,?,?,?,?)""",(x.client_id,pid,x.target_weight,x.target_reps.strip(),x.target_rir.strip(),x.note.strip()))
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
+        (x.client_id,"client","exercise_target","Тренер оновив завдання на наступне тренування"))
+    return {"ok":True}
 
 @app.post("/api/program")
 def add_program(x:ProgramIn):
