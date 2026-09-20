@@ -57,6 +57,8 @@ init()
 class Login(BaseModel): email:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
+class ClientUpdate(BaseModel):
+    name:str|None=None; goal:str|None=None; weight:float|None=None; kcal:int|None=None; protein:int|None=None; fat:int|None=None; carbs:int|None=None
 class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2
 class ResultIn(BaseModel):
@@ -87,6 +89,19 @@ def add_client(x:ClientIn):
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
         return one("SELECT * FROM clients WHERE id=?",(i,))
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
+
+@app.patch("/api/clients/{cid}")
+def update_client(cid:int,x:ClientUpdate):
+    c=one("SELECT * FROM clients WHERE id=?",(cid,))
+    if not c: raise HTTPException(404,"Клієнта не знайдено")
+    data=x.model_dump(exclude_none=True)
+    allowed=("name","goal","weight","kcal","protein","fat","carbs")
+    fields=[k for k in allowed if k in data]
+    if fields:
+        sql="UPDATE clients SET "+", ".join(f"{k}=?" for k in fields)+" WHERE id=?"
+        run(sql,tuple(data[k] for k in fields)+(cid,))
+    return one("SELECT * FROM clients WHERE id=?",(cid,))
+
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int):
     for t in ("program","results","nutrition","measurements"): run(f"DELETE FROM {t} WHERE client_id=?",(cid,))
