@@ -152,8 +152,12 @@ def result_set_history(cid:int):
 
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
+    today=str(date.today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
+    existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
+    if existing:
+        raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
     i=run("INSERT INTO workout_sessions(client_id,day_name,status) VALUES(?,?,?)",(x.client_id,x.day_name,"training"))
     return one("SELECT * FROM workout_sessions WHERE id=?",(i,))
 
