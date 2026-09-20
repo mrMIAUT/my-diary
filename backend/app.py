@@ -64,8 +64,8 @@ def require_active_client(cid:int):
 
 def send_reset_email(email:str,link:str):
     key=os.getenv("RESEND_API_KEY","").strip()
-    sender=os.getenv("RESET_FROM_EMAIL","").strip()
-    if not key or not sender:return False
+    sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
+    if not key:return False
     data=json.dumps({"from":sender,"to":[email],"subject":"Доступ до Є ПЛАН",
                      "html":f"<h2>Є ПЛАН</h2><p>Щоб створити або відновити пароль до кабінету, відкрийте посилання:</p><p><a href='{link}'>Встановити пароль</a></p><p>Якщо ви не очікували цей лист, просто проігноруйте його.</p>"}).encode()
     req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
