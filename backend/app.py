@@ -324,8 +324,10 @@ def add_comment(x:CommentIn):
           (x.client_id,x.day,x.program_id,x.exercise,x.author,x.body.strip()))
     recipient="client" if x.author=="trainer" else "trainer"
     who="Тренер" if x.author=="trainer" else "Клієнт"
-    target=(" до вправи "+x.exercise) if x.exercise else ""
-    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,recipient,"comment",who+" залишив коментар"+target))
+    target=(" до вправи «"+x.exercise+"»") if x.exercise else " до тренування"
+    comment_text=(x.text or "").strip()
+    message=who+" залишив коментар"+target+((": "+comment_text) if comment_text else "")
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,recipient,"comment",message))
     return one("SELECT * FROM comments WHERE id=?",(i,))
 
 @app.patch("/api/workout/{sid}/review")
