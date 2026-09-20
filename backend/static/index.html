@@ -24,7 +24,7 @@ async function route(){if(!session)return renderLogin();if(session.role==='train
 async function trainerHome(){let cs=await api('/clients');app.innerHTML=shell(`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${cs.length}</p><button onclick="newClient()">+ Додати клієнта</button></div><h1>Клієнти</h1>${cs.map(c=>`<div class="card client" onclick="openClient(${c.id})"><div class="between"><div><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')} · ${c.weight||0} кг</div></div><span class="${c.live_status==='Тренується'?'training-live':'badge'}">${esc(c.live_status||c.status||'Активний')}</span></div></div>`).join('')}`)}
 function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" placeholder="Email"><input id="p" value="client123" placeholder="Пароль"><input id="g" placeholder="Ціль"><input id="w" type="number" placeholder="Вага, кг"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити клієнта</button></div></div>`)}
 async function createClient(){try{await api('/clients',{method:'POST',body:JSON.stringify({name:n.value,email:e.value,password:p.value,goal:g.value,weight:+w.value||0,kcal:+k.value||0,protein:+pr.value||0,fat:+f.value||0,carbs:+ca.value||0})});modal.remove();trainerHome()}catch(x){me.textContent=x.message}}
-async function openClient(id){selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;app.innerHTML=shell(`<button class="dark" onclick="trainerHome()">← До клієнтів</button><div style="height:15px"></div><div class="card"><div class="between"><div><h1>${esc(c.name)}</h1><div class="muted">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="big">${c.weight||0} кг</div></div></div><div class="tabs"><button onclick="showTab('program',this)">Програма</button><button class="dark" onclick="showTab('results',this)">Результати</button><button class="dark" onclick="showTab('nutrition',this)">Харчування</button><button class="dark" onclick="showTab('progress',this)">Заміри</button><button class="dark" onclick="showTab('calendar',this)">Календар</button><button class="dark" onclick="showTab('comments',this)">Коментарі</button></div><div id="program" class="tab">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`)}
+async function openClient(id){selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;app.innerHTML=shell(`<button class="dark" onclick="trainerHome()">← До клієнтів</button><div style="height:15px"></div><div class="card"><div class="between"><div><h1>${esc(c.name)}</h1><div class="muted">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="big">${c.weight||0} кг</div></div></div><div style="margin-bottom:12px"><button class="dark" onclick="showNotifications(c.id,'trainer')">🔔 Сповіщення</button></div><div class="tabs"><button onclick="showTab('program',this)">Програма</button><button class="dark" onclick="showTab('results',this)">Результати</button><button class="dark" onclick="showTab('nutrition',this)">Харчування</button><button class="dark" onclick="showTab('progress',this)">Заміри</button><button class="dark" onclick="showTab('calendar',this)">Календар</button><button class="dark" onclick="showTab('comments',this)">Коментарі</button></div><div id="program" class="tab">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`)}
 function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$('#'+id).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.add('dark'));btn.classList.remove('dark')}
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
@@ -116,7 +116,7 @@ function showCalendarDay(day,btn){
    workoutHTML=old.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div>`).join('');
  }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>'+(day<=isoToday()?historyWorkoutForm(day,d.client.id,d):'<div class="exercise muted">На майбутню дату дані додавати не можна.</div>');
 
- let sessionHTML=session?`<div class="exercise"><div class="muted">Тренування</div><strong>${esc(session.day_name)}</strong><div class="muted" style="margin-top:5px">${session.status==='finished'?'Завершено':'Тренування триває'}</div></div>`:'';
+ let sessionHTML=session?`<div class="exercise"><div class="muted">Тренування</div><strong>${esc(session.day_name)}</strong><div class="muted" style="margin-top:5px">${session.status==='finished'?'Завершено':'Тренування триває'}</div>${session.trainer_reviewed?`<div style="margin-top:10px"><strong style="color:#6ee787">Перевірено тренером ✓</strong>${session.trainer_comment?`<div style="margin-top:6px">${esc(session.trainer_comment)}</div>`:''}</div>`:''}</div>`:'';
  let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>'+(day<=isoToday()?historyNutritionForm(day,d.client.id):'<div class="exercise muted">На майбутню дату дані додавати не можна.</div>');
  let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>`<div class="exercise">${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('')}</div>`:'';
 
@@ -128,6 +128,36 @@ function returnFromCalendarDay(){
  if(session&&session.role==='trainer'&&selected){openClient(selected);return}
  if(session&&session.role==='client'&&session.client_id){clientCabinet(session.client_id);return}
  route()
+}
+
+
+async function notificationBadge(cid,recipient){
+ try{
+  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
+  return xs.filter(x=>!x.is_read).length;
+ }catch(e){return 0}
+}
+async function showNotifications(cid,recipient){
+ let xs=await api('/notifications/'+cid+'?recipient='+recipient);
+ let body=xs.length?xs.map(x=>`<div class="exercise"><strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div>`).join(''):'<p class="muted">Нових сповіщень немає.</p>';
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div>${body}<button onclick="markNotificationsRead(${cid},'${recipient}')">Позначити прочитаними</button></div></div>`);
+}
+async function markNotificationsRead(cid,recipient){
+ await api('/notifications/'+cid+'/read',{method:'PATCH',body:JSON.stringify({recipient})});
+ notificationModal.remove();
+ if(session.role==='trainer')openClient(cid);else clientCabinet(cid);
+}
+function sessionProgramForDate(d,dayName,day){
+ let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
+ if(sessions.length&&sessions[0].program_snapshot){
+  try{let snap=JSON.parse(sessions[0].program_snapshot);if(Array.isArray(snap)&&snap.length)return snap}catch(e){}
+ }
+ return (d.program||[]).filter(x=>x.day_name===dayName);
+}
+async function reviewWorkout(sid,cid){
+ let t=$('#reviewComment'+sid),comment=t?t.value.trim():'';
+ await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
+ openClient(cid);
 }
 
 function resultDelta(v){
@@ -155,6 +185,8 @@ function toggleResultExercise(id,btn){
 }
 function trainerResultDates(d,dayName){
  let program=(d.program||[]).filter(x=>x.day_name===dayName),pids=new Set(program.map(x=>x.id));
+ let ss=(d.workout_sessions||[]).filter(s=>s.day_name===dayName);
+ ss.forEach(s=>{if(s.program_snapshot){try{JSON.parse(s.program_snapshot).forEach(x=>pids.add(x.id))}catch(e){}}});
  let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&s.status==='finished');
  let sessionDates=sessions.map(s=>(s.started_at||'').slice(0,10)).filter(Boolean);
  let setDates=(d.result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day);
@@ -176,7 +208,7 @@ function toggleWorkoutResult(id,btn){
 }
 
 function trainerDayResultsHTML(d,dayName){
- let program=(d.program||[]).filter(x=>x.day_name===dayName);
+ let baseProgram=(d.program||[]).filter(x=>x.day_name===dayName);
  let allDates=trainerResultDates(d,dayName);
  let period=window.trainerResultsPeriod||'90',from=periodStart(period);
  let customFrom=window.trainerResultsFrom||'',customTo=window.trainerResultsTo||'';
@@ -190,6 +222,7 @@ function trainerDayResultsHTML(d,dayName){
 
  let cards=shown.map(day=>{
    let allIndex=allDates.indexOf(day),previous=allDates[allIndex+1]||null;
+   let program=sessionProgramForDate(d,dayName,day);
    let exercises=program.filter(x=>(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===day));
    let workoutBodyId=`workoutResult_${dayName.replace(/[^a-zA-Z0-9]/g,'_')}_${day.replaceAll('-','_')}`;
    return `<div class="card" style="padding:0;overflow:hidden">
@@ -198,6 +231,11 @@ function trainerDayResultsHTML(d,dayName){
       <span class="arrow">⌄</span>
     </button>
     <div id="${workoutBodyId}" class="hidden" style="padding:0 24px 22px">
+    ${(()=>{
+      let ws=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id)[0];
+      if(!ws)return '';
+      return `<div class="exercise" style="margin-bottom:14px">${ws.trainer_reviewed?`<strong style="color:#6ee787">Перевірено тренером ✓</strong>${ws.trainer_comment?`<div style="margin-top:7px">${esc(ws.trainer_comment)}</div>`:''}`:`<strong style="color:var(--yellow)">Нове тренування</strong><textarea id="reviewComment${ws.id}" placeholder="Загальний коментар до тренування..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><button style="margin-top:8px" onclick="reviewWorkout(${ws.id},${d.client.id})">Перевірено ✓</button>`}</div>`;
+    })()}
     ${exercises.map(x=>{
       let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===day).sort((a,b)=>a.set_number-b.set_number);
       let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
@@ -430,7 +468,7 @@ async function clientCabinet(id){
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='<div class="card muted">Обери тренування вище, щоб переглянути вправи.</div>';
- app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}${commentsHTML(d,id)}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`)
+ app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}<div class="card"><button class="dark" onclick="showNotifications(${id},'client')">🔔 Сповіщення</button></div>${programPart}${commentsHTML(d,id)}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`)
 }
 async function saveSets(cid,pid,exercise,count){
  let sets=[];
