@@ -63,50 +63,34 @@ function changeCalendarMonth(delta,mode){
  else {let el=$('#clientCalendar');if(el)el.innerHTML=calendarHTML(data,'client')}
 }
 function showCalendarDay(day,btn){
- document.querySelectorAll('.calendar-day').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
  let d=window.currentClientData||{};
  let sets=(d.result_sets||[]).filter(x=>x.day===day);
  let old=(d.results||[]).filter(x=>x.day===day);
  let nut=(d.nutrition||[]).filter(x=>x.day===day).sort((a,b)=>b.id-a.id);
- let sessions=(d.workout_sessions||[]).filter(x=>{
-   let started=(x.started_at||'').slice(0,10),finished=(x.finished_at||'').slice(0,10);
-   return started===day||finished===day;
- });
+ let sessions=(d.workout_sessions||[]).filter(x=>(x.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
+ let session=sessions[0]||null;
  let meas=(d.measurements||[]).filter(x=>x.day===day);
 
- let by={};
- sets.forEach(x=>{let k=x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
- let workoutGroups=Object.values(by);
- let workoutHTML='';
-
+ let by={};sets.forEach(x=>{let k=x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
+ let workoutGroups=Object.values(by),workoutHTML='';
  if(workoutGroups.length){
-   workoutHTML=workoutGroups.map(xs=>{
-     xs.sort((a,b)=>a.set_number-b.set_number);
-     return `<div class="exercise"><strong>${esc(xs[0].exercise)}</strong>${xs.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}</div>`;
-   }).join('');
+   workoutHTML=workoutGroups.map(xs=>{xs.sort((a,b)=>a.set_number-b.set_number);return `<div class="exercise"><strong>${esc(xs[0].exercise)}</strong>${xs.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}</div>`}).join('');
  }else if(old.length){
    workoutHTML=old.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div>`).join('');
- }else{
-   workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>';
- }
+ }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>';
 
- let sessionTitle=sessions.length
-   ? sessions.map(s=>`<div class="muted" style="margin-bottom:8px">Тренування: <strong>${esc(s.day_name)}</strong>${s.status==='finished'?' · завершено':' · розпочато'}</div>`).join('')
-   : '';
+ let sessionHTML=session?`<div class="exercise"><div class="muted">Тренування</div><strong>${esc(session.day_name)}</strong><div class="muted" style="margin-top:5px">${session.status==='finished'?'Завершено':'Тренування триває'}</div></div>`:'';
+ let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>';
+ let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>`<div class="exercise">${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('')}</div>`:'';
 
- let nutritionHTML=nut.length
-   ? nut.map(x=>`<div class="exercise"><strong>${x.kcal} ккал</strong><div class="muted">Б ${x.protein} г · Ж ${x.fat} г · В ${x.carbs} г</div></div>`).join('')
-   : '<div class="exercise muted">Харчування за цей день не внесено.</div>';
-
- let measureHTML=meas.length
-   ? `<h3 style="margin-top:18px">Заміри</h3>`+meas.map(x=>`<div class="exercise">${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('')
-   : '';
-
- $('#calendarDetails').innerHTML=
-   `<h2>${esc(day)}</h2>`+
-   `<h3>Тренування</h3>${sessionTitle}${workoutHTML}`+
-   `<h3 style="margin-top:18px">Харчування</h3>${nutritionHTML}`+
-   measureHTML;
+ let content=`<button class="dark" onclick="returnFromCalendarDay()">← До календаря</button><div style="height:16px"></div><div class="card"><div class="muted">Щоденник</div><h1>${esc(day)}</h1></div><div class="card"><h2>Тренування</h2>${sessionHTML}${workoutHTML}</div><div class="card"><h2>Харчування</h2>${nutritionHTML}</div>${measures}`;
+ window.calendarReturnHTML=app.innerHTML;
+ app.innerHTML=shell(content);
+}
+function returnFromCalendarDay(){
+ if(session&&session.role==='trainer'&&selected){openClient(selected);return}
+ if(session&&session.role==='client'&&session.client_id){clientCabinet(session.client_id);return}
+ route()
 }
 
 function resultsHTML(d){
@@ -182,6 +166,8 @@ async function finishWorkout(cid,sid){
 function workoutChooser(d,cid,groups){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  if(active)return `<div class="card"><div class="between"><div><div class="training-live">Тренування триває</div><h2 style="margin-top:8px">${esc(active.day_name)}</h2></div><button onclick="finishWorkout(${cid},${active.id})">Завершити тренування</button></div></div>`;
+ let todayDone=(d.workout_sessions||[]).find(x=>(x.started_at||'').slice(0,10)===isoToday()&&x.status==='finished');
+ if(todayDone)return `<div class="card"><h2>Тренування на сьогодні завершено ✓</h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p></div>`;
  return `<div class="card"><h2>Тренування</h2><p class="muted">Обери день, щоб просто переглянути вправи. Тренування почнеться лише після натискання «Почати тренування».</p><div style="display:flex;gap:8px;flex-wrap:wrap">${Object.keys(groups).map(day=>`<button class="${previewWorkoutDay===day?'preview-selected':'dark'}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('')}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
 }
 async function clientCabinet(id){
