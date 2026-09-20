@@ -120,6 +120,10 @@ class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""
 class CardioIn(BaseModel):
     client_id:int; day:str=""; cardio_type:str=""; minutes:int=0; speed:float=0; incline:float=0; steps:int=0
+class ProgramOrderIn(BaseModel):
+    client_id:int
+    day_name:str
+    ordered_ids:list[int]
 class ResultIn(BaseModel):
     client_id:int; exercise:str; weight:float; reps:int; sets:int; rir:int
 class SupersetIn(BaseModel):
@@ -267,18 +271,17 @@ def edit_program(pid:int,x:ProgramIn):
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),pid))
     return {"ok":True}
 
-@app.patch("/api/program/{pid}/move/{direction}")
-def move_program(pid:int,direction:str):
-    if direction not in ("up","down"): raise HTTPException(400,"Невірний напрямок")
-    p=one("SELECT * FROM program WHERE id=?",(pid,))
-    if not p: raise HTTPException(404,"Вправу не знайдено")
-    items=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY CASE WHEN sort_order>0 THEN sort_order ELSE 999999 END,id",(p["client_id"],p["day_name"]))
-    ids=[x["id"] for x in items]
-    i=ids.index(pid); j=i-1 if direction=="up" else i+1
-    if j<0 or j>=len(ids): return {"ok":True}
-    ids[i],ids[j]=ids[j],ids[i]
-    for n,item_id in enumerate(ids,1):
-        run("UPDATE program SET sort_order=? WHERE id=?",(n,item_id))
+@app.post("/api/program/reorder")
+def reorder_program(x:ProgramOrderIn):
+    current=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name))
+    current_ids={r["id"] for r in current}
+    ordered=[int(i) for i in x.ordered_ids]
+    if len(ordered)!=len(set(ordered)) or set(ordered)!=current_ids:
+        raise HTTPException(400,"Некоректний порядок вправ")
+    with con() as c:
+        for pos,item_id in enumerate(ordered,1):
+            c.execute("UPDATE program SET sort_order=%s WHERE id=%s AND client_id=%s",(pos,item_id,x.client_id))
+        c.commit()
     return {"ok":True}
 
 @app.patch("/api/program/{pid}/superset")
