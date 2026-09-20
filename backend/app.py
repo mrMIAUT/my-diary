@@ -66,8 +66,8 @@ def send_reset_email(email:str,link:str):
     key=os.getenv("RESEND_API_KEY","").strip()
     sender=os.getenv("RESET_FROM_EMAIL","").strip()
     if not key or not sender:return False
-    data=json.dumps({"from":sender,"to":[email],"subject":"Відновлення пароля — Є ПЛАН",
-                     "html":f"<p>Щоб встановити новий пароль, відкрийте посилання:</p><p><a href='{link}'>{link}</a></p><p>Посилання діє 30 хвилин.</p>"}).encode()
+    data=json.dumps({"from":sender,"to":[email],"subject":"Доступ до Є ПЛАН",
+                     "html":f"<h2>Є ПЛАН</h2><p>Щоб створити або відновити пароль до кабінету, відкрийте посилання:</p><p><a href='{link}'>Встановити пароль</a></p><p>Якщо ви не очікували цей лист, просто проігноруйте його.</p>"}).encode()
     req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
     try:
         with urllib.request.urlopen(req,timeout=10) as r:return 200<=r.status<300
@@ -207,11 +207,24 @@ def clients():
     FROM clients c WHERE c.status<>'Видалений' ORDER BY c.id DESC""")
 @app.post("/api/clients")
 def add_client(x:ClientIn):
+    email=x.email.strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]: raise HTTPException(400,"Вкажи коректний email")
+    # Trainer creates the client by real email. The client sets their own password from the invitation.
+    initial_password=secrets.token_urlsafe(32)
     try:
-        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name,x.email,hash_password(x.password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
+        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
-        return one("SELECT * FROM clients WHERE id=?",(i,))
+        token=secrets.token_urlsafe(32)
+        token_hash=hashlib.sha256(token.encode()).hexdigest()
+        run("INSERT INTO password_resets(client_id,token_hash,expires_at) VALUES(?,?,?)",(i,token_hash,datetime.utcnow()+timedelta(hours=24)))
+        base=os.getenv("APP_BASE_URL","").rstrip("/")
+        sent=False
+        if base:
+            sent=send_reset_email(email,base+"/?reset="+token)
+        c=one("SELECT * FROM clients WHERE id=?",(i,))
+        return {"client":c,"invite_sent":sent}
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
+
 @app.patch("/api/clients/{cid}/status")
 def set_client_status(cid:int,x:ClientStatusIn):
     if x.status not in ("Активний","Заморожений","Видалений"): raise HTTPException(400,"Невірний статус")
