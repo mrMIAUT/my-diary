@@ -141,50 +141,99 @@ function toggleResultExercise(id,btn){
  el.classList.toggle('hidden');
  let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
+
+function resultDelta(v){
+ let n=+v||0;
+ if(n>0)return `<span class="delta-up">+${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
+ if(n<0)return `<span class="delta-down">${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
+ return `<span class="muted">0</span>`;
+}
+function toggleResultExercise(id,btn){
+ let el=$('#'+id);if(!el)return;
+ el.classList.toggle('hidden');
+ let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
+}
+function trainerResultDates(d,dayName){
+ let program=(d.program||[]).filter(x=>x.day_name===dayName),pids=new Set(program.map(x=>x.id));
+ let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&s.status==='finished');
+ let sessionDates=sessions.map(s=>(s.started_at||'').slice(0,10)).filter(Boolean);
+ let setDates=(d.result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day);
+ return [...new Set([...sessionDates,...setDates])].sort().reverse();
+}
+function periodStart(period){
+ let d=new Date();
+ if(period==='30')d.setDate(d.getDate()-30);
+ else if(period==='90')d.setDate(d.getDate()-90);
+ else if(period==='180')d.setDate(d.getDate()-180);
+ else return null;
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function trainerDayResultsHTML(d,dayName){
  let program=(d.program||[]).filter(x=>x.day_name===dayName);
- let pids=new Set(program.map(x=>x.id));
- let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&s.status==='finished').sort((a,b)=>(b.started_at||'').localeCompare(a.started_at||''));
- let sessionDates=[...new Set(sessions.map(s=>(s.started_at||'').slice(0,10)).filter(Boolean))];
- // Include old result-set dates too, so history survives older session records.
- let setDates=[...new Set((d.result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day))];
- let dates=[...new Set([...sessionDates,...setDates])].sort().reverse();
- if(!dates.length)return `<div class="card"><p class="muted">Для ${esc(dayName)} ще немає виконаних тренувань.</p></div>`;
+ let allDates=trainerResultDates(d,dayName);
+ let period=window.trainerResultsPeriod||'90',from=periodStart(period);
+ let customFrom=window.trainerResultsFrom||'',customTo=window.trainerResultsTo||'';
+ let dates=allDates.filter(day=>{
+   if(period==='custom')return (!customFrom||day>=customFrom)&&(!customTo||day<=customTo);
+   return !from||day>=from;
+ });
+ let limit=window.trainerResultsLimit||5,shown=dates.slice(0,limit);
 
- return dates.map((day,di)=>{
-   let previous=dates[di+1]||null;
+ if(!dates.length)return `<div class="card"><p class="muted">У вибраному періоді немає тренувань ${esc(dayName)}.</p></div>`;
+
+ let cards=shown.map(day=>{
+   let allIndex=allDates.indexOf(day),previous=allDates[allIndex+1]||null;
    let exercises=program.filter(x=>(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===day));
    return `<div class="card">
-     <div class="between"><div><div class="muted">${esc(dayName)}</div><h2>${esc(day)}</h2></div>${previous?`<span class="muted">порівняно з ${esc(previous)}</span>`:''}</div>
-     ${exercises.map((x,xi)=>{
-       let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===day).sort((a,b)=>a.set_number-b.set_number);
-       let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
-       let bodyId=`trainerResult_${x.id}_${day.replaceAll('-','_')}`;
-       return `<div class="exercise">
-         <button class="exercise-toggle" onclick="toggleResultExercise('${bodyId}',this)">
-           <span><strong>${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span>
-           <span class="arrow">⌄</span>
-         </button>
-         <div id="${bodyId}" class="hidden" style="margin-top:10px">
-           ${cur.map(s=>{
-             let p=prev.find(z=>z.set_number===s.set_number);
-             return `<div style="padding:8px 0;border-top:1px solid var(--line)">
-               <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>
-               ${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${p.reps} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}
-             </div>`;
-           }).join('')}
-         </div>
-       </div>`;
-     }).join('')}
+    <div class="between"><div><div class="muted">${esc(dayName)}</div><h2>${esc(day)}</h2></div>${previous?`<span class="muted">порівняно з ${esc(previous)}</span>`:''}</div>
+    ${exercises.map(x=>{
+      let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===day).sort((a,b)=>a.set_number-b.set_number);
+      let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
+      let bodyId=`trainerResult_${x.id}_${day.replaceAll('-','_')}`;
+      return `<div class="exercise">
+       <button class="exercise-toggle" onclick="toggleResultExercise('${bodyId}',this)">
+        <span><strong>${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span><span class="arrow">⌄</span>
+       </button>
+       <div id="${bodyId}" class="hidden" style="margin-top:10px">${cur.map(s=>{
+        let p=prev.find(z=>z.set_number===s.set_number);
+        return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${p.reps} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
+       }).join('')}</div>
+      </div>`;
+    }).join('')}
    </div>`;
  }).join('');
+
+ return cards+(dates.length>shown.length?`<div style="text-align:center;margin:16px 0 28px"><button class="dark" onclick="window.trainerResultsLimit=(window.trainerResultsLimit||5)+5;document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData)">Показати ще (${dates.length-shown.length})</button></div>`:'');
+}
+function setResultsPeriod(p){
+ window.trainerResultsPeriod=p;window.trainerResultsLimit=5;
+ document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData);
+}
+function applyCustomResultsPeriod(){
+ window.trainerResultsFrom=$('#resultsFrom').value;window.trainerResultsTo=$('#resultsTo').value;
+ window.trainerResultsPeriod='custom';window.trainerResultsLimit=5;
+ document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData);
 }
 function resultsHTML(d){
  let days=[...new Set((d.program||[]).map(x=>x.day_name))];
  if(!days.length)return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Програма ще порожня.</p></div>`;
  let selectedDay=window.trainerResultsDay&&days.includes(window.trainerResultsDay)?window.trainerResultsDay:days[0];
  window.trainerResultsDay=selectedDay;
- return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Обери тренувальний день. Усередині показані всі його виконання та зміни відносно попереднього такого ж дня.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${days.map(day=>`<button class="${day===selectedDay?'':'dark'}" onclick="window.trainerResultsDay='${esc(day).replace(/'/g,"&#39;")}';document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData)">${esc(day)}</button>`).join('')}</div></div><div>${trainerDayResultsHTML(d,selectedDay)}</div>`;
+ let period=window.trainerResultsPeriod||'90';
+ return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Обери тренувальний день і період. Спочатку показуються 5 останніх тренувань.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${days.map(day=>`<button class="${day===selectedDay?'':'dark'}" onclick="window.trainerResultsDay='${esc(day).replace(/'/g,"&#39;")}';window.trainerResultsLimit=5;document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData)">${esc(day)}</button>`).join('')}</div>
+  <div style="height:16px"></div>
+  <div class="muted" style="margin-bottom:8px">Період</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+   ${[['30','30 днів'],['90','3 місяці'],['180','6 місяців'],['all','Весь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="setResultsPeriod('${v}')">${t}</button>`).join('')}
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:14px">
+   <div><div class="muted">З</div><input id="resultsFrom" type="date" value="${window.trainerResultsFrom||''}"></div>
+   <div><div class="muted">По</div><input id="resultsTo" type="date" value="${window.trainerResultsTo||''}"></div>
+   <button class="${period==='custom'?'':'dark'}" onclick="applyCustomResultsPeriod()">Показати період</button>
+  </div>
+ </div>
+ <div>${trainerDayResultsHTML(d,selectedDay)}</div>`;
 }
 
 function nutritionHTML(d){let c=d.client;return `<div class="card"><h2>Цільове харчування</h2><p class="muted">Зміни калорійність та БЖВ клієнта. Після збереження нові цілі одразу з'являться в його кабінеті.</p><div class="grid"><div><div class="muted">Ккал</div><input id="nkcal" type="number" value="${c.kcal||0}"></div><div><div class="muted">Білки, г</div><input id="nprotein" type="number" value="${c.protein||0}"></div><div><div class="muted">Жири, г</div><input id="nfat" type="number" value="${c.fat||0}"></div><div><div class="muted">Вуглеводи, г</div><input id="ncarbs" type="number" value="${c.carbs||0}"></div></div><br><button onclick="saveNutritionTargets(${c.id})">Зберегти харчування</button><span id="nutritionSaved" class="muted" style="margin-left:12px"></span></div>`}
