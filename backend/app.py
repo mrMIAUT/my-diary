@@ -3,11 +3,13 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
-import sqlite3, os, shutil
+import os, shutil
+import psycopg
+from psycopg.rows import dict_row
 from datetime import date
 
 BASE=Path(__file__).resolve().parent
-DB=BASE/"fitness.db"
+DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
@@ -16,30 +18,28 @@ app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
 app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
 
 def con():
-    c=sqlite3.connect(DB); c.row_factory=sqlite3.Row; return c
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 def rows(q,p=()):
-    with con() as c:return [dict(x) for x in c.execute(q,p).fetchall()]
+    with con() as c:return [dict(x) for x in c.execute(q.replace('?', '%s'),p).fetchall()]
 def one(q,p=()):
     with con() as c:
-        x=c.execute(q,p).fetchone(); return dict(x) if x else None
+        x=c.execute(q.replace('?', '%s'),p).fetchone(); return dict(x) if x else None
 def run(q,p=()):
     with con() as c:
-        cur=c.execute(q,p); c.commit(); return cur.lastrowid
+        cur=c.execute(q.replace('?', '%s'),p); c.commit(); return cur.lastrowid
 
 def init():
     with con() as c:
-        c.executescript("""
-        CREATE TABLE IF NOT EXISTS clients(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight REAL,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний');
-        CREATE TABLE IF NOT EXISTS program(id INTEGER PRIMARY KEY AUTOINCREMENT,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS results(id INTEGER PRIMARY KEY AUTOINCREMENT,client_id INTEGER,exercise TEXT,day TEXT,weight REAL,reps INTEGER,sets INTEGER,rir INTEGER);
-        CREATE TABLE IF NOT EXISTS nutrition(id INTEGER PRIMARY KEY AUTOINCREMENT,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT);
-        CREATE TABLE IF NOT EXISTS measurements(id INTEGER PRIMARY KEY AUTOINCREMENT,client_id INTEGER,day TEXT,weight REAL,waist REAL,chest REAL,hips REAL);
-        """)
-        if c.execute("SELECT COUNT(*) FROM clients").fetchone()[0]==0:
-            c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?)",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265))
-            c.executemany("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,sort) VALUES(?,?,?,?,?,?,?)",[(1,"День A","Присідання",3,"8",2,1),(1,"День A","Жим лежачи",3,"10",2,2),(1,"День B","Румунська тяга",3,"8-10",2,1),(1,"День B","Тяга верхнього блока",3,"10-12",2,2)])
-            c.executemany("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",[(1,"Присідання","2026-09-08",70,8,3,2),(1,"Присідання","2026-09-15",72.5,8,3,2)])
-            c.executemany("INSERT INTO measurements(client_id,day,weight,waist) VALUES(?,?,?,?)",[(1,"2026-08-20",62.4,72),(1,"2026-09-15",61,71)])
+        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
+        c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
+        if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
+            anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
+            c.executemany("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,sort) VALUES(%s,%s,%s,%s,%s,%s,%s)",[(anna_id,"День A","Присідання",3,"8",2,1),(anna_id,"День A","Жим лежачи",3,"10",2,2),(anna_id,"День B","Румунська тяга",3,"8-10",2,1),(anna_id,"День B","Тяга верхнього блока",3,"10-12",2,2)])
+            c.executemany("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(%s,%s,%s,%s,%s,%s,%s)",[(anna_id,"Присідання","2026-09-08",70,8,3,2),(anna_id,"Присідання","2026-09-15",72.5,8,3,2)])
+            c.executemany("INSERT INTO measurements(client_id,day,weight,waist) VALUES(%s,%s,%s,%s)",[(anna_id,"2026-08-20",62.4,72),(anna_id,"2026-09-15",61,71)])
         c.commit()
 init()
 
@@ -58,7 +58,7 @@ class MeasureIn(BaseModel):
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
 @app.get("/health")
-def health(): return {"status":"online","version":"V2"}
+def health(): return {"status":"online","version":"V2","database":"postgresql"}
 
 @app.post("/api/login")
 def login(x:Login):
@@ -75,7 +75,7 @@ def add_client(x:ClientIn):
         i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name,x.email,x.password,x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
         return one("SELECT * FROM clients WHERE id=?",(i,))
-    except sqlite3.IntegrityError: raise HTTPException(400,"Email вже використовується")
+    except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int):
     for t in ("program","results","nutrition","measurements"): run(f"DELETE FROM {t} WHERE client_id=?",(cid,))
