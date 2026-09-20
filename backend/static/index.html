@@ -12,7 +12,7 @@
 .calendar-day.active{background:var(--yellow);color:#080808}.calendar-day.active:after{background:#080808}.day-details{margin-top:16px}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.wrap{padding:20px 14px 90px}.brand{font-size:21px}.login .brand{font-size:38px}.card{padding:18px;border-radius:20px}.setrow{grid-template-columns:52px 1fr 1fr 1fr;gap:6px}.setrow input{padding:11px 7px;font-size:14px}}
 </style></head><body><div id="app"></div><script>
-const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;
+const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;
 async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});if(!r.ok){let x;try{x=await r.json()}catch{};throw new Error(x?.detail||'Помилка сервера')}return r.status===204?null:r.json()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function shell(content){return `<div class="wrap"><div class="top"><div class="brand">ЗРОБИ СЕБЕ <span>ЗІ МНОЮ</span></div><button class="dark" onclick="logout()">Вийти</button></div>${content}</div>`}
@@ -40,11 +40,20 @@ function monthKey(day){return day ? day.slice(0,7) : ''}
 function calendarHTML(d,mode='trainer'){
  let days=[...(d.result_sets||[]).map(x=>x.day),...(d.results||[]).map(x=>x.day),...(d.nutrition||[]).map(x=>x.day),...(d.measurements||[]).map(x=>x.day)].filter(Boolean);
  let unique=[...new Set(days)];
- let base=unique[0]||isoToday(), ym=base.slice(0,7), [yy,mm]=ym.split('-').map(Number);
- let first=new Date(yy,mm-1,1), count=new Date(yy,mm,0).getDate(), start=(first.getDay()+6)%7;
- let cells=''; for(let i=0;i<start;i++)cells+='<button class="calendar-day empty"></button>';
+ if(!calendarMonth) calendarMonth=(unique.sort().reverse()[0]||isoToday()).slice(0,7);
+ let ym=calendarMonth,[yy,mm]=ym.split('-').map(Number);
+ let first=new Date(yy,mm-1,1),count=new Date(yy,mm,0).getDate(),start=(first.getDay()+6)%7;
+ let cells='';for(let i=0;i<start;i++)cells+='<button class="calendar-day empty"></button>';
  for(let n=1;n<=count;n++){let day=ym+'-'+String(n).padStart(2,'0'),has=unique.includes(day);cells+=`<button class="calendar-day ${has?'has-data':''}" data-day="${day}" onclick="showCalendarDay('${day}',this)">${n}</button>`}
- return `<div class="card"><div class="calendar-head"><div><h2 style="margin-bottom:4px">Календар тренувань</h2><div class="muted">${String(mm).padStart(2,'0')}.${yy} · жовта крапка = є записи</div></div></div><div class="calendar-grid">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>`<div class="calendar-weekday">${x}</div>`).join('')}${cells}</div><div id="calendarDetails" class="day-details muted">Натисни на день, щоб переглянути записи.</div></div>`;
+ let monthNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+ return `<div class="card"><div class="calendar-head"><button class="dark" onclick="changeCalendarMonth(-1,'${mode}')">←</button><div style="text-align:center"><h2 style="margin-bottom:4px">${monthNames[mm-1]} ${yy}</h2><div class="muted">жовта крапка = є записи</div></div><button class="dark" onclick="changeCalendarMonth(1,'${mode}')">→</button></div><div class="calendar-grid">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>`<div class="calendar-weekday">${x}</div>`).join('')}${cells}</div><div id="calendarDetails" class="day-details muted">Натисни на день, щоб переглянути записи.</div></div>`;
+}
+function changeCalendarMonth(delta,mode){
+ let [y,m]=calendarMonth.split('-').map(Number),d=new Date(y,m-1+delta,1);
+ calendarMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ let data=window.currentClientData||{};
+ if(mode==='trainer'){let el=$('#calendar');if(el)el.innerHTML=calendarHTML(data,'trainer')}
+ else {let el=$('#clientCalendar');if(el)el.innerHTML=calendarHTML(data,'client')}
 }
 function showCalendarDay(day,btn){
  document.querySelectorAll('.calendar-day').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
@@ -79,6 +88,24 @@ function previousSets(d,pid){
 }
 function setRows(x,d){let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;for(let n=1;n<=x.sets;n++)h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" placeholder="кг"><input id="r${x.id}_${n}" type="number" placeholder="${esc(x.reps)}"><input id="i${x.id}_${n}" type="number" value="${x.target_rir}" min="0" max="10"></div>`;return previousSets(d,x.id)+h}
 async function clientCabinet(id){let d=await api('/client/'+id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div><h1>Моя програма</h1>${Object.entries(groups).length?Object.entries(groups).map(([day,xs])=>`<div class="card"><h2>${esc(day)}</h2>${xs.map(x=>`<div class="exercise"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(x.exercise)}</strong><span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)} · RIR ${x.target_rir}</span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${setRows(x,d)}<br><button onclick="saveSets(${id},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets})">Зберегти підходи</button></div></div>`).join('')}</div>`).join(''):'<div class="card muted">Тренер ще не додав програму.</div>'}`)}
-async function saveSets(cid,pid,exercise,count){let sets=[];for(let n=1;n<=count;n++){let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);if(!w.value&&!r.value)continue;if(!w.value||!r.value)return alert(`Заповни вагу та повтори у підході ${n}`);sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})}if(!sets.length)return alert('Заповни хоча б один підхід');await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});alert('Підходи збережено ✓');clientCabinet(cid)}
+async function saveSets(cid,pid,exercise,count){
+ let sets=[];
+ for(let n=1;n<=count;n++){
+  let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
+  if(!w.value&&!r.value)continue;
+  if(!w.value||!r.value)return alert(`Заповни вагу та повтори у підході ${n}`);
+  sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})
+ }
+ if(!sets.length)return alert('Заповни хоча б один підхід');
+ await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
+ let body=$('#exerciseBody'+pid);
+ if(body){
+   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="clientCabinet(${cid})">Редагувати</button></div></div>`;
+   body.classList.add('hidden');
+   let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
+ }
+ let d=await api('/client/'+cid);window.currentClientData=d;
+ let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
+}
 route();
 </script></body></html>
