@@ -32,10 +32,13 @@ async function requestPasswordReset(){
  try{let r=await api('/password-reset/request',{method:'POST',body:JSON.stringify({email:resetEmail.value})});resetMsg.textContent=r.message}catch(e){resetMsg.textContent=e.message}
 }
 function renderResetPassword(token){
- app.innerHTML=`<div class="wrap login"><div class="brand">Є <span>ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><input id="newPass" type="password" placeholder="Новий пароль, мінімум 8 символів"><p id="resetMsg" class="muted"></p><button onclick="confirmPasswordReset('${esc(token)}')">Зберегти пароль</button></div></div>`
+ app.innerHTML=`<div class="wrap login"><div class="brand">Є <span>ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><input id="newPass" type="password" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><input id="newPassRepeat" type="password" autocomplete="new-password" placeholder="Повторіть новий пароль"><p id="resetMsg" class="muted"></p><button onclick="confirmPasswordReset('${esc(token)}')">Зберегти пароль</button></div></div>`
 }
 async function confirmPasswordReset(token){
- try{await api('/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password:newPass.value})});history.replaceState({},'',location.pathname);alert('Пароль змінено. Тепер увійдіть з новим паролем.');renderLogin()}catch(e){resetMsg.textContent=e.message}
+ let p=newPass.value,r=newPassRepeat.value;
+ if(p.length<8){resetMsg.textContent='Пароль має містити щонайменше 8 символів';return}
+ if(p!==r){resetMsg.textContent='Паролі не співпадають';return}
+ try{await api('/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password:p})});localStorage.removeItem('fitSession');session=null;history.replaceState({},'',location.pathname);alert('Пароль змінено. Тепер увійдіть з новим паролем.');renderLogin()}catch(e){resetMsg.textContent=e.message}
 }
 function togglePassword(){let p=$('#pass');if(p)p.type=p.type==='password'?'text':'password'}
 async function login(){try{let s=await api('/login',{method:'POST',body:JSON.stringify({email:email.value,password:pass.value})});session=s;localStorage.setItem('fitSession',JSON.stringify(s));route()}catch(e){err.textContent=e.message}}
@@ -626,5 +629,6 @@ async function saveSets(cid,pid,exercise,count){
  let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
  setTimeout(()=>clientCabinet(cid),350);
 }
-route();
+let startupResetToken=new URLSearchParams(location.search).get('reset');
+if(startupResetToken){renderResetPassword(startupResetToken)}else{route()}
 </script></body></html>
