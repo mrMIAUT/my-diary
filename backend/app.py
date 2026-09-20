@@ -175,27 +175,46 @@ def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
 
 @app.get("/api/debug/resend")
-def debug_resend():
-    """Temporary diagnostic endpoint. Does not expose the API key."""
+def debug_resend(to: str = ""):
+    """Temporary Resend diagnostic. Sends a real test email without exposing the API key."""
     key=os.getenv("RESEND_API_KEY","").strip()
+    sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
+    recipient=(to or os.getenv("TRAINER_EMAIL","")).strip()
+
     result={
         "resend_api_key_present": bool(key),
         "resend_api_key_prefix_ok": key.startswith("re_") if key else False,
-        "reset_from_email": os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip(),
-        "test_url": "https://api.resend.com/domains",
+        "from": sender,
+        "to": recipient,
+        "test_url": "https://api.resend.com/emails",
     }
+
     if not key:
+        result["ok"]=False
         result["error"]="RESEND_API_KEY is empty"
         return result
+    if not recipient or "@" not in recipient:
+        result["ok"]=False
+        result["error"]="No valid recipient. Set TRAINER_EMAIL or use ?to=email@example.com"
+        return result
+
+    data=json.dumps({
+        "from":sender,
+        "to":[recipient],
+        "subject":"Тест пошти Є ПЛАН",
+        "html":"<h2>Є ПЛАН</h2><p>Тестове повідомлення успішно відправлено через Resend.</p>"
+    }).encode("utf-8")
 
     req=urllib.request.Request(
-        "https://api.resend.com/domains",
+        "https://api.resend.com/emails",
+        data=data,
         headers={
             "Authorization":"Bearer "+key,
+            "Content-Type":"application/json",
             "Accept":"application/json",
-            "User-Agent":"eplan-resend-debug/1.0",
+            "User-Agent":"eplan-resend-debug/2.0",
         },
-        method="GET",
+        method="POST",
     )
     try:
         with urllib.request.urlopen(req,timeout=15) as r:
@@ -212,9 +231,6 @@ def debug_resend():
         result["ok"]=False
         result["reason"]=str(e.reason)
         result["body"]=body[:4000]
-        result["response_headers"]={k:v for k,v in e.headers.items() if k.lower() in (
-            "server","content-type","cf-ray","cf-mitigated","x-resend-error"
-        )}
     except Exception as e:
         result["ok"]=False
         result["error_type"]=type(e).__name__
