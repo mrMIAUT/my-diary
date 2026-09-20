@@ -76,6 +76,12 @@ class NutritionTargetIn(BaseModel):
     kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str
+class HistoricalNutritionIn(BaseModel):
+    client_id:int; day:str; kcal:int; protein:int; fat:int; carbs:int
+class HistoricalSetIn(BaseModel):
+    program_id:int; exercise:str; set_number:int; weight:float; reps:int; rir:int
+class HistoricalWorkoutIn(BaseModel):
+    client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
@@ -165,6 +171,28 @@ def start_workout(x:WorkoutStartIn):
 def finish_workout(sid:int):
     run("UPDATE workout_sessions SET status='finished',finished_at=CURRENT_TIMESTAMP WHERE id=?",(sid,))
     return one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+
+@app.post("/api/history/nutrition")
+def historical_nutrition(x:HistoricalNutritionIn):
+    existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
+    if existing:
+        run("UPDATE nutrition SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,existing["id"]))
+        return one("SELECT * FROM nutrition WHERE id=?",(existing["id"],))
+    i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,x.day,x.kcal,x.protein,x.fat,x.carbs))
+    return one("SELECT * FROM nutrition WHERE id=?",(i,))
+
+@app.post("/api/history/workout")
+def historical_workout(x:HistoricalWorkoutIn):
+    existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
+    if existing:
+        raise HTTPException(400,"Тренування за цей день уже записано")
+    for s in x.sets:
+        run("INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir) VALUES(?,?,?,?,?,?,?,?)",
+            (x.client_id,s.program_id,s.exercise,x.day,s.set_number,s.weight,s.reps,s.rir))
+    # Noon avoids timezone/date rollover ambiguity for historical display.
+    run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished')",
+        (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00"))
+    return {"ok":True}
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
