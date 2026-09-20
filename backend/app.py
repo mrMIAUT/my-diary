@@ -130,7 +130,7 @@ def add_result_sets(x:SetResultIn):
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
     today=str(date.today())
-    # Re-saving the same exercise on the same day replaces that exercise's set details.
+    # A completed exercise is locked in the UI. Explicit editing re-saves and replaces today's sets.
     run("DELETE FROM result_sets WHERE client_id=? AND program_id=? AND day=?",(x.client_id,x.program_id,today))
     ids=[]
     for s in x.sets:
