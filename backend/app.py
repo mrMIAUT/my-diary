@@ -174,69 +174,6 @@ def home(): return FileResponse(BASE/"static"/"index.html")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
 
-@app.get("/api/debug/resend")
-def debug_resend(to: str = ""):
-    """Temporary Resend diagnostic. Sends a real test email without exposing the API key."""
-    key=os.getenv("RESEND_API_KEY","").strip()
-    sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
-    recipient=(to or os.getenv("TRAINER_EMAIL","")).strip()
-
-    result={
-        "resend_api_key_present": bool(key),
-        "resend_api_key_prefix_ok": key.startswith("re_") if key else False,
-        "from": sender,
-        "to": recipient,
-        "test_url": "https://api.resend.com/emails",
-    }
-
-    if not key:
-        result["ok"]=False
-        result["error"]="RESEND_API_KEY is empty"
-        return result
-    if not recipient or "@" not in recipient:
-        result["ok"]=False
-        result["error"]="No valid recipient. Set TRAINER_EMAIL or use ?to=email@example.com"
-        return result
-
-    data=json.dumps({
-        "from":sender,
-        "to":[recipient],
-        "subject":"Тест пошти Є ПЛАН",
-        "html":"<h2>Є ПЛАН</h2><p>Тестове повідомлення успішно відправлено через Resend.</p>"
-    }).encode("utf-8")
-
-    req=urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=data,
-        headers={
-            "Authorization":"Bearer "+key,
-            "Content-Type":"application/json",
-            "Accept":"application/json",
-            "User-Agent":"eplan-resend-debug/2.0",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req,timeout=15) as r:
-            body=r.read().decode("utf-8",errors="replace")
-            result["status"]=r.status
-            result["ok"]=200 <= r.status < 300
-            result["body"]=body[:4000]
-    except urllib.error.HTTPError as e:
-        try:
-            body=e.read().decode("utf-8",errors="replace")
-        except Exception:
-            body="<could not read response body>"
-        result["status"]=e.code
-        result["ok"]=False
-        result["reason"]=str(e.reason)
-        result["body"]=body[:4000]
-    except Exception as e:
-        result["ok"]=False
-        result["error_type"]=type(e).__name__
-        result["error"]=str(e)
-    return result
-
 @app.post("/api/login")
 def login(x:Login):
     trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local")
