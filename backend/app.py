@@ -68,7 +68,7 @@ def send_reset_email(email:str,link:str):
     if not key:return False
     data=json.dumps({"from":sender,"to":[email],"subject":"Доступ до Є ПЛАН",
                      "html":f"<h2>Є ПЛАН</h2><p>Щоб створити або відновити пароль до кабінету, відкрийте посилання:</p><p><a href='{link}'>Встановити пароль</a></p><p>Якщо ви не очікували цей лист, просто проігноруйте його.</p>"}).encode()
-    req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
+    req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json","Accept":"application/json","User-Agent":"eplan.com.ua/1.0"},method="POST")
     try:
         with urllib.request.urlopen(req,timeout=10) as r:
             ok=200<=r.status<300
