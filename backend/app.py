@@ -71,6 +71,8 @@ class NutIn(BaseModel):
     client_id:int; kcal:int; protein:int; fat:int; carbs:int
 class MeasureIn(BaseModel):
     client_id:int; weight:float; waist:float=0; chest:float=0; hips:float=0
+class NutritionTargetIn(BaseModel):
+    kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
@@ -107,6 +109,13 @@ def client(cid:int):
             "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,))}
+@app.patch("/api/client/{cid}/nutrition")
+def update_client_nutrition(cid:int,x:NutritionTargetIn):
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)):
+        raise HTTPException(404,"Клієнта не знайдено")
+    run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,cid))
+    return one("SELECT * FROM clients WHERE id=?",(cid,))
+
 @app.post("/api/program")
 def add_program(x:ProgramIn):
     i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir) VALUES(?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir)); return {"id":i}
