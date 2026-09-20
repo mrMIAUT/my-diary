@@ -267,6 +267,20 @@ def edit_program(pid:int,x:ProgramIn):
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),pid))
     return {"ok":True}
 
+@app.patch("/api/program/{pid}/move")
+def move_program(pid:int,direction:str):
+    p=one("SELECT * FROM program WHERE id=?",(pid,))
+    if not p: raise HTTPException(404,"Вправу не знайдено")
+    items=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY sort_order,id",(p["client_id"],p["day_name"]))
+    ids=[x["id"] for x in items]
+    if pid not in ids: return {"ok":True}
+    i=ids.index(pid); j=i-1 if direction=="up" else i+1
+    if j<0 or j>=len(ids): return {"ok":True}
+    ids[i],ids[j]=ids[j],ids[i]
+    for n,item_id in enumerate(ids,1):
+        run("UPDATE program SET sort_order=? WHERE id=?",(n,item_id))
+    return {"ok":True}
+
 @app.patch("/api/program/{pid}/superset")
 def set_superset(pid:int,x:SupersetIn):
     run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
