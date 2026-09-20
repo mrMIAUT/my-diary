@@ -27,20 +27,28 @@ function programHTML(d){
 async function addExercise(){if(!dn.value||!ex.value)return alert('Вкажи день і вправу');await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dn.value,exercise:ex.value,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+rr.value||2})});openClient(selected)}
 async function deleteExercise(id){if(confirm('Видалити вправу?')){await api('/program/'+id,{method:'DELETE'});openClient(selected)}}
 function resultsHTML(d){
-let detailed=d.result_sets||[],by={};
-detailed.forEach(x=>{let k=x.day+'|'+x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
-let detailHTML=Object.values(by).map(xs=>{
-let setLines=xs.map(s=>'<div style="margin-top:7px">Підхід '+s.set_number+': <strong>'+s.weight+' кг × '+s.reps+'</strong> · RIR '+s.rir+'</div>').join('');
-return '<div class="exercise"><strong>'+esc(xs[0].exercise)+'</strong><div class="muted">'+esc(xs[0].day)+'</div>'+setLines+'</div>';
-}).join('');
-let oldHTML=(d.results||[]).map(x=>'<div class="exercise"><strong>'+esc(x.exercise)+'</strong><div class="muted">'+esc(x.day)+' · '+x.weight+' кг × '+x.reps+' · '+x.sets+' підходи · RIR '+x.rir+'</div></div>').join('');
-let content=detailHTML||oldHTML||'<p class="muted">Клієнт ще не записував результати.</p>';
-return '<div class="card"><h2>Результати тренувань</h2>'+content+'</div>';
+ let detailed=d.result_sets||[],by={};
+ detailed.forEach(x=>{let k=x.day+'|'+x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
+ let detailHTML=Object.values(by).map(xs=>{
+   xs.sort((a,b)=>a.set_number-b.set_number);
+   let setLines=xs.map(s=>'<div style="margin-top:7px">Підхід '+s.set_number+': <strong>'+s.weight+' кг × '+s.reps+'</strong> · RIR '+s.rir+'</div>').join('');
+   return '<div class="exercise"><strong>'+esc(xs[0].exercise)+'</strong><div class="muted">'+esc(xs[0].day)+'</div>'+setLines+'</div>';
+ }).join('');
+ let oldHTML=(d.results||[]).map(x=>'<div class="exercise"><strong>'+esc(x.exercise)+'</strong><div class="muted">'+esc(x.day)+' · '+x.weight+' кг × '+x.reps+' · '+x.sets+' підходи · RIR '+x.rir+'</div></div>').join('');
+ let content=detailHTML||oldHTML||'<p class="muted">Клієнт ще не записував результати.</p>';
+ return '<div class="card"><h2>Історія тренувань</h2><p class="muted">Кожен підхід зберігається окремо: вага, повтори та RIR.</p>'+content+'</div>';
 }
 function nutritionHTML(d){let c=d.client;return `<div class="card"><h2>Цільове харчування</h2><div class="grid"><div class="exercise">Ккал<br><strong>${c.kcal||0}</strong></div><div class="exercise">Білки<br><strong>${c.protein||0} г</strong></div><div class="exercise">Жири<br><strong>${c.fat||0} г</strong></div><div class="exercise">Вуглеводи<br><strong>${c.carbs||0} г</strong></div></div></div>`}
 function measureHTML(d){return `<div class="card"><h2>Динаміка</h2>${d.measurements.length?d.measurements.map(x=>`<div class="exercise">${esc(x.day)} — <strong>${x.weight} кг</strong>${x.waist?' · талія '+x.waist+' см':''}</div>`).join(''):'<p class="muted">Заміри відсутні.</p>'}</div>`}
-function setRows(x){let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;for(let n=1;n<=x.sets;n++)h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" placeholder="кг"><input id="r${x.id}_${n}" type="number" placeholder="${esc(x.reps)}"><input id="i${x.id}_${n}" type="number" value="${x.target_rir}" min="0" max="10"></div>`;return h}
-async function clientCabinet(id){let d=await api('/client/'+id),c=d.client;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div><h1>Моя програма</h1>${Object.entries(groups).length?Object.entries(groups).map(([day,xs])=>`<div class="card"><h2>${esc(day)}</h2>${xs.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">План: ${x.sets} × ${esc(x.reps)} · цільовий RIR ${x.target_rir}</div>${setRows(x)}<br><button onclick="saveSets(${id},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets})">Зберегти підходи</button></div>`).join('')}</div>`).join(''):'<div class="card muted">Тренер ще не додав програму.</div>'}`)}
-async function saveSets(cid,pid,exercise,count){let sets=[];for(let n=1;n<=count;n++){let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);if(!w.value&&!r.value)continue;if(!w.value||!r.value)return alert(`Заповни вагу та повтори у підході ${n}`);sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})}if(!sets.length)return alert('Заповни хоча б один підхід');await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});alert('Підходи збережено ✓')}
+function previousSets(d,pid){
+ let all=(d.result_sets||[]).filter(x=>x.program_id===pid);
+ if(!all.length)return '';
+ let latest=all.map(x=>x.day).sort().reverse()[0];
+ let xs=all.filter(x=>x.day===latest).sort((a,b)=>a.set_number-b.set_number);
+ return `<div class="exercise" style="margin-top:12px"><div class="muted">Попереднє тренування · ${esc(latest)}</div>${xs.map(s=>`<div style="margin-top:6px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`).join('')}</div>`;
+}
+function setRows(x,d){let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;for(let n=1;n<=x.sets;n++)h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" placeholder="кг"><input id="r${x.id}_${n}" type="number" placeholder="${esc(x.reps)}"><input id="i${x.id}_${n}" type="number" value="${x.target_rir}" min="0" max="10"></div>`;return previousSets(d,x.id)+h}
+async function clientCabinet(id){let d=await api('/client/'+id),c=d.client;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div><h1>Моя програма</h1>${Object.entries(groups).length?Object.entries(groups).map(([day,xs])=>`<div class="card"><h2>${esc(day)}</h2>${xs.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">План: ${x.sets} × ${esc(x.reps)} · цільовий RIR ${x.target_rir}</div>${setRows(x,d)}<br><button onclick="saveSets(${id},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets})">Зберегти підходи</button></div>`).join('')}</div>`).join(''):'<div class="card muted">Тренер ще не додав програму.</div>'}`)}
+async function saveSets(cid,pid,exercise,count){let sets=[];for(let n=1;n<=count;n++){let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);if(!w.value&&!r.value)continue;if(!w.value||!r.value)return alert(`Заповни вагу та повтори у підході ${n}`);sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})}if(!sets.length)return alert('Заповни хоча б один підхід');await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});alert('Підходи збережено ✓');clientCabinet(cid)}
 route();
 </script></body></html>
