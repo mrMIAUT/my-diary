@@ -133,6 +133,19 @@ async function moveProgramBlock(dayName,blockIndex,direction){
    await openClient(cid);
  }catch(e){alert(e.message||'Не вдалося змінити порядок вправ')}
 }
+function editExercise(pid){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
+ if(!x)return alert('Вправу не знайдено');
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card"><div class="between"><h2>Редагувати вправу</h2><button class="dark" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRir" type="number" value="${x.target_rir??2}" placeholder="RIR"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+}
+async function saveExerciseEdit(pid,cid){
+ let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+editRir.value||0,superset_group:'',superset_order:0,technique_url:editTech.value.trim()};
+ if(!body.day_name||!body.exercise)return alert('Вкажи день та назву вправи');
+ try{
+   await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
+   editExerciseModal.remove();await openClient(cid);
+ }catch(e){alert(e.message||'Не вдалося зберегти зміни')}
+}
 async function addExercise(){if(!dn.value||!ex.value)return alert('Вкажи день і вправу');await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dn.value,exercise:ex.value,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+rr.value||2,superset_group:'',superset_order:0,technique_url:tech.value})});openClient(selected)}
 
 function addSupersetExercise(sourceId,dayName){
