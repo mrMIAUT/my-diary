@@ -173,6 +173,28 @@ def home(): return FileResponse(BASE/"static"/"index.html")
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
+@app.get("/api/debug/resend")
+def debug_resend(to:str=""):
+    key=os.getenv("RESEND_API_KEY","").strip()
+    sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
+    result={
+        "resend_api_key_present": bool(key),
+        "resend_api_key_prefix_ok": key.startswith("re_"),
+        "from": sender,
+        "to": to or None,
+    }
+    if not to:
+        result["ok"]=False
+        result["message"]="Додай ?to=email@example.com для тестового листа"
+        return result
+    if "@" not in to:
+        raise HTTPException(400,"Некоректний email")
+    test_link=os.getenv("APP_BASE_URL","").rstrip("/") or "https://eplan.com.ua"
+    ok=send_reset_email(to,test_link+"/?debug=resend")
+    result["ok"]=ok
+    result["message"]="Тестовий лист передано в Resend" if ok else "Resend відхилив лист. Перевір Render Logs."
+    return result
+
 
 @app.post("/api/login")
 def login(x:Login):
@@ -417,7 +439,7 @@ def add_comment(x:CommentIn):
     recipient="client" if x.author=="trainer" else "trainer"
     who="Тренер" if x.author=="trainer" else "Клієнт"
     target=(" до вправи «"+x.exercise+"»") if x.exercise else " до тренування"
-    comment_text=(x.text or "").strip()
+    comment_text=(x.body or "").strip()
     message=who+" залишив коментар"+target+((": "+comment_text) if comment_text else "")
     run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,recipient,"comment",message))
     return one("SELECT * FROM comments WHERE id=?",(i,))
