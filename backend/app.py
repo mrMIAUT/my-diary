@@ -259,6 +259,14 @@ def save_cardio(x:CardioIn):
 @app.post("/api/program")
 def add_program(x:ProgramIn):
     i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url) VALUES(?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip())); return {"id":i}
+@app.put("/api/program/{pid}")
+def edit_program(pid:int,x:ProgramIn):
+    p=one("SELECT * FROM program WHERE id=?",(pid,))
+    if not p: raise HTTPException(404,"Вправу не знайдено")
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),pid))
+    return {"ok":True}
+
 @app.patch("/api/program/{pid}/superset")
 def set_superset(pid:int,x:SupersetIn):
     run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
