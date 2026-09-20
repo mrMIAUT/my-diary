@@ -17,7 +17,7 @@ async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function shell(content){
  let notify=session&&session.role==="client"&&session.client_id?`<button id="clientNotifyBtn" class="dark notify-btn" onclick="showNotifications(${session.client_id},'client')">🔔 Сповіщення</button>`:'';
- return `<div class="wrap"><div class="top"><div class="brand">Є <span>ПЛАН</span></div>${notify}</div>${content}<div class="logout-bottom"><button class="dark" onclick="logout()">Вийти</button></div></div>`
+ return `<div class="wrap"><div class="top"><div class="brand">Є <span>ПЛАН</span></div>${notify}</div>${content}<div class="logout-bottom"><button class="dark" onclick="logout()">🚪 Вийти</button></div></div>`
 }
 function logout(){localStorage.removeItem('fitSession');session=null;renderLogin()}
 function renderLogin(){
@@ -186,7 +186,7 @@ async function openNotification(nid,cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient),n=xs.find(x=>x.id===nid);if(!n)return;
  if(!n.is_read)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
  notificationModal.remove();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationDetailModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationDetailModal.remove()">✕</button></div><div class="exercise"><strong>${esc(n.message)}</strong><div class="muted" style="margin-top:8px">${String(n.created_at||'').replace('T',' ').slice(0,16)}</div></div><button class="dark" onclick="notificationDetailModal.remove();showNotifications(${cid},'${recipient}')">Назад</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationDetailModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationDetailModal.remove()">✕</button></div><div class="exercise"><div class="muted" style="margin-bottom:7px">Повідомлення</div><strong style="white-space:pre-wrap;line-height:1.5">${esc(n.message)}</strong><div class="muted" style="margin-top:10px">${String(n.created_at||'').replace('T',' ').slice(0,16)}</div></div><button class="dark" onclick="notificationDetailModal.remove();showNotifications(${cid},'${recipient}')">Назад</button></div></div>`);
  refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
 }
 async function markNotificationsRead(cid,recipient){
