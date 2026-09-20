@@ -269,11 +269,11 @@ def edit_program(pid:int,x:ProgramIn):
 
 @app.patch("/api/program/{pid}/move")
 def move_program(pid:int,direction:str):
+    if direction not in ("up","down"): raise HTTPException(400,"Невірний напрямок")
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
-    items=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY sort_order,id",(p["client_id"],p["day_name"]))
+    items=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY CASE WHEN sort_order>0 THEN sort_order ELSE 999999 END,id",(p["client_id"],p["day_name"]))
     ids=[x["id"] for x in items]
-    if pid not in ids: return {"ok":True}
     i=ids.index(pid); j=i-1 if direction=="up" else i+1
     if j<0 or j>=len(ids): return {"ok":True}
     ids[i],ids[j]=ids[j],ids[i]
