@@ -165,6 +165,13 @@ def finish_workout(sid:int):
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
+@app.patch("/api/nutrition/{nid}")
+def edit_nutrition(nid:int,x:NutIn):
+    if not one("SELECT id FROM nutrition WHERE id=?",(nid,)):
+        raise HTTPException(404,"Запис не знайдено")
+    run("UPDATE nutrition SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,nid))
+    return one("SELECT * FROM nutrition WHERE id=?",(nid,))
+
 @app.patch("/api/nutrition/{nid}/check")
 def check_nutrition(nid:int): run("UPDATE nutrition SET checked=1 WHERE id=?",(nid,)); return {"ok":True}
 @app.post("/api/nutrition/{nid}/screenshot")
