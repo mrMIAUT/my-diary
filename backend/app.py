@@ -15,7 +15,7 @@ DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
-app=FastAPI(title="Є ПЛАН V3")
+app=FastAPI(title="Зроби себе зі мною V3")
 app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
 app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
 
@@ -340,6 +340,13 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str):
     return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
+
+@app.patch("/api/notifications/item/{nid}/read")
+def read_notification_item(nid:int):
+    n=one("SELECT * FROM notifications WHERE id=?",(nid,))
+    if not n: raise HTTPException(404,"Сповіщення не знайдено")
+    run("UPDATE notifications SET is_read=TRUE WHERE id=?",(nid,))
+    return {"ok":True}
 
 @app.patch("/api/notifications/{cid}/read")
 def read_notifications(cid:int,x:NotificationReadIn):
