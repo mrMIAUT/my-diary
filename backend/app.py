@@ -66,6 +66,8 @@ class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0
 class ResultIn(BaseModel):
     client_id:int; exercise:str; weight:float; reps:int; sets:int; rir:int
+class SupersetIn(BaseModel):
+    superset_group:str=""
 class SetIn(BaseModel):
     set_number:int; weight:float; reps:int; rir:int
 class SetResultIn(BaseModel):
@@ -135,6 +137,11 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
 @app.post("/api/program")
 def add_program(x:ProgramIn):
     i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order)); return {"id":i}
+@app.patch("/api/program/{pid}/superset")
+def set_superset(pid:int,x:SupersetIn):
+    run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
+    return {"ok":True}
+
 @app.delete("/api/program/{pid}")
 def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
 @app.post("/api/results")
