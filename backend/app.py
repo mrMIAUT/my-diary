@@ -48,6 +48,7 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
             anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
             with c.cursor() as cur:
@@ -80,6 +81,8 @@ class NutritionTargetIn(BaseModel):
     kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str
+class CommentIn(BaseModel):
+    client_id:int; day:str; program_id:int=0; exercise:str=""; author:str; body:str
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:str; kcal:int; protein:int; fat:int; carbs:int
 class HistoricalSetIn(BaseModel):
@@ -126,7 +129,8 @@ def client(cid:int):
             "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,)),
-            "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,))}
+            "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,)),
+            "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,))}
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
@@ -206,6 +210,13 @@ def historical_workout(x:HistoricalWorkoutIn):
     run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished')",
         (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00"))
     return {"ok":True}
+
+@app.post("/api/comments")
+def add_comment(x:CommentIn):
+    if not x.body.strip(): raise HTTPException(400,"Коментар порожній")
+    i=run("INSERT INTO comments(client_id,day,program_id,exercise,author,body) VALUES(?,?,?,?,?,?)",
+          (x.client_id,x.day,x.program_id,x.exercise,x.author,x.body.strip()))
+    return one("SELECT * FROM comments WHERE id=?",(i,))
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
