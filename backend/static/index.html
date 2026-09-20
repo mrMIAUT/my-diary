@@ -64,12 +64,49 @@ function changeCalendarMonth(delta,mode){
 }
 function showCalendarDay(day,btn){
  document.querySelectorAll('.calendar-day').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
- let d=window.currentClientData||{}, sets=(d.result_sets||[]).filter(x=>x.day===day), old=(d.results||[]).filter(x=>x.day===day), nut=(d.nutrition||[]).filter(x=>x.day===day), meas=(d.measurements||[]).filter(x=>x.day===day);
- let by={};sets.forEach(x=>{let k=x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
- let workouts=Object.values(by).map(xs=>{xs.sort((a,b)=>a.set_number-b.set_number);return `<div class="exercise"><strong>${esc(xs[0].exercise)}</strong>${xs.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}</div>`}).join('');
- workouts+=old.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div>`).join('');
- let extra=nut.map(x=>`<div class="exercise">Харчування: ${x.kcal} ккал · Б ${x.protein} · Ж ${x.fat} · В ${x.carbs}</div>`).join('')+meas.map(x=>`<div class="exercise">Заміри: ${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('');
- $('#calendarDetails').innerHTML=`<h3>${esc(day)}</h3>`+(workouts||extra?workouts+extra:'<p class="muted">На цей день записів немає.</p>');
+ let d=window.currentClientData||{};
+ let sets=(d.result_sets||[]).filter(x=>x.day===day);
+ let old=(d.results||[]).filter(x=>x.day===day);
+ let nut=(d.nutrition||[]).filter(x=>x.day===day).sort((a,b)=>b.id-a.id);
+ let sessions=(d.workout_sessions||[]).filter(x=>{
+   let started=(x.started_at||'').slice(0,10),finished=(x.finished_at||'').slice(0,10);
+   return started===day||finished===day;
+ });
+ let meas=(d.measurements||[]).filter(x=>x.day===day);
+
+ let by={};
+ sets.forEach(x=>{let k=x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
+ let workoutGroups=Object.values(by);
+ let workoutHTML='';
+
+ if(workoutGroups.length){
+   workoutHTML=workoutGroups.map(xs=>{
+     xs.sort((a,b)=>a.set_number-b.set_number);
+     return `<div class="exercise"><strong>${esc(xs[0].exercise)}</strong>${xs.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}</div>`;
+   }).join('');
+ }else if(old.length){
+   workoutHTML=old.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div>`).join('');
+ }else{
+   workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>';
+ }
+
+ let sessionTitle=sessions.length
+   ? sessions.map(s=>`<div class="muted" style="margin-bottom:8px">Тренування: <strong>${esc(s.day_name)}</strong>${s.status==='finished'?' · завершено':' · розпочато'}</div>`).join('')
+   : '';
+
+ let nutritionHTML=nut.length
+   ? nut.map(x=>`<div class="exercise"><strong>${x.kcal} ккал</strong><div class="muted">Б ${x.protein} г · Ж ${x.fat} г · В ${x.carbs} г</div></div>`).join('')
+   : '<div class="exercise muted">Харчування за цей день не внесено.</div>';
+
+ let measureHTML=meas.length
+   ? `<h3 style="margin-top:18px">Заміри</h3>`+meas.map(x=>`<div class="exercise">${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('')
+   : '';
+
+ $('#calendarDetails').innerHTML=
+   `<h2>${esc(day)}</h2>`+
+   `<h3>Тренування</h3>${sessionTitle}${workoutHTML}`+
+   `<h3 style="margin-top:18px">Харчування</h3>${nutritionHTML}`+
+   measureHTML;
 }
 
 function resultsHTML(d){
