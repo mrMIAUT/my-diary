@@ -88,6 +88,12 @@ def send_reset_email(email:str,link:str):
 def init():
     with con() as c:
         c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS sex TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS contraindications TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS injuries TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
@@ -131,6 +137,8 @@ class ResetRequestIn(BaseModel): email:str
 class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
+class ClientProfileIn(BaseModel):
+    first_name:str=""; last_name:str=""; weight:float=0; age:int=0; sex:str=""; contraindications:str=""; injuries:str=""
 class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""
 class CardioIn(BaseModel):
@@ -311,6 +319,22 @@ def client(cid:int):
             "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,)),
             "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,)),
             "cardio":rows("SELECT * FROM cardio_log WHERE client_id=? ORDER BY day DESC,id DESC",(cid,))}
+@app.patch("/api/client/{cid}/profile")
+def update_client_profile(cid:int,x:ClientProfileIn):
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)):
+        raise HTTPException(404,"Клієнта не знайдено")
+    if x.age < 0 or x.age > 120: raise HTTPException(400,"Перевір вік")
+    if x.weight < 0 or x.weight > 500: raise HTTPException(400,"Перевір вагу")
+    if x.sex not in ("","Чоловіча","Жіноча","Інше"):
+        raise HTTPException(400,"Невірно вказана стать")
+    first=x.first_name.strip(); last=x.last_name.strip()
+    display=(first+" "+last).strip()
+    if not display:
+        old=one("SELECT name FROM clients WHERE id=?",(cid,)); display=old["name"]
+    run("UPDATE clients SET first_name=?,last_name=?,name=?,weight=?,age=?,sex=?,contraindications=?,injuries=? WHERE id=?",
+        (first,last,display,x.weight,x.age,x.sex,x.contraindications.strip(),x.injuries.strip(),cid))
+    return one("SELECT * FROM clients WHERE id=?",(cid,))
+
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
