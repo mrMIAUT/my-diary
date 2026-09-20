@@ -80,7 +80,7 @@ async function refreshNotificationBadge(cid,recipient,buttonId){
 
 function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$('#'+id).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.add('dark'));btn.classList.remove('dark')}
 function cardioHTML(d,cid,readonly=false){
- let today=new Date().toISOString().slice(0,10),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
+ let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
  if(readonly)return `<div class="card"><h2>Кардіо та активність</h2>${xs.length?xs.slice(0,30).map(x=>`<div class="exercise"><div class="between"><strong>${esc(x.day)}</strong><span>${x.steps||0} кроків</span></div>${x.cardio_type?`<div class="muted" style="margin-top:6px">${esc(x.cardio_type)} · ${x.minutes||0} хв${x.speed?` · швидкість ${x.speed}`:''}${x.incline?` · нахил ${x.incline}%`:''}</div>`:'<div class="muted" style="margin-top:6px">Без окремого кардіо</div>'}</div>`).join(''):'<p class="muted">Даних ще немає.</p>'}</div>`;
  if(saved)return `<div class="card"><div class="between"><div><h2>Кардіо та активність за сьогодні</h2><p class="muted">Дані збережено.</p></div><button class="dark" onclick="editCardio(${cid})">Редагувати</button></div><div class="cardio-summary">${cur.cardio_type?`<div class="cardio-chip">${esc(cur.cardio_type)}</div><div class="cardio-chip">${cur.minutes||0} хв</div>${cur.speed?`<div class="cardio-chip">Швидкість ${cur.speed}</div>`:''}${cur.incline?`<div class="cardio-chip">Нахил ${cur.incline}%</div>`:''}`:''}${cur.steps?`<div class="cardio-chip">${cur.steps} кроків</div>`:''}</div></div>`;
  return cardioEditHTML(cid,cur);
@@ -91,13 +91,13 @@ function cardioEditHTML(cid,cur={}){
 function editCardio(cid){
  let d=window.clientData||window.currentClientData;
  if(!d)return clientCabinet(cid);
- let cur=(d.cardio||[]).find(x=>x.day===new Date().toISOString().slice(0,10))||{};
+ let cur=(d.cardio||[]).find(x=>x.day===isoToday())||{};
  let cards=[...document.querySelectorAll('.card')],card=cards.find(x=>x.querySelector('h2')?.textContent.includes('Кардіо та активність за сьогодні'));
  if(card){let holder=document.createElement('div');holder.innerHTML=cardioEditHTML(cid,cur);card.replaceWith(holder.firstElementChild);setTimeout(toggleCardioFields,0)}
 }
 function toggleCardioFields(){let f=$('#cardioFields'),t=$('#cardioType');if(f&&t)f.style.display=t.value?'grid':'none'}
 async function saveCardio(cid){
- let body={client_id:cid,day:new Date().toISOString().slice(0,10),cardio_type:cardioType.value,minutes:+cardioMinutes.value||0,speed:+cardioSpeed.value||0,incline:+cardioIncline.value||0,steps:+dailySteps.value||0};
+ let body={client_id:cid,day:isoToday(),cardio_type:cardioType.value,minutes:+cardioMinutes.value||0,speed:+cardioSpeed.value||0,incline:+cardioIncline.value||0,steps:+dailySteps.value||0};
  if(!body.cardio_type&&!body.steps)return alert('Вкажи кроки або обери вид кардіо');
  if(body.cardio_type&&!body.minutes)return alert('Вкажи тривалість кардіо');
  await api('/cardio',{method:'POST',body:JSON.stringify(body)});clientCabinet(cid)
@@ -178,7 +178,7 @@ function toggleExercise(id,btn){let b=$('#'+id);if(!b)return;b.classList.toggle(
 function isoToday(){let x=new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 function monthKey(day){return day ? day.slice(0,7) : ''}
 function calendarHTML(d,mode='trainer'){
- let days=[...(d.result_sets||[]).map(x=>x.day),...(d.results||[]).map(x=>x.day),...(d.nutrition||[]).map(x=>x.day),...(d.measurements||[]).map(x=>x.day)].filter(Boolean);
+ let days=[...(d.result_sets||[]).map(x=>x.day),...(d.results||[]).map(x=>x.day),...(d.nutrition||[]).map(x=>x.day),...(d.measurements||[]).map(x=>x.day),...(d.cardio||[]).map(x=>x.day)].filter(Boolean);
  let unique=[...new Set(days)];
  if(!calendarMonth) calendarMonth=(unique.sort().reverse()[0]||isoToday()).slice(0,7);
  let ym=calendarMonth,[yy,mm]=ym.split('-').map(Number);
