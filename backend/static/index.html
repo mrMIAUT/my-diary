@@ -62,6 +62,31 @@ function changeCalendarMonth(delta,mode){
  if(mode==='trainer'){let el=$('#trainerCalendarBody');if(el)el.innerHTML=calendarHTML(data,'trainer')}
  else {let el=$('#clientCalendar');if(el)el.innerHTML=calendarHTML(data,'client')}
 }
+
+function historyNutritionForm(day,cid){
+ return `<div class="exercise"><div class="grid"><input id="hkcal" type="number" placeholder="Ккал"><input id="hprotein" type="number" placeholder="Білки, г"><input id="hfat" type="number" placeholder="Жири, г"><input id="hcarbs" type="number" placeholder="Вуглеводи, г"></div><br><button onclick="saveHistoryNutrition('${day}',${cid})">Додати харчування</button></div>`;
+}
+async function saveHistoryNutrition(day,cid){
+ let body={client_id:cid,day,kcal:+hkcal.value||0,protein:+hprotein.value||0,fat:+hfat.value||0,carbs:+hcarbs.value||0};
+ await api('/history/nutrition',{method:'POST',body:JSON.stringify(body)});
+ let d=await api('/client/'+cid);window.currentClientData=d;showCalendarDay(day,null)
+}
+function historyWorkoutForm(day,cid,d){
+ let groups={};(d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
+ return `<div class="exercise"><div class="muted">Додати пропущене тренування</div><select id="historyDaySelect" onchange="renderHistoryWorkoutExercises('${day}',${cid})" style="width:100%;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px"><option value="">Оберіть тренування</option>${Object.keys(groups).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select><div id="historyWorkoutExercises"></div></div>`;
+}
+function renderHistoryWorkoutExercises(day,cid){
+ let d=window.currentClientData||{},name=$('#historyDaySelect').value,items=(d.program||[]).filter(x=>x.day_name===name),box=$('#historyWorkoutExercises');if(!box)return;
+ box.innerHTML=items.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong>${Array.from({length:x.sets},(_,i)=>`<div class="setrow"><div class="setnum">${i+1}</div><input id="hw${x.id}_${i+1}" type="number" step="0.5" placeholder="кг"><input id="hr${x.id}_${i+1}" type="number" placeholder="${esc(x.reps)}"><input id="hi${x.id}_${i+1}" type="number" value="${x.target_rir}" min="0" max="10"></div>`).join('')}</div>`).join('')+`<button onclick="saveHistoryWorkout('${day}',${cid},'${esc(name).replace(/'/g,"&#39;")}')">Зберегти тренування</button>`;
+}
+async function saveHistoryWorkout(day,cid,name){
+ let d=window.currentClientData||{},items=(d.program||[]).filter(x=>x.day_name===name),sets=[];
+ for(let x of items){for(let n=1;n<=x.sets;n++){let w=$('#hw'+x.id+'_'+n),r=$('#hr'+x.id+'_'+n),i=$('#hi'+x.id+'_'+n);if(!w||(!w.value&&!r.value))continue;if(!w.value||!r.value)return alert('Заповни вагу та повтори');sets.push({program_id:x.id,exercise:x.exercise,set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})}}
+ if(!sets.length)return alert('Додай хоча б один підхід');
+ await api('/history/workout',{method:'POST',body:JSON.stringify({client_id:cid,day,day_name:name,sets})});
+ let nd=await api('/client/'+cid);window.currentClientData=nd;showCalendarDay(day,null)
+}
+
 function showCalendarDay(day,btn){
  let d=window.currentClientData||{};
  let sets=(d.result_sets||[]).filter(x=>x.day===day);
@@ -77,10 +102,10 @@ function showCalendarDay(day,btn){
    workoutHTML=workoutGroups.map(xs=>{xs.sort((a,b)=>a.set_number-b.set_number);return `<div class="exercise"><strong>${esc(xs[0].exercise)}</strong>${xs.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}</div>`}).join('');
  }else if(old.length){
    workoutHTML=old.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div>`).join('');
- }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>';
+ }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>'+historyWorkoutForm(day,d.client.id,d);
 
  let sessionHTML=session?`<div class="exercise"><div class="muted">Тренування</div><strong>${esc(session.day_name)}</strong><div class="muted" style="margin-top:5px">${session.status==='finished'?'Завершено':'Тренування триває'}</div></div>`:'';
- let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>';
+ let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>'+historyNutritionForm(day,d.client.id);
  let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>`<div class="exercise">${x.weight} кг${x.waist?' · талія '+x.waist+' см':''}</div>`).join('')}</div>`:'';
 
  let content=`<button class="dark" onclick="returnFromCalendarDay()">← До календаря</button><div style="height:16px"></div><div class="card"><div class="muted">Щоденник</div><h1>${esc(day)}</h1></div><div class="card"><h2>Тренування</h2>${sessionHTML}${workoutHTML}</div><div class="card"><h2>Харчування</h2>${nutritionHTML}</div>${measures}`;
@@ -167,7 +192,7 @@ function workoutChooser(d,cid,groups){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  if(active)return `<div class="card"><div class="between"><div><div class="training-live">Тренування триває</div><h2 style="margin-top:8px">${esc(active.day_name)}</h2></div><button onclick="finishWorkout(${cid},${active.id})">Завершити тренування</button></div></div>`;
  let todayDone=(d.workout_sessions||[]).find(x=>(x.started_at||'').slice(0,10)===isoToday()&&x.status==='finished');
- if(todayDone)return `<div class="card"><h2>Тренування на сьогодні завершено ✓</h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p></div>`;
+ if(todayDone)return `<div class="card"><h2>Тренування на сьогодні завершено ✓</h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${Object.keys(groups).map(day=>`<button class="${previewWorkoutDay===day?'preview-selected':'dark'}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('')}</div></div>`;
  return `<div class="card"><h2>Тренування</h2><p class="muted">Обери день, щоб просто переглянути вправи. Тренування почнеться лише після натискання «Почати тренування».</p><div style="display:flex;gap:8px;flex-wrap:wrap">${Object.keys(groups).map(day=>`<button class="${previewWorkoutDay===day?'preview-selected':'dark'}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('')}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
 }
 async function clientCabinet(id){
