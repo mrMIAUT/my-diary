@@ -168,6 +168,13 @@ function periodStart(period){
  else return null;
  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+
+function toggleWorkoutResult(id,btn){
+ let el=$('#'+id);if(!el)return;
+ el.classList.toggle('hidden');
+ let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
+}
+
 function trainerDayResultsHTML(d,dayName){
  let program=(d.program||[]).filter(x=>x.day_name===dayName);
  let allDates=trainerResultDates(d,dayName);
@@ -184,8 +191,13 @@ function trainerDayResultsHTML(d,dayName){
  let cards=shown.map(day=>{
    let allIndex=allDates.indexOf(day),previous=allDates[allIndex+1]||null;
    let exercises=program.filter(x=>(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===day));
-   return `<div class="card">
-    <div class="between"><div><div class="muted">${esc(dayName)}</div><h2>${esc(day)}</h2></div>${previous?`<span class="muted">порівняно з ${esc(previous)}</span>`:''}</div>
+   let workoutBodyId=`workoutResult_${dayName.replace(/[^a-zA-Z0-9]/g,'_')}_${day.replaceAll('-','_')}`;
+   return `<div class="card" style="padding:0;overflow:hidden">
+    <button class="exercise-toggle" onclick="toggleWorkoutResult('${workoutBodyId}',this)" style="padding:20px 24px">
+      <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong>${previous?`<span class="muted" style="display:block;margin-top:5px">порівняно з ${esc(previous)}</span>`:''}</span>
+      <span class="arrow">⌄</span>
+    </button>
+    <div id="${workoutBodyId}" class="hidden" style="padding:0 24px 22px">
     ${exercises.map(x=>{
       let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===day).sort((a,b)=>a.set_number-b.set_number);
       let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
@@ -200,6 +212,7 @@ function trainerDayResultsHTML(d,dayName){
        }).join('')}</div>
       </div>`;
     }).join('')}
+    </div>
    </div>`;
  }).join('');
 
