@@ -207,6 +207,39 @@ function workoutChooser(d,cid,groups){
  if(todayDone)return `<div class="card"><h2>Тренування на сьогодні <span style="color:#39d353">завершено ✓</span></h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${Object.keys(groups).map(day=>`<button class="${previewWorkoutDay===day?'preview-selected':'dark'}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('')}</div></div>`;
  return `<div class="card"><h2>Тренування</h2><p class="muted">Обери день, щоб просто переглянути вправи. Тренування почнеться лише після натискання «Почати тренування».</p><div style="display:flex;gap:8px;flex-wrap:wrap">${Object.keys(groups).map(day=>`<button class="${previewWorkoutDay===day?'preview-selected':'dark'}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('')}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
 }
+
+
+function activeExercisesHTML(items,d,cid){
+ let used=new Set(),html='';
+ function card(x,inner=false){
+  return `<div class="${inner?'':'exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(x.exercise)}</strong>${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span style="color:var(--yellow);font-weight:800;margin-left:8px">Виконано ✓</span>':''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)} · RIR ${x.target_rir}</span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${completedExerciseHTML(x,d,cid)}</div></div>`;
+ }
+ for(let x of items){
+  if(used.has(x.id))continue;
+  if(x.superset_group){
+   let pair=items.filter(y=>y.superset_group===x.superset_group);pair.forEach(y=>used.add(y.id));
+   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,i)=>card(y,true)+(i<pair.length-1?'<div style="border-bottom:1px solid var(--line)"></div>':'')).join('')}</div></div>`;
+  }else{used.add(x.id);html+=card(x)}
+ }
+ return html;
+}
+
+function previewExercisesHTML(items){
+ let used=new Set(),html='';
+ for(let x of items){
+  if(used.has(x.id))continue;
+  if(x.superset_group){
+   let pair=items.filter(y=>y.superset_group===x.superset_group);
+   pair.forEach(y=>used.add(y.id));
+   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(y.reps)} · RIR ${y.target_rir}</div></div>`).join('')}</div></div>`;
+  }else{
+   used.add(x.id);
+   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong><div class="muted">План: ${x.sets} × ${esc(x.reps)} · RIR ${x.target_rir}</div></div>`;
+  }
+ }
+ return html;
+}
+
 async function clientCabinet(id){
  let d=await api('/client/'+id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
@@ -214,9 +247,9 @@ async function clientCabinet(id){
  let chosen=active?active.day_name:previewWorkoutDay;
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1><div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${(groups[active.day_name]||[]).map(x=>`<div class="exercise"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span style="color:var(--yellow);font-weight:800;margin-left:8px">Виконано ✓</span>':''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)} · RIR ${x.target_rir}</span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${completedExerciseHTML(x,d,id)}</div></div>`).join('')}</div>`;
+   programPart=`<h1>${esc(active.day_name)}</h1><div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
  }else if(chosen){
-   programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${(groups[chosen]||[]).map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<div class="muted">План: ${x.sets} × ${esc(x.reps)} · RIR ${x.target_rir}</div></div>`).join('')}</div>`;
+   programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='<div class="card muted">Обери тренування вище, щоб переглянути вправи.</div>';
  app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`)
 }
