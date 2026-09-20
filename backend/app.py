@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
 from typing import List
-import os, shutil
+import os
+import json, shutil
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime
@@ -48,6 +49,14 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
+
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS program_snapshot TEXT DEFAULT ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS notifications(
+            id SERIAL PRIMARY KEY, client_id INTEGER, recipient TEXT, kind TEXT,
+            message TEXT, is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
             anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
@@ -81,6 +90,10 @@ class NutritionTargetIn(BaseModel):
     kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str
+class WorkoutReviewIn(BaseModel):
+    comment:str=""
+class NotificationReadIn(BaseModel):
+    recipient:str
 class CommentIn(BaseModel):
     client_id:int; day:str; program_id:int=0; exercise:str=""; author:str; body:str
 class HistoricalNutritionIn(BaseModel):
@@ -177,7 +190,8 @@ def start_workout(x:WorkoutStartIn):
     existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
     if existing:
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-    i=run("INSERT INTO workout_sessions(client_id,day_name,status) VALUES(?,?,?)",(x.client_id,x.day_name,"training"))
+    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
+    i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
     return one("SELECT * FROM workout_sessions WHERE id=?",(i,))
 
 @app.post("/api/workout/{sid}/finish")
@@ -207,8 +221,9 @@ def historical_workout(x:HistoricalWorkoutIn):
         run("INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir) VALUES(?,?,?,?,?,?,?,?)",
             (x.client_id,s.program_id,s.exercise,x.day,s.set_number,s.weight,s.reps,s.rir))
     # Noon avoids timezone/date rollover ambiguity for historical display.
-    run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished')",
-        (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00"))
+    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
+    run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status,program_snapshot) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished',?)",
+        (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00",snapshot))
     return {"ok":True}
 
 @app.post("/api/comments")
@@ -216,7 +231,29 @@ def add_comment(x:CommentIn):
     if not x.body.strip(): raise HTTPException(400,"Коментар порожній")
     i=run("INSERT INTO comments(client_id,day,program_id,exercise,author,body) VALUES(?,?,?,?,?,?)",
           (x.client_id,x.day,x.program_id,x.exercise,x.author,x.body.strip()))
+    recipient="client" if x.author=="trainer" else "trainer"
+    who="Тренер" if x.author=="trainer" else "Клієнт"
+    target=(" до вправи "+x.exercise) if x.exercise else ""
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,recipient,"comment",who+" залишив коментар"+target))
     return one("SELECT * FROM comments WHERE id=?",(i,))
+
+@app.patch("/api/workout/{sid}/review")
+def review_workout(sid:int,x:WorkoutReviewIn):
+    s=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    if not s: raise HTTPException(404,"Тренування не знайдено")
+    run("UPDATE workout_sessions SET trainer_reviewed=TRUE,trainer_comment=? WHERE id=?",(x.comment.strip(),sid))
+    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
+        (s["client_id"],"client","workout_review","Тренер перевірив тренування "+s["day_name"]))
+    return {"ok":True}
+
+@app.get("/api/notifications/{cid}")
+def get_notifications(cid:int,recipient:str):
+    return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
+
+@app.patch("/api/notifications/{cid}/read")
+def read_notifications(cid:int,x:NotificationReadIn):
+    run("UPDATE notifications SET is_read=TRUE WHERE client_id=? AND recipient=?",(cid,x.recipient))
+    return {"ok":True}
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
