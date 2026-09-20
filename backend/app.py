@@ -5,10 +5,10 @@ from pydantic import BaseModel
 from pathlib import Path
 from typing import List
 import os
-import json, shutil
+import json, shutil, hashlib, hmac, secrets, urllib.request, urllib.error
 import psycopg
 from psycopg.rows import dict_row
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 BASE=Path(__file__).resolve().parent
 DATABASE_URL=os.environ["DATABASE_URL"]
@@ -38,6 +38,41 @@ def run(q,p=()):
         c.commit()
         return None
 
+def hash_password(password:str)->str:
+    salt=secrets.token_hex(16)
+    digest=hashlib.pbkdf2_hmac("sha256",password.encode(),bytes.fromhex(salt),200000).hex()
+    return "pbkdf2$"+salt+"$"+digest
+
+def check_password(password:str,stored:str)->bool:
+    if not stored:return False
+    if not stored.startswith("pbkdf2$"):
+        return hmac.compare_digest(password,stored)
+    try:
+        _,salt,digest=stored.split("$",2)
+        test=hashlib.pbkdf2_hmac("sha256",password.encode(),bytes.fromhex(salt),200000).hex()
+        return hmac.compare_digest(test,digest)
+    except Exception:return False
+
+def client_state(cid:int):
+    return one("SELECT id,status FROM clients WHERE id=?",(cid,))
+
+def require_active_client(cid:int):
+    c=client_state(cid)
+    if not c: raise HTTPException(404,"Клієнта не знайдено")
+    if c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
+    if c["status"]=="Заморожений": raise HTTPException(403,"Акаунт заморожено. Доступний лише перегляд історії.")
+
+def send_reset_email(email:str,link:str):
+    key=os.getenv("RESEND_API_KEY","").strip()
+    sender=os.getenv("RESET_FROM_EMAIL","").strip()
+    if not key or not sender:return False
+    data=json.dumps({"from":sender,"to":[email],"subject":"Відновлення пароля — Зроби себе зі мною",
+                     "html":f"<p>Щоб встановити новий пароль, відкрийте посилання:</p><p><a href='{link}'>{link}</a></p><p>Посилання діє 30 хвилин.</p>"}).encode()
+    req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
+    try:
+        with urllib.request.urlopen(req,timeout=10) as r:return 200<=r.status<300
+    except Exception:return False
+
 def init():
     with con() as c:
         c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
@@ -57,6 +92,10 @@ def init():
             id SERIAL PRIMARY KEY, client_id INTEGER, recipient TEXT, kind TEXT,
             message TEXT, is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS password_resets(
+            id SERIAL PRIMARY KEY, client_id INTEGER, token_hash TEXT UNIQUE,
+            expires_at TIMESTAMP, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
             anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
@@ -70,6 +109,9 @@ def init():
 init()
 
 class Login(BaseModel): email:str; password:str
+class ClientStatusIn(BaseModel): status:str
+class ResetRequestIn(BaseModel): email:str
+class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
@@ -110,28 +152,73 @@ def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
 @app.post("/api/login")
 def login(x:Login):
-    if x.email=="trainer@demo.local" and x.password=="trainer123": return {"role":"trainer","name":"Михайло","client_id":None}
-    u=one("SELECT * FROM clients WHERE email=? AND password=?",(x.email,x.password))
-    if u:return {"role":"client","name":u["name"],"client_id":u["id"]}
+    trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local")
+    trainer_password=os.getenv("TRAINER_PASSWORD","trainer123")
+    if x.email.lower()==trainer_email.lower() and hmac.compare_digest(x.password,trainer_password):
+        return {"role":"trainer","name":"Михайло","client_id":None}
+    u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(x.email,))
+    if u and check_password(x.password,u["password"]):
+        if u["status"]=="Видалений": raise HTTPException(403,"Цей акаунт видалено. Зверніться до тренера.")
+        # migrate legacy plaintext password on successful login
+        if not str(u["password"] or "").startswith("pbkdf2$"):
+            run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),u["id"]))
+        return {"role":"client","name":u["name"],"client_id":u["id"],"status":u["status"]}
     raise HTTPException(401,"Невірний email або пароль")
+
+@app.post("/api/password-reset/request")
+def password_reset_request(x:ResetRequestIn):
+    u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(x.email,))
+    # Always return same response to avoid revealing registered emails.
+    if u and u["status"]!="Видалений":
+        token=secrets.token_urlsafe(32)
+        token_hash=hashlib.sha256(token.encode()).hexdigest()
+        run("UPDATE password_resets SET used=TRUE WHERE client_id=? AND used=FALSE",(u["id"],))
+        run("INSERT INTO password_resets(client_id,token_hash,expires_at) VALUES(?,?,?)",
+            (u["id"],token_hash,datetime.utcnow()+timedelta(minutes=30)))
+        base=os.getenv("APP_BASE_URL","").rstrip("/")
+        if base: send_reset_email(u["email"],base+"/?reset="+token)
+    return {"ok":True,"message":"Якщо така пошта зареєстрована, на неї надіслано посилання для відновлення пароля."}
+
+@app.post("/api/password-reset/confirm")
+def password_reset_confirm(x:ResetConfirmIn):
+    if len(x.password)<8: raise HTTPException(400,"Пароль має містити щонайменше 8 символів")
+    th=hashlib.sha256(x.token.encode()).hexdigest()
+    r=one("SELECT * FROM password_resets WHERE token_hash=? AND used=FALSE",(th,))
+    if not r or r["expires_at"]<datetime.utcnow(): raise HTTPException(400,"Посилання недійсне або вже прострочене")
+    c=one("SELECT * FROM clients WHERE id=?",(r["client_id"],))
+    if not c or c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
+    run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),r["client_id"]))
+    run("UPDATE password_resets SET used=TRUE WHERE id=?",(r["id"],))
+    return {"ok":True}
 
 @app.get("/api/clients")
 def clients():
     return rows("""SELECT c.*, CASE WHEN EXISTS(
         SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
     ) THEN 'Тренується' ELSE c.status END AS live_status
-    FROM clients c ORDER BY c.id DESC""")
+    FROM clients c WHERE c.status<>'Видалений' ORDER BY c.id DESC""")
 @app.post("/api/clients")
 def add_client(x:ClientIn):
     try:
-        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name,x.email,x.password,x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
+        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name,x.email,hash_password(x.password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
         return one("SELECT * FROM clients WHERE id=?",(i,))
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
+@app.patch("/api/clients/{cid}/status")
+def set_client_status(cid:int,x:ClientStatusIn):
+    if x.status not in ("Активний","Заморожений","Видалений"): raise HTTPException(400,"Невірний статус")
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
+    run("UPDATE clients SET status=? WHERE id=?",(x.status,cid))
+    if x.status!="Активний":
+        run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE client_id=? AND status='training'",(cid,))
+    return {"ok":True,"status":x.status}
+
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int):
-    for t in ("program","results","result_sets","nutrition","measurements"): run(f"DELETE FROM {t} WHERE client_id=?",(cid,))
-    run("DELETE FROM clients WHERE id=?",(cid,)); return {"ok":True}
+    # Soft delete preserves training/nutrition history but closes account access.
+    run("UPDATE clients SET status='Видалений' WHERE id=?",(cid,))
+    run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE client_id=? AND status='training'",(cid,))
+    return {"ok":True}
 @app.get("/api/client/{cid}")
 def client(cid:int):
     c=one("SELECT * FROM clients WHERE id=?",(cid,))
@@ -167,6 +254,7 @@ def add_result(x:ResultIn):
 
 @app.post("/api/result-sets")
 def add_result_sets(x:SetResultIn):
+    require_active_client(x.client_id)
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
     today=str(date.today())
@@ -184,6 +272,7 @@ def result_set_history(cid:int):
 
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
+    require_active_client(x.client_id)
     today=str(date.today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
@@ -201,6 +290,7 @@ def finish_workout(sid:int):
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
+    require_active_client(x.client_id)
     if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати дані на майбутню дату")
     existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
@@ -212,6 +302,7 @@ def historical_nutrition(x:HistoricalNutritionIn):
 
 @app.post("/api/history/workout")
 def historical_workout(x:HistoricalWorkoutIn):
+    require_active_client(x.client_id)
     if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
     existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
@@ -257,6 +348,7 @@ def read_notifications(cid:int,x:NotificationReadIn):
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
+    require_active_client(x.client_id)
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
 @app.patch("/api/nutrition/{nid}")
 def edit_nutrition(nid:int,x:NutIn):
@@ -274,5 +366,6 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
     run("UPDATE nutrition SET screenshot=? WHERE id=?",(name,nid)); return {"url":"/uploads/"+name}
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
+    require_active_client(x.client_id)
     i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips))
     run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id)); return {"id":i}
