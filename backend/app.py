@@ -7,7 +7,7 @@ from typing import List
 import os, shutil
 import psycopg
 from psycopg.rows import dict_row
-from datetime import date
+from datetime import date, datetime
 
 BASE=Path(__file__).resolve().parent
 DATABASE_URL=os.environ["DATABASE_URL"]
@@ -43,6 +43,7 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
@@ -73,6 +74,8 @@ class MeasureIn(BaseModel):
     client_id:int; weight:float; waist:float=0; chest:float=0; hips:float=0
 class NutritionTargetIn(BaseModel):
     kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
+class WorkoutStartIn(BaseModel):
+    client_id:int; day_name:str
 
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
@@ -87,7 +90,11 @@ def login(x:Login):
     raise HTTPException(401,"Невірний email або пароль")
 
 @app.get("/api/clients")
-def clients(): return rows("SELECT * FROM clients ORDER BY id DESC")
+def clients():
+    return rows("""SELECT c.*, CASE WHEN EXISTS(
+        SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
+    ) THEN 'Тренується' ELSE c.status END AS live_status
+    FROM clients c ORDER BY c.id DESC""")
 @app.post("/api/clients")
 def add_client(x:ClientIn):
     try:
@@ -108,7 +115,8 @@ def client(cid:int):
             "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
-            "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,))}
+            "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,)),
+            "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,))}
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
@@ -141,6 +149,18 @@ def add_result_sets(x:SetResultIn):
 @app.get("/api/result-sets/{cid}")
 def result_set_history(cid:int):
     return rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,))
+
+@app.post("/api/workout/start")
+def start_workout(x:WorkoutStartIn):
+    active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
+    if active:return active
+    i=run("INSERT INTO workout_sessions(client_id,day_name,status) VALUES(?,?,?)",(x.client_id,x.day_name,"training"))
+    return one("SELECT * FROM workout_sessions WHERE id=?",(i,))
+
+@app.post("/api/workout/{sid}/finish")
+def finish_workout(sid:int):
+    run("UPDATE workout_sessions SET status='finished',finished_at=CURRENT_TIMESTAMP WHERE id=?",(sid,))
+    return one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
