@@ -1,33 +1,79 @@
-<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Зроби себе зі мною</title>
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Зроби себе зі мною</title>
 <style>
-:root{--b:#09090a;--c:#171719;--c2:#101012;--l:#2d2d31;--m:#97979f;--y:#f0c400;--w:#f5f5f6}*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--w);font:16px system-ui,-apple-system,sans-serif}.wrap{max-width:980px;margin:auto;padding:24px 16px 100px}.brand{font-weight:950;font-size:25px}.y{color:var(--y)}.card{background:var(--c);border:1px solid var(--l);border-radius:20px;padding:18px;margin:14px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:var(--c2);padding:14px;border-radius:15px}.muted{color:var(--m)}h1,h2,h3,p{margin-top:0}input,select{width:100%;padding:13px;background:var(--c2);color:white;border:1px solid var(--l);border-radius:12px;margin:5px 0 9px;font-size:16px}button{background:var(--y);color:#111;border:0;border-radius:12px;padding:12px 14px;font-weight:850}.ghost{background:#28282c;color:white}.danger{background:#392020;color:#ffb6b6}.tag{background:#29292d;border-radius:20px;padding:6px 10px;font-size:12px}.nav{position:fixed;bottom:0;left:0;right:0;background:#111113f2;border-top:1px solid var(--l);display:flex;justify-content:center;padding:10px;z-index:3}.nav button{background:transparent;color:#aaa;font-size:12px}.nav button:hover{color:var(--y)}.hidden{display:none}.login{max-width:430px;margin:8vh auto}.logo{font-size:38px;font-weight:950;line-height:1.05;margin-bottom:25px}.client{cursor:pointer}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:9px 4px;border-bottom:1px solid var(--l);text-align:left}.scroll{overflow:auto}.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:4px}.tabs button{white-space:nowrap;background:#252529;color:white}.tabs button.on{background:var(--y);color:#111}.small{font-size:12px}.file{padding:10px 0}
-</style></head><body>
-<div id="login" class="wrap login"><div class="logo">ЗРОБИ СЕБЕ<br><span class="y">ЗІ МНОЮ</span></div><div class="card"><h2>Вхід</h2><p class="muted">Кабінет тренера та клієнта</p><input id="email" value="trainer@demo.local" placeholder="Email"><input id="password" type="password" value="trainer123" placeholder="Пароль"><button onclick="login()">Увійти</button><p id="err" class="muted"></p><p class="muted small">Тренер: trainer@demo.local / trainer123<br>Демо-клієнт: anna@demo.local / client123</p></div></div>
-<div id="app" class="hidden"><div class="wrap"><div class="row"><div class="brand">ЗРОБИ СЕБЕ <span class="y">ЗІ МНОЮ</span></div><button class="ghost" onclick="location.reload()">Вийти</button></div><div id="content"></div></div><div class="nav" id="nav"></div></div>
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#f5f5f5;font-family:Arial,sans-serif}button,input{font:inherit}
+.wrap{max-width:850px;margin:auto;padding:28px 24px 110px}.brand{font-weight:900;font-size:30px}.y{color:#ffd000}
+.card{background:#18181b;border:1px solid #34343a;border-radius:28px;padding:28px;margin:22px 0}.muted{color:#9b9ba3}
+input{width:100%;padding:17px;border-radius:16px;border:1px solid #38383f;background:#101012;color:white;margin:7px 0}
+.btn{border:0;border-radius:16px;padding:15px 22px;font-weight:800;background:#ffd000;color:#090909;cursor:pointer}.ghost{background:#28282d;color:white}
+.top{display:flex;justify-content:space-between;align-items:center}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.client{display:flex;justify-content:space-between;align-items:center;gap:12px}.client b{font-size:22px}.pill{background:#29292e;padding:10px 15px;border-radius:999px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#101012;border-top:1px solid #29292d;display:flex;justify-content:center;gap:30px;padding:17px;z-index:4}
+.bottom button{background:none;border:0;color:#aaa;font-weight:800}.modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;z-index:10}
+.sheet{background:#18181b;border:1px solid #38383f;border-radius:28px 28px 0 0;width:min(850px,100%);margin:auto;padding:24px;max-height:92vh;overflow:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.error{color:#ff7373}.success{color:#69dc8a}
+@media(max-width:600px){.wrap{padding:24px 20px 105px}.brand{font-size:25px}.card{padding:22px}.grid,.row{grid-template-columns:1fr}.client b{font-size:20px}}
+</style></head>
+<body>
+<div class="wrap">
+ <div id="login">
+  <div class="brand" style="font-size:48px;margin-top:90px">ЗРОБИ СЕБЕ<br><span class="y">ЗІ МНОЮ</span></div>
+  <div class="card"><h1>Вхід</h1><p class="muted">Кабінет тренера та клієнта</p>
+   <input id="email" value="trainer@demo.local" placeholder="Email"><input id="password" type="password" value="trainer123" placeholder="Пароль">
+   <p><button class="btn" onclick="login()">Увійти</button></p><div id="loginErr" class="error"></div>
+   <p class="muted">Тренер: trainer@demo.local / trainer123<br>Клієнт: anna@demo.local / client123</p>
+  </div>
+ </div>
+ <div id="app" style="display:none">
+  <div class="top"><div class="brand">ЗРОБИ СЕБЕ <span class="y">ЗІ МНОЮ</span></div><button class="btn ghost" onclick="logout()">Вийти</button></div>
+  <div id="main"></div>
+ </div>
+</div>
+<div id="nav" class="bottom" style="display:none"><button onclick="home()">Головна</button><button onclick="clientsPage()">Клієнти</button><button onclick="nutritionPage()">Харчування</button></div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">
+ <div class="top"><h2>Новий клієнт</h2><button class="btn ghost" onclick="closeModal()">✕</button></div>
+ <p class="muted">Створи клієнту обліковий запис і одразу задай стартові дані.</p>
+ <input id="nName" placeholder="Ім'я та прізвище">
+ <div class="row"><input id="nEmail" type="email" placeholder="Email"><input id="nPass" value="client123" placeholder="Пароль"></div>
+ <input id="nGoal" placeholder="Ціль, напр. Рекомпозиція">
+ <div class="row"><input id="nWeight" type="number" step=".1" placeholder="Вага, кг"><input id="nKcal" type="number" placeholder="Ккал"></div>
+ <div class="row"><input id="nP" type="number" placeholder="Білки, г"><input id="nF" type="number" placeholder="Жири, г"></div>
+ <input id="nC" type="number" placeholder="Вуглеводи, г">
+ <div id="formMsg"></div><p><button class="btn" onclick="createClient()">Створити клієнта</button></p>
+</div></div>
+
 <script>
-let U=null,C=1,tab='overview';const $=x=>document.getElementById(x);async function api(u,o={}){let r=await fetch(u,{headers:{'Content-Type':'application/json'},...o});if(!r.ok)throw Error(await r.text());return r.json()}
-async function login(){try{U=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('email').value,password:$('password').value})});$('login').classList.add('hidden');$('app').classList.remove('hidden');nav();U.role==='trainer'?home():openClient(U.client_id)}catch(e){$('err').textContent='Невірний email або пароль'}}
-function nav(){let a=U.role==='trainer'?[['home()','Головна'],['clients()','Клієнти'],['newClient()','+ Клієнт']]:[[`openClient(${U.client_id})`,'Мій план'],['workout()','Тренування'],['food()','Харчування']];$('nav').innerHTML=a.map(x=>`<button onclick="${x[0]}">${x[1]}</button>`).join('')}
-function cc(c){return `<div class="card client" onclick="openClient(${c.id})"><div class="row"><div><h3>${c.name}</h3><span class="muted">${c.goal||'Без цілі'} · ${c.weight||0} кг</span></div><span class="tag">${c.status}</span></div></div>`}
-async function home(){let a=await api('/api/clients');$('content').innerHTML=`<div class="card"><h2>Панель тренера</h2><p class="muted">Активних клієнтів: ${a.length}</p><div class="grid">${a.slice(0,4).map(c=>`<div class="metric"><span class="muted">${c.name}</span><br><b>${c.weight||0} кг</b></div>`).join('')}</div></div><h2>Клієнти</h2>${a.map(cc).join('')}`}
-async function clients(){let a=await api('/api/clients');$('content').innerHTML='<h2>Клієнти</h2>'+a.map(cc).join('')}
-function newClient(){$('content').innerHTML=`<h2>Новий клієнт</h2><div class="card"><input id="cn" placeholder="Ім'я"><input id="ce" placeholder="Email"><input id="cp" value="client123" placeholder="Пароль"><input id="cg" placeholder="Ціль"><div class="grid"><input id="cw" type="number" placeholder="Вага"><input id="ck" type="number" placeholder="Ккал"><input id="cpr" type="number" placeholder="Білок"><input id="cf" type="number" placeholder="Жири"><input id="ccar" type="number" placeholder="Вуглеводи"></div><button onclick="saveClient()">Створити клієнта</button></div>`}
-async function saveClient(){await api('/api/clients',{method:'POST',body:JSON.stringify({name:$('cn').value,email:$('ce').value,password:$('cp').value,goal:$('cg').value,weight:+$('cw').value,kcal:+$('ck').value,protein:+$('cpr').value,fat:+$('cf').value,carbs:+$('ccar').value})});clients()}
-async function openClient(id){C=id;tab='overview';renderClient()}
-async function renderClient(){let d=await api('/api/client/'+C),c=d.client;let tabs=`<div class="tabs"><button class="${tab==='overview'?'on':''}" onclick="tab='overview';renderClient()">Огляд</button><button class="${tab==='program'?'on':''}" onclick="tab='program';renderClient()">Програма</button><button class="${tab==='history'?'on':''}" onclick="tab='history';renderClient()">Історія</button><button class="${tab==='progress'?'on':''}" onclick="tab='progress';renderClient()">Прогрес</button></div>`;
-let body='';if(tab==='overview')body=`<div class="card"><div class="row"><div><h2>${c.name}</h2><p class="muted">${c.goal}</p></div><b>${c.weight||0} кг</b></div><div class="grid"><div class="metric">Ккал<br><b>${c.kcal}</b></div><div class="metric">Білок<br><b>${c.protein} г</b></div><div class="metric">Жири<br><b>${c.fat} г</b></div><div class="metric">Вугл.<br><b>${c.carbs} г</b></div></div></div>${U.role==='trainer'?`<button class="danger" onclick="delClient()">Видалити клієнта</button>`:''}`;
-if(tab==='program')body=`<div class="card"><h3>Програма</h3>${d.program.length?d.program.map(p=>`<div class="metric" style="margin:8px 0"><b>${p.day_name} · ${p.exercise}</b><br><span class="muted">${p.sets} × ${p.reps} · RIR ${p.target_rir}</span>${U.role==='trainer'?` <button class="ghost" onclick="delProgram(${p.id})">×</button>`:''}</div>`).join(''):'<p class="muted">Програма ще не створена.</p>'}</div>${U.role==='trainer'?`<div class="card"><h3>Додати вправу</h3><input id="pd" placeholder="День, напр. День A"><input id="pe" placeholder="Вправа"><div class="grid"><input id="ps" type="number" value="3" placeholder="Підходи"><input id="pr" value="8-12" placeholder="Повтори"><input id="pir" type="number" value="2" placeholder="RIR"></div><button onclick="addProgram()">Додати</button></div>`:''}`;
-if(tab==='history')body=`<div class="card scroll"><h3>Історія тренувань</h3><table><tr><th>Дата</th><th>Вправа</th><th>Кг</th><th>Повт.</th><th>RIR</th></tr>${d.results.map(r=>`<tr><td>${r.day}</td><td>${r.exercise}</td><td>${r.weight}</td><td>${r.reps}</td><td>${r.rir}</td></tr>`).join('')}</table></div>`;
-if(tab==='progress')body=`<div class="card"><h3>Заміри</h3>${d.measurements.map(m=>`<div class="metric" style="margin:8px 0"><b>${m.day} · ${m.weight} кг</b><br><span class="muted">Талія ${m.waist||'-'} · Груди ${m.chest||'-'} · Стегна ${m.hips||'-'}</span></div>`).join('')}</div><div class="card"><h3>Новий замір</h3><div class="grid"><input id="mw" type="number" step=".1" placeholder="Вага"><input id="mwa" type="number" step=".1" placeholder="Талія"><input id="mch" type="number" step=".1" placeholder="Груди"><input id="mhi" type="number" step=".1" placeholder="Стегна"></div><button onclick="addMeasure()">Зберегти</button></div>`;
-$('content').innerHTML=tabs+body}
-async function delClient(){if(confirm('Видалити клієнта та його дані?')){await api('/api/clients/'+C,{method:'DELETE'});home()}}
-async function addProgram(){await api('/api/program',{method:'POST',body:JSON.stringify({client_id:C,day_name:$('pd').value,exercise:$('pe').value,sets:+$('ps').value,reps:$('pr').value,target_rir:+$('pir').value})});renderClient()}
-async function delProgram(id){await api('/api/program/'+id,{method:'DELETE'});renderClient()}
-async function workout(){let d=await api('/api/client/'+U.client_id);C=U.client_id;$('content').innerHTML=`<h2>Тренування</h2><div class="card"><select id="ex">${d.program.map(p=>`<option>${p.exercise}</option>`).join('')}</select><div class="grid"><input id="rw" type="number" step=".5" placeholder="Вага"><input id="rr" type="number" placeholder="Повтори"><input id="rs" type="number" value="3" placeholder="Підходи"><input id="ri" type="number" value="2" placeholder="RIR"></div><button onclick="saveWorkout()">Зберегти</button></div>`}
-async function saveWorkout(){await api('/api/results',{method:'POST',body:JSON.stringify({client_id:C,exercise:$('ex').value,weight:+$('rw').value,reps:+$('rr').value,sets:+$('rs').value,rir:+$('ri').value})});alert('Збережено');workout()}
-async function food(){C=U.role==='client'?U.client_id:C;let d=await api('/api/client/'+C);$('content').innerHTML=`<h2>Харчування</h2><div class="card"><div class="grid"><input id="nk" type="number" placeholder="Ккал"><input id="np" type="number" placeholder="Білок"><input id="nf" type="number" placeholder="Жири"><input id="nc" type="number" placeholder="Вуглеводи"></div><button onclick="saveFood()">Додати день</button></div>`+d.nutrition.map(n=>`<div class="card"><div class="row"><div><b>${n.day}</b><p class="muted">${n.kcal} ккал · Б${n.protein} Ж${n.fat} В${n.carbs}</p></div>${n.checked?'<span class="tag">Перевірено</span>':U.role==='trainer'?`<button onclick="checkFood(${n.id})">Перевірено</button>`:'<span class="tag">Очікує</span>'}</div>${n.screenshot?`<a href="/uploads/${n.screenshot}" target="_blank" class="y">Відкрити скрин</a>`:`<div class="file"><input type="file" id="file${n.id}" accept="image/*"><button class="ghost" onclick="upload(${n.id})">Завантажити FatSecret</button></div>`}</div>`).join('')}
-async function saveFood(){await api('/api/nutrition',{method:'POST',body:JSON.stringify({client_id:C,kcal:+$('nk').value,protein:+$('np').value,fat:+$('nf').value,carbs:+$('nc').value})});food()}
-async function checkFood(id){await api('/api/nutrition/'+id+'/check',{method:'PATCH'});food()}
-async function upload(id){let f=$('file'+id).files[0];if(!f)return;let fd=new FormData();fd.append('file',f);await fetch('/api/nutrition/'+id+'/screenshot',{method:'POST',body:fd});food()}
-async function addMeasure(){await api('/api/measurements',{method:'POST',body:JSON.stringify({client_id:C,weight:+$('mw').value,waist:+$('mwa').value,chest:+$('mch').value,hips:+$('mhi').value})});renderClient()}
+let role="",clientId=null,clients=[];
+async function api(path,opt={}){let r=await fetch(path,opt);if(!r.ok)throw new Error(await r.text());return r.json()}
+async function login(){
+ loginErr.textContent="";
+ try{let x=await api("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.value,password:password.value})});
+ role=x.role;clientId=x.client_id;sessionStorage.setItem("session",JSON.stringify(x));showApp();
+ }catch(e){loginErr.textContent="Невірний email або пароль"}
+}
+function logout(){sessionStorage.removeItem("session");location.reload()}
+async function showApp(){login.style.display="none";app.style.display="block";nav.style.display="flex";await home()}
+async function home(){
+ if(role==="trainer"){clients=await api("/api/clients");main.innerHTML=`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${clients.length}</p><button class="btn" onclick="openModal()">＋ Додати клієнта</button></div><h1>Клієнти</h1>`+clientCards(clients)}
+ else {let d=await api("/api/client/"+clientId);main.innerHTML=`<div class="card"><h1>${d.client.name}</h1><p class="muted">${d.client.goal||""} · ${d.client.weight||0} кг</p><b>${d.client.kcal||0} ккал · Б ${d.client.protein||0} · Ж ${d.client.fat||0} · В ${d.client.carbs||0}</b></div><h2>Моя програма</h2>`+d.program.map(x=>`<div class="card"><b>${x.day_name}: ${x.exercise}</b><p>${x.sets} × ${x.reps} · RIR ${x.target_rir}</p></div>`).join("")}
+}
+function clientCards(a){return a.map(x=>`<div class="card client"><div><b>${x.name}</b><p class="muted">${x.goal||"Без цілі"} · ${x.weight||0} кг</p></div><span class="pill">${x.status||"Активний"}</span></div>`).join("")}
+async function clientsPage(){if(role!=="trainer"){home();return}clients=await api("/api/clients");main.innerHTML=`<div class="top"><h1>Клієнти</h1><button class="btn" onclick="openModal()">＋ Додати</button></div>`+clientCards(clients)}
+async function nutritionPage(){
+ let cid=role==="client"?clientId:(clients[0]&&clients[0].id); if(!cid){main.innerHTML="<h1>Харчування</h1><p>Немає клієнтів.</p>";return}
+ let d=await api("/api/client/"+cid);main.innerHTML=`<h1>Харчування</h1><p class="muted">${d.client.name}</p>`+(d.nutrition.length?d.nutrition.map(n=>`<div class="card"><b>${n.day}</b><p>${n.kcal} ккал · Б ${n.protein} · Ж ${n.fat} · В ${n.carbs}</p></div>`).join(""):"<div class='card muted'>Записів поки немає</div>")
+}
+function openModal(){formMsg.textContent="";modal.style.display="flex"} function closeModal(){modal.style.display="none"}
+async function createClient(){
+ formMsg.className="";formMsg.textContent="";
+ if(!nName.value.trim()||!nEmail.value.trim()){formMsg.className="error";formMsg.textContent="Вкажи ім'я та email.";return}
+ let data={name:nName.value.trim(),email:nEmail.value.trim(),password:nPass.value||"client123",goal:nGoal.value.trim(),weight:+nWeight.value||0,kcal:+nKcal.value||0,protein:+nP.value||0,fat:+nF.value||0,carbs:+nC.value||0};
+ try{await api("/api/clients",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});formMsg.className="success";formMsg.textContent="Клієнта створено ✓";setTimeout(async()=>{closeModal();await clientsPage()},500)}
+ catch(e){formMsg.className="error";formMsg.textContent=e.message.includes("Email")?"Цей email вже використовується.":"Не вдалося створити клієнта."}
+}
+let s=sessionStorage.getItem("session");if(s){let x=JSON.parse(s);role=x.role;clientId=x.client_id;showApp()}
 </script></body></html>
