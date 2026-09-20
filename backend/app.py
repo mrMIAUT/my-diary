@@ -74,6 +74,13 @@ def send_reset_email(email:str,link:str):
             ok=200<=r.status<300
             print(f"RESEND: status={r.status} to={email}", flush=True)
             return ok
+    except urllib.error.HTTPError as e:
+        try:
+            body=e.read().decode("utf-8",errors="replace")
+        except Exception:
+            body="<could not read response body>"
+        print(f"RESEND ERROR to={email}: status={e.code} reason={e.reason} body={body}", flush=True)
+        return False
     except Exception as e:
         print(f"RESEND ERROR to={email}: {type(e).__name__}: {e}", flush=True)
         return False
