@@ -267,7 +267,7 @@ def edit_program(pid:int,x:ProgramIn):
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),pid))
     return {"ok":True}
 
-@app.patch("/api/program/{pid}/move")
+@app.patch("/api/program/{pid}/move/{direction}")
 def move_program(pid:int,direction:str):
     if direction not in ("up","down"): raise HTTPException(400,"Невірний напрямок")
     p=one("SELECT * FROM program WHERE id=?",(pid,))
