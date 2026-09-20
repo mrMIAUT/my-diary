@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
+from typing import List
 import os, shutil
 import psycopg
 from psycopg.rows import dict_row
@@ -13,7 +14,7 @@ DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
-app=FastAPI(title="Зроби себе зі мною V2")
+app=FastAPI(title="Зроби себе зі мною V3")
 app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
 app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
 
@@ -41,6 +42,7 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
@@ -57,12 +59,14 @@ init()
 class Login(BaseModel): email:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
-class ClientUpdate(BaseModel):
-    name:str|None=None; goal:str|None=None; weight:float|None=None; kcal:int|None=None; protein:int|None=None; fat:int|None=None; carbs:int|None=None
 class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2
 class ResultIn(BaseModel):
     client_id:int; exercise:str; weight:float; reps:int; sets:int; rir:int
+class SetIn(BaseModel):
+    set_number:int; weight:float; reps:int; rir:int
+class SetResultIn(BaseModel):
+    client_id:int; program_id:int; exercise:str; sets:List[SetIn]
 class NutIn(BaseModel):
     client_id:int; kcal:int; protein:int; fat:int; carbs:int
 class MeasureIn(BaseModel):
@@ -71,7 +75,7 @@ class MeasureIn(BaseModel):
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
 @app.get("/health")
-def health(): return {"status":"online","version":"V2","database":"postgresql"}
+def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
 @app.post("/api/login")
 def login(x:Login):
@@ -89,28 +93,20 @@ def add_client(x:ClientIn):
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
         return one("SELECT * FROM clients WHERE id=?",(i,))
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
-
-@app.patch("/api/clients/{cid}")
-def update_client(cid:int,x:ClientUpdate):
-    c=one("SELECT * FROM clients WHERE id=?",(cid,))
-    if not c: raise HTTPException(404,"Клієнта не знайдено")
-    data=x.model_dump(exclude_none=True)
-    allowed=("name","goal","weight","kcal","protein","fat","carbs")
-    fields=[k for k in allowed if k in data]
-    if fields:
-        sql="UPDATE clients SET "+", ".join(f"{k}=?" for k in fields)+" WHERE id=?"
-        run(sql,tuple(data[k] for k in fields)+(cid,))
-    return one("SELECT * FROM clients WHERE id=?",(cid,))
-
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int):
-    for t in ("program","results","nutrition","measurements"): run(f"DELETE FROM {t} WHERE client_id=?",(cid,))
+    for t in ("program","results","result_sets","nutrition","measurements"): run(f"DELETE FROM {t} WHERE client_id=?",(cid,))
     run("DELETE FROM clients WHERE id=?",(cid,)); return {"ok":True}
 @app.get("/api/client/{cid}")
 def client(cid:int):
     c=one("SELECT * FROM clients WHERE id=?",(cid,))
     if not c: raise HTTPException(404)
-    return {"client":c,"program":rows("SELECT * FROM program WHERE client_id=? ORDER BY day_name,sort,id",(cid,)),"results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),"nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),"measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,))}
+    return {"client":c,
+            "program":rows("SELECT * FROM program WHERE client_id=? ORDER BY day_name,sort,id",(cid,)),
+            "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
+            "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
+            "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
+            "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,))}
 @app.post("/api/program")
 def add_program(x:ProgramIn):
     i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir) VALUES(?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir)); return {"id":i}
@@ -119,6 +115,20 @@ def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {
 @app.post("/api/results")
 def add_result(x:ResultIn):
     i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(date.today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
+
+@app.post("/api/result-sets")
+def add_result_sets(x:SetResultIn):
+    if not x.sets:
+        raise HTTPException(400,"Додай хоча б один підхід")
+    today=str(date.today())
+    # Re-saving the same exercise on the same day replaces that exercise's set details.
+    run("DELETE FROM result_sets WHERE client_id=? AND program_id=? AND day=?",(x.client_id,x.program_id,today))
+    ids=[]
+    for s in x.sets:
+        ids.append(run("INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir) VALUES(?,?,?,?,?,?,?,?)",
+                       (x.client_id,x.program_id,x.exercise,today,s.set_number,s.weight,s.reps,s.rir)))
+    return {"ok":True,"ids":ids}
+
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
