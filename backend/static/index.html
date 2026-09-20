@@ -11,7 +11,7 @@
 .calendar-day.empty{visibility:hidden}.calendar-day.has-data{border-color:#756200}.calendar-day.has-data:after{content:'';width:6px;height:6px;border-radius:50%;background:var(--yellow);position:absolute;bottom:5px;left:50%;transform:translateX(-50%)}
 .calendar-day.active{background:var(--yellow);color:#080808}.training-live{display:inline-flex;align-items:center;gap:7px;color:#6ee787;font-weight:900}.training-live:before{content:'';width:9px;height:9px;border-radius:50%;background:#39d353;box-shadow:0 0 12px #39d353}.preview-selected{outline:2px solid var(--yellow)}.calendar-day.active:after{background:#080808}.day-details{margin-top:16px}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.wrap{padding:20px 14px 90px}.brand{font-size:21px}.login .brand{font-size:38px}.card{padding:18px;border-radius:20px}.setrow{grid-template-columns:52px 1fr 1fr 1fr;gap:6px}.setrow input{padding:11px 7px;font-size:14px}}
-</style></head><body><div id="app"></div><script>
+.delta-up{color:#6ee787;font-weight:900;text-shadow:0 0 10px rgba(57,211,83,.55)}.delta-down{color:#ff7b72;font-weight:900;text-shadow:0 0 10px rgba(248,81,73,.5)}</style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;
 async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});if(!r.ok){let x;try{x=await r.json()}catch{};throw new Error(x?.detail||'Помилка сервера')}return r.status===204?null:r.json()}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -24,7 +24,7 @@ async function route(){if(!session)return renderLogin();if(session.role==='train
 async function trainerHome(){let cs=await api('/clients');app.innerHTML=shell(`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${cs.length}</p><button onclick="newClient()">+ Додати клієнта</button></div><h1>Клієнти</h1>${cs.map(c=>`<div class="card client" onclick="openClient(${c.id})"><div class="between"><div><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')} · ${c.weight||0} кг</div></div><span class="${c.live_status==='Тренується'?'training-live':'badge'}">${esc(c.live_status||c.status||'Активний')}</span></div></div>`).join('')}`)}
 function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" placeholder="Email"><input id="p" value="client123" placeholder="Пароль"><input id="g" placeholder="Ціль"><input id="w" type="number" placeholder="Вага, кг"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити клієнта</button></div></div>`)}
 async function createClient(){try{await api('/clients',{method:'POST',body:JSON.stringify({name:n.value,email:e.value,password:p.value,goal:g.value,weight:+w.value||0,kcal:+k.value||0,protein:+pr.value||0,fat:+f.value||0,carbs:+ca.value||0})});modal.remove();trainerHome()}catch(x){me.textContent=x.message}}
-async function openClient(id){selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;app.innerHTML=shell(`<button class="dark" onclick="trainerHome()">← До клієнтів</button><div style="height:15px"></div><div class="card"><div class="between"><div><h1>${esc(c.name)}</h1><div class="muted">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="big">${c.weight||0} кг</div></div></div><div class="tabs"><button onclick="showTab('program',this)">Програма</button><button class="dark" onclick="showTab('results',this)">Результати</button><button class="dark" onclick="showTab('nutrition',this)">Харчування</button><button class="dark" onclick="showTab('progress',this)">Заміри</button><button class="dark" onclick="showTab('calendar',this)">Календар</button><button class="dark" onclick="showTab('analytics',this)">Прогрес</button><button class="dark" onclick="showTab('comments',this)">Коментарі</button></div><div id="program" class="tab">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="analytics" class="tab hidden">${progressHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`)}
+async function openClient(id){selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;app.innerHTML=shell(`<button class="dark" onclick="trainerHome()">← До клієнтів</button><div style="height:15px"></div><div class="card"><div class="between"><div><h1>${esc(c.name)}</h1><div class="muted">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="big">${c.weight||0} кг</div></div></div><div class="tabs"><button onclick="showTab('program',this)">Програма</button><button class="dark" onclick="showTab('results',this)">Результати</button><button class="dark" onclick="showTab('nutrition',this)">Харчування</button><button class="dark" onclick="showTab('progress',this)">Заміри</button><button class="dark" onclick="showTab('calendar',this)">Календар</button><button class="dark" onclick="showTab('comments',this)">Коментарі</button></div><div id="program" class="tab">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`)}
 function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$('#'+id).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.add('dark'));btn.classList.remove('dark')}
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
@@ -148,18 +148,70 @@ function measureHTML(d){return `<div class="card"><h2>Динаміка</h2>${d.m
 
 function todaySets(d,pid){return (d.result_sets||[]).filter(x=>x.program_id===pid&&x.day===isoToday()).sort((a,b)=>a.set_number-b.set_number)}
 
+
+function signedDelta(v){
+ let n=+v||0;
+ if(n>0)return `<span class="delta-up">+${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
+ if(n<0)return `<span class="delta-down">${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
+ return `<span class="muted">0</span>`;
+}
+function exerciseHistoryDates(d,pid){
+ return [...new Set((d.result_sets||[]).filter(r=>r.program_id===pid).map(r=>r.day))].sort();
+}
 function previousExerciseHTML(d,pid){
- let all=(d.result_sets||[]).filter(r=>r.program_id===pid&&r.day<isoToday());
- if(!all.length)return '<div class="muted" style="margin-top:10px">Попередніх результатів ще немає.</div>';
- let latest=all.map(r=>r.day).sort().reverse()[0];
- let xs=all.filter(r=>r.day===latest).sort((a,b)=>a.set_number-b.set_number);
- return `<div class="exercise" style="margin-top:12px"><div class="muted">Минулого разу · ${esc(latest)}</div>${xs.map(s=>`<div style="margin-top:5px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`).join('')}</div>`;
+ let dates=exerciseHistoryDates(d,pid).filter(day=>day<isoToday());
+ if(!dates.length)return '<div class="muted" style="margin-top:10px">Попередніх результатів ще немає.</div>';
+
+ let latest=dates[dates.length-1];
+ let previous=dates.length>1?dates[dates.length-2]:null;
+ let cur=(d.result_sets||[]).filter(r=>r.program_id===pid&&r.day===latest).sort((a,b)=>a.set_number-b.set_number);
+ let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===pid&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
+
+ return `<div class="exercise" style="margin-top:12px">
+   <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
+   ${cur.map(s=>{
+      let p=prev.find(z=>z.set_number===s.set_number);
+      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`;
+      return `<div style="margin-top:9px">
+        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>
+        <div class="muted" style="margin-top:3px">Різниця: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>
+      </div>`;
+   }).join('')}
+ </div>`;
+}
+function completedComparisonHTML(x,d){
+ let dates=exerciseHistoryDates(d,x.id);
+ if(dates.length<2)return '';
+ let currentDay=dates[dates.length-1],previousDay=dates[dates.length-2];
+ let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
+ let prev=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
+ return `<div class="exercise" style="margin-top:12px"><strong>Порівняння з ${esc(previousDay)}</strong>${cur.map(s=>{
+   let p=prev.find(z=>z.set_number===s.set_number);if(!p)return '';
+   return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>`;
+ }).join('')}</div>`;
+}
+
+
+function exerciseCommentsHTML(x,d,cid){
+ let xs=(d.comments||[]).filter(c=>c.day===isoToday()&&c.program_id===x.id);
+ return `<div class="exercise" style="margin-top:12px">
+   <strong>Коментарі до вправи</strong>
+   ${xs.length?xs.slice().reverse().map(c=>`<div style="margin-top:8px"><span class="muted">${c.author==='trainer'?'Тренер':'Клієнт'}:</span> ${esc(c.body)}</div>`).join(''):'<div class="muted" style="margin-top:6px">Коментарів немає.</div>'}
+   <textarea id="exerciseComment${x.id}" placeholder="Коментар до цієї вправи..." style="width:100%;min-height:70px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;resize:vertical"></textarea>
+   <button style="margin-top:8px" onclick="saveExerciseComment(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}')">Додати коментар</button>
+ </div>`;
+}
+async function saveExerciseComment(cid,pid,exercise){
+ let t=$('#exerciseComment'+pid);if(!t||!t.value.trim())return alert('Напиши коментар');
+ await api('/comments',{method:'POST',body:JSON.stringify({client_id:cid,day:isoToday(),program_id:pid,exercise:exercise,author:session.role,body:t.value.trim()})});
+ let d=await api('/client/'+cid);window.currentClientData=d;
+ if(session.role==='trainer')openClient(cid);else clientCabinet(cid)
 }
 
 function completedExerciseHTML(x,d,cid){
  let done=todaySets(d,x.id);
- if(!done.length)return previousExerciseHTML(d,x.id)+setRows(x,d)+`<br><button onclick="saveSets(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets})">Закінчити вправу</button>`;
- return previousExerciseHTML(d,x.id)+`<div class="exercise" style="margin-top:12px"><strong style="color:var(--yellow)">Виконано ✓</strong>${done.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="editCompletedExercise(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets},'${esc(x.reps)}',${x.target_rir})">Редагувати</button></div></div>`;
+ if(!done.length)return previousExerciseHTML(d,x.id)+setRows(x,d)+`<br><button onclick="saveSets(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets})">Закінчити вправу</button>`+exerciseCommentsHTML(x,d,cid);
+ return previousExerciseHTML(d,x.id)+`<div class="exercise" style="margin-top:12px"><strong style="color:var(--yellow)">Виконано ✓</strong>${done.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="editCompletedExercise(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets},'${esc(x.reps)}',${x.target_rir})">Редагувати</button></div></div>`+completedComparisonHTML(x,d)+exerciseCommentsHTML(x,d,cid);
 }
 function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
  let d=window.currentClientData||{},done=todaySets(d,pid),body=$('#exerciseBody'+pid);if(!body)return;
@@ -244,24 +296,6 @@ async function saveComment(cid,day){
  let d=await api('/client/'+cid);window.currentClientData=d;
  if(session.role==='trainer')openClient(cid);else clientCabinet(cid)
 }
-function progressHTML(d){
- let ms=d.measurements||[],rs=d.result_sets||[];
- let weights=ms.map(x=>({day:x.day,value:+x.weight||0})).filter(x=>x.value);
- let exercises={};rs.forEach(x=>{let key=x.exercise;(exercises[key]??=[]).push(x)});
- let exBlocks=Object.entries(exercises).map(([name,xs])=>{
-   let days={};xs.forEach(x=>(days[x.day]??=[]).push(x));
-   let vals=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).map(([day,s])=>({day,value:Math.max(...s.map(z=>(+z.weight||0)*(1+(+z.reps||0)/30)))}));
-   return `<div class="exercise"><strong>${esc(name)}</strong>${miniChart(vals)}<div class="muted">Орієнтовна динаміка сили за вагою та повторами</div></div>`;
- }).join('');
- return `<div class="card"><h2>Прогрес</h2><h3>Вага тіла</h3>${weights.length?miniChart(weights):'<p class="muted">Ще немає даних ваги.</p>'}${exBlocks?'<h3 style="margin-top:22px">Вправи</h3>'+exBlocks:''}</div>`;
-}
-function miniChart(vals){
- if(!vals.length)return '';
- let w=620,h=150,p=18,min=Math.min(...vals.map(x=>x.value)),max=Math.max(...vals.map(x=>x.value));if(max===min)max=min+1;
- let pts=vals.map((x,i)=>`${p+(w-2*p)*(vals.length===1?.5:i/(vals.length-1))},${h-p-(h-2*p)*(x.value-min)/(max-min)}`).join(' ');
- return `<div style="overflow:auto;margin:12px 0"><svg viewBox="0 0 ${w} ${h}" style="width:100%;min-width:420px;height:150px;background:var(--card2);border-radius:14px"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--yellow)"/>${vals.map((x,i)=>{let px=p+(w-2*p)*(vals.length===1?.5:i/(vals.length-1)),py=h-p-(h-2*p)*(x.value-min)/(max-min);return `<circle cx="${px}" cy="${py}" r="4" fill="currentColor" style="color:var(--yellow)"><title>${x.day}: ${x.value.toFixed(1)}</title></circle>`}).join('')}</svg></div>`;
-}
-
 function previewExercisesHTML(items){
  let used=new Set(),html='';
  for(let x of items){
@@ -289,7 +323,7 @@ async function clientCabinet(id){
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='<div class="card muted">Обери тренування вище, щоб переглянути вправи.</div>';
- app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}${commentsHTML(d,id)}${progressHTML(d)}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`)
+ app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}${commentsHTML(d,id)}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`)
 }
 async function saveSets(cid,pid,exercise,count){
  let sets=[];
