@@ -24,6 +24,32 @@
 #profileModal .profile-hint{display:block;color:var(--muted);font-size:13px;margin-top:7px}
 #profileModal select{background-image:linear-gradient(45deg,transparent 50%,#b9b9c0 50%),linear-gradient(135deg,#b9b9c0 50%,transparent 50%)}
 @media(max-width:650px){#profileModal .card{padding:22px 18px}#profileModal .profile-close{top:16px;right:16px;width:44px;height:44px}#profileModal .profile-modal-head{padding-right:54px}#profileModal .profile-wide{grid-column:auto}}
+
+/* Responsive trainer cabinet */
+.trainer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.trainer-client-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+.trainer-client-main{min-width:0}.trainer-client-main h1{overflow-wrap:anywhere}
+.trainer-client-email{overflow-wrap:anywhere;word-break:break-word}
+.trainer-client-side{min-width:220px;text-align:right}.trainer-client-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}
+.trainer-tabs{width:100%;max-width:100%}
+@media(max-width:700px){
+ .wrap{width:100%;max-width:none;padding:18px 14px 86px;overflow-x:hidden}
+ .trainer-header-notify{position:static!important;margin:0!important}
+ .trainer-toolbar{margin-bottom:14px}.trainer-toolbar>button,.trainer-toolbar .notify-btn{padding:12px 14px;font-size:14px}
+ .trainer-client-head{grid-template-columns:1fr;gap:16px;align-items:start}
+ .trainer-client-side{min-width:0;width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+ .trainer-client-side .big{font-size:28px}.trainer-client-actions{margin-top:0;justify-content:flex-start}
+ .trainer-client-actions button{padding:12px 14px}
+ .trainer-tabs{display:flex;gap:8px;overflow-x:auto!important;overflow-y:hidden!important;padding:2px 2px 9px;margin-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
+ .trainer-tabs::-webkit-scrollbar{display:none}.trainer-tabs button{flex:0 0 auto!important;min-width:auto!important;padding:12px 16px;white-space:nowrap}
+ .top{flex-wrap:nowrap;align-items:center}.top>div:last-child{min-width:0}.top .notify-btn{font-size:0;padding:12px}.top .notify-btn::first-letter{font-size:16px}
+ .card h1{font-size:30px;line-height:1.08}.card h2{font-size:24px;line-height:1.15}.big{font-size:28px}
+ .between{min-width:0}.between>*{min-width:0}
+ .grid{grid-template-columns:1fr!important}
+ #results .grid{grid-template-columns:1fr!important}
+}
+@media(max-width:390px){.trainer-toolbar{gap:8px}.trainer-toolbar>button,.trainer-toolbar .notify-btn{padding:11px 12px}.trainer-client-actions{width:100%}.trainer-client-actions button{flex:1 1 auto}.trainer-tabs button{padding:11px 14px}}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;
 async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});if(!r.ok){let x;try{x=await r.json()}catch{};throw new Error(x?.detail||'Помилка сервера')}return r.status===204?null:r.json()}
@@ -72,7 +98,14 @@ async function createClient(){
    trainerHome()
  }catch(x){me.textContent=x.message}
 }
-async function openClient(id){selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;app.innerHTML=shell(`<button class="dark" onclick="trainerHome()">← До клієнтів</button><div style="height:15px"></div><div class="card"><div class="between"><div><h1>${esc(c.name)}</h1><div class="muted">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div><div class="big">${c.weight||0} кг</div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="dark" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div class="trainer-header-notify"><button id="trainerNotifyBtn" class="dark notify-btn" onclick="showNotifications(${c.id},'trainer')">🔔 Сповіщення</button></div><div class="tabs"><button onclick="showTab('profile',this)">Анкета</button><button class="dark" onclick="showTab('program',this)">Програма</button><button class="dark" onclick="showTab('results',this)">Результати</button><button class="dark" onclick="showTab('nutrition',this)">Харчування</button><button class="dark" onclick="showTab('progress',this)">Заміри</button><button class="dark" onclick="showTab('calendar',this)">Календар</button><button class="dark" onclick="showTab('comments',this)">Коментарі</button><button class="dark" onclick="showTab('cardio',this)">Кардіо</button></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);refreshNotificationBadge(c.id,'trainer','trainerNotifyBtn')}
+async function openClient(id,activeTab='profile'){
+ selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;
+ app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="trainerHome()">← До клієнтів</button><div class="trainer-header-notify"><button id="trainerNotifyBtn" class="dark notify-btn" onclick="showNotifications(${c.id},'trainer')">🔔 Сповіщення</button></div></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="big">${c.weight||0} кг</div><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="dark" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div class="tabs trainer-tabs"><button data-tab="profile" onclick="showTab('profile',this)">Анкета</button><button data-tab="program" class="dark" onclick="showTab('program',this)">Програма</button><button data-tab="results" class="dark" onclick="showTab('results',this)">Результати</button><button data-tab="nutrition" class="dark" onclick="showTab('nutrition',this)">Харчування</button><button data-tab="progress" class="dark" onclick="showTab('progress',this)">Заміри</button><button data-tab="calendar" class="dark" onclick="showTab('calendar',this)">Календар</button><button data-tab="comments" class="dark" onclick="showTab('comments',this)">Коментарі</button><button data-tab="cardio" class="dark" onclick="showTab('cardio',this)">Кардіо</button></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
+ refreshNotificationBadge(c.id,'trainer','trainerNotifyBtn');
+ let target=document.querySelector(`.trainer-tabs button[data-tab="${activeTab}"]`)||document.querySelector('.trainer-tabs button[data-tab="profile"]');
+ if(target&&activeTab!=='profile')showTab(activeTab,target,false);
+ if(!history.state?.eplanClient || history.state.eplanClient!==id)history.replaceState({eplanClient:id,tab:activeTab},'',location.pathname+location.search+'#client-'+id+'-'+activeTab);
+}
 
 async function setClientStatus(cid,status){
  let text=status==='Заморожений'?'Заморозити клієнта? Він зможе увійти, але матиме лише перегляд історії.':'Відновити повний доступ клієнту?';
@@ -91,7 +124,12 @@ async function refreshNotificationBadge(cid,recipient,buttonId){
  }catch(e){}
 }
 
-function showTab(id,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$('#'+id).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.add('dark'));btn.classList.remove('dark')}
+function showTab(id,btn,push=true){
+ document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));let pane=$('#'+id);if(!pane)return;pane.classList.remove('hidden');
+ document.querySelectorAll('.trainer-tabs button').forEach(x=>x.classList.add('dark'));if(btn)btn.classList.remove('dark');
+ if(btn&&btn.scrollIntoView)btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+ if(push&&selected){let st={eplanClient:selected,tab:id};if(history.state?.eplanClient===selected&&history.state?.tab===id)history.replaceState(st,'',location.pathname+location.search+'#client-'+selected+'-'+id);else history.pushState(st,'',location.pathname+location.search+'#client-'+selected+'-'+id)}
+}
 function cardioHTML(d,cid,readonly=false){
  let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
  if(readonly)return `<div class="card"><h2>Кардіо та активність</h2>${xs.length?xs.slice(0,30).map(x=>`<div class="exercise"><div class="between"><strong>${esc(x.day)}</strong><span>${x.steps||0} кроків</span></div>${x.cardio_type?`<div class="muted" style="margin-top:6px">${esc(x.cardio_type)} · ${x.minutes||0} хв${x.speed?` · швидкість ${x.speed}`:''}${x.incline?` · нахил ${x.incline}%`:''}</div>`:'<div class="muted" style="margin-top:6px">Без окремого кардіо</div>'}</div>`).join(''):'<p class="muted">Даних ще немає.</p>'}</div>`;
@@ -156,7 +194,11 @@ async function moveProgramBlock(dayName,blockIndex,direction){
    let ordered_ids=blocks.flatMap(b=>b.ids);
    let cid=d.client.id;
    await api('/program/reorder',{method:'POST',body:JSON.stringify({client_id:cid,day_name:dayName,ordered_ids})});
-   await openClient(cid);
+   let byId=new Map((d.program||[]).map(x=>[x.id,x]));
+   let daySet=new Set(ordered_ids), reordered=ordered_ids.map(id=>byId.get(id)).filter(Boolean), pos=0;
+   d.program=(d.program||[]).map(x=>x.day_name===dayName?reordered[pos++]:x);
+   window.currentClientData=d;
+   let programPane=$('#program');if(programPane)programPane.innerHTML=programHTML(d);
  }catch(e){alert(e.message||'Не вдалося змінити порядок вправ')}
 }
 function editExercise(pid){
@@ -661,6 +703,17 @@ async function saveSets(cid,pid,exercise,count){
  let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
  setTimeout(()=>clientCabinet(cid),350);
 }
+window.addEventListener('popstate',async e=>{
+ if(!session)return;
+ let st=e.state;
+ if(session.role==='trainer'&&st?.eplanClient){
+   if(selected!==st.eplanClient||!window.currentClientData)await openClient(st.eplanClient,st.tab||'profile');
+   else{let b=document.querySelector(`.trainer-tabs button[data-tab="${st.tab||'profile'}"]`);if(b)showTab(st.tab||'profile',b,false)}
+   return;
+ }
+ if(session.role==='trainer'&&selected){selected=null;await trainerHome()}
+});
+
 let startupResetToken=new URLSearchParams(location.search).get('reset');
 if(startupResetToken){renderResetPassword(startupResetToken)}else{route()}
 </script></body></html>
