@@ -19,16 +19,16 @@ input{width:100%;padding:17px;border-radius:16px;border:1px solid #38383f;backgr
 </style></head>
 <body>
 <div class="wrap">
- <div id="login">
+ <div id="loginScreen">
   <div class="brand" style="font-size:48px;margin-top:90px">ЗРОБИ СЕБЕ<br><span class="y">ЗІ МНОЮ</span></div>
   <div class="card"><h1>Вхід</h1><p class="muted">Кабінет тренера та клієнта</p>
    <input id="email" value="trainer@demo.local" placeholder="Email"><input id="password" type="password" value="trainer123" placeholder="Пароль">
-   <p><button class="btn" onclick="login()">Увійти</button></p><div id="loginErr" class="error"></div>
+   <p><button class="btn" onclick="doLogin()">Увійти</button></p><div id="loginErr" class="error"></div>
    <p class="muted">Тренер: trainer@demo.local / trainer123<br>Клієнт: anna@demo.local / client123</p>
   </div>
  </div>
  <div id="app" style="display:none">
-  <div class="top"><div class="brand">ЗРОБИ СЕБЕ <span class="y">ЗІ МНОЮ</span></div><button class="btn ghost" onclick="logout()">Вийти</button></div>
+  <div class="top"><div class="brand">ЗРОБИ СЕБЕ <span class="y">ЗІ МНОЮ</span></div><button class="btn ghost" onclick="doLogout()">Вийти</button></div>
   <div id="main"></div>
  </div>
 </div>
@@ -49,14 +49,14 @@ input{width:100%;padding:17px;border-radius:16px;border:1px solid #38383f;backgr
 <script>
 let role="",clientId=null,clients=[];
 async function api(path,opt={}){let r=await fetch(path,opt);if(!r.ok)throw new Error(await r.text());return r.json()}
-async function login(){
- loginErr.textContent="";
- try{let x=await api("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.value,password:password.value})});
+async function doLogin(){
+ document.getElementById("loginErr").textContent="";
+ try{let x=await api("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:document.getElementById("email").value,password:document.getElementById("password").value})});
  role=x.role;clientId=x.client_id;sessionStorage.setItem("session",JSON.stringify(x));showApp();
- }catch(e){loginErr.textContent="Невірний email або пароль"}
+ }catch(e){document.getElementById("loginErr").textContent="Невірний email або пароль"}
 }
-function logout(){sessionStorage.removeItem("session");location.reload()}
-async function showApp(){login.style.display="none";app.style.display="block";nav.style.display="flex";await home()}
+function doLogout(){sessionStorage.removeItem("session");location.reload()}
+async function showApp(){document.getElementById("loginScreen").style.display="none";document.getElementById("app").style.display="block";document.getElementById("nav").style.display="flex";await home()}
 async function home(){
  if(role==="trainer"){clients=await api("/api/clients");main.innerHTML=`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${clients.length}</p><button class="btn" onclick="openModal()">＋ Додати клієнта</button></div><h1>Клієнти</h1>`+clientCards(clients)}
  else {let d=await api("/api/client/"+clientId);main.innerHTML=`<div class="card"><h1>${d.client.name}</h1><p class="muted">${d.client.goal||""} · ${d.client.weight||0} кг</p><b>${d.client.kcal||0} ккал · Б ${d.client.protein||0} · Ж ${d.client.fat||0} · В ${d.client.carbs||0}</b></div><h2>Моя програма</h2>`+d.program.map(x=>`<div class="card"><b>${x.day_name}: ${x.exercise}</b><p>${x.sets} × ${x.reps} · RIR ${x.target_rir}</p></div>`).join("")}
