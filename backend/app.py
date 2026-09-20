@@ -129,6 +129,10 @@ def add_result_sets(x:SetResultIn):
                        (x.client_id,x.program_id,x.exercise,today,s.set_number,s.weight,s.reps,s.rir)))
     return {"ok":True,"ids":ids}
 
+@app.get("/api/result-sets/{cid}")
+def result_set_history(cid:int):
+    return rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,))
+
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
