@@ -70,8 +70,13 @@ def send_reset_email(email:str,link:str):
                      "html":f"<h2>Є ПЛАН</h2><p>Щоб створити або відновити пароль до кабінету, відкрийте посилання:</p><p><a href='{link}'>Встановити пароль</a></p><p>Якщо ви не очікували цей лист, просто проігноруйте його.</p>"}).encode()
     req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
     try:
-        with urllib.request.urlopen(req,timeout=10) as r:return 200<=r.status<300
-    except Exception:return False
+        with urllib.request.urlopen(req,timeout=10) as r:
+            ok=200<=r.status<300
+            print(f"RESEND: status={r.status} to={email}", flush=True)
+            return ok
+    except Exception as e:
+        print(f"RESEND ERROR to={email}: {type(e).__name__}: {e}", flush=True)
+        return False
 
 def init():
     with con() as c:
@@ -96,6 +101,9 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS password_resets(
             id SERIAL PRIMARY KEY, client_id INTEGER, token_hash TEXT UNIQUE,
             expires_at TIMESTAMP, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_auth(
+            id INTEGER PRIMARY KEY, password TEXT NOT NULL
         )""")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         c.execute("""CREATE TABLE IF NOT EXISTS cardio_log(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,cardio_type TEXT DEFAULT '',minutes INTEGER DEFAULT 0,speed DOUBLE PRECISION DEFAULT 0,incline DOUBLE PRECISION DEFAULT 0,steps INTEGER DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(client_id,day))""")
@@ -162,8 +170,11 @@ def health(): return {"status":"online","version":"V3","database":"postgresql"}
 def login(x:Login):
     trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local")
     trainer_password=os.getenv("TRAINER_PASSWORD","trainer123")
-    if x.email.lower()==trainer_email.lower() and hmac.compare_digest(x.password,trainer_password):
-        return {"role":"trainer","name":"Михайло","client_id":None}
+    if x.email.lower()==trainer_email.lower():
+        ta=one("SELECT password FROM trainer_auth WHERE id=1")
+        valid=check_password(x.password,ta["password"]) if ta else hmac.compare_digest(x.password,trainer_password)
+        if valid:
+            return {"role":"trainer","name":"Михайло","client_id":None}
     u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(x.email,))
     if u and check_password(x.password,u["password"]):
         if u["status"]=="Видалений": raise HTTPException(403,"Цей акаунт видалено. Зверніться до тренера.")
@@ -175,16 +186,30 @@ def login(x:Login):
 
 @app.post("/api/password-reset/request")
 def password_reset_request(x:ResetRequestIn):
-    u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(x.email,))
+    email=x.email.strip()
+    trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local").strip()
+    u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(email,))
+    target_id=None
+    target_email=None
+    if email.lower()==trainer_email.lower():
+        target_id=0  # reserved id for trainer password reset
+        target_email=trainer_email
+    elif u and u["status"]!="Видалений":
+        target_id=u["id"]
+        target_email=u["email"]
     # Always return same response to avoid revealing registered emails.
-    if u and u["status"]!="Видалений":
+    if target_id is not None:
         token=secrets.token_urlsafe(32)
         token_hash=hashlib.sha256(token.encode()).hexdigest()
-        run("UPDATE password_resets SET used=TRUE WHERE client_id=? AND used=FALSE",(u["id"],))
+        run("UPDATE password_resets SET used=TRUE WHERE client_id=? AND used=FALSE",(target_id,))
         run("INSERT INTO password_resets(client_id,token_hash,expires_at) VALUES(?,?,?)",
-            (u["id"],token_hash,datetime.utcnow()+timedelta(minutes=30)))
+            (target_id,token_hash,datetime.utcnow()+timedelta(minutes=30)))
         base=os.getenv("APP_BASE_URL","").rstrip("/")
-        if base: send_reset_email(u["email"],base+"/?reset="+token)
+        if base:
+            sent=send_reset_email(target_email,base+"/?reset="+token)
+            print(f"PASSWORD RESET: email={target_email} sent={sent}", flush=True)
+        else:
+            print("PASSWORD RESET ERROR: APP_BASE_URL is empty", flush=True)
     return {"ok":True,"message":"Якщо така пошта зареєстрована, на неї надіслано посилання для відновлення пароля."}
 
 @app.post("/api/password-reset/confirm")
@@ -193,9 +218,12 @@ def password_reset_confirm(x:ResetConfirmIn):
     th=hashlib.sha256(x.token.encode()).hexdigest()
     r=one("SELECT * FROM password_resets WHERE token_hash=? AND used=FALSE",(th,))
     if not r or r["expires_at"]<datetime.utcnow(): raise HTTPException(400,"Посилання недійсне або вже прострочене")
-    c=one("SELECT * FROM clients WHERE id=?",(r["client_id"],))
-    if not c or c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
-    run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),r["client_id"]))
+    if r["client_id"]==0:
+        run("INSERT INTO trainer_auth(id,password) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET password=EXCLUDED.password",(hash_password(x.password),))
+    else:
+        c=one("SELECT * FROM clients WHERE id=?",(r["client_id"],))
+        if not c or c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
+        run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),r["client_id"]))
     run("UPDATE password_resets SET used=TRUE WHERE id=?",(r["id"],))
     return {"ok":True}
 
