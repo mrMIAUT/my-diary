@@ -41,6 +41,8 @@ def init():
     with con() as c:
         c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
@@ -61,7 +63,7 @@ class Login(BaseModel): email:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2
+    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0
 class ResultIn(BaseModel):
     client_id:int; exercise:str; weight:float; reps:int; sets:int; rir:int
 class SetIn(BaseModel):
@@ -132,7 +134,7 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
 
 @app.post("/api/program")
 def add_program(x:ProgramIn):
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir) VALUES(?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir)); return {"id":i}
+    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order)); return {"id":i}
 @app.delete("/api/program/{pid}")
 def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
 @app.post("/api/results")
@@ -174,6 +176,8 @@ def finish_workout(sid:int):
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
+    if x.day > str(date.today()):
+        raise HTTPException(400,"Не можна додавати дані на майбутню дату")
     existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
         run("UPDATE nutrition SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,existing["id"]))
@@ -183,6 +187,8 @@ def historical_nutrition(x:HistoricalNutritionIn):
 
 @app.post("/api/history/workout")
 def historical_workout(x:HistoricalWorkoutIn):
+    if x.day > str(date.today()):
+        raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
     existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
         raise HTTPException(400,"Тренування за цей день уже записано")
