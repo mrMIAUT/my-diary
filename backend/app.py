@@ -15,7 +15,7 @@ DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
-app=FastAPI(title="Зроби себе зі мною V3")
+app=FastAPI(title="Є ПЛАН V3")
 app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
 app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
 
@@ -66,7 +66,7 @@ def send_reset_email(email:str,link:str):
     key=os.getenv("RESEND_API_KEY","").strip()
     sender=os.getenv("RESET_FROM_EMAIL","").strip()
     if not key or not sender:return False
-    data=json.dumps({"from":sender,"to":[email],"subject":"Відновлення пароля — Зроби себе зі мною",
+    data=json.dumps({"from":sender,"to":[email],"subject":"Відновлення пароля — Є ПЛАН",
                      "html":f"<p>Щоб встановити новий пароль, відкрийте посилання:</p><p><a href='{link}'>{link}</a></p><p>Посилання діє 30 хвилин.</p>"}).encode()
     req=urllib.request.Request("https://api.resend.com/emails",data=data,headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},method="POST")
     try:
