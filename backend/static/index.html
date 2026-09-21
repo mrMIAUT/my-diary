@@ -82,9 +82,118 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .social-links{display:flex;align-items:center;gap:8px}.social-link{width:42px;height:42px;border-radius:13px;background:#29292e;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-weight:900;font-size:17px}.social-link:hover{border-color:#666;transform:translateY(-1px)}.social-link svg{width:21px;height:21px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.social-link.tiktok svg{fill:currentColor;stroke:none}.top-right{display:flex;align-items:center;gap:10px}.measure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.measure-grid label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}.contact-link{color:var(--yellow);font-weight:800;text-decoration:none;overflow-wrap:anywhere}.contact-link:hover{text-decoration:underline}@media(max-width:700px){.top{align-items:center}.top-right{flex-direction:row;align-items:center;gap:6px}.top-right .notify-btn{padding:11px 12px;font-size:0}.top-right .notify-btn::first-letter{font-size:16px}.social-links{gap:5px}.social-link{width:36px!important;height:36px!important;font-size:13px!important}.social-links{gap:6px}.social-link{width:38px;height:38px;border-radius:12px}.measure-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:420px){.measure-grid{grid-template-columns:1fr}}
 
 .ui-icon{width:20px;height:20px;display:inline-block;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.side-nav-icon{display:flex!important;align-items:center;justify-content:center}.side-nav-icon .ui-icon{width:21px;height:21px}.notify-btn{display:inline-flex;align-items:center;gap:8px}.notify-btn .ui-icon{width:18px;height:18px}.meal-plan-card{padding:0;overflow:hidden}.meal-plan-head{padding:20px 22px}.meal-plan-body{padding:0 22px 22px}.meal-editor{border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;background:var(--card2)}.meal-editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.meal-variant{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.meal-variant:first-of-type{border-top:0}.meal-variant textarea{min-height:110px}.meal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px}.icon-btn .ui-icon{width:18px;height:18px}.meal-view{border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:10px;background:var(--card2)}.variant-pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:5px 9px;margin:7px 6px 0 0;color:var(--muted);font-size:12px}.meal-option{padding:10px 0;border-top:1px solid #29292e}.meal-option:first-of-type{border-top:0}@media(max-width:650px){.meal-plan-head,.meal-plan-body{padding-left:16px;padding-right:16px}.notify-label{display:none}}
+
+/* PWA offline + compact logout */
+.side-menu-footer{padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+.side-menu-footer .logout-link{
+  width:auto!important;min-width:0!important;background:transparent!important;border:0!important;
+  color:#b9b9bf!important;padding:10px 12px!important;border-radius:12px!important;
+  display:inline-flex!important;align-items:center!important;gap:10px!important;font-size:15px!important;
+  box-shadow:none!important;
+}
+.side-menu-footer .logout-link:hover{background:#242428!important;color:#fff!important;transform:none!important}
+.side-menu-footer .logout-link .side-nav-icon{width:22px}
+.offline-pill{
+  position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  z-index:2500;background:#29292e;border:1px solid #45454b;color:#fff;border-radius:999px;
+  padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 8px 30px #0008;display:none;
+}
+.offline-pill.show{display:block}.offline-pill.syncing{color:#ffd000}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
-async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});if(!r.ok){let x;try{x=await r.json()}catch{};throw new Error(x?.detail||'Помилка сервера')}return r.status===204?null:r.json()}
+const OFFDB='eplan-offline-v1', OFFVER=1;
+function offDb(){return new Promise((ok,no)=>{let q=indexedDB.open(OFFDB,OFFVER);q.onupgradeneeded=()=>{let d=q.result;if(!d.objectStoreNames.contains('cache'))d.createObjectStore('cache');if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{keyPath:'id',autoIncrement:true})};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function offGet(store,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function offPut(store,val,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).put(val,key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function offAdd(store,val){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).add(val);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function offAll(store){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).getAll();q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>no(q.error)})}
+async function offDel(store,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).delete(key);q.onsuccess=()=>ok();q.onerror=()=>no(q.error)})}
+function offBody(opt){try{return opt?.body?JSON.parse(opt.body):{}}catch{return {}}}
+function offToday(){return new Date().toLocaleDateString('sv-SE')}
+function offClientKey(cid){return '/client/'+cid}
+async function offClient(cid){return await offGet('cache',offClientKey(cid))}
+async function offSaveClient(cid,d){if(d)await offPut('cache',d,offClientKey(cid))}
+async function offApply(path,opt,localSid){
+ let b=offBody(opt),m=(opt.method||'GET').toUpperCase(),cid=b.client_id||session?.client_id, d=cid?await offClient(cid):null;
+ if(!d)return;
+ if(path==='/result-sets'&&m==='POST'){d.result_sets=(d.result_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===offToday()));(b.sets||[]).forEach(x=>d.result_sets.push({...x,id:-Date.now()-x.set_number,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:offToday()}))}
+ else if(path==='/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];d.nutrition.unshift({id:-Date.now(),client_id:cid,day:offToday(),kcal:b.kcal,protein:b.protein,fat:b.fat,carbs:b.carbs})}
+ else if(/^\/nutrition\/-?\d+$/.test(path)&&m==='PATCH'){let id=+path.split('/').pop(),x=(d.nutrition||[]).find(x=>x.id==id);if(x)Object.assign(x,b)}
+ else if(path==='/history/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];let x=d.nutrition.find(x=>x.day===b.day);if(x)Object.assign(x,b);else d.nutrition.unshift({id:-Date.now(),...b})}
+ else if(path==='/measurements'&&m==='POST'){d.measurements=d.measurements||[];d.measurements.push({id:-Date.now(),day:offToday(),...b})}
+ else if(path==='/cardio'&&m==='POST'){d.cardio=d.cardio||[];let day=b.day||offToday(),x=d.cardio.find(x=>x.day===day);if(x)Object.assign(x,b,{day});else d.cardio.unshift({id:-Date.now(),...b,day})}
+ else if(path==='/workout/start'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:localSid,client_id:cid,day_name:b.day_name,status:'training',started_at:offToday()+' 12:00:00',program_snapshot:'[]'})}
+ else if(/^\/workout\/-\d+\/finish$/.test(path)&&m==='POST'){let id=+path.split('/')[2],x=(d.workout_sessions||[]).find(x=>x.id==id);if(x){x.status='finished';x.finished_at=offToday()+' 13:00:00'}}
+ else if(path==='/history/workout'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:-Date.now(),client_id:cid,day_name:b.day_name,status:'finished',started_at:b.day+' 12:00:00',finished_at:b.day+' 13:00:00'});d.result_sets=d.result_sets||[];(b.sets||[]).forEach((x,i)=>d.result_sets.push({...x,id:-Date.now()-i,client_id:cid,day:b.day}))}
+ else if(path==='/comments'&&m==='POST'){d.comments=d.comments||[];d.comments.unshift({id:-Date.now(),created_at:new Date().toISOString(),...b})}
+ await offSaveClient(cid,d);window.currentClientData=d;
+}
+function offResponse(path,opt,localSid){
+ let b=offBody(opt);
+ if(path==='/workout/start')return {id:localSid,client_id:b.client_id,day_name:b.day_name,status:'training',started_at:new Date().toISOString()};
+ if(/\/finish$/.test(path))return {ok:true,status:'finished'};
+ if(path==='/nutrition'||path==='/measurements'||path==='/comments')return {id:-Date.now(),ok:true};
+ return {ok:true,offline:true};
+}
+function offCanQueue(path,opt){
+ let m=(opt.method||'GET').toUpperCase();
+ if(m==='GET'||!session||session.role!=='client')return false;
+ return !path.startsWith('/login')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications');
+}
+async function offlineStatus(msg,kind=''){
+ let el=document.getElementById('offlinePill');if(!el){el=document.createElement('div');el.id='offlinePill';el.className='offline-pill';document.body.appendChild(el)}
+ el.textContent=msg;el.className='offline-pill show '+kind;
+ if(msg==='✓ Синхронізовано')setTimeout(()=>el.classList.remove('show'),1800);
+}
+async function api(path,opt={}){
+ let method=(opt.method||'GET').toUpperCase();
+ try{
+   let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
+   if(!r.ok){let x;try{x=await r.json()}catch{};throw Object.assign(new Error(x?.detail||'Помилка сервера'),{server:true,status:r.status})}
+   let data=r.status===204?null:await r.json();
+   if(method==='GET')await offPut('cache',data,path);
+   return data;
+ }catch(e){
+   if(e.server)throw e;
+   if(method==='GET'){
+     let cached=await offGet('cache',path);
+     if(cached!==undefined){offlineStatus('● Офлайн · показано збережені дані');return cached}
+     throw new Error('Немає інтернету. Відкрий цей розділ хоча б один раз онлайн, щоб він був доступний офлайн.');
+   }
+   if(offCanQueue(path,opt)){
+     let localSid=path==='/workout/start'?-Date.now():null;
+     await offAdd('queue',{path,opt:{method,body:opt.body||null},created:Date.now(),localSid});
+     await offApply(path,opt,localSid);
+     offlineStatus('● Офлайн · зміни збережено на телефоні');
+     return offResponse(path,opt,localSid);
+   }
+   throw new Error('Ця дія потребує інтернету.');
+ }
+}
+let offSyncing=false;
+async function syncOfflineQueue(){
+ if(offSyncing||!navigator.onLine)return;offSyncing=true;
+ let q=await offAll('queue');if(!q.length){offSyncing=false;return}
+ offlineStatus('Синхронізація…','syncing');let sidMap={};
+ try{
+   for(let item of q){
+     let path=item.path;
+     let neg=path.match(/^\/workout\/(-\d+)\/finish$/);if(neg&&sidMap[neg[1]])path='/workout/'+sidMap[neg[1]]+'/finish';
+     let r=await fetch(A+path,{headers:{'Content-Type':'application/json'},method:item.opt.method,body:item.opt.body||undefined});
+     if(!r.ok)throw new Error('sync');
+     let data=null;try{data=await r.clone().json()}catch{}
+     if(item.localSid&&data?.id)sidMap[String(item.localSid)]=data.id;
+     await offDel('queue',item.id);
+   }
+   if(session?.client_id){try{let r=await fetch(A+'/client/'+session.client_id);if(r.ok){let d=await r.json();await offSaveClient(session.client_id,d);window.currentClientData=d}}catch{}}
+   offlineStatus('✓ Синхронізовано');
+ }catch{offlineStatus('● Є дані, що очікують синхронізації')}
+ offSyncing=false;
+}
+window.addEventListener('online',()=>syncOfflineQueue());
+window.addEventListener('offline',()=>offlineStatus('● Офлайн · дані зберігаються на телефоні'));
+setTimeout(()=>{if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні')},800);
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'https://www.tiktok.com/@michael_hilyk',telegram:'https://t.me/mrMiaut'};
 function uiIcon(name){const p={menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',user:'<circle cx="12" cy="8" r="3"/><path d="M5 20c.7-4 3.1-6 7-6s6.3 2 7 6"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c.6-4 2.7-6 6-6s5.4 2 6 6"/><path d="M16 6.5a2.5 2.5 0 0 1 0 5M17 14c2.2.6 3.5 2.5 4 5"/>',home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M9 20v-6h6v6"/>',dumbbell:'<path d="M6 8v8M3 9v6M18 8v8M21 9v6M6 12h12"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',food:'<path d="M7 3v7M4 3v4c0 2 1 3 3 3s3-1 3-3V3M7 10v11M16 3c3 2 4 5 4 9h-4V3Zm0 9v9"/>',measure:'<path d="M4 8h16v8H4z"/><path d="M7 8v4M10 8v2M13 8v4M16 8v2"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',message:'<path d="M4 5h16v12H9l-5 4V5Z"/>',run:'<circle cx="14" cy="4" r="2"/><path d="m10 21 2-7-3-3 3-4 4 3 4 1M12 14l4 3 1 4M9 11l-4 3"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',edit:'<path d="m4 20 4.5-1L19 8.5 15.5 5 5 15.5 4 20Z"/><path d="m13.5 7 3.5 3.5"/>',trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',plus:'<path d="M12 5v14M5 12h14"/>',logout:'<path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">${p[name]||''}</svg>`}
@@ -108,7 +217,7 @@ function sideMenuHTML(){
 }
 function openSideMenu(){
  document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div id="sideOverlay" class="side-overlay" onclick="closeSideMenu()"></div><aside id="sideDrawer" class="side-drawer"><div class="side-drawer-head"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><button class="side-close" onclick="closeSideMenu()">×</button></div><div class="side-menu-body">${sideMenuHTML()}</div><div class="side-menu-footer"><button class="dark" onclick="closeSideMenu();logout()"><span class="side-nav-icon">${uiIcon('logout')}</span>Вийти</button></div></aside>`);
+ document.body.insertAdjacentHTML('beforeend',`<div id="sideOverlay" class="side-overlay" onclick="closeSideMenu()"></div><aside id="sideDrawer" class="side-drawer"><div class="side-drawer-head"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><button class="side-close" onclick="closeSideMenu()">×</button></div><div class="side-menu-body">${sideMenuHTML()}</div><div class="side-menu-footer"><button class="logout-link" onclick="closeSideMenu();logout()"><span class="side-nav-icon">${uiIcon('logout')}</span>Вийти</button></div></aside>`);
  requestAnimationFrame(()=>{document.querySelector('#sideOverlay')?.classList.add('open');document.querySelector('#sideDrawer')?.classList.add('open')});syncOverlayLock();
 }
 function closeSideMenu(){document.querySelector('#sideOverlay')?.classList.remove('open');document.querySelector('#sideDrawer')?.classList.remove('open');setTimeout(()=>{document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove()},230)}

@@ -1,4 +1,4 @@
-const CACHE='eplan-pwa-v1';
+const CACHE='eplan-pwa-v2-offline';
 const SHELL=['/','/manifest.webmanifest','/static/icons/icon-192.png','/static/icons/icon-512.png','/static/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', event => {
