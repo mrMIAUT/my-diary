@@ -160,6 +160,27 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .top-left{padding-left:0!important;margin-left:0!important}
 .program-extra{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.program-extra .badge{font-size:12px}
 .workout-day-comment{margin-top:18px}.workout-day-comment textarea{width:100%;min-height:88px}
+
+/* PWA header: truly fixed on iPhone while the document scrolls */
+.top{
+  position:fixed!important;
+  top:0!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(calc(100% - 48px),1132px)!important;
+  z-index:1900!important;
+  background:rgba(8,9,9,.96)!important;
+  padding-top:calc(12px + env(safe-area-inset-top))!important;
+  padding-bottom:12px!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+.wrap{padding-top:calc(98px + env(safe-area-inset-top))!important}
+@media(max-width:700px){
+  .top{width:calc(100% - 28px)!important}
+  .wrap{padding-top:calc(94px + env(safe-area-inset-top))!important}
+}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -294,7 +315,6 @@ function showClientSection(section){
  let html='';
  if(section==='mealplan')html=`<h1>План харчування</h1><div class="card"><h2>Моє харчування</h2><div class="daily-macros-line"><div class="daily-macro"><strong>${c.kcal||0}</strong><br>ккал</div><div class="daily-macro"><strong>${c.protein||0}</strong><br>Б</div><div class="daily-macro"><strong>${c.fat||0}</strong><br>Ж</div><div class="daily-macro"><strong>${c.carbs||0}</strong><br>В</div></div></div>${clientMealPlanHTML(d)||'<div class="card"><p class="muted">План харчування ще не додано.</p></div>'}`;
  else if(section==='measurements')html=`<h1>Заміри</h1>${clientMeasurementsHTML(d,c.id)}`;
- else if(section==='comments')html=`<h1>Коментарі</h1>${commentsHTML(d,c.id)}`;
  else if(section==='history')html=`<h1>Моя історія</h1><div class="card"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div>`;
  app.innerHTML=shell(html);refreshNotificationBadge(c.id,'client','clientNotifyBtn');
 }
@@ -358,7 +378,7 @@ async function navigateToClient(id){
 
 async function openClient(id,activeTab=null){
  selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;
- app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="freeze-btn" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
+ app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="freeze-btn" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden"></div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
  refreshTrainerGlobalBadge();
  currentTrainerTab=activeTab||currentTrainerTab||'profile';
  if(currentTrainerTab!=='profile')showTab(currentTrainerTab,null,false);
@@ -939,7 +959,7 @@ function workoutChooser(d,cid,groups){
  let cycle=workoutCycleState(d,groups);
  let hint=cycle.next?`Наступне тренування: <strong>${esc(cycle.next)}</strong>. Після завершення всього циклу зелені позначки автоматично скинуться.`:'';
  let todayDone=(d.workout_sessions||[]).find(x=>(x.started_at||'').slice(0,10)===isoToday()&&x.status==='finished');
- if(todayDone)return `<div class="card"><h2>Тренування на сьогодні <span style="color:#39d353">завершено ✓</span></h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><p class="muted">${hint}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${workoutDayButtons(d,cid,groups)}</div></div>${workoutDayCommentHTML(d,cid,todayDone.day_name)}`;
+ if(todayDone)return `<div class="card"><h2>Тренування на сьогодні <span style="color:#39d353">завершено ✓</span></h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><p class="muted">${hint}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${workoutDayButtons(d,cid,groups)}</div></div>`;
  return `<div class="card"><h2>Тренування</h2><p class="muted">Обери день, щоб просто переглянути вправи. Тренування почнеться лише після натискання «Почати тренування».</p>${hint?`<p class="muted">${hint}</p>`:''}<div style="display:flex;gap:8px;flex-wrap:wrap">${workoutDayButtons(d,cid,groups)}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
 }
 
@@ -960,21 +980,6 @@ function activeExercisesHTML(items,d,cid){
 }
 
 
-
-function workoutDayCommentHTML(d,cid,dayName){
- let marker='__workout__:'+dayName,x=(d.comments||[]).find(c=>c.day===isoToday()&&c.exercise===marker&&c.author==='client');
- if(x)return `<div class="card workout-day-comment"><h2>Коментар до тренування</h2><div class="exercise">${esc(x.body)}</div><button class="dark compact-edit" onclick="editWorkoutDayComment(${x.id},${cid},'${esc(dayName).replace(/'/g,"&#39;")}')">Редагувати</button></div>`;
- return `<div class="card workout-day-comment"><h2>Коментар до тренування</h2><p class="muted">Коментар саме до ${esc(dayName)}.</p><textarea id="workoutDayComment" placeholder="Як пройшло тренування?"></textarea><br><br><button onclick="saveWorkoutDayComment(${cid},'${esc(dayName).replace(/'/g,"&#39;")}')">Зберегти коментар</button></div>`;
-}
-async function saveWorkoutDayComment(cid,dayName,id=null){
- let t=$('#workoutDayComment');if(!t||!t.value.trim())return alert('Напиши коментар');
- let body={client_id:cid,day:isoToday(),program_id:0,exercise:'__workout__:'+dayName,author:'client',body:t.value.trim()};
- await api(id?'/comments/'+id:'/comments',{method:id?'PUT':'POST',body:JSON.stringify(body)});await clientCabinet(cid);
-}
-function editWorkoutDayComment(id,cid,dayName){
- let d=window.currentClientData||{},marker='__workout__:'+dayName,x=(d.comments||[]).find(c=>c.id===id),box=document.querySelector('.workout-day-comment');if(!x||!box)return;
- box.innerHTML=`<h2>Редагувати коментар</h2><textarea id="workoutDayComment">${esc(x.body)}</textarea><br><br><button onclick="saveWorkoutDayComment(${cid},'${esc(dayName).replace(/'/g,"&#39;")}',${id})">Зберегти зміни</button>`;
-}
 
 function commentsHTML(d,cid,day=isoToday()){
  let xs=(d.comments||[]).filter(x=>x.day===day);
@@ -1043,7 +1048,7 @@ async function clientCabinet(id){
  let chosen=active?active.day_name:previewWorkoutDay;
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1><div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>${workoutDayCommentHTML(d,id,active.day_name)}`;
+   programPart=`<h1>${esc(active.day_name)}</h1><div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='';
