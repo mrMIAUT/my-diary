@@ -210,6 +210,16 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   }
 }
 
+
+.profile-socials{display:flex;gap:9px;flex-wrap:wrap;margin-top:7px}
+.profile-social{
+ width:44px;height:44px;border-radius:13px;background:#29292e;border:1px solid var(--line);
+ display:inline-flex;align-items:center;justify-content:center;color:#fff;text-decoration:none
+}
+.profile-social svg{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.profile-social.tiktok svg{fill:currentColor;stroke:none}
+.profile-social:hover{background:#333338}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1051,24 +1061,55 @@ function previewExercisesHTML(items){
 
 function profileVal(v){return esc(v==null?'':String(v))}
 function contactHref(v){v=(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;if(/^@/.test(v))return 'https://t.me/'+v.slice(1);if(/^(instagram\.com|t\.me|telegram\.me|www\.)/i.test(v))return 'https://'+v;return ''}
+function socialHref(kind,v){
+ v=String(v||'').trim();if(!v)return '';
+ if(/^https?:\/\//i.test(v))return v;
+ let u=v.replace(/^@/,'').replace(/^\/+/,'');
+ if(kind==='instagram')return 'https://instagram.com/'+u;
+ if(kind==='telegram')return 'https://t.me/'+u;
+ if(kind==='tiktok')return 'https://www.tiktok.com/@'+u;
+ return '';
+}
+function socialIcon(kind){
+ if(kind==='instagram')return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`;
+ if(kind==='telegram')return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4L3.8 10.6c-1.2.5-1.2 1.2-.2 1.5l4.4 1.4 1.7 5.2c.2.6.1.8.7.8.5 0 .7-.2 1-.5l2.1-2 4.4 3.2c.8.4 1.4.2 1.6-.8L22 5.2c.3-1.1-.4-1.6-1-1.2z"/><path d="M8 13.5L18.7 7"/></svg>`;
+ return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3v11.2a4.7 4.7 0 1 1-4-4.6v3.1a1.8 1.8 0 1 0 1 1.6V3h3zM14.5 3c.7 2.6 2.3 4.1 5 4.5v3.1c-2-.1-3.7-.8-5-2"/></svg>`;
+}
+function legacySocial(c){
+ let v=String(c.contact||'').trim();if(!v)return {};
+ let low=v.toLowerCase();
+ if(low.includes('instagram.com'))return {instagram:v};
+ if(low.includes('t.me')||low.includes('telegram.me'))return {telegram:v};
+ if(low.includes('tiktok.com'))return {tiktok:v};
+ return {};
+}
+function socialContactsHTML(c){
+ let legacy=legacySocial(c),items=[
+  ['instagram',c.instagram||legacy.instagram],
+  ['telegram',c.telegram||legacy.telegram],
+  ['tiktok',c.tiktok||legacy.tiktok]
+ ].filter(x=>x[1]);
+ if(!items.length)return '<strong>—</strong>';
+ return `<div class="profile-socials">${items.map(([k,v])=>`<a class="profile-social ${k}" href="${esc(socialHref(k,v))}" target="_blank" rel="noopener" aria-label="${k}">${socialIcon(k)}</a>`).join('')}</div>`;
+}
 function contactLinkHTML(v){if(!v)return '<strong>—</strong>';let href=contactHref(v);return href?`<a class="contact-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(v)}</a>`:`<strong>${esc(v)}</strong>`}
 function clientProfileHTML(c){
- return `<div class="card"><div class="between"><div><h2>Мій кабінет</h2><p class="muted">Особисті дані та інформація, важлива для тренувань.</p></div><button class="dark" onclick="editClientProfile(${c.id})">Редагувати</button></div><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${contactLinkHTML(c.contact)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
+ return `<div class="card"><div class="between"><div><h2>Мій кабінет</h2><p class="muted">Особисті дані та інформація, важлива для тренувань.</p></div><button class="dark" onclick="editClientProfile(${c.id})">Редагувати</button></div><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
 }
 function trainerProfileHTML(c){
- return `<div class="card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${contactLinkHTML(c.contact)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
+ return `<div class="card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
 }
 function showClientProfile(cid){
  let c=(window.currentClientData||{}).client||{};currentClientView='profile';
- app.innerHTML=shell(`<div class="client-section-page"><h1>Мій профіль</h1><div class="card"><p class="muted">Особисті дані та інформація, важлива для тренувань.</p><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${contactLinkHTML(c.contact)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div><button style="margin-top:20px" onclick="editClientProfile(${cid})">Редагувати анкету</button></div></div>`);
+ app.innerHTML=shell(`<div class="client-section-page"><h1>Мій профіль</h1><div class="card"><p class="muted">Особисті дані та інформація, важлива для тренувань.</p><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div><button style="margin-top:20px" onclick="editClientProfile(${cid})">Редагувати анкету</button></div></div>`);
  history.pushState({eplanPage:'clientProfile',cid},'',location.href);
 }
 function editClientProfile(cid){
  let c=(window.currentClientData||{}).client||{};
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="profileModal"><div class="card"><div class="profile-modal-head"><h2>Мій кабінет</h2><p class="muted" style="margin:0">Особисті дані та інформація, важлива для тренувань.</p></div><button class="profile-close" onclick="profileModal.remove()" aria-label="Закрити">×</button><div class="grid profile-grid"><div class="profile-field"><label>Ім’я</label><input id="pfFirst" placeholder="Ім’я" value="${profileVal(c.first_name||c.name||'')}"></div><div class="profile-field"><label>Прізвище</label><input id="pfLast" placeholder="Прізвище" value="${profileVal(c.last_name||'')}"></div><div class="profile-field"><label>Вік</label><input id="pfAge" type="number" placeholder="Вік" value="${c.age||''}"></div><div class="profile-field profile-wide"><label>Стать</label><select id="pfSex"><option value="">Оберіть стать</option><option ${c.sex==='Чоловіча'?'selected':''}>Чоловіча</option><option ${c.sex==='Жіноча'?'selected':''}>Жіноча</option><option ${c.sex==='Інше'?'selected':''}>Інше</option></select></div><div class="profile-field profile-wide"><label>Instagram або Telegram</label><input id="pfContact" placeholder="@username або https://instagram.com/username" value="${profileVal(c.contact||'')}"><span class="profile-hint">Можна вказати @username або повне посилання.</span></div><div class="profile-field profile-wide"><label>Протипоказання</label><textarea id="pfContra" placeholder="Опишіть протипоказання, якщо вони є">${profileVal(c.contraindications||'')}</textarea><span class="profile-hint">Наприклад: проблеми з серцем, тиском, суглобами тощо.</span></div><div class="profile-field profile-wide"><label>Травми</label><textarea id="pfInjuries" placeholder="Опишіть травми, якщо вони є">${profileVal(c.injuries||'')}</textarea><span class="profile-hint">Наприклад: травми коліна, спини, плеча тощо.</span></div></div><p id="profileErr" class="muted"></p><button onclick="saveClientProfile(${cid})">Зберегти зміни</button></div></div>`)
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="profileModal"><div class="card"><div class="profile-modal-head"><h2>Мій кабінет</h2><p class="muted" style="margin:0">Особисті дані та інформація, важлива для тренувань.</p></div><button class="profile-close" onclick="profileModal.remove()" aria-label="Закрити">×</button><div class="grid profile-grid"><div class="profile-field"><label>Ім’я</label><input id="pfFirst" placeholder="Ім’я" value="${profileVal(c.first_name||c.name||'')}"></div><div class="profile-field"><label>Прізвище</label><input id="pfLast" placeholder="Прізвище" value="${profileVal(c.last_name||'')}"></div><div class="profile-field"><label>Вік</label><input id="pfAge" type="number" placeholder="Вік" value="${c.age||''}"></div><div class="profile-field profile-wide"><label>Стать</label><select id="pfSex"><option value="">Оберіть стать</option><option ${c.sex==='Чоловіча'?'selected':''}>Чоловіча</option><option ${c.sex==='Жіноча'?'selected':''}>Жіноча</option><option ${c.sex==='Інше'?'selected':''}>Інше</option></select></div><div class="profile-field profile-wide"><label>Instagram</label><input id="pfInstagram" placeholder="@username або посилання" value="${profileVal(c.instagram||legacySocial(c).instagram||'')}"></div><div class="profile-field profile-wide"><label>Telegram</label><input id="pfTelegram" placeholder="@username або посилання" value="${profileVal(c.telegram||legacySocial(c).telegram||'')}"></div><div class="profile-field profile-wide"><label>TikTok</label><input id="pfTikTok" placeholder="@username або посилання" value="${profileVal(c.tiktok||legacySocial(c).tiktok||'')}"><span class="profile-hint">Усі поля необов’язкові. Можна додати одну, дві або всі три соцмережі.</span></div><div class="profile-field profile-wide"><label>Протипоказання</label><textarea id="pfContra" placeholder="Опишіть протипоказання, якщо вони є">${profileVal(c.contraindications||'')}</textarea><span class="profile-hint">Наприклад: проблеми з серцем, тиском, суглобами тощо.</span></div><div class="profile-field profile-wide"><label>Травми</label><textarea id="pfInjuries" placeholder="Опишіть травми, якщо вони є">${profileVal(c.injuries||'')}</textarea><span class="profile-hint">Наприклад: травми коліна, спини, плеча тощо.</span></div></div><p id="profileErr" class="muted"></p><button onclick="saveClientProfile(${cid})">Зберегти зміни</button></div></div>`)
 }
 async function saveClientProfile(cid){
- try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,contraindications:pfContra.value,injuries:pfInjuries.value,contact:pfContact.value})});profileModal.remove();let d=await api('/client/'+cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
+ try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,contraindications:pfContra.value,injuries:pfInjuries.value,contact:'',instagram:pfInstagram.value,telegram:pfTelegram.value,tiktok:pfTikTok.value})});profileModal.remove();let d=await api('/client/'+cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
 }
 
 async function clientCabinet(id){
