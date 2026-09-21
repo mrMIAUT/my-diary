@@ -87,7 +87,7 @@ def send_reset_email(email:str,link:str):
 
 def init():
     with con() as c:
-        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,status TEXT DEFAULT 'Активний')""")
+        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний')""")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
@@ -96,6 +96,7 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
 
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
@@ -152,7 +153,7 @@ class NutIn(BaseModel):
 class MeasureIn(BaseModel):
     client_id:int; weight:float; waist:float=0; chest:float=0; hips:float=0
 class NutritionTargetIn(BaseModel):
-    kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
+    kcal:int=0; protein:int=0; fat:int=0; carbs:int=0; meal_plan:str=""
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str
 class WorkoutReviewIn(BaseModel):
@@ -315,7 +316,7 @@ def client(cid:int):
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
-    run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,cid))
+    run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=?,meal_plan=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,x.meal_plan,cid))
     return one("SELECT * FROM clients WHERE id=?",(cid,))
 
 @app.post("/api/cardio")
