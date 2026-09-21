@@ -354,9 +354,34 @@ function showClientSection(section){
  let html='';
  if(section==='mealplan')html=`<h1>План харчування</h1><div class="card"><h2>Моє харчування</h2><div class="daily-macros-line"><div class="daily-macro"><strong>${c.kcal||0}</strong><br>ккал</div><div class="daily-macro"><strong>${c.protein||0}</strong><br>Б</div><div class="daily-macro"><strong>${c.fat||0}</strong><br>Ж</div><div class="daily-macro"><strong>${c.carbs||0}</strong><br>В</div></div></div>${clientMealPlanHTML(d)||'<div class="card"><p class="muted">План харчування ще не додано.</p></div>'}`;
  else if(section==='measurements')html=`<h1>Заміри</h1>${clientMeasurementsHTML(d,c.id)}`;
- else if(section==='history')html=`<h1>Моя історія</h1><div class="card"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div>`;
+ else if(section==='history')html=`<h1>Моя історія</h1><div id="clientCalendar">${calendarHTML(d,'client')}</div>${clientProgressHTML(d)}`;
  app.innerHTML=shell(html);refreshNotificationBadge(c.id,'client','clientNotifyBtn');
 }
+
+function clientProgressHTML(d){
+ let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let metric=window.clientProgressMetric||'weight',period=window.clientProgressPeriod||'90';
+ let labels={weight:'Вага',waist:'Талія',chest:'Груди',hips:'Таз',thighs:'Бедра',arms:'Руки'};
+ let from=periodStart(period),cf=window.clientProgressFrom||'',ct=window.clientProgressTo||'';
+ let filtered=xs.filter(x=>{
+   if(period==='custom')return (!cf||x.day>=cf)&&(!ct||x.day<=ct);
+   return !from||x.day>=from;
+ }).filter(x=>Number(x[metric])>0);
+ let first=filtered[0],last=filtered[filtered.length-1],delta=first&&last?(+last[metric]-+first[metric]):0;
+ let chart='';
+ if(filtered.length){
+   let vals=filtered.map(x=>+x[metric]),min=Math.min(...vals),max=Math.max(...vals),range=Math.max(1,max-min);
+   let pts=filtered.map((x,j)=>`${filtered.length===1?50:(j/(filtered.length-1))*100},${88-((+x[metric]-min)/range)*68}`).join(' ');
+   chart=`<div style="margin-top:18px"><svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:180px;overflow:visible"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" style="color:var(--yellow)"/></svg><div class="between muted" style="font-size:12px"><span>${esc(filtered[0].day)}</span><span>${esc(filtered[filtered.length-1].day)}</span></div></div>`;
+ }else chart='<p class="muted" style="margin-top:18px">За вибраний період немає замірів для цього показника.</p>';
+ return `<div class="card" id="clientProgress"><h2>Мій прогрес</h2><p class="muted">Переглядай зміну замірів за вибраний проміжок часу.</p>
+ <div class="grid" style="margin-top:14px"><div><div class="muted">Показник</div><select onchange="window.clientProgressMetric=this.value;refreshClientProgress()">${Object.entries(labels).map(([v,t])=>`<option value="${v}" ${metric===v?'selected':''}>${t}</option>`).join('')}</select></div></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${[['30','30 днів'],['90','3 місяці'],['180','6 місяців'],['all','Весь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="window.clientProgressPeriod='${v}';refreshClientProgress()">${t}</button>`).join('')}</div>
+ <div class="results-date-range"><div class="results-date-field"><div class="muted">З</div><input id="clientProgressFrom" type="date" value="${cf}"></div><div class="results-date-field"><div class="muted">По</div><input id="clientProgressTo" type="date" value="${ct}"></div><button class="${period==='custom'?'':'dark'}" onclick="applyClientProgressPeriod()">Показати період</button></div>
+ ${first&&last?`<div class="exercise" style="margin-top:16px"><div class="between"><span>${labels[metric]}</span><strong>${Number(last[metric]).toFixed(1).replace('.0','')} ${metric==='weight'?'кг':'см'}</strong></div><div class="muted" style="margin-top:6px">Зміна за період: ${delta>0?'+':''}${delta.toFixed(1).replace('.0','')} ${metric==='weight'?'кг':'см'}</div></div>`:''}${chart}</div>`;
+}
+function refreshClientProgress(){let el=$('#clientProgress');if(!el)return;let tmp=document.createElement('div');tmp.innerHTML=clientProgressHTML(window.currentClientData||{});el.replaceWith(tmp.firstElementChild)}
+function applyClientProgressPeriod(){window.clientProgressFrom=$('#clientProgressFrom')?.value||'';window.clientProgressTo=$('#clientProgressTo')?.value||'';window.clientProgressPeriod='custom';refreshClientProgress()}
 function openClientHistory(){let head=document.querySelector('#clientCalendarBody')?.previousElementSibling;if(head){let body=document.querySelector('#clientCalendarBody');if(body?.classList.contains('hidden'))toggleCalendar('clientCalendarBody',head);head.scrollIntoView({behavior:'smooth',block:'start'})}}
 
 
