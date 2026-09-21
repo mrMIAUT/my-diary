@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
+<meta name="theme-color" content="#080909">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Є ПЛАН">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080909'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Arial,sans-serif' font-size='48' font-weight='700' fill='%23ffd000'%3EЄ%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#080909;--card:#19191c;--card2:#101012;--line:#303035;--text:#f4f4f5;--muted:#9a9aa3;--yellow:#ffd000}
@@ -873,7 +880,26 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
  if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
  route()
 }
-</script></body></html><style>
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', {scope:'/'});
+      reg.update();
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        location.reload();
+      });
+    } catch (e) {
+      console.warn('PWA service worker registration failed', e);
+    }
+  });
+}
+</script>
+</body></html><style>
 /* Align menu + logo with page content */
 .top-left{padding-left:0!important;margin-left:0!important}
 @media(max-width:650px){.top-left{padding-left:0!important;margin-left:0!important}}
