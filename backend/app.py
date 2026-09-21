@@ -97,6 +97,10 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_plan_items(
+            id SERIAL PRIMARY KEY, client_id INTEGER, meal_number INTEGER, variant_number INTEGER,
+            content TEXT DEFAULT '', sort INTEGER DEFAULT 0
+        )""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 0")
@@ -166,8 +170,10 @@ class MeasureIn(BaseModel):
     client_id:int; weight:float=0; waist:float=0; chest:float=0; hips:float=0; thighs:float=0; arms:float=0
 class ClientProfileIn(BaseModel):
     first_name:str=""; last_name:str=""; age:int=0; sex:str=""; contraindications:str=""; injuries:str=""; contact:str=""
+class NutritionPlanItemIn(BaseModel):
+    meal_number:int; variant_number:int=1; content:str=""; sort:int=0
 class NutritionTargetIn(BaseModel):
-    kcal:int=0; protein:int=0; fat:int=0; carbs:int=0; meal_plan:str=""
+    kcal:int=0; protein:int=0; fat:int=0; carbs:int=0; meal_plan:str=""; meals:List[NutritionPlanItemIn]=[]
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str
 class WorkoutReviewIn(BaseModel):
@@ -322,6 +328,7 @@ def client(cid:int):
             "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
+            "nutrition_plan":rows("SELECT * FROM nutrition_plan_items WHERE client_id=? ORDER BY meal_number,variant_number,sort,id",(cid,)),
             "measurements":rows("SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",(cid,)),
             "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,)),
             "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,)),
@@ -337,7 +344,21 @@ def update_client_profile(cid:int,x:ClientProfileIn):
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
-    run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=?,meal_plan=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,x.meal_plan,cid))
+    legacy=x.meal_plan.strip()
+    if x.meals:
+        parts=[]
+        for item in x.meals:
+            txt=item.content.strip()
+            if txt: parts.append(f"Прийом їжі {item.meal_number}, варіант {item.variant_number}: {txt}")
+        legacy="\n\n".join(parts)
+    with con() as c:
+        c.execute("UPDATE clients SET kcal=%s,protein=%s,fat=%s,carbs=%s,meal_plan=%s WHERE id=%s",(x.kcal,x.protein,x.fat,x.carbs,legacy,cid))
+        c.execute("DELETE FROM nutrition_plan_items WHERE client_id=%s",(cid,))
+        if x.meals:
+            for item in x.meals:
+                if item.content.strip():
+                    c.execute("INSERT INTO nutrition_plan_items(client_id,meal_number,variant_number,content,sort) VALUES(%s,%s,%s,%s,%s)",(cid,max(1,item.meal_number),max(1,item.variant_number),item.content.strip(),item.sort))
+        c.commit()
     return one("SELECT * FROM clients WHERE id=?",(cid,))
 
 @app.post("/api/cardio")
