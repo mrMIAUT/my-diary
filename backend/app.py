@@ -214,6 +214,19 @@ class HistoricalSetIn(BaseModel):
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
+
+@app.get("/manifest.webmanifest")
+def pwa_manifest():
+    return FileResponse(BASE/"static"/"manifest.webmanifest", media_type="application/manifest+json")
+
+@app.get("/sw.js")
+def pwa_service_worker():
+    return FileResponse(
+        BASE/"static"/"sw.js",
+        media_type="application/javascript",
+        headers={"Cache-Control":"no-cache, no-store, must-revalidate","Service-Worker-Allowed":"/"}
+    )
+
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
 @app.get("/health")
