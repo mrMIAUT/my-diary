@@ -546,11 +546,18 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 def get_all_trainer_notifications():
     return rows("""SELECT n.*, COALESCE(NULLIF(c.first_name,''),c.name,'Клієнт') AS client_name
                    FROM notifications n LEFT JOIN clients c ON c.id=n.client_id
-                   WHERE n.recipient='trainer' ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
+                   WHERE n.recipient='trainer' AND n.kind='workout_review' ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
 
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str):
-    return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
+    return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? AND kind='workout_review' ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
+
+@app.delete("/api/notifications/item/{nid}")
+def delete_notification_item(nid:int):
+    n=one("SELECT * FROM notifications WHERE id=?",(nid,))
+    if not n: raise HTTPException(404,"Сповіщення не знайдено")
+    run("DELETE FROM notifications WHERE id=?",(nid,))
+    return {"ok":True}
 
 @app.patch("/api/notifications/item/{nid}/read")
 def read_notification_item(nid:int):
