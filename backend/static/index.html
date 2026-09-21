@@ -155,7 +155,9 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 
 /* Sticky menu access + workout prescription */
-.side-menu-btn{position:fixed!important;left:max(14px,env(safe-area-inset-left))!important;top:calc(10px + env(safe-area-inset-top))!important;z-index:2200!important;box-shadow:0 6px 24px rgba(0,0,0,.38)!important}
+.side-menu-btn{position:relative!important;left:auto!important;top:auto!important;z-index:auto!important;box-shadow:none!important;flex:0 0 auto}
+.top{position:sticky!important;top:0!important;z-index:1900!important;background:rgba(8,9,9,.96)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.top-left{padding-left:0!important;margin-left:0!important}
 .program-extra{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.program-extra .badge{font-size:12px}
 .workout-day-comment{margin-top:18px}.workout-day-comment textarea{width:100%;min-height:88px}
 </style></head><body><div id="app"></div><script>
