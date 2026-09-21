@@ -100,6 +100,26 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 }
 .offline-pill.show{display:block}.offline-pill.syncing{color:#ffd000}
 
+
+/* Full-width logout button */
+.side-menu-footer .logout-link{
+  width:100%!important;
+  min-height:52px!important;
+  background:#29292e!important;
+  border:1px solid #303036!important;
+  color:#fff!important;
+  padding:13px 16px!important;
+  border-radius:14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  font-size:16px!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+}
+.side-menu-footer .logout-link:hover{background:#323238!important;color:#fff!important}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -280,11 +300,11 @@ async function navigateToClient(id){
  await openClient(id,'profile');
 }
 
-async function openClient(id,activeTab='profile'){
+async function openClient(id,activeTab=null){
  selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;
  app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="freeze-btn" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
  refreshTrainerGlobalBadge();
- currentTrainerTab=activeTab||'profile';
+ currentTrainerTab=activeTab||currentTrainerTab||'profile';
  if(currentTrainerTab!=='profile')showTab(currentTrainerTab,null,false);
 
 }
