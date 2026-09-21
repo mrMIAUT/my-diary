@@ -97,7 +97,16 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS sex TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS contraindications TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS injuries TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms DOUBLE PRECISION DEFAULT 0")
 
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
@@ -151,7 +160,9 @@ class SetResultIn(BaseModel):
 class NutIn(BaseModel):
     client_id:int; kcal:int; protein:int; fat:int; carbs:int
 class MeasureIn(BaseModel):
-    client_id:int; weight:float; waist:float=0; chest:float=0; hips:float=0
+    client_id:int; weight:float=0; waist:float=0; chest:float=0; hips:float=0; thighs:float=0; arms:float=0
+class ClientProfileIn(BaseModel):
+    first_name:str=""; last_name:str=""; age:int=0; sex:str=""; contraindications:str=""; injuries:str=""; contact:str=""
 class NutritionTargetIn(BaseModel):
     kcal:int=0; protein:int=0; fat:int=0; carbs:int=0; meal_plan:str=""
 class WorkoutStartIn(BaseModel):
@@ -312,6 +323,13 @@ def client(cid:int):
             "workout_sessions":rows("SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",(cid,)),
             "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,)),
             "cardio":rows("SELECT * FROM cardio_log WHERE client_id=? ORDER BY day DESC,id DESC",(cid,))}
+@app.patch("/api/client/{cid}/profile")
+def update_client_profile(cid:int,x:ClientProfileIn):
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
+    display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
+    run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,contraindications=?,injuries=?,contact=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),display,display,cid))
+    return one("SELECT * FROM clients WHERE id=?",(cid,))
+
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
@@ -491,8 +509,9 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
     require_active_client(x.client_id)
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips))
-    run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id)); return {"id":i}
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
+    if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
+    return {"id":i}
 
 @app.delete("/api/comments/{comment_id}")
 def delete_comment(comment_id:int):
