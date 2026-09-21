@@ -115,6 +115,9 @@ def init():
             id SERIAL PRIMARY KEY, client_id INTEGER, recipient TEXT, kind TEXT,
             message TEXT, is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
+        c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_tab TEXT DEFAULT ''")
+        c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_day TEXT DEFAULT ''")
+        c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_program_id INTEGER DEFAULT 0")
         c.execute("""CREATE TABLE IF NOT EXISTS password_resets(
             id SERIAL PRIMARY KEY, client_id INTEGER, token_hash TEXT UNIQUE,
             expires_at TIMESTAMP, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -347,7 +350,7 @@ def save_cardio(x:CardioIn):
     vals=(x.cardio_type,max(0,x.minutes),max(0,x.speed),max(0,x.incline),max(0,x.steps))
     if old: run("UPDATE cardio_log SET cardio_type=?,minutes=?,speed=?,incline=?,steps=? WHERE id=?",vals+(old["id"],))
     else: run("INSERT INTO cardio_log(client_id,day,cardio_type,minutes,speed,incline,steps) VALUES(?,?,?,?,?,?,?)",(x.client_id,d)+vals)
-    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,"trainer","cardio","Клієнт оновив кардіо та активність за "+d))
+    run("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(?,?,?,?,?,?)",(x.client_id,"trainer","cardio","Клієнт оновив кардіо та активність за "+d,"cardio",d))
     return {"ok":True}
 
 @app.post("/api/program")
@@ -460,7 +463,7 @@ def add_comment(x:CommentIn):
     target=(" до вправи «"+x.exercise+"»") if x.exercise else " до тренування"
     comment_text=(x.body or "").strip()
     message=who+" залишив коментар"+target+((": "+comment_text) if comment_text else "")
-    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",(x.client_id,recipient,"comment",message))
+    run("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day,target_program_id) VALUES(?,?,?,?,?,?,?)",(x.client_id,recipient,"comment",message,"comments",x.day,x.program_id))
     return one("SELECT * FROM comments WHERE id=?",(i,))
 
 @app.patch("/api/workout/{sid}/review")
@@ -471,6 +474,12 @@ def review_workout(sid:int,x:WorkoutReviewIn):
     run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
         (s["client_id"],"client","workout_review","Тренер перевірив тренування "+s["day_name"]))
     return {"ok":True}
+
+@app.get("/api/notifications/trainer/all")
+def get_all_trainer_notifications():
+    return rows("""SELECT n.*, COALESCE(NULLIF(c.first_name,''),c.name,'Клієнт') AS client_name
+                   FROM notifications n LEFT JOIN clients c ON c.id=n.client_id
+                   WHERE n.recipient='trainer' ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
 
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str):
