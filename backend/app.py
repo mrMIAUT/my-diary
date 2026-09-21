@@ -117,6 +117,8 @@ def init():
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS technique_url TEXT DEFAULT ''")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rest_seconds INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
@@ -174,7 +176,7 @@ class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""
+    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rir_by_set:str=""
 class CardioIn(BaseModel):
     client_id:int; day:str=""; cardio_type:str=""; minutes:int=0; speed:float=0; incline:float=0; steps:int=0
 class ProgramOrderIn(BaseModel):
@@ -213,19 +215,6 @@ class HistoricalSetIn(BaseModel):
     program_id:int; exercise:str; set_number:int; weight:float; reps:int; rir:int
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
-
-
-@app.get("/manifest.webmanifest")
-def pwa_manifest():
-    return FileResponse(BASE/"static"/"manifest.webmanifest", media_type="application/manifest+json")
-
-@app.get("/sw.js")
-def pwa_service_worker():
-    return FileResponse(
-        BASE/"static"/"sw.js",
-        media_type="application/javascript",
-        headers={"Cache-Control":"no-cache, no-store, must-revalidate","Service-Worker-Allowed":"/"}
-    )
 
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
@@ -414,13 +403,13 @@ def save_cardio(x:CardioIn):
 
 @app.post("/api/program")
 def add_program(x:ProgramIn):
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url) VALUES(?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip())); return {"id":i}
+    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rir_by_set) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rir_by_set.strip())); return {"id":i}
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn):
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
-    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),pid))
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rir_by_set=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rir_by_set.strip(),pid))
     return {"ok":True}
 
 @app.post("/api/program/reorder")
@@ -474,7 +463,7 @@ def start_workout(x:WorkoutStartIn):
     existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
     if existing:
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
+    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rir_by_set FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
     i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
     session=one("SELECT * FROM workout_sessions WHERE id=?",(i,))
     client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(x.client_id,))
@@ -599,6 +588,13 @@ def measurement(x:MeasureIn):
     i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
+
+@app.put("/api/comments/{comment_id}")
+def edit_comment(comment_id:int,x:CommentIn):
+    c=one("SELECT * FROM comments WHERE id=?",(comment_id,))
+    if not c: raise HTTPException(404,"Коментар не знайдено")
+    run("UPDATE comments SET body=? WHERE id=?",(x.body.strip(),comment_id))
+    return {"ok":True}
 
 @app.delete("/api/comments/{comment_id}")
 def delete_comment(comment_id:int):
