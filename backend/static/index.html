@@ -188,6 +188,28 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .notification-swipe.reveal .notification-item{transform:translateX(-72px)}
 .client-collapsible-body{margin-top:14px}.client-collapsible.done{border-color:#356b45!important}.client-status{color:#56d878;font-weight:900}
 .client-section-page{max-width:900px}
+
+/* Client questionnaire editor: clear the fixed app header */
+#profileModal{
+  padding-top:calc(112px + env(safe-area-inset-top))!important;
+  align-items:flex-start!important;
+}
+#profileModal>.card{
+  max-height:calc(100dvh - 132px - env(safe-area-inset-top))!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+}
+@media(max-width:700px){
+  #profileModal{
+    padding-top:calc(104px + env(safe-area-inset-top))!important;
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  #profileModal>.card{
+    max-height:calc(100dvh - 122px - env(safe-area-inset-top))!important;
+  }
+}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
 const OFFDB='eplan-offline-v1', OFFVER=1;
