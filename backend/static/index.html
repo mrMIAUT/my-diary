@@ -50,6 +50,13 @@
 }
 @media(max-width:390px){.trainer-toolbar{gap:8px}.trainer-toolbar>button,.trainer-toolbar .notify-btn{padding:11px 12px}.trainer-client-actions{width:100%}.trainer-client-actions button{flex:1 1 auto}.trainer-tabs button{padding:11px 14px}}
 
+
+/* Mobile overlap fixes v2 */
+.results-date-range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;margin-top:14px}
+.results-date-field{min-width:0}.results-date-field input{min-width:0;width:100%}
+.superset-title-line{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}.superset-title-line strong{min-width:0;flex:0 1 auto}.superset-title-line .badge{flex:0 0 auto;margin-left:0!important;white-space:nowrap;line-height:1}
+@media(max-width:650px){.results-date-range{grid-template-columns:1fr 1fr}.results-date-range>button{grid-column:1/-1;justify-self:start}.results-date-field input[type=date]{font-size:16px;padding:12px 9px}.superset-title-line{display:block}.superset-title-line .badge{display:inline-block;margin:8px 0 2px!important;padding:7px 11px}.superset-inner>div:first-child{padding-right:0}}
+@media(max-width:390px){.results-date-range{grid-template-columns:1fr}.results-date-range>button{grid-column:auto;width:100%}}
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;
 async function api(path,opt={}){let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});if(!r.ok){let x;try{x=await r.json()}catch{};throw new Error(x?.detail||'Помилка сервера')}return r.status===204?null:r.json()}
@@ -82,9 +89,14 @@ async function confirmPasswordReset(token){
 function togglePassword(){let p=$('#pass');if(p)p.type=p.type==='password'?'text':'password'}
 async function login(){try{let s=await api('/login',{method:'POST',body:JSON.stringify({email:email.value,password:pass.value})});session=s;localStorage.setItem('fitSession',JSON.stringify(s));route()}catch(e){err.textContent=e.message}}
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}
+async function goToTrainerHome(){
+ history.pushState({eplanPage:'clients'},'',location.pathname+location.search);
+ selected=null;window.currentClientData=null;
+ await trainerHome();
+}
 async function trainerHome(){
  let cs=await api('/clients'),activeCount=cs.filter(c=>c.status==='Активний').length;
- app.innerHTML=shell(`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${activeCount} · На паузі: ${cs.filter(c=>c.status==='Заморожений').length}</p><button onclick="newClient()">+ Додати клієнта</button></div><h1>Клієнти</h1>${cs.map(c=>`<div class="card client" onclick="openClient(${c.id})"><div class="between"><div><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')} · ${c.weight||0} кг</div></div><span class="${c.live_status==='Тренується'?'training-live':c.status==='Заморожений'?'badge status-frozen':'badge'}">${esc(c.live_status||c.status||'Активний')}</span></div></div>`).join('')}`)
+ app.innerHTML=shell(`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${activeCount} · На паузі: ${cs.filter(c=>c.status==='Заморожений').length}</p><button onclick="newClient()">+ Додати клієнта</button></div><h1>Клієнти</h1>${cs.map(c=>`<div class="card client" onclick="navigateToClient(${c.id})"><div class="between"><div><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')} · ${c.weight||0} кг</div></div><span class="${c.live_status==='Тренується'?'training-live':c.status==='Заморожений'?'badge status-frozen':'badge'}">${esc(c.live_status||c.status||'Активний')}</span></div></div>`).join('')}`)
 }
 function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><p class="muted">Вкажи справжню пошту клієнта. Після створення він отримає посилання та сам встановить пароль.</p><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" type="email" autocomplete="email" placeholder="Email клієнта"><input id="g" placeholder="Ціль"><input id="w" type="number" placeholder="Вага, кг"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити та надіслати запрошення</button></div></div>`)}
 async function createClient(){
@@ -98,13 +110,19 @@ async function createClient(){
    trainerHome()
  }catch(x){me.textContent=x.message}
 }
+async function navigateToClient(id){
+ // Only real screen changes belong to browser history. Inner tabs do not.
+ history.pushState({eplanPage:'client',eplanClient:id},'',location.pathname+location.search+'#client-'+id);
+ await openClient(id,'profile');
+}
+
 async function openClient(id,activeTab='profile'){
  selected=id;let d=await api('/client/'+id),c=d.client;window.currentClientData=d;
- app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="trainerHome()">← До клієнтів</button><div class="trainer-header-notify"><button id="trainerNotifyBtn" class="dark notify-btn" onclick="showNotifications(${c.id},'trainer')">🔔 Сповіщення</button></div></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="big">${c.weight||0} кг</div><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="dark" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div class="tabs trainer-tabs"><button data-tab="profile" onclick="showTab('profile',this)">Анкета</button><button data-tab="program" class="dark" onclick="showTab('program',this)">Програма</button><button data-tab="results" class="dark" onclick="showTab('results',this)">Результати</button><button data-tab="nutrition" class="dark" onclick="showTab('nutrition',this)">Харчування</button><button data-tab="progress" class="dark" onclick="showTab('progress',this)">Заміри</button><button data-tab="calendar" class="dark" onclick="showTab('calendar',this)">Календар</button><button data-tab="comments" class="dark" onclick="showTab('comments',this)">Коментарі</button><button data-tab="cardio" class="dark" onclick="showTab('cardio',this)">Кардіо</button></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
+ app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button><div class="trainer-header-notify"><button id="trainerNotifyBtn" class="dark notify-btn" onclick="showNotifications(${c.id},'trainer')">🔔 Сповіщення</button></div></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="big">${c.weight||0} кг</div><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="dark" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div class="tabs trainer-tabs"><button data-tab="profile" onclick="showTab('profile',this)">Анкета</button><button data-tab="program" class="dark" onclick="showTab('program',this)">Програма</button><button data-tab="results" class="dark" onclick="showTab('results',this)">Результати</button><button data-tab="nutrition" class="dark" onclick="showTab('nutrition',this)">Харчування</button><button data-tab="progress" class="dark" onclick="showTab('progress',this)">Заміри</button><button data-tab="calendar" class="dark" onclick="showTab('calendar',this)">Календар</button><button data-tab="comments" class="dark" onclick="showTab('comments',this)">Коментарі</button><button data-tab="cardio" class="dark" onclick="showTab('cardio',this)">Кардіо</button></div><div id="profile" class="tab">${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="progress" class="tab hidden">${measureHTML(d)}</div><div id="comments" class="tab hidden">${commentsHTML(d,c.id)}</div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб відкрити календар</span></span><span class="arrow">⌄</span></button><div id="trainerCalendarBody" class="hidden" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
  refreshNotificationBadge(c.id,'trainer','trainerNotifyBtn');
  let target=document.querySelector(`.trainer-tabs button[data-tab="${activeTab}"]`)||document.querySelector('.trainer-tabs button[data-tab="profile"]');
  if(target&&activeTab!=='profile')showTab(activeTab,target,false);
- if(!history.state?.eplanClient || history.state.eplanClient!==id)history.replaceState({eplanClient:id,tab:activeTab},'',location.pathname+location.search+'#client-'+id+'-'+activeTab);
+
 }
 
 async function setClientStatus(cid,status){
@@ -128,7 +146,7 @@ function showTab(id,btn,push=true){
  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));let pane=$('#'+id);if(!pane)return;pane.classList.remove('hidden');
  document.querySelectorAll('.trainer-tabs button').forEach(x=>x.classList.add('dark'));if(btn)btn.classList.remove('dark');
  if(btn&&btn.scrollIntoView)btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
- if(push&&selected){let st={eplanClient:selected,tab:id};if(history.state?.eplanClient===selected&&history.state?.tab===id)history.replaceState(st,'',location.pathname+location.search+'#client-'+selected+'-'+id);else history.pushState(st,'',location.pathname+location.search+'#client-'+selected+'-'+id)}
+ // Inner cabinet tabs are UI state only; they must not create browser history entries.
 }
 function cardioHTML(d,cid,readonly=false){
  let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
@@ -167,7 +185,7 @@ function programHTML(d){
    });
    let rows=blocks.map((b,bi)=>{
      let first=b.items[0],isSuper=!!b.group;
-     let info=b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div><strong>${esc(x.exercise)}</strong>${isSuper?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}</div><div class="muted">${x.sets} підходи × ${esc(x.reps)} · RIR ${x.target_rir}</div>${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">▶ Техніка</a>`:''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
+     let info=b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${isSuper?`<span class="badge" style="color:var(--yellow)">Суперсет</span>`:''}</div><div class="muted">${x.sets} підходи × ${esc(x.reps)} · RIR ${x.target_rir}</div>${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">▶ Техніка</a>`:''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
      return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" onclick="event.stopPropagation();addSupersetExercise(${first.id},'${esc(first.day_name).replace(/'/g,"&#39;")}')">＋</button>`:''}</div></div>`;
    }).join('');
    return `<div class="card"><button class="program-day-head" onclick="toggleProgramDay('${bodyId}',this)"><h2 style="margin:0">${esc(day)}</h2><span class="program-day-arrow">⌃</span></button><div id="${bodyId}" style="margin-top:18px">${rows}</div></div>`;
@@ -467,9 +485,9 @@ function resultsHTML(d){
   <div style="display:flex;gap:8px;flex-wrap:wrap">
    ${[['30','30 днів'],['90','3 місяці'],['180','6 місяців'],['all','Весь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="setResultsPeriod('${v}')">${t}</button>`).join('')}
   </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:14px">
-   <div><div class="muted">З</div><input id="resultsFrom" type="date" value="${window.trainerResultsFrom||''}"></div>
-   <div><div class="muted">По</div><input id="resultsTo" type="date" value="${window.trainerResultsTo||''}"></div>
+  <div class="results-date-range">
+   <div class="results-date-field"><div class="muted">З</div><input id="resultsFrom" type="date" value="${window.trainerResultsFrom||''}"></div>
+   <div class="results-date-field"><div class="muted">По</div><input id="resultsTo" type="date" value="${window.trainerResultsTo||''}"></div>
    <button class="${period==='custom'?'':'dark'}" onclick="applyCustomResultsPeriod()">Показати період</button>
   </div>
  </div>
@@ -705,15 +723,20 @@ async function saveSets(cid,pid,exercise,count){
 }
 window.addEventListener('popstate',async e=>{
  if(!session)return;
- let st=e.state;
- if(session.role==='trainer'&&st?.eplanClient){
-   if(selected!==st.eplanClient||!window.currentClientData)await openClient(st.eplanClient,st.tab||'profile');
-   else{let b=document.querySelector(`.trainer-tabs button[data-tab="${st.tab||'profile'}"]`);if(b)showTab(st.tab||'profile',b,false)}
-   return;
+ let st=e.state||{};
+ if(session.role==='trainer'){
+   if(st.eplanPage==='client'&&st.eplanClient){
+     await openClient(st.eplanClient,'profile');
+   }else{
+     selected=null;window.currentClientData=null;
+     await trainerHome();
+   }
  }
- if(session.role==='trainer'&&selected){selected=null;await trainerHome()}
 });
 
 let startupResetToken=new URLSearchParams(location.search).get('reset');
-if(startupResetToken){renderResetPassword(startupResetToken)}else{route()}
+if(startupResetToken){renderResetPassword(startupResetToken)}else{
+ if(!history.state?.eplanPage)history.replaceState({eplanPage:'clients'},'',location.pathname+location.search);
+ route()
+}
 </script></body></html>
