@@ -62,6 +62,31 @@ def require_active_client(cid:int):
     if c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
     if c["status"]=="Заморожений": raise HTTPException(403,"Акаунт заморожено. Доступний лише перегляд історії.")
 
+def send_telegram(text:str):
+    token=os.getenv("TELEGRAM_BOT_TOKEN","").strip()
+    chat_id=os.getenv("TELEGRAM_CHAT_ID","").strip()
+    if not token or not chat_id:
+        print("TELEGRAM: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is empty", flush=True)
+        return False
+    data=json.dumps({
+        "chat_id":chat_id,
+        "text":text
+    },ensure_ascii=False).encode("utf-8")
+    req=urllib.request.Request(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        data=data,
+        headers={"Content-Type":"application/json"},
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req,timeout=10) as r:
+            ok=200<=r.status<300
+            print(f"TELEGRAM: status={r.status}", flush=True)
+            return ok
+    except Exception as e:
+        print(f"TELEGRAM ERROR: {type(e).__name__}: {e}", flush=True)
+        return False
+
 def send_reset_email(email:str,link:str):
     key=os.getenv("RESEND_API_KEY","").strip()
     sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
@@ -438,12 +463,31 @@ def start_workout(x:WorkoutStartIn):
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
     snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
     i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
-    return one("SELECT * FROM workout_sessions WHERE id=?",(i,))
+    session=one("SELECT * FROM workout_sessions WHERE id=?",(i,))
+    client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(x.client_id,))
+    if client_info:
+        full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
+        client_name=full_name or client_info.get("name") or "Клієнт"
+        send_telegram(f"🏋️ {client_name} почав тренування\n{x.day_name}\n{today}")
+    return session
 
 @app.post("/api/workout/{sid}/finish")
 def finish_workout(sid:int):
-    run("UPDATE workout_sessions SET status='finished',finished_at=CURRENT_TIMESTAMP WHERE id=?",(sid,))
-    return one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    if not session:
+        raise HTTPException(404,"Тренування не знайдено")
+    was_finished=session.get("status")=="finished"
+    run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE id=?",(sid,))
+    finished=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    if not was_finished:
+        client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
+        if client_info:
+            full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
+            client_name=full_name or client_info.get("name") or "Клієнт"
+            workout_day=str(session.get("day_name") or "Тренування")
+            workout_date=str(session.get("started_at") or "")[:10] or str(date.today())
+            send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
+    return finished
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
