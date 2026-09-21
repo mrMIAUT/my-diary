@@ -135,6 +135,9 @@ def init():
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS contraindications TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS injuries TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS instagram TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS telegram TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tiktok TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs DOUBLE PRECISION DEFAULT 0")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms DOUBLE PRECISION DEFAULT 0")
@@ -196,7 +199,7 @@ class NutIn(BaseModel):
 class MeasureIn(BaseModel):
     client_id:int; weight:float=0; waist:float=0; chest:float=0; hips:float=0; thighs:float=0; arms:float=0
 class ClientProfileIn(BaseModel):
-    first_name:str=""; last_name:str=""; age:int=0; sex:str=""; contraindications:str=""; injuries:str=""; contact:str=""
+    first_name:str=""; last_name:str=""; age:int=0; sex:str=""; contraindications:str=""; injuries:str=""; contact:str=""; instagram:str=""; telegram:str=""; tiktok:str=""
 class NutritionPlanItemIn(BaseModel):
     meal_number:int; variant_number:int=1; content:str=""; sort:int=0
 class NutritionTargetIn(BaseModel):
@@ -364,7 +367,7 @@ def client(cid:int):
 def update_client_profile(cid:int,x:ClientProfileIn):
     if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
     display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
-    run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,contraindications=?,injuries=?,contact=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),display,display,cid))
+    run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,contraindications=?,injuries=?,contact=?,instagram=?,telegram=?,tiktok=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),display,display,cid))
     return one("SELECT * FROM clients WHERE id=?",(cid,))
 
 @app.patch("/api/client/{cid}/nutrition")
