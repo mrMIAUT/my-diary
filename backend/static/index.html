@@ -55,7 +55,7 @@
 .results-date-range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;margin-top:14px}
 .results-date-field{min-width:0}.results-date-field input{min-width:0;width:100%}
 .superset-title-line{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}.superset-title-line strong{min-width:0;flex:0 1 auto}.superset-title-line .badge{flex:0 0 auto;margin-left:0!important;white-space:nowrap;line-height:1}
-@media(max-width:650px){.results-date-range{grid-template-columns:1fr 1fr}.results-date-range>button{grid-column:1/-1;justify-self:start}.results-date-field input[type=date]{font-size:16px;padding:12px 9px}.superset-title-line{display:block}.superset-title-line .badge{display:inline-block;margin:8px 0 2px!important;padding:7px 11px}.superset-inner>div:first-child{padding-right:0}}
+@media(max-width:650px){.results-date-range{grid-template-columns:1fr}.results-date-range>button{grid-column:auto;justify-self:start}.results-date-field{width:100%;overflow:hidden}.results-date-field input[type=date]{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;font-size:16px;padding:12px 9px}.superset-title-line{display:block}.superset-title-line .badge{display:inline-block;margin:8px 0 2px!important;padding:7px 11px}.superset-inner>div:first-child{padding-right:0}}
 @media(max-width:390px){.results-date-range{grid-template-columns:1fr}.results-date-range>button{grid-column:auto;width:100%}}
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;
@@ -472,6 +472,7 @@ function applyCustomResultsPeriod(){
  window.trainerResultsPeriod='custom';window.trainerResultsLimit=5;
  document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData);
 }
+function resetCustomResultsPeriod(){window.trainerResultsFrom='';window.trainerResultsTo='';window.trainerResultsPeriod='90';window.trainerResultsLimit=5;let box=$('#results');if(box)box.innerHTML=resultsHTML(window.currentClientData)}
 function resultsHTML(d){
  let days=[...new Set((d.program||[]).map(x=>x.day_name))];
  if(!days.length)return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Програма ще порожня.</p></div>`;
@@ -489,13 +490,15 @@ function resultsHTML(d){
    <div class="results-date-field"><div class="muted">З</div><input id="resultsFrom" type="date" value="${window.trainerResultsFrom||''}"></div>
    <div class="results-date-field"><div class="muted">По</div><input id="resultsTo" type="date" value="${window.trainerResultsTo||''}"></div>
    <button class="${period==='custom'?'':'dark'}" onclick="applyCustomResultsPeriod()">Показати період</button>
+   <button class="dark" onclick="resetCustomResultsPeriod()">Скинути дати</button>
   </div>
  </div>
  <div>${trainerDayResultsHTML(d,selectedDay)}</div>`;
 }
 
-function nutritionHTML(d){let c=d.client;return `<div class="card"><h2>Цільове харчування</h2><p class="muted">Зміни калорійність та БЖВ клієнта. Після збереження нові цілі одразу з'являться в його кабінеті.</p><div class="grid"><div><div class="muted">Ккал</div><input id="nkcal" type="number" value="${c.kcal||0}"></div><div><div class="muted">Білки, г</div><input id="nprotein" type="number" value="${c.protein||0}"></div><div><div class="muted">Жири, г</div><input id="nfat" type="number" value="${c.fat||0}"></div><div><div class="muted">Вуглеводи, г</div><input id="ncarbs" type="number" value="${c.carbs||0}"></div></div><br><button onclick="saveNutritionTargets(${c.id})">Зберегти харчування</button><span id="nutritionSaved" class="muted" style="margin-left:12px"></span></div>`}
-async function saveNutritionTargets(cid){let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0};await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify(body)});let s=$('#nutritionSaved');if(s)s.textContent='Збережено ✓';let d=await api('/client/'+cid);window.currentClientData=d}
+function nutritionHTML(d){let c=d.client;let locked=!!(c.kcal||c.protein||c.fat||c.carbs);let dis=locked?' disabled':'';return `<div class="card"><h2>Цільове харчування</h2><p class="muted">Зміни калорійність та БЖВ клієнта. Після збереження нові цілі одразу з'являться в його кабінеті.</p><div class="grid"><div><div class="muted">Ккал</div><input id="nkcal" type="number" value="${c.kcal||0}"${dis}></div><div><div class="muted">Білки, г</div><input id="nprotein" type="number" value="${c.protein||0}"${dis}></div><div><div class="muted">Жири, г</div><input id="nfat" type="number" value="${c.fat||0}"${dis}></div><div><div class="muted">Вуглеводи, г</div><input id="ncarbs" type="number" value="${c.carbs||0}"${dis}></div></div><br><div id="nutritionActions">${locked?`<button class="dark" onclick="editNutritionTargets()">Редагувати</button><span class="muted" style="margin-left:12px">Збережено ✓</span>`:`<button onclick="saveNutritionTargets(${c.id})">Зберегти харчування</button>`}</div></div>`}
+function editNutritionTargets(){['nkcal','nprotein','nfat','ncarbs'].forEach(id=>{let el=$('#'+id);if(el)el.disabled=false});let a=$('#nutritionActions');if(a)a.innerHTML=`<button onclick="saveNutritionTargets(${window.currentClientData.client.id})">Зберегти харчування</button><button class="dark" style="margin-left:8px" onclick="document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData)">Скасувати</button>`}
+async function saveNutritionTargets(cid){let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0};await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify(body)});let d=await api('/client/'+cid);window.currentClientData=d;let box=$('#nutrition');if(box)box.innerHTML=nutritionHTML(d)}
 function measureHTML(d){return `<div class="card"><h2>Динаміка</h2>${d.measurements.length?d.measurements.map(x=>`<div class="exercise">${esc(x.day)} — <strong>${x.weight} кг</strong>${x.waist?' · талія '+x.waist+' см':''}</div>`).join(''):'<p class="muted">Заміри відсутні.</p>'}</div>`}
 
 function todaySets(d,pid){return (d.result_sets||[]).filter(x=>x.program_id===pid&&x.day===isoToday()).sort((a,b)=>a.set_number-b.set_number)}
