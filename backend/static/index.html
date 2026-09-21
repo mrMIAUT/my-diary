@@ -873,4 +873,8 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
  if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
  route()
 }
-</script></body></html>
+</script></body></html><style>
+/* Align menu + logo with page content */
+.top-left{padding-left:0!important;margin-left:0!important}
+@media(max-width:650px){.top-left{padding-left:0!important;margin-left:0!important}}
+</style>
