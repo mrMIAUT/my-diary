@@ -120,6 +120,15 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 }
 .side-menu-footer .logout-link:hover{background:#323238!important;color:#fff!important}
 
+
+/* iPhone/PWA: no focus zoom, stable form layout */
+@media(max-width:700px){
+  input, select, textarea{font-size:16px!important}
+  .cardio-saved-head{display:flex!important;align-items:flex-start!important;gap:12px!important;flex-wrap:wrap!important}
+  .cardio-saved-head>div:first-child{flex:1 1 210px!important;min-width:0!important}
+  .cardio-saved-head>button{flex:0 0 auto!important;max-width:100%!important;margin-left:0!important}
+}
+
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -225,6 +234,7 @@ function shell(content){
  return `<div class="wrap"><div class="top"><div class="top-left"><button class="side-menu-btn" onclick="openSideMenu()" aria-label="Меню">${uiIcon('menu')}</button><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div></div><div class="top-right">${right}</div></div>${content}</div>`
 }
 
+let currentClientView='home';
 function sideMenuHTML(){
  if(!session)return '';
  if(session.role==='trainer'){
@@ -233,7 +243,12 @@ function sideMenuHTML(){
    return `<button class="side-nav-item ${client?'':'active'}" onclick="closeSideMenu();goToTrainerHome()"><span class="side-nav-icon">${uiIcon('users')}</span>Клієнти</button>${clientItems}`;
  }
  let cid=session.client_id;
- return `<button class="side-nav-item active" onclick="closeSideMenu();clientCabinet(${cid})"><span class="side-nav-icon">${uiIcon('home')}</span>Головна</button><button class="side-nav-item" onclick="closeSideMenu();showClientProfile(${cid})"><span class="side-nav-icon">${uiIcon('user')}</span>Мій профіль</button><button class="side-nav-item" onclick="closeSideMenu();openClientHistory()"><span class="side-nav-icon">${uiIcon('calendar')}</span>Моя історія</button>`;
+ return `<button class="side-nav-item ${currentClientView==='home'?'active':''}" onclick="closeSideMenu();clientCabinet(${cid})"><span class="side-nav-icon">${uiIcon('home')}</span>Головна</button>
+ <button class="side-nav-item ${currentClientView==='mealplan'?'active':''}" onclick="closeSideMenu();showClientSection('mealplan')"><span class="side-nav-icon">${uiIcon('food')}</span>План харчування</button>
+ <button class="side-nav-item ${currentClientView==='measurements'?'active':''}" onclick="closeSideMenu();showClientSection('measurements')"><span class="side-nav-icon">${uiIcon('measure')}</span>Заміри</button>
+ <button class="side-nav-item ${currentClientView==='comments'?'active':''}" onclick="closeSideMenu();showClientSection('comments')"><span class="side-nav-icon">${uiIcon('message')}</span>Коментарі</button>
+ <button class="side-nav-item ${currentClientView==='history'?'active':''}" onclick="closeSideMenu();showClientSection('history')"><span class="side-nav-icon">${uiIcon('calendar')}</span>Моя історія</button>
+ <button class="side-nav-item" onclick="closeSideMenu();showClientProfile(${cid})"><span class="side-nav-icon">${uiIcon('user')}</span>Мій профіль</button>`;
 }
 function openSideMenu(){
  document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove();
@@ -242,6 +257,16 @@ function openSideMenu(){
 }
 function closeSideMenu(){document.querySelector('#sideOverlay')?.classList.remove('open');document.querySelector('#sideDrawer')?.classList.remove('open');setTimeout(()=>{document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove()},230)}
 function sideTrainerTab(id){closeSideMenu();showTab(id,null,false)}
+function showClientSection(section){
+ let d=window.currentClientData,c=d?.client;if(!d||!c)return clientCabinet(session.client_id);
+ currentClientView=section;
+ let html='';
+ if(section==='mealplan')html=`<h1>План харчування</h1>${clientMealPlanHTML(d)||'<div class="card"><p class="muted">План харчування ще не додано.</p></div>'}`;
+ else if(section==='measurements')html=`<h1>Заміри</h1>${clientMeasurementsHTML(d,c.id)}`;
+ else if(section==='comments')html=`<h1>Коментарі</h1>${commentsHTML(d,c.id)}`;
+ else if(section==='history')html=`<h1>Моя історія</h1><div class="card"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div>`;
+ app.innerHTML=shell(html);refreshNotificationBadge(c.id,'client','clientNotifyBtn');
+}
 function openClientHistory(){let head=document.querySelector('#clientCalendarBody')?.previousElementSibling;if(head){let body=document.querySelector('#clientCalendarBody');if(body?.classList.contains('hidden'))toggleCalendar('clientCalendarBody',head);head.scrollIntoView({behavior:'smooth',block:'start'})}}
 
 
@@ -335,7 +360,7 @@ function showTab(id,btn,push=true){
 function cardioHTML(d,cid,readonly=false){
  let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
  if(readonly)return `<div class="card"><h2>Кардіо та активність</h2>${xs.length?xs.slice(0,30).map(x=>`<div class="exercise"><div class="between"><strong>${esc(x.day)}</strong><span>${x.steps||0} кроків</span></div>${x.cardio_type?`<div class="muted" style="margin-top:6px">${esc(x.cardio_type)} · ${x.minutes||0} хв${x.speed?` · швидкість ${x.speed}`:''}${x.incline?` · нахил ${x.incline}%`:''}</div>`:'<div class="muted" style="margin-top:6px">Без окремого кардіо</div>'}</div>`).join(''):'<p class="muted">Даних ще немає.</p>'}</div>`;
- if(saved)return `<div class="card"><div class="between"><div><h2>Кардіо та активність за сьогодні</h2><p class="muted">Дані збережено.</p></div><button class="dark" onclick="editCardio(${cid})">Редагувати</button></div><div class="cardio-summary">${cur.cardio_type?`<div class="cardio-chip">${esc(cur.cardio_type)}</div><div class="cardio-chip">${cur.minutes||0} хв</div>${cur.speed?`<div class="cardio-chip">Швидкість ${cur.speed}</div>`:''}${cur.incline?`<div class="cardio-chip">Нахил ${cur.incline}%</div>`:''}`:''}${cur.steps?`<div class="cardio-chip">${cur.steps} кроків</div>`:''}</div></div>`;
+ if(saved)return `<div class="card"><div class="between cardio-saved-head"><div><h2>Кардіо та активність за сьогодні</h2><p class="muted">Дані збережено.</p></div><button class="dark" onclick="editCardio(${cid})">Редагувати</button></div><div class="cardio-summary">${cur.cardio_type?`<div class="cardio-chip">${esc(cur.cardio_type)}</div><div class="cardio-chip">${cur.minutes||0} хв</div>${cur.speed?`<div class="cardio-chip">Швидкість ${cur.speed}</div>`:''}${cur.incline?`<div class="cardio-chip">Нахил ${cur.incline}%</div>`:''}`:''}${cur.steps?`<div class="cardio-chip">${cur.steps} кроків</div>`:''}</div></div>`;
  return cardioEditHTML(cid,cur);
 }
 function cardioEditHTML(cid,cur={}){
@@ -555,7 +580,7 @@ async function openNotification(nid,cid,recipient){
 async function markNotificationsRead(cid,recipient){
  await api('/notifications/'+cid+'/read',{method:'PATCH',body:JSON.stringify({recipient})});
  notificationModal.remove();
- if(session.role==='trainer')openClient(cid);else clientCabinet(cid);
+ if(session.role==='trainer')openClient(cid);else showClientSection('comments');
 }
 function sessionProgramForDate(d,dayName,day){
  let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
@@ -729,7 +754,7 @@ function clientMealPlanHTML(d){let items=planFromData(d).filter(x=>x.content.tri
 function measurementRowHTML(x){let vals=[];if(+x.weight)vals.push(`<strong>${x.weight} кг</strong>`);if(+x.waist)vals.push(`Талія ${x.waist} см`);if(+x.hips)vals.push(`Таз ${x.hips} см`);if(+x.thighs)vals.push(`Стегна ${x.thighs} см`);if(+x.arms)vals.push(`Руки ${x.arms} см`);if(+x.chest)vals.push(`Груди ${x.chest} см`);return `<div class="exercise">${x.day?`<div class="muted" style="margin-bottom:7px">${esc(x.day)}</div>`:''}${vals.join(' · ')||'<span class="muted">Немає значень</span>'}</div>`}
 function measureHTML(d){return `<div class="card"><h2>Заміри клієнта</h2><p class="muted">Ці дані заповнює клієнт у своєму кабінеті. Тут доступний лише перегляд історії.</p>${d.measurements.length?d.measurements.slice().reverse().map(x=>measurementRowHTML(x)).join(''):'<p class="muted">Заміри відсутні.</p>'}</div>`}
 function clientMeasurementsHTML(d,cid){return `<div class="card"><h2>Заміри</h2><p class="muted">Заповни актуальні заміри. Вони збережуться за сьогоднішню дату.</p><div class="measure-grid"><div><label>Вага, кг</label><input id="mWeight" type="number" step="0.1" placeholder="Напр. 89"></div><div><label>Талія, см</label><input id="mWaist" type="number" step="0.1" placeholder="Напр. 82"></div><div><label>Таз, см</label><input id="mHips" type="number" step="0.1" placeholder="Напр. 98"></div><div><label>Стегна, см</label><input id="mThighs" type="number" step="0.1" placeholder="Напр. 60"></div><div><label>Руки, см</label><input id="mArms" type="number" step="0.1" placeholder="Напр. 39"></div><div><label>Груди, см</label><input id="mChest" type="number" step="0.1" placeholder="Напр. 108"></div></div><button style="margin-top:14px" onclick="saveMeasurement(${cid})">Зберегти заміри</button>${d.measurements.length?`<div style="margin-top:18px"><div class="muted" style="margin-bottom:8px">Останній запис</div>${measurementRowHTML(d.measurements[d.measurements.length-1])}</div>`:''}</div>`}
-async function saveMeasurement(cid){let body={client_id:cid,weight:+mWeight.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,thighs:+mThighs.value||0,arms:+mArms.value||0,chest:+mChest.value||0};if(!Object.values(body).slice(1).some(v=>v>0))return alert('Заповни хоча б один замір');await api('/measurements',{method:'POST',body:JSON.stringify(body)});await clientCabinet(cid)}
+async function saveMeasurement(cid){let body={client_id:cid,weight:+mWeight.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,thighs:+mThighs.value||0,arms:+mArms.value||0,chest:+mChest.value||0};if(!Object.values(body).slice(1).some(v=>v>0))return alert('Заповни хоча б один замір');await api('/measurements',{method:'POST',body:JSON.stringify(body)});let d=await api('/client/'+cid);window.currentClientData=d;showClientSection('measurements')}
 
 function todaySets(d,pid){return (d.result_sets||[]).filter(x=>x.program_id===pid&&x.day===isoToday()).sort((a,b)=>a.set_number-b.set_number)}
 
@@ -906,7 +931,7 @@ async function deleteComment(id,cid,day){
  let d=await api('/client/'+cid);window.currentClientData=d;
  if(history.state?.eplanPage==='calendarDay'){showCalendarDay(day,null,false);return}
  if(session.role==='trainer'){await openClient(cid,'comments');return}
- await clientCabinet(cid);
+ showClientSection('comments');
 }
 async function saveComment(cid,day){
  let t=$('#commentText');if(!t||!t.value.trim())return alert('Напиши коментар');
@@ -967,7 +992,7 @@ async function clientCabinet(id){
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='';
- app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${clientMealPlanHTML(d)}${dailyNutritionHTML(d,id)}${clientMeasurementsHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}${cardioHTML(d,id)}${commentsHTML(d,id)}<div class="card" style="margin-top:28px"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Календар тренувань, харчування та замірів</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
+ currentClientView='home';app.innerHTML=shell(`<div class="card"><h1>Привіт, ${esc(c.name)}</h1><p class="muted">${esc(c.goal||'Твоя програма')}</p><div class="big">${c.weight||0} кг</div></div><div class="card"><h2>Моє харчування</h2><p>${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p></div>${dailyNutritionHTML(d,id)}${workoutChooser(d,id,groups)}${programPart}${cardioHTML(d,id)}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
 async function saveSets(cid,pid,exercise,count){
  let sets=[];
