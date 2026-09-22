@@ -53,14 +53,41 @@ def check_password(password:str,stored:str)->bool:
         return hmac.compare_digest(test,digest)
     except Exception:return False
 
-def client_state(cid:int):
-    return one("SELECT id,status FROM clients WHERE id=?",(cid,))
+PLAN_FEATURES={
+ "coaching":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":True,"meal_plan":True},
+ "workout_plan":{"workouts":True,"nutrition":False,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False},
+ "workout_nutrition":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":True},
+ "self":{"workouts":True,"nutrition":False,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False},
+ "free":{"workouts":False,"nutrition":False,"measurements":False,"cardio":False,"trainer_review":False,"meal_plan":False}}
+PLAN_NAMES={"coaching":"Онлайн-ведення","workout_plan":"План тренувань","workout_nutrition":"План тренувань + План харчування","self":"Самостійно","free":"Free"}
 
-def require_active_client(cid:int):
+def client_state(cid:int):
+    return one("SELECT id,status,plan_code,access_until FROM clients WHERE id=?",(cid,))
+
+def access_info(c:dict):
+    code=str(c.get("plan_code") or "coaching")
+    if code not in PLAN_FEATURES: code="coaching"
+    until=c.get("access_until"); expired=False; days_left=None
+    if until:
+        try:
+            ud=until if isinstance(until,date) else date.fromisoformat(str(until)[:10])
+            days_left=(ud-date.today()).days; expired=days_left<0
+        except Exception: pass
+    frozen=c.get("status")=="Заморожений"
+    effective="free" if expired or frozen else code
+    return {"plan_code":code,"plan_name":PLAN_NAMES[code],"effective_plan":effective,
+      "access_until":str(until)[:10] if until else "","expired":expired,"manually_frozen":frozen,
+      "days_left":days_left,"features":PLAN_FEATURES[effective]}
+
+def require_active_client(cid:int,feature:str|None=None):
     c=client_state(cid)
     if not c: raise HTTPException(404,"Клієнта не знайдено")
     if c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
-    if c["status"]=="Заморожений": raise HTTPException(403,"Акаунт заморожено. Доступний лише перегляд історії.")
+    a=access_info(c)
+    if a["manually_frozen"]: raise HTTPException(403,"Акаунт заморожено. Доступний лише перегляд історії.")
+    if a["expired"]: raise HTTPException(403,"Термін доступу закінчився. Історія збережена у режимі перегляду.")
+    if feature and not a["features"].get(feature,False): raise HTTPException(403,"Ця функція недоступна у вашому тарифі.")
+    return a
 
 def send_telegram(text:str):
     token=os.getenv("TELEGRAM_BOT_TOKEN","").strip()
@@ -146,6 +173,10 @@ def init():
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS instagram TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS telegram TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tiktok TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS plan_code TEXT DEFAULT 'coaching'")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS access_until DATE")
+        c.execute("UPDATE clients SET plan_code='coaching' WHERE plan_code IS NULL OR plan_code=''")
+
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs DOUBLE PRECISION DEFAULT 0")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms DOUBLE PRECISION DEFAULT 0")
@@ -182,6 +213,8 @@ init()
 
 class Login(BaseModel): email:str; password:str
 class ClientStatusIn(BaseModel): status:str
+class ClientAccessIn(BaseModel):
+    plan_code:str="coaching"; access_until:str="" 
 class ResetRequestIn(BaseModel): email:str
 class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
@@ -320,10 +353,12 @@ def password_reset_confirm(x:ResetConfirmIn):
 
 @app.get("/api/clients")
 def clients():
-    return rows("""SELECT c.*, CASE WHEN EXISTS(
+    xs=rows("""SELECT c.*, CASE WHEN EXISTS(
         SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
     ) THEN 'Тренується' ELSE c.status END AS live_status
     FROM clients c WHERE c.status<>'Видалений' ORDER BY c.id DESC""")
+    for c in xs: c["access"]=access_info(c)
+    return xs
 @app.post("/api/clients")
 def add_client(x:ClientIn):
     email=x.email.strip().lower()
@@ -353,6 +388,17 @@ def set_client_status(cid:int,x:ClientStatusIn):
         run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE client_id=? AND status='training'",(cid,))
     return {"ok":True,"status":x.status}
 
+@app.patch("/api/clients/{cid}/access")
+def set_client_access(cid:int,x:ClientAccessIn):
+    if x.plan_code not in PLAN_FEATURES: raise HTTPException(400,"Невідомий тариф")
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
+    until=None
+    if x.access_until.strip():
+        try: until=date.fromisoformat(x.access_until.strip())
+        except Exception: raise HTTPException(400,"Некоректна дата доступу")
+    run("UPDATE clients SET plan_code=?,access_until=?,status=CASE WHEN status='Видалений' THEN status ELSE 'Активний' END WHERE id=?",(x.plan_code,until,cid))
+    return {"ok":True,"access":access_info(one("SELECT * FROM clients WHERE id=?",(cid,)))}
+
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int):
     # Soft delete preserves training/nutrition history but closes account access.
@@ -363,6 +409,7 @@ def del_client(cid:int):
 def client(cid:int):
     c=one("SELECT * FROM clients WHERE id=?",(cid,))
     if not c: raise HTTPException(404)
+    c["access"]=access_info(c)
     return {"client":c,
             "program":rows("SELECT * FROM program WHERE client_id=? ORDER BY day_name,sort,id",(cid,)),
             "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
@@ -403,7 +450,7 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
 
 @app.post("/api/cardio")
 def save_cardio(x:CardioIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'cardio')
     d=x.day.strip() or str(date.today())
     if d>str(date.today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
     if x.cardio_type not in ("","Доріжка","Орбітрек","Велосипед"): raise HTTPException(400,"Невідомий тип кардіо")
@@ -489,7 +536,7 @@ def add_result(x:ResultIn):
 
 @app.post("/api/result-sets")
 def add_result_sets(x:SetResultIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'workouts')
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
     today=str(date.today())
@@ -507,7 +554,7 @@ def result_set_history(cid:int):
 
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'workouts')
     today=str(date.today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
@@ -544,7 +591,7 @@ def finish_workout(sid:int):
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'nutrition')
     if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати дані на майбутню дату")
     existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
@@ -556,7 +603,7 @@ def historical_nutrition(x:HistoricalNutritionIn):
 
 @app.post("/api/history/workout")
 def historical_workout(x:HistoricalWorkoutIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'workouts')
     if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
     existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
@@ -624,12 +671,13 @@ def read_notifications(cid:int,x:NotificationReadIn):
 
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'nutrition')
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
 @app.patch("/api/nutrition/{nid}")
 def edit_nutrition(nid:int,x:NutIn):
-    if not one("SELECT id FROM nutrition WHERE id=?",(nid,)):
-        raise HTTPException(404,"Запис не знайдено")
+    rec=one("SELECT id,client_id FROM nutrition WHERE id=?",(nid,))
+    if not rec: raise HTTPException(404,"Запис не знайдено")
+    require_active_client(rec["client_id"],'nutrition')
     run("UPDATE nutrition SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,nid))
     return one("SELECT * FROM nutrition WHERE id=?",(nid,))
 
@@ -642,7 +690,7 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
     run("UPDATE nutrition SET screenshot=? WHERE id=?",(name,nid)); return {"url":"/uploads/"+name}
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
-    require_active_client(x.client_id)
+    require_active_client(x.client_id,'measurements')
     i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
