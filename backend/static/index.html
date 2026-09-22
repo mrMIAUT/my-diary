@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v13"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v14"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -385,8 +385,22 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 }
 
 .workout-plan-today{margin:12px 0!important}.workout-warmup{margin-top:10px}
+
+.client-review-row{display:flex;justify-content:flex-end;margin:-2px 0 8px}
+.trainer-meta-chip.review-pending{background:#3b3214;border-color:#75611c;color:#ffe58a;font-weight:800}
+.trainer-meta-chip.review-done{background:#173522;border-color:#356646;color:#baf3c9;font-weight:800}
+.trainer-meta-chip.review-none{color:var(--muted)}
+.edit-exercise-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.edit-exercise-head h2{margin:0;min-width:0}
+.edit-exercise-close{position:static!important;flex:0 0 48px;width:48px!important;height:48px!important;padding:0!important;display:flex!important;align-items:center;justify-content:center}
+@media(max-width:650px){
+ .edit-exercise-card{padding-top:18px!important}
+ .edit-exercise-head{align-items:flex-start;margin-bottom:16px}
+ .edit-exercise-close{margin:0!important;flex-basis:46px;width:46px!important;height:46px!important}
+ .client-review-row{justify-content:flex-start;margin-bottom:9px}
+}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v13');
+console.info('Є ПЛАН build 2026-09-23-v14');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -688,12 +702,12 @@ async function goToTrainerHome(){
 }
 async function trainerHome(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
- let [cs,reviews]=await Promise.all([api('/clients'),api('/notifications/trainer/all').catch(()=>[])]);
+ let cs=await api('/clients');
  let today=isoToday(),active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
- let unread=(reviews||[]).filter(n=>!n.is_read),reviewByClient={};unread.forEach(n=>reviewByClient[n.client_id]=(reviewByClient[n.client_id]||0)+1);
+ let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0),needsReviewTotal=needsReviewClients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
  app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Клієнти, яким сьогодні потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
- <div class="trainer-stats"><div class="trainer-stat"><strong>${unread.length}</strong><span>Потрібно перевірити</span></div><div class="trainer-stat"><strong>${ending.length}</strong><span>Доступ завершується</span></div><div class="trainer-stat"><strong>${active.length}</strong><span>Активних клієнтів</span></div></div></div>
- <h1>Клієнти</h1>${cs.map(c=>{let a=c.access||{},r=reviewByClient[c.id]||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span>${c.live_status==='Тренується'?'<span class="trainer-meta-chip ok">Тренується зараз</span>':''}${r?`<span class="trainer-meta-chip warn">Потрібно перевірити: ${r}</span>`:''}</div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div></div>`}).join('')}`);
+ <div class="trainer-stats"><div class="trainer-stat"><strong>${needsReviewClients.length}</strong><span>Потрібно перевірити</span></div><div class="trainer-stat"><strong>${ending.length}</strong><span>Доступ завершується</span></div><div class="trainer-stat"><strong>${active.length}</strong><span>Активних клієнтів</span></div></div></div>
+ <h1>Клієнти</h1>${cs.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let reviewChip=r?`<span class="trainer-meta-chip review-pending">● Не перевірено${r>1?` · ${r}`:''}</span>`:(c.review_state==='reviewed'?'<span class="trainer-meta-chip review-done">✓ Перевірено</span>':'<span class="trainer-meta-chip review-none">— Ще без тренувань</span>');return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div class="client-review-row">${reviewChip}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span>${c.live_status==='Тренується'?'<span class="trainer-meta-chip ok">Тренується зараз</span>':''}${r?`<span class="trainer-meta-chip warn">Потрібно перевірити тренування</span>`:''}</div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div></div>`}).join('')}`);
  refreshTrainerGlobalBadge()
 }
 function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><p class="muted">Вкажи справжню пошту клієнта. Після створення він отримає посилання та сам встановить пароль.</p><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" type="email" autocomplete="email" placeholder="Email клієнта"><input id="g" placeholder="Ціль"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити та надіслати запрошення</button></div></div>`)}
@@ -803,7 +817,7 @@ function autofillTechnique(name,targetId){
 async function loadExerciseLibrary(){try{window.exerciseLibrary=await api('/exercise-library')}catch(e){window.exerciseLibrary={groups:[],exercises:[]}}}
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
- let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rr" type="number" value="2" placeholder="RIR за замовчуванням"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><div class="rir-help"><strong>RIR (Reps In Reserve)</strong> — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 повтори.</div><br><button onclick="addExercise()">+ Додати вправу</button></div>`;
+ let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><div class="rir-help"><strong>RIR (Reps In Reserve)</strong> — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 повтори.</div><br><button onclick="addExercise()">+ Додати вправу</button></div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
    let bodyId='programDay_'+di, blocks=[];
@@ -852,17 +866,17 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card"><div class="between"><h2>Редагувати вправу</h2><button class="dark" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRir" type="number" value="${x.target_rir??2}" placeholder="RIR за замовчуванням"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
 }
 async function saveExerciseEdit(pid,cid){
- let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+editRir.value||0,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim()};
+ let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+((editRirSet.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim()};
  if(!body.day_name||!body.exercise)return alert('Вкажи день та назву вправи');
  try{
    await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
    editExerciseModal.remove();await openClient(cid);
  }catch(e){alert(e.message||'Не вдалося зберегти зміни')}
 }
-async function addExercise(){if(!dn.value||!ex.value)return alert('Вкажи день і вправу');await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dn.value,exercise:ex.value,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+rr.value||2,superset_group:'',superset_order:0,technique_url:tech.value,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim()})});openClient(selected)}
+async function addExercise(){if(!dn.value||!ex.value)return alert('Вкажи день і вправу');await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dn.value,exercise:ex.value,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:tech.value,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim()})});openClient(selected)}
 
 function addSupersetExercise(sourceId,dayName){
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal"><div class="card"><div class="between"><div><h2>Додати суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark" onclick="supersetModal.remove()">✕</button></div><p class="muted">Нова вправа буде автоматично об'єднана з вибраною вправою в один суперсет.</p><div class="grid"><input id="ssex" placeholder="Друга вправа"><input id="sssets" type="number" value="3" placeholder="Підходи"><input id="ssreps" value="8-12" placeholder="Повтори"><input id="ssrir" type="number" value="2" placeholder="RIR"><input id="ssrirset" value="2,2,2" placeholder="RIR по підходах"><input id="ssrest" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button onclick="saveSupersetExercise(${sourceId},'${esc(dayName).replace(/'/g,"&#39;")}')">+ Додати в суперсет</button></div></div>`)
