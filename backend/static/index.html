@@ -248,7 +248,30 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .access-card{overflow:hidden}.access-grid{width:100%;max-width:100%;overflow:hidden}.access-grid>div{width:100%;max-width:100%;min-width:0;overflow:hidden}.access-grid input[type="date"]{-webkit-appearance:none;appearance:none;display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0!important}
 .access-saved{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.access-saved-main{display:flex;flex-wrap:wrap;gap:8px}.access-edit-box.hidden{display:none!important}.access-save-success{background:#1f7a3e!important;color:#fff!important;border-color:#2f9b55!important}.access-save-success:hover{background:#1f7a3e!important}
 @media(max-width:650px){.access-card{padding-left:18px;padding-right:18px}.access-grid,.access-grid>div{min-width:0!important;width:100%!important;max-width:100%!important}.access-grid input[type="date"]{font-size:16px!important}}
-</style></head><body><div id="app"></div><script>
+
+@media(max-width:650px){
+  /* Trainer dashboard: compact header, 3 useful stats in a clean grid */
+  .trainer-dashboard-head .between{align-items:flex-start;gap:12px}
+  .trainer-dashboard-head h1{font-size:32px;line-height:1.05;margin:0 0 8px}
+  .trainer-dashboard-head .muted{font-size:15px;line-height:1.35;margin:0}
+  .trainer-dashboard-head .add-client-btn{width:auto;min-width:132px;flex:0 0 auto;padding:12px 14px;font-size:15px;border-radius:14px}
+  .trainer-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin-top:18px!important}
+  .trainer-stat{display:block!important;text-align:center;padding:12px 7px!important;min-width:0;border-radius:14px}
+  .trainer-stat strong{font-size:24px!important;line-height:1;margin-bottom:7px!important}
+  .trainer-stat span{display:block;font-size:11px;line-height:1.25;color:var(--muted)}
+  /* Access card: hierarchy instead of loose pills */
+  .access-saved{display:block!important}
+  .access-saved>div:first-child{width:100%}
+  .access-saved h2{font-size:27px;line-height:1.12;margin-bottom:16px}
+  .access-saved-main{display:grid!important;grid-template-columns:auto 1fr!important;gap:8px!important;align-items:center}
+  .access-saved-main .access-pill{justify-content:center;text-align:center;min-width:0;padding:9px 10px;font-size:13px}
+  .access-saved-main .access-pill:nth-child(1){grid-column:1}
+  .access-saved-main .access-pill:nth-child(2){grid-column:2}
+  .access-saved-main .access-pill:nth-child(3){grid-column:1}
+  .access-saved-main .access-pill:nth-child(4){grid-column:2}
+  .access-saved>button{width:100%;margin-top:14px;padding:12px 14px;font-size:15px}
+}
+</head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
 function offDb(){return new Promise((ok,no)=>{let q=indexedDB.open(OFFDB,OFFVER);q.onupgradeneeded=()=>{let d=q.result;if(!d.objectStoreNames.contains('cache'))d.createObjectStore('cache');if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{keyPath:'id',autoIncrement:true})};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
@@ -552,7 +575,7 @@ async function trainerHome(){
  let [cs,reviews]=await Promise.all([api('/clients'),api('/notifications/trainer/all').catch(()=>[])]);
  let today=isoToday(),active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
  let unread=(reviews||[]).filter(n=>!n.is_read),reviewByClient={};unread.forEach(n=>reviewByClient[n.client_id]=(reviewByClient[n.client_id]||0)+1);
- app.innerHTML=shell(`<div class="card"><div class="between"><div><h1>Панель тренера</h1><p class="muted">Швидко видно, кому сьогодні потрібна увага.</p></div><button onclick="newClient()">+ Додати клієнта</button></div>
+ app.innerHTML=shell(`<div class="card trainer-dashboard-head"><div class="between"><div><h1>Панель тренера</h1><p class="muted">Швидко видно, кому сьогодні потрібна увага.</p></div><button class="add-client-btn" onclick="newClient()">+ Додати клієнта</button></div>
  <div class="trainer-stats"><div class="trainer-stat"><strong>${unread.length}</strong><span>Потрібно перевірити</span></div><div class="trainer-stat"><strong>${ending.length}</strong><span>Доступ завершується</span></div><div class="trainer-stat"><strong>${active.length}</strong><span>Активних клієнтів</span></div></div></div>
  <h1>Клієнти</h1>${cs.map(c=>{let a=c.access||{},r=reviewByClient[c.id]||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span>${c.live_status==='Тренується'?'<span class="trainer-meta-chip ok">Тренується зараз</span>':''}${r?`<span class="trainer-meta-chip warn">Потрібно перевірити: ${r}</span>`:''}</div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div></div>`}).join('')}`);
  refreshTrainerGlobalBadge()
