@@ -357,7 +357,17 @@ def clients():
         SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
     ) THEN 'Тренується' ELSE c.status END AS live_status
     FROM clients c WHERE c.status<>'Видалений' ORDER BY c.id DESC""")
-    for c in xs: c["access"]=access_info(c)
+    for c in xs:
+        c["access"]=access_info(c)
+        review=one("""SELECT
+            COUNT(*) FILTER (WHERE status='finished' AND COALESCE(trainer_reviewed,FALSE)=FALSE) AS needs_review_count,
+            COUNT(*) FILTER (WHERE status='finished') AS finished_count,
+            MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
+            FROM workout_sessions WHERE client_id=?""",(c["id"],)) or {}
+        c["needs_review_count"]=int(review.get("needs_review_count") or 0)
+        c["finished_workout_count"]=int(review.get("finished_count") or 0)
+        c["last_finished_at"]=review.get("last_finished_at")
+        c["review_state"]="needs_review" if c["needs_review_count"]>0 else ("reviewed" if c["finished_workout_count"]>0 else "none")
     return xs
 @app.post("/api/clients")
 def add_client(x:ClientIn):
