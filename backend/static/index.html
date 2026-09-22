@@ -330,6 +330,58 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
  .trainer-dashboard-copy p{max-width:none}
  .trainer-add-client{max-width:none!important;width:100%!important}
 }
+
+@media(max-width:650px){
+  /* Access editor spacing */
+  .access-edit-box .access-grid{row-gap:16px!important}
+  .access-edit-box .access-grid>div:first-child{padding-top:10px!important}
+  .access-edit-box label.muted{display:block!important;margin:0 0 8px!important;line-height:1.2!important}
+  .access-edit-box .access-actions:last-of-type{display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
+  .access-edit-box .access-actions:last-of-type button{width:100%!important;max-width:none!important;margin:0!important}
+  /* Trainer dashboard top alignment */
+  .trainer-dashboard-top{align-items:start!important}
+  .trainer-dashboard-copy h1{margin-top:0!important}
+  .trainer-add-client{align-self:start!important;margin-top:0!important}
+  .trainer-dashboard-copy p{
+    max-width:none!important;
+    white-space:nowrap!important;
+    font-size:11px!important;
+    line-height:1.2!important;
+    letter-spacing:-.15px!important
+  }
+}
+
+@media(max-width:650px){
+  /* Save + Cancel stay side-by-side and together fill the row */
+  .access-edit-box .access-actions:last-of-type{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)!important;
+    gap:9px!important;
+    width:100%!important
+  }
+  .access-edit-box .access-actions:last-of-type button{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important
+  }
+
+  /* Add-client button aligned with the top of "Панель тренера" */
+  .trainer-dashboard-top{align-items:start!important}
+  .trainer-add-client{
+    align-self:start!important;
+    margin-top:-2px!important
+  }
+
+  /* Keep the subtitle at its normal readable size, but on one line */
+  .trainer-dashboard-copy p{
+    max-width:none!important;
+    white-space:nowrap!important;
+    font-size:14px!important;
+    line-height:1.35!important;
+    letter-spacing:normal!important
+  }
+}
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
