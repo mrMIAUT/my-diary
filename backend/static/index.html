@@ -301,6 +301,35 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
     font-size:15px!important
   }
 }
+
+@media(max-width:650px){
+  /* More balanced trainer dashboard header */
+  .trainer-stats{margin-top:14px!important}
+  /* Scope through the first card rendered by trainerHome without touching JS */
+  #app>.shell>.card:first-child .between,
+  main>.card:first-child .between{
+    align-items:center!important;
+    gap:12px!important
+  }
+}
+@media(max-width:430px){
+  .trainer-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+
+@media(max-width:650px){
+ .trainer-dashboard-card{padding:18px!important}
+ .trainer-dashboard-top{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important}
+ .trainer-dashboard-copy{min-width:0!important}
+ .trainer-dashboard-copy h1{font-size:29px!important;line-height:1.05!important;margin:0 0 7px!important}
+ .trainer-dashboard-copy p{font-size:14px!important;line-height:1.35!important;margin:0!important;max-width:210px}
+ .trainer-add-client{width:auto!important;min-width:124px!important;max-width:142px!important;padding:12px 13px!important;border-radius:14px!important;font-size:14px!important;line-height:1.15!important;white-space:normal!important}
+ .trainer-dashboard-card .trainer-stats{margin-top:16px!important}
+}
+@media(max-width:380px){
+ .trainer-dashboard-top{grid-template-columns:1fr!important}
+ .trainer-dashboard-copy p{max-width:none}
+ .trainer-add-client{max-width:none!important;width:100%!important}
+}
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -605,7 +634,7 @@ async function trainerHome(){
  let [cs,reviews]=await Promise.all([api('/clients'),api('/notifications/trainer/all').catch(()=>[])]);
  let today=isoToday(),active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
  let unread=(reviews||[]).filter(n=>!n.is_read),reviewByClient={};unread.forEach(n=>reviewByClient[n.client_id]=(reviewByClient[n.client_id]||0)+1);
- app.innerHTML=shell(`<div class="card"><div class="between"><div><h1>Панель тренера</h1><p class="muted">Швидко видно, кому сьогодні потрібна увага.</p></div><button onclick="newClient()">+ Додати клієнта</button></div>
+ app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Клієнти, яким сьогодні потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
  <div class="trainer-stats"><div class="trainer-stat"><strong>${unread.length}</strong><span>Потрібно перевірити</span></div><div class="trainer-stat"><strong>${ending.length}</strong><span>Доступ завершується</span></div><div class="trainer-stat"><strong>${active.length}</strong><span>Активних клієнтів</span></div></div></div>
  <h1>Клієнти</h1>${cs.map(c=>{let a=c.access||{},r=reviewByClient[c.id]||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span>${c.live_status==='Тренується'?'<span class="trainer-meta-chip ok">Тренується зараз</span>':''}${r?`<span class="trainer-meta-chip warn">Потрібно перевірити: ${r}</span>`:''}</div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div></div>`}).join('')}`);
  refreshTrainerGlobalBadge()
