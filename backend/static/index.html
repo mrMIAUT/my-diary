@@ -236,7 +236,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .rir-help{font-size:13px;line-height:1.45;margin-top:10px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#111214}
 
 </style></head><body><div id="app"></div><script>
-const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';
+const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
 function offDb(){return new Promise((ok,no)=>{let q=indexedDB.open(OFFDB,OFFVER);q.onupgradeneeded=()=>{let d=q.result;if(!d.objectStoreNames.contains('cache'))d.createObjectStore('cache');if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{keyPath:'id',autoIncrement:true})};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
 async function offGet(store,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
@@ -419,7 +419,7 @@ function sideMenuHTML(){
  if(session.role==='trainer'){
    let client=selected&&window.currentClientData?.client;
    let clientItems=client?`<button class="side-nav-item ${currentTrainerTab==='profile'?'active':''}" onclick="sideTrainerTab('profile')"><span class="side-nav-icon">${uiIcon('user')}</span>Анкета</button><button class="side-nav-item ${currentTrainerTab==='program'?'active':''}" onclick="sideTrainerTab('program')"><span class="side-nav-icon">${uiIcon('dumbbell')}</span>Програма</button><button class="side-nav-item ${currentTrainerTab==='results'?'active':''}" onclick="sideTrainerTab('results')"><span class="side-nav-icon">${uiIcon('chart')}</span>Результати</button><button class="side-nav-item ${currentTrainerTab==='nutrition'?'active':''}" onclick="sideTrainerTab('nutrition')"><span class="side-nav-icon">${uiIcon('food')}</span>Харчування</button><button class="side-nav-item ${currentTrainerTab==='progress'?'active':''}" onclick="sideTrainerTab('progress')"><span class="side-nav-icon">${uiIcon('measure')}</span>Заміри</button><button class="side-nav-item ${currentTrainerTab==='calendar'?'active':''}" onclick="sideTrainerTab('calendar')"><span class="side-nav-icon">${uiIcon('calendar')}</span>Календар</button><button class="side-nav-item ${currentTrainerTab==='cardio'?'active':''}" onclick="sideTrainerTab('cardio')"><span class="side-nav-icon">${uiIcon('run')}</span>Кардіо</button>`:'';
-   return `<button class="side-nav-item ${client?'':'active'}" onclick="closeSideMenu();goToTrainerHome()"><span class="side-nav-icon">${uiIcon('users')}</span>Клієнти</button><button class="side-nav-item ${currentTrainerTab==='library'?'active':''}" onclick="closeSideMenu();showExerciseLibrary()"><span class="side-nav-icon">${uiIcon('dumbbell')}</span>Бібліотека вправ</button>${clientItems}`;
+   return `<button class="side-nav-item ${!client&&currentTrainerMainView==='clients'?'active':''}" onclick="closeSideMenu();goToTrainerHome()"><span class="side-nav-icon">${uiIcon('users')}</span>Клієнти</button><button class="side-nav-item ${!client&&currentTrainerMainView==='library'?'active':''}" onclick="closeSideMenu();showExerciseLibrary()"><span class="side-nav-icon">${uiIcon('dumbbell')}</span>Бібліотека вправ</button>${clientItems}`;
  }
  let cid=session.client_id;
  return `<button class="side-nav-item ${currentClientView==='home'?'active':''}" onclick="closeSideMenu();clientCabinet(${cid})"><span class="side-nav-icon">${uiIcon('home')}</span>Головна</button>
@@ -430,7 +430,7 @@ function sideMenuHTML(){
 }
 
 async function showExerciseLibrary(){
- currentTrainerTab='library';selected=null;await loadExerciseLibrary();
+ currentTrainerMainView='library';selected=null;window.currentClientData=null;await loadExerciseLibrary();
  let L=window.exerciseLibrary||{groups:[],exercises:[]};
  app.innerHTML=shell(`<h1>Бібліотека вправ</h1><div class="card"><h2>Групи м’язів</h2><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Спина"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>${L.groups.map(g=>`<div class="card library-group"><button class="exercise-toggle" onclick="toggleExercise('libGroup${g.id}',this)"><span><strong>${esc(g.name)}</strong><span class="muted" style="display:block;margin-top:5px">${L.exercises.filter(x=>x.group_id===g.id).length} вправ</span></span><span class="arrow">⌄</span></button><div id="libGroup${g.id}" class="library-group-body hidden">${L.exercises.filter(x=>x.group_id===g.id).map(x=>`<div class="library-exercise"><div><strong>${esc(x.name)}</strong>${x.technique_url?`<div><a href="${esc(x.technique_url)}" target="_blank" rel="noopener">▶ Відео</a></div>`:''}</div><button class="danger" onclick="deleteLibraryExercise(${x.id})">×</button></div>`).join('')||'<p class="muted">Вправ ще немає.</p>'}<div class="grid" style="margin-top:14px"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div><button style="margin-top:10px" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" style="margin-top:10px;margin-left:8px" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div></div>`).join('')}`);
 }
@@ -514,10 +514,11 @@ async function login(){try{let em=email.value.trim();let s=await api('/login',{m
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}
 async function goToTrainerHome(){
  history.pushState({eplanPage:'clients'},'',location.pathname+location.search);
- selected=null;window.currentClientData=null;
+ currentTrainerMainView='clients';selected=null;window.currentClientData=null;
  await trainerHome();
 }
 async function trainerHome(){
+ currentTrainerMainView='clients';
  let cs=await api('/clients'),activeCount=cs.filter(c=>c.status==='Активний').length;
  app.innerHTML=shell(`<div class="card"><h1>Панель тренера</h1><p class="muted">Активних клієнтів: ${activeCount} · На паузі: ${cs.filter(c=>c.status==='Заморожений').length}</p><button onclick="newClient()">+ Додати клієнта</button></div><h1>Клієнти</h1>${cs.map(c=>`<div class="card client" onclick="navigateToClient(${c.id})"><div class="between"><div><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')} · ${c.weight||0} кг</div></div><span class="${c.live_status==='Тренується'?'training-live':c.status==='Заморожений'?'badge status-frozen':'badge'}">${esc(c.live_status||c.status||'Активний')}</span></div></div>`).join('')}`);refreshTrainerGlobalBadge()
 }
