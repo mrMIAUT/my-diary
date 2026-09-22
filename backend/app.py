@@ -118,6 +118,14 @@ def init():
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS technique_url TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rest_seconds INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rest_text TEXT DEFAULT ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS exercise_groups(
+            id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, sort INTEGER DEFAULT 0
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS exercise_library(
+            id SERIAL PRIMARY KEY, group_id INTEGER NOT NULL, name TEXT NOT NULL,
+            technique_url TEXT DEFAULT '', UNIQUE(group_id,name)
+        )""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
@@ -179,7 +187,9 @@ class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rir_by_set:str=""
+    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rest_text:str=""; rir_by_set:str=""
+class ExerciseGroupIn(BaseModel): name:str
+class ExerciseLibraryIn(BaseModel): group_id:int; name:str; technique_url:str=""
 class CardioIn(BaseModel):
     client_id:int; day:str=""; cardio_type:str=""; minutes:int=0; speed:float=0; incline:float=0; steps:int=0
 class ProgramOrderIn(BaseModel):
@@ -404,15 +414,53 @@ def save_cardio(x:CardioIn):
     run("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(?,?,?,?,?,?)",(x.client_id,"trainer","cardio","Клієнт оновив кардіо та активність за "+d,"cardio",d))
     return {"ok":True}
 
+
+@app.get("/api/exercise-library")
+def get_exercise_library():
+    return {"groups":rows("SELECT * FROM exercise_groups ORDER BY sort,id"),
+            "exercises":rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                               JOIN exercise_groups g ON g.id=e.group_id
+                               ORDER BY g.sort,g.id,e.name""")}
+
+@app.post("/api/exercise-library/groups")
+def add_exercise_group(x:ExerciseGroupIn):
+    name=x.name.strip()
+    if not name: raise HTTPException(400,"Вкажіть назву групи")
+    old=one("SELECT id FROM exercise_groups WHERE lower(name)=lower(?)",(name,))
+    if old: return {"id":old["id"]}
+    return {"id":run("INSERT INTO exercise_groups(name) VALUES(?)",(name,))}
+
+@app.delete("/api/exercise-library/groups/{gid}")
+def delete_exercise_group(gid:int):
+    run("DELETE FROM exercise_library WHERE group_id=?",(gid,))
+    run("DELETE FROM exercise_groups WHERE id=?",(gid,))
+    return {"ok":True}
+
+@app.post("/api/exercise-library/exercises")
+def add_library_exercise(x:ExerciseLibraryIn):
+    if not one("SELECT id FROM exercise_groups WHERE id=?",(x.group_id,)): raise HTTPException(404,"Групу не знайдено")
+    name=x.name.strip()
+    if not name: raise HTTPException(400,"Вкажіть назву вправи")
+    old=one("SELECT id FROM exercise_library WHERE group_id=? AND lower(name)=lower(?)",(x.group_id,name))
+    if old:
+        run("UPDATE exercise_library SET technique_url=? WHERE id=?",(x.technique_url.strip(),old["id"]))
+        return {"id":old["id"]}
+    return {"id":run("INSERT INTO exercise_library(group_id,name,technique_url) VALUES(?,?,?)",(x.group_id,name,x.technique_url.strip()))}
+
+@app.delete("/api/exercise-library/exercises/{eid}")
+def delete_library_exercise(eid:int):
+    run("DELETE FROM exercise_library WHERE id=?",(eid,))
+    return {"ok":True}
+
 @app.post("/api/program")
 def add_program(x:ProgramIn):
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rir_by_set) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rir_by_set.strip())); return {"id":i}
+    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip())); return {"id":i}
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn):
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
-    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rir_by_set=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rir_by_set.strip(),pid))
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),pid))
     return {"ok":True}
 
 @app.post("/api/program/reorder")
@@ -466,7 +514,7 @@ def start_workout(x:WorkoutStartIn):
     existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
     if existing:
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rir_by_set FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
+    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
     i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
     session=one("SELECT * FROM workout_sessions WHERE id=?",(i,))
     client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(x.client_id,))
