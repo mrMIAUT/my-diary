@@ -354,9 +354,22 @@ const EN_MAP={
 'Мій прогрес':'My progress','Показник':'Metric','Вага':'Weight','Талія':'Waist','Груди':'Chest','Таз':'Hips','Бедра':'Thighs','Руки':'Arms',
 'Почати тренування':'Start workout','Завершити тренування':'Finish workout','Перевірено тренером ✓':'Reviewed by trainer ✓',
 'БЖВ за сьогодні':'Macros today','Моє харчування':'My nutrition','Особисті дані та інформація, важлива для тренувань.':'Personal data and information important for training.','Редагувати анкету':'Edit profile',
+'← До клієнтів':'← Back to clients','+ Додати вправу':'+ Add exercise',
+'День, напр. День 1':'Day, e.g. Day 1','Вправа':'Exercise','Посилання на техніку':'Technique video link',
+'RIR за замовчуванням':'Default RIR','RIR по підходах: 2,2,1':'RIR by set: 2,2,1',
+'Відпочинок, хв (напр. 2-3)':'Rest, min (e.g. 2-3)',
+'Назва вправи':'Exercise name','Посилання на відео':'Video link',
+'Напр. Спина':'e.g. Back','Видалити групу':'Delete group',
+
 'Жіноча':'Female','Чоловіча':'Male','Так':'Yes','Ні':'No','Зберегти активність':'Save activity','Редагувати активність':'Edit activity'
 };
 const EN_PARTS=[
+['RIR (Reps In Reserve) — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 reps.','RIR (Reps In Reserve) — the number of reps you would still have in reserve before failure. For example, RIR 2 means you could perform about 2 more reps after the set.'],
+['RIR — скільки повторів залишилося б у запасі до відмови. RIR 2 = ти міг би зробити ще приблизно 2 повтори.','RIR — how many reps you would still have in reserve before failure. RIR 2 means you could do about 2 more reps.'],
+['Обери день, щоб просто переглянути вправи.','Choose a day to preview the exercises.'],
+['Тренування почнеться лише після натискання «Почати тренування».','The workout starts only after tapping “Start workout”.'],
+['Наступне тренування:','Next workout:'],['Нове тренування можна буде почати наступного дня.','A new workout can be started the next day.'],
+
 ['Натисни на день, щоб переглянути записи.','Tap a day to view records.'],
 ['Натисни на день, щоб переглянути записи','Tap a day to view records'],
 ['Доріжка ·','Treadmill ·'],['швидкість','speed'],['нахил','incline'],['кроків','steps'],
@@ -367,6 +380,9 @@ function enText(s){
  let lead=s.match(/^\s*/)?.[0]||'', trail=s.match(/\s*$/)?.[0]||'', t=s.trim();
  if(!t)return s;
  if(EN_MAP[t])return lead+EN_MAP[t]+trail;
+ const months={Січень:'January',Лютий:'February',Березень:'March',Квітень:'April',Травень:'May',Червень:'June',Липень:'July',Серпень:'August',Вересень:'September',Жовтень:'October',Листопад:'November',Грудень:'December'};
+ let mm=t.match(/^(Січень|Лютий|Березень|Квітень|Травень|Червень|Липень|Серпень|Вересень|Жовтень|Листопад|Грудень)(\s+\d{4})$/);
+ if(mm)return lead+months[mm[1]]+mm[2]+trail;
  // Dynamic labels
  let m=t.match(/^День\s+(\d+)$/); if(m)return lead+'Day '+m[1]+trail;
  m=t.match(/^(\d+)\s+кроків$/); if(m)return lead+m[1]+' steps'+trail;
@@ -468,7 +484,7 @@ function openClientHistory(){let head=document.querySelector('#clientCalendarBod
 
 function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal')||!!document.querySelector('.side-drawer.open'))}
 new MutationObserver(()=>syncOverlayLock()).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-new MutationObserver(ms=>{if(appLanguage==='en')ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)translateTree(n)}))}).observe(document.body,{childList:true,subtree:true});
+new MutationObserver(ms=>{if(appLanguage==='en')ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)translateTree(n);else if(n.nodeType===3)n.nodeValue=enText(n.nodeValue)}))}).observe(document.body,{childList:true,subtree:true});
 setTimeout(()=>translateTree(document.body),0);
 
 function logout(){localStorage.removeItem('fitSession');session=null;renderLogin()}
