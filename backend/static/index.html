@@ -335,24 +335,56 @@ const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'ht
 
 let appLanguage=localStorage.getItem('eplanLanguage')||'uk';
 const EN_MAP={
-'Клієнти':'Clients','Анкета':'Profile','Програма':'Program','Результати':'Results','Харчування':'Nutrition','Заміри':'Measurements','Календар':'Calendar','Кардіо':'Cardio','Бібліотека вправ':'Exercise library',
-'Головна':'Home','План харчування':'Meal plan','Моя історія':'My history','Мій профіль':'My profile','Вийти':'Log out','Сповіщення':'Notifications',
-'Історія тренувань':'Workout history','Період':'Period','30 днів':'30 days','3 місяці':'3 months','6 місяців':'6 months','Весь час':'All time','Показати період':'Show period','Скинути дати':'Reset dates',
-'З':'From','По':'To','Тренування':'Workout','Харчування':'Nutrition','Заміри':'Measurements','Щоденник':'Diary','До календаря':'Back to calendar',
-'Програма тренувань':'Workout program','Додати вправу':'Add exercise','Редагувати вправу':'Edit exercise','Видалити':'Delete','Редагувати':'Edit','Зберегти':'Save',
-'Групи м’язів':'Muscle groups','Додати групу':'Add group','Додати вправу':'Add exercise','Вправ ще немає.':'No exercises yet.','Відео':'Video',
+'Клієнти':'Clients','Анкета':'Profile','Анкета клієнта':'Client profile','Програма':'Program','Результати':'Results','Харчування':'Nutrition','Заміри':'Measurements','Календар':'Calendar','Кардіо':'Cardio','Бібліотека вправ':'Exercise library',
+'Головна':'Home','План харчування':'Meal plan','Моя історія':'My history','Мій профіль':'My profile','Вийти':'Log out','Сповіщення':'Notifications','До клієнтів':'Back to clients',
+'Заморозити':'Freeze','Розморозити':'Unfreeze','Видалити':'Delete','Без цілі':'No goal',
+'Ім’я':'First name','Прізвище':'Last name','Вік':'Age','Стать':'Sex','Зв’язок':'Contact','Протипоказання':'Contraindications','Травми':'Injuries','Не вказано':'Not specified',
+'Цільове харчування':'Target nutrition','Вкажи калорійність та БЖВ клієнта.':'Set the client’s calorie and macro targets.','Ккал':'kcal','Білки, г':'Protein, g','Жири, г':'Fat, g','Вуглеводи, г':'Carbs, g','Зберегти харчування':'Save nutrition',
+'План харчування':'Meal plan','Прийом їжі':'Meal','Варіант':'Option','Додати прийом їжі':'Add meal','Додати варіант':'Add option','Зберегти план':'Save plan',
+'Календар історії':'History calendar','Натисни, щоб відкрити календар':'Tap to open calendar','жовта крапка = є записи':'yellow dot = records available',
+'Січень':'January','Лютий':'February','Березень':'March','Квітень':'April','Травень':'May','Червень':'June','Липень':'July','Серпень':'August','Вересень':'September','Жовтень':'October','Листопад':'November','Грудень':'December',
+'Пн':'Mon','Вт':'Tue','Ср':'Wed','Чт':'Thu','Пт':'Fri','Сб':'Sat','Нд':'Sun',
+'Кардіо та активність':'Cardio and activity','Кардіо та активність сьогодні':'Cardio and activity today','кроків':'steps','Доріжка':'Treadmill','Швидкість':'speed','нахил':'incline','хв':'min',
+'Історія тренувань':'Workout history','Обери тренувальний день і період. Спочатку показуються 5 останніх тренувань.':'Choose a workout day and period. The 5 most recent workouts are shown first.',
+'Період':'Period','30 днів':'30 days','3 місяці':'3 months','6 місяців':'6 months','Весь час':'All time','Показати період':'Show period','Скинути дати':'Reset dates','З':'From','По':'To',
+'Тренування':'Workout','День 1':'Day 1','День 2':'Day 2','День 3':'Day 3','День 4':'Day 4','День 5':'Day 5',
+'Програма тренувань':'Workout program','Додати вправу':'Add exercise','Редагувати вправу':'Edit exercise','Редагувати':'Edit','Зберегти':'Save',
+'Групи м’язів':'Muscle groups','Додати групу':'Add group','Вправ ще немає.':'No exercises yet.','Відео':'Video',
 'Відпочинок':'Rest','Підходи':'Sets','Повтори':'Reps','Вага, кг':'Weight, kg','Підхід':'Set','Виконано ✓':'Completed ✓',
 'Мій прогрес':'My progress','Показник':'Metric','Вага':'Weight','Талія':'Waist','Груди':'Chest','Таз':'Hips','Бедра':'Thighs','Руки':'Arms',
-'Почати тренування':'Start workout','Завершити тренування':'Finish workout','День 1':'Day 1','День 2':'Day 2','День 3':'Day 3',
-'Календар історії':'History calendar','Натисни, щоб відкрити календар':'Tap to open calendar','Перевірено тренером ✓':'Reviewed by trainer ✓',
-'Кардіо та активність сьогодні':'Cardio and activity today','БЖВ за сьогодні':'Macros today','Моє харчування':'My nutrition','Особисті дані та інформація, важлива для тренувань.':'Personal data and information important for training.',
-'Ім’я':'First name','Прізвище':'Last name','Вік':'Age','Стать':'Sex','Зв’язок':'Contact','Протипоказання':'Contraindications','Травми':'Injuries','Редагувати анкету':'Edit profile'
+'Почати тренування':'Start workout','Завершити тренування':'Finish workout','Перевірено тренером ✓':'Reviewed by trainer ✓',
+'БЖВ за сьогодні':'Macros today','Моє харчування':'My nutrition','Особисті дані та інформація, важлива для тренувань.':'Personal data and information important for training.','Редагувати анкету':'Edit profile',
+'Жіноча':'Female','Чоловіча':'Male','Так':'Yes','Ні':'No','Зберегти активність':'Save activity','Редагувати активність':'Edit activity'
 };
+const EN_PARTS=[
+['Натисни на день, щоб переглянути записи.','Tap a day to view records.'],
+['Натисни на день, щоб переглянути записи','Tap a day to view records'],
+['Доріжка ·','Treadmill ·'],['швидкість','speed'],['нахил','incline'],['кроків','steps'],
+['Не вказано','Not specified'],['Без цілі','No goal'],['Прийом їжі','Meal'],['Варіант','Option'],
+['Відпочинок','Rest'],['підходи','sets'],['повтори','reps']
+];
+function enText(s){
+ let lead=s.match(/^\s*/)?.[0]||'', trail=s.match(/\s*$/)?.[0]||'', t=s.trim();
+ if(!t)return s;
+ if(EN_MAP[t])return lead+EN_MAP[t]+trail;
+ // Dynamic labels
+ let m=t.match(/^День\s+(\d+)$/); if(m)return lead+'Day '+m[1]+trail;
+ m=t.match(/^(\d+)\s+кроків$/); if(m)return lead+m[1]+' steps'+trail;
+ m=t.match(/^(\d+)\s+хв$/); if(m)return lead+m[1]+' min'+trail;
+ let out=t;
+ EN_PARTS.forEach(([a,b])=>{out=out.split(a).join(b)});
+ return lead+out+trail;
+}
 function translateTree(root=document.body){
  if(appLanguage!=='en'||!root)return;
- let walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
- nodes.forEach(n=>{let raw=n.nodeValue,t=raw.trim();if(EN_MAP[t])n.nodeValue=raw.replace(t,EN_MAP[t])});
- root.querySelectorAll?.('input,textarea,select,button').forEach(el=>{if(el.placeholder&&EN_MAP[el.placeholder])el.placeholder=EN_MAP[el.placeholder];if(el.title&&EN_MAP[el.title])el.title=EN_MAP[el.title]});
+ let walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let nodes=[];
+ while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(n=>{n.nodeValue=enText(n.nodeValue)});
+ root.querySelectorAll?.('input,textarea,select,button').forEach(el=>{
+   if(el.placeholder)el.placeholder=enText(el.placeholder);
+   if(el.title)el.title=enText(el.title);
+   if(el.getAttribute('aria-label'))el.setAttribute('aria-label',enText(el.getAttribute('aria-label')));
+ });
  document.documentElement.lang='en';
 }
 function setLanguage(lang){appLanguage=lang;localStorage.setItem('eplanLanguage',lang);location.reload()}
