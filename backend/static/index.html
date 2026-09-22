@@ -244,6 +244,10 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .access-grid>*{min-width:0}.access-grid input[type="date"],.access-grid select{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
 @media(max-width:650px){.access-grid input[type="date"]{display:block;width:100%;max-width:100%;min-width:0}}
+
+.access-card{overflow:hidden}.access-grid{width:100%;max-width:100%;overflow:hidden}.access-grid>div{width:100%;max-width:100%;min-width:0;overflow:hidden}.access-grid input[type="date"]{-webkit-appearance:none;appearance:none;display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0!important}
+.access-saved{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.access-saved-main{display:flex;flex-wrap:wrap;gap:8px}.access-edit-box.hidden{display:none!important}.access-save-success{background:#1f7a3e!important;color:#fff!important;border-color:#2f9b55!important}.access-save-success:hover{background:#1f7a3e!important}
+@media(max-width:650px){.access-card{padding-left:18px;padding-right:18px}.access-grid,.access-grid>div{min-width:0!important;width:100%!important;max-width:100%!important}.access-grid input[type="date"]{font-size:16px!important}}
 </style></head><body><div id="app"></div><script>
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -572,9 +576,22 @@ async function navigateToClient(id){
 }
 
 function isoAddMonths(n){let d=new Date(),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);let last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return d.toISOString().slice(0,10)}
-function trainerAccessHTML(c){let a=clientAccess(c),cls=(a.expired||a.manually_frozen)?'off':(a.days_left!==null&&a.days_left<=7?'warn':'ok'),days=a.days_left===null?'Безстроково':a.days_left<0?'Закінчився':`${a.days_left} дн.`;return `<div class="card access-card"><h2>Доступ до застосунку</h2><div class="access-status"><span class="access-pill ${cls}">${a.expired?'Закінчився':a.manually_frozen?'Заморожено':'Активний'}</span><span class="access-pill">${esc(a.plan_name)}</span><span class="access-pill">${days}</span></div><div class="access-grid"><div><label class="muted">Тариф</label><select id="accessPlan"><option value="coaching" ${a.plan_code==='coaching'?'selected':''}>Онлайн-ведення</option><option value="workout_plan" ${a.plan_code==='workout_plan'?'selected':''}>План тренувань</option><option value="workout_nutrition" ${a.plan_code==='workout_nutrition'?'selected':''}>План тренувань + План харчування</option><option value="self" ${a.plan_code==='self'?'selected':''}>Самостійно</option><option value="free" ${a.plan_code==='free'?'selected':''}>Free</option></select></div><div><label class="muted">Доступ до</label><input id="accessUntil" type="date" value="${esc(a.access_until||'')}"></div></div><div class="access-actions"><button class="dark" onclick="quickAccess(${c.id},1)">+ 1 місяць</button><button class="dark" onclick="quickAccess(${c.id},3)">+ 3 місяці</button><button onclick="saveClientAccess(${c.id})">Зберегти доступ</button></div><p class="muted" style="margin:12px 0 0">Після завершення строку клієнт автоматично переходить у режим перегляду. Дані не видаляються.</p></div>`}
+function trainerAccessHTML(c){
+ let a=clientAccess(c),cls=(a.expired||a.manually_frozen)?'off':(a.days_left!==null&&a.days_left<=7?'warn':'ok'),days=a.days_left===null?'Безстроково':a.days_left<0?'Закінчився':`${a.days_left} дн.`;
+ let summary=`<div class="access-saved" id="accessSavedView"><div><h2>Доступ до застосунку</h2><div class="access-saved-main"><span class="access-pill ${cls}">${a.expired?'Закінчився':a.manually_frozen?'Заморожено':'Активний'}</span><span class="access-pill">${esc(a.plan_name)}</span><span class="access-pill">${days}</span>${a.access_until?`<span class="access-pill">до ${esc(a.access_until)}</span>`:''}</div></div><button class="dark" onclick="toggleAccessEdit(true)">Редагувати</button></div>`;
+ let editor=`<div id="accessEditBox" class="access-edit-box hidden"><div class="access-grid"><div><label class="muted">Тариф</label><select id="accessPlan"><option value="coaching" ${a.plan_code==='coaching'?'selected':''}>Онлайн-ведення</option><option value="workout_nutrition" ${a.plan_code==='workout_nutrition'?'selected':''}>План тренувань + План харчування</option><option value="workout_plan" ${a.plan_code==='workout_plan'?'selected':''}>План тренувань</option><option value="self" ${a.plan_code==='self'?'selected':''}>Самостійно</option><option value="free" ${a.plan_code==='free'?'selected':''}>Free</option></select></div><div><label class="muted">Доступ до</label><input id="accessUntil" type="date" value="${esc(a.access_until||'')}"></div></div><div class="access-actions"><button class="dark" onclick="quickAccess(${c.id},1)">+ 1 місяць</button><button class="dark" onclick="quickAccess(${c.id},3)">+ 3 місяці</button><button class="dark" onclick="quickAccess(${c.id},6)">+ 6 місяців</button></div><div class="access-actions"><button id="accessSaveBtn" onclick="saveClientAccess(${c.id},this)">Зберегти доступ</button><button class="dark" onclick="toggleAccessEdit(false)">Скасувати</button></div><p class="muted" style="margin:12px 0 0">Після завершення строку клієнт автоматично переходить у режим перегляду. Дані не видаляються.</p></div>`;
+ return `<div class="card access-card">${summary}${editor}</div>`;
+}
+function toggleAccessEdit(show){let box=document.getElementById('accessEditBox'),view=document.getElementById('accessSavedView');if(box)box.classList.toggle('hidden',!show);if(view){let b=view.querySelector('button');if(b)b.style.display=show?'none':''}}
 function quickAccess(cid,m){accessUntil.value=isoAddMonths(m);accessUntil.dispatchEvent(new Event('change',{bubbles:true}))}
-async function saveClientAccess(cid){let btn=event?.currentTarget;if(btn){btn.disabled=true;btn.textContent='Зберігаю...'}try{await api('/clients/'+cid+'/access',{method:'PATCH',body:JSON.stringify({plan_code:accessPlan.value,access_until:accessUntil.value})});await openClient(cid,currentTrainerTab)}catch(e){if(btn){btn.disabled=false;btn.textContent='Зберегти доступ'}throw e}}
+async function saveClientAccess(cid,btn){
+ if(btn){btn.disabled=true;btn.textContent='Зберігаю...'}
+ try{
+   await api('/clients/'+cid+'/access',{method:'PATCH',body:JSON.stringify({plan_code:accessPlan.value,access_until:accessUntil.value})});
+   if(btn){btn.disabled=false;btn.classList.add('access-save-success');btn.textContent='✓ Доступ збережено'}
+   setTimeout(()=>openClient(cid,currentTrainerTab),850)
+ }catch(e){if(btn){btn.disabled=false;btn.classList.remove('access-save-success');btn.textContent='Зберегти доступ'}throw e}
+}
 
 async function openClient(id,activeTab=null){
  selected=id;let [d]=await Promise.all([api('/client/'+id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
