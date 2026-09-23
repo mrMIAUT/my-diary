@@ -10,7 +10,6 @@ import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta
 import base64
-from zoneinfo import ZoneInfo
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -19,9 +18,6 @@ except Exception:
     webpush=None; WebPushException=Exception; ec=None; serialization=None
 
 BASE=Path(__file__).resolve().parent
-KYIV_TZ=ZoneInfo('Europe/Kyiv')
-def kyiv_today(): return datetime.now(KYIV_TZ).date()
-def kyiv_now(): return datetime.now(KYIV_TZ)
 DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
@@ -165,6 +161,7 @@ def init():
             technique_url TEXT DEFAULT '', UNIQUE(group_id,name)
         )""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS alternatives_json TEXT DEFAULT '[]'")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
@@ -239,7 +236,7 @@ class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
     name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rest_text:str=""; rir_by_set:str=""
+    client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rest_text:str=""; rir_by_set:str=""; alternatives_json:str="[]"
 class ExerciseGroupIn(BaseModel): name:str
 class ExerciseLibraryIn(BaseModel): group_id:int; name:str; technique_url:str=""
 class CardioIn(BaseModel):
@@ -288,8 +285,7 @@ class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
 @app.get("/")
-def home():
-    return FileResponse(BASE/"static"/"index.html",headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache"})
+def home(): return FileResponse(BASE/"static"/"index.html")
 @app.get("/sw.js")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
 @app.get("/manifest.webmanifest")
@@ -407,7 +403,7 @@ def add_client(x:ClientIn):
     initial_password=secrets.token_urlsafe(32)
     try:
         i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
-        if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(kyiv_today()),x.weight))
+        if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
         token=secrets.token_urlsafe(32)
         token_hash=hashlib.sha256(token.encode()).hexdigest()
         run("INSERT INTO password_resets(client_id,token_hash,expires_at) VALUES(?,?,?)",(i,token_hash,datetime.utcnow()+timedelta(hours=24)))
@@ -491,8 +487,8 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
 @app.post("/api/cardio")
 def save_cardio(x:CardioIn):
     require_active_client(x.client_id,'cardio')
-    d=x.day.strip() or str(kyiv_today())
-    if d>str(kyiv_today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
+    d=x.day.strip() or str(date.today())
+    if d>str(date.today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
     if x.cardio_type not in ("","Доріжка","Орбітрек","Велосипед"): raise HTTPException(400,"Невідомий тип кардіо")
     old=one("SELECT id FROM cardio_log WHERE client_id=? AND day=?",(x.client_id,d))
     vals=(x.cardio_type,max(0,x.minutes),max(0,x.speed),max(0,x.incline),max(0,x.steps))
@@ -541,13 +537,13 @@ def delete_library_exercise(eid:int):
 
 @app.post("/api/program")
 def add_program(x:ProgramIn):
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip())); return {"id":i}
+    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]")); return {"id":i}
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn):
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
-    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),pid))
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]",pid))
     return {"ok":True}
 
 @app.post("/api/program/reorder")
@@ -572,14 +568,14 @@ def set_superset(pid:int,x:SupersetIn):
 def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
 @app.post("/api/results")
 def add_result(x:ResultIn):
-    i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(kyiv_today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
+    i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(date.today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
 
 @app.post("/api/result-sets")
 def add_result_sets(x:SetResultIn):
     require_active_client(x.client_id,'workouts')
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
-    today=str(kyiv_today())
+    today=str(date.today())
     # A completed exercise is locked in the UI. Explicit editing re-saves and replaces today's sets.
     run("DELETE FROM result_sets WHERE client_id=? AND program_id=? AND day=?",(x.client_id,x.program_id,today))
     ids=[]
@@ -658,14 +654,14 @@ def push_subscribe(x:PushSubscriptionIn):
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
     require_active_client(x.client_id,'workouts')
-    today=str(kyiv_today())
+    today=str(date.today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
     existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
     if existing:
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
-    i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,started_at) VALUES(?,?,?,?,?)",(x.client_id,x.day_name,"training",snapshot,kyiv_now().replace(tzinfo=None)))
+    snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
+    i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
     session=one("SELECT * FROM workout_sessions WHERE id=?",(i,))
     client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(x.client_id,))
     if client_info:
@@ -680,7 +676,7 @@ def finish_workout(sid:int):
     if not session:
         raise HTTPException(404,"Тренування не знайдено")
     was_finished=session.get("status")=="finished"
-    run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,?) WHERE id=?",(kyiv_now().replace(tzinfo=None),sid))
+    run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE id=?",(sid,))
     finished=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
     if not was_finished:
         client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
@@ -688,7 +684,7 @@ def finish_workout(sid:int):
             full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
             client_name=full_name or client_info.get("name") or "Клієнт"
             workout_day=str(session.get("day_name") or "Тренування")
-            workout_date=str(session.get("started_at") or "")[:10] or str(kyiv_today())
+            workout_date=str(session.get("started_at") or "")[:10] or str(date.today())
             send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
             add_notification(session["client_id"],"trainer","workout_finished",
                 f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
@@ -698,7 +694,7 @@ def finish_workout(sid:int):
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
     require_active_client(x.client_id,'nutrition')
-    if x.day > str(kyiv_today()):
+    if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати дані на майбутню дату")
     existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
@@ -710,7 +706,7 @@ def historical_nutrition(x:HistoricalNutritionIn):
 @app.post("/api/history/workout")
 def historical_workout(x:HistoricalWorkoutIn):
     require_active_client(x.client_id,'workouts')
-    if x.day > str(kyiv_today()):
+    if x.day > str(date.today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
     existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
@@ -808,7 +804,7 @@ def read_notifications(cid:int,x:NotificationReadIn):
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
     require_active_client(x.client_id,'nutrition')
-    i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
+    i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
 @app.patch("/api/nutrition/{nid}")
 def edit_nutrition(nid:int,x:NutIn):
     rec=one("SELECT id,client_id FROM nutrition WHERE id=?",(nid,))
@@ -827,22 +823,9 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
     require_active_client(x.client_id,'measurements')
-    today=str(kyiv_today())
-    existing=one("SELECT id FROM measurements WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
-    if existing:
-        raise HTTPException(409,"Заміри за сьогодні вже збережені")
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,today,x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
-
-@app.delete("/api/measurements/{mid}")
-def delete_measurement(mid:int,client_id:int):
-    m=one("SELECT * FROM measurements WHERE id=? AND client_id=?",(mid,client_id))
-    if not m: raise HTTPException(404,"Замір не знайдено")
-    run("DELETE FROM measurements WHERE id=? AND client_id=?",(mid,client_id))
-    last=one("SELECT weight FROM measurements WHERE client_id=? AND weight>0 ORDER BY day DESC,id DESC LIMIT 1",(client_id,))
-    if last: run("UPDATE clients SET weight=? WHERE id=?",(last["weight"],client_id))
-    return {"ok":True}
 
 @app.put("/api/comments/{comment_id}")
 def edit_comment(comment_id:int,x:CommentIn):
