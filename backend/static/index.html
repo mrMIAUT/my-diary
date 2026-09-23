@@ -656,7 +656,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{background:#18181b!important;border:1px solid #4a4a52!important;color:var(--text)!important;box-shadow:none!important}
 
-/* v46 — training day titles + collapsed trainer program */
+/* v47 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -667,11 +667,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
 
-/* v46 — minimalist password visibility icon */
+/* v47 — minimalist password visibility icon */
 .password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
 
-/* v46 — alternative selector + clearer rest timer controls */
+/* v47 — alternative selector + clearer rest timer controls */
 .rest-timer-choices button{
  border:1.5px solid #55565f!important;
  border-radius:14px!important;
@@ -684,9 +684,27 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
  box-shadow:0 0 0 2px rgba(95,155,112,.12)!important;
 }
 
-/* v46 — restore finish workout action */
+/* v47 — restore finish workout action */
 .finish-workout-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .finish-workout-btn{width:100%;background:#2a2a30!important;color:var(--text)!important;border:1px solid #4a4a52!important}
+.finish-workout-btn:active{transform:scale(.99)}
+
+/* v47 — completion badge + visible finish workout CTA */
+.exercise-done-badge{
+ display:inline-block;
+ white-space:nowrap;
+ color:var(--yellow);
+ font-weight:800;
+ margin-left:8px;
+}
+.finish-workout-btn{
+ width:100%;
+ background:var(--yellow)!important;
+ color:#090909!important;
+ border:1px solid var(--yellow)!important;
+ font-weight:850!important;
+ box-shadow:0 0 0 1px rgba(255,212,0,.12),0 8px 24px rgba(0,0,0,.22)!important;
+}
 .finish-workout-btn:active{transform:scale(.99)}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
@@ -2170,7 +2188,7 @@ async function selectWorkoutExercise(pid,cid,index){
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),html='';
  function card(x,inner=false){
-  return `<div class="${inner?'':'exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(workoutExerciseName(x))}</strong>${workoutExerciseName(x)!==x.exercise?`<span class="muted" style="display:block;margin-top:3px">Замість: ${esc(x.exercise)}</span>`:``}${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--yellow);font-size:13px">▶ Техніка</a>`:'' }${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span style="color:var(--yellow);font-weight:800;margin-left:8px">Виконано ✓</span>':''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="dark swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
+  return `<div class="${inner?'':'exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(workoutExerciseName(x))}</strong>${workoutExerciseName(x)!==x.exercise?`<span class="muted" style="display:block;margin-top:3px">Замість: ${esc(x.exercise)}</span>`:``}${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--yellow);font-size:13px">▶ Техніка</a>`:'' }${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span class="exercise-done-badge">Виконано&nbsp;✓</span>':''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="dark swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
