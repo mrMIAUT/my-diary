@@ -656,7 +656,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{background:#18181b!important;border:1px solid #4a4a52!important;color:var(--text)!important;box-shadow:none!important}
 
-/* v47 — training day titles + collapsed trainer program */
+/* v48 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -667,11 +667,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
 
-/* v47 — minimalist password visibility icon */
+/* v48 — minimalist password visibility icon */
 .password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
 
-/* v47 — alternative selector + clearer rest timer controls */
+/* v48 — alternative selector + clearer rest timer controls */
 .rest-timer-choices button{
  border:1.5px solid #55565f!important;
  border-radius:14px!important;
@@ -684,12 +684,12 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
  box-shadow:0 0 0 2px rgba(95,155,112,.12)!important;
 }
 
-/* v47 — restore finish workout action */
+/* v48 — restore finish workout action */
 .finish-workout-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .finish-workout-btn{width:100%;background:#2a2a30!important;color:var(--text)!important;border:1px solid #4a4a52!important}
 .finish-workout-btn:active{transform:scale(.99)}
 
-/* v47 — completion badge + visible finish workout CTA */
+/* v48 — completion badge + visible finish workout CTA */
 .exercise-done-badge{
  display:inline-block;
  white-space:nowrap;
@@ -2044,7 +2044,9 @@ function measurementReminderState(d){
 }
 function todayGuidanceHTML(d,cid,groups){
  let today=isoToday(),sessions=(d.workout_sessions||[]),active=sessions.find(x=>x.status==='training'),
-     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today),
+     todaySetsAll=(d.result_sets||[]).filter(x=>x.day===today),
+     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today)
+       ||(todaySetsAll.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),
      cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
  if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
