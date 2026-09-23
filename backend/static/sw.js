@@ -1,28 +1,50 @@
-let restTimerHandle=null;
-self.addEventListener('install',()=>self.skipWaiting());
-self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
-self.addEventListener('message',e=>{
- const d=e.data||{};
- if(d.type==='CANCEL_REST_TIMER'){if(restTimerHandle)clearTimeout(restTimerHandle);restTimerHandle=null;return}
- if(d.type==='REST_TIMER'&&d.end){
-   if(restTimerHandle)clearTimeout(restTimerHandle);
-   const delay=Math.max(0,+d.end-Date.now());
-   restTimerHandle=setTimeout(()=>{self.registration.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true,vibrate:[180,90,180,90,260]});restTimerHandle=null},delay);
- }
+const CACHE_VERSION='eplan-v49';
+
+self.addEventListener('install',event=>{
+  event.waitUntil(self.skipWaiting());
 });
-self.addEventListener('notificationclick',e=>{
- e.notification.close();
- const url=e.notification.data?.url||'/';
- e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(xs=>{
-   if(xs.length){xs[0].navigate(url);return xs[0].focus()}
-   return clients.openWindow(url);
- }));
+
+self.addEventListener('activate',event=>{
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch',event=>{
+  const req=event.request;
+  if(req.method!=='GET') return;
+  if(req.mode==='navigate'){
+    event.respondWith(fetch(req,{cache:'no-store'}).catch(()=>new Response(
+      '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="background:#090909;color:white;font-family:system-ui;padding:32px"><h2>Є ПЛАН</h2><p>Немає з’єднання з сервером. Перевір інтернет і відкрий застосунок ще раз.</p></body>',
+      {headers:{'Content-Type':'text/html; charset=utf-8'}}
+    )));
+    return;
+  }
+  event.respondWith(fetch(req).catch(()=>caches.match(req)));
 });
 
 self.addEventListener('push',event=>{
- let d={};try{d=event.data?event.data.json():{}}catch(e){d={body:event.data?event.data.text():'Нове сповіщення'}}
- event.waitUntil(self.registration.showNotification(d.title||'Є ПЛАН',{
-   body:d.body||'Нове сповіщення',icon:'/static/icon-192.png',badge:'/static/icon-192.png',
-   tag:'eplan-'+Date.now(),data:{url:d.url||'/'}
- }));
+  let data={};
+  try{data=event.data?event.data.json():{}}catch(e){data={body:event.data?.text()||''}}
+  event.waitUntil(self.registration.showNotification(data.title||'Є ПЛАН',{
+    body:data.body||'',
+    icon:'/static/icon-192.png',
+    badge:'/static/icon-192.png',
+    data:{url:data.url||'/'}
+  }));
+});
+
+self.addEventListener('notificationclick',event=>{
+  event.notification.close();
+  const url=new URL(event.notification.data?.url||'/',self.location.origin).href;
+  event.waitUntil((async()=>{
+    const list=await clients.matchAll({type:'window',includeUncontrolled:true});
+    for(const client of list){
+      if('navigate' in client) await client.navigate(url);
+      if('focus' in client) return client.focus();
+    }
+    return clients.openWindow(url);
+  })());
 });
