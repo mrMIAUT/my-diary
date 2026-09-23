@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v15"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v16"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -432,8 +432,24 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
  .strength-main{grid-template-columns:minmax(0,1fr) auto;gap:8px}.strength-main .arrow{grid-column:2;grid-row:1}.strength-change{grid-column:1/3;margin-top:-3px}
  .body-progress-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.measurements-page{display:grid;gap:14px}.measurements-page>.card{margin:0!important}
+.measurement-next{display:flex;align-items:center;justify-content:space-between;gap:16px;border-color:#4b4320}.measurement-next.due{border-color:#75611c;background:#1d1a10}
+.measurement-kicker{display:block;color:var(--yellow);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.measurement-next h2{margin:0 0 5px}.measurement-next p{margin:0}
+.measurement-tip{display:flex;gap:12px;align-items:flex-start;background:#18181b;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:14px}.measurement-tip strong{white-space:nowrap}.measurement-tip span{color:var(--muted);font-size:13px;line-height:1.4}
+.measurement-form-actions{display:flex;gap:9px;margin-top:14px}.measurement-form-actions button{flex:1}
+.measurement-section-title{display:flex;align-items:center;justify-content:space-between}.measurement-section-title h2,.measurement-section-title p{margin-top:0}.measurement-section-title p{margin-bottom:12px}
+.measurement-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.measurement-metric{border:1px solid var(--line);background:#121214;border-radius:14px;padding:13px;min-width:0}.measurement-metric span,.measurement-metric em{display:block;color:var(--muted);font-size:12px;font-style:normal}.measurement-metric strong{display:block;font-size:20px;margin:6px 0}.measurement-metric strong small{font-size:12px;color:var(--muted)}.measurement-metric em.down{color:#79df96}.measurement-metric em.up{color:#ffbd78}
+.measurement-changes{display:grid;gap:8px;margin-top:14px}.measurement-changes>div{display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.measurement-changes>div:last-child{border-bottom:0}.measurement-changes span{color:var(--muted)}.measurement-changes em{font-style:normal;font-weight:800}.measurement-changes em.down{color:#79df96}.measurement-changes em.up{color:#ffbd78}
+.measurement-history{margin-top:12px}.measurement-history-card{padding:13px 0;border-bottom:1px solid var(--line)}.measurement-history-card:last-child{border-bottom:0}.measurement-history-date{font-weight:800;margin-bottom:8px}.measurement-history-values{display:flex;flex-wrap:wrap;gap:7px}.measurement-history-values span{background:#1d1d20;border:1px solid var(--line);border-radius:999px;padding:7px 9px;font-size:12px}.measurement-history-values small{color:var(--muted)}
+@media(max-width:650px){
+ .measurement-next{display:block}.measurement-next button{width:100%;margin-top:14px}
+ .measurement-tip{display:block}.measurement-tip strong{display:block;margin-bottom:5px}
+ .measurement-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .measurement-changes>div{grid-template-columns:70px minmax(0,1fr);}.measurement-changes em{grid-column:2}
+}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v15');
+console.info('Є ПЛАН build 2026-09-23-v16');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1283,7 +1299,49 @@ async function saveNutritionTargets(cid){let meals=(nutritionPlanDraft||[]).filt
 function clientMealPlanHTML(d){let items=planFromData(d).filter(x=>x.content.trim());if(!items.length)return '';let nums=[...new Set(items.map(x=>x.meal_number))].sort((a,b)=>a-b);return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('clientMealPlanBody',this)"><span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб переглянути прийоми їжі</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">${nums.map(n=>{let xs=items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);return `<div class="meal-view"><strong>Прийом їжі ${n}</strong>${xs.map(x=>`<div class="meal-option"><span class="variant-pill">Варіант ${x.variant_number}</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">${esc(x.content)}</div></div>`).join('')}</div>`}).join('')}</div></div>`}
 function measurementRowHTML(x){let vals=[];if(+x.weight)vals.push(`<strong>${x.weight} кг</strong>`);if(+x.waist)vals.push(`Талія ${x.waist} см`);if(+x.hips)vals.push(`Таз ${x.hips} см`);if(+x.thighs)vals.push(`Стегна ${x.thighs} см`);if(+x.arms)vals.push(`Руки ${x.arms} см`);if(+x.chest)vals.push(`Груди ${x.chest} см`);return `<div class="exercise">${x.day?`<div class="muted" style="margin-bottom:7px">${esc(x.day)}</div>`:''}${vals.join(' · ')||'<span class="muted">Немає значень</span>'}</div>`}
 function measureHTML(d){return `<div class="card"><h2>Заміри клієнта</h2><p class="muted">Ці дані заповнює клієнт у своєму кабінеті. Тут доступний лише перегляд історії.</p>${d.measurements.length?d.measurements.slice().reverse().map(x=>measurementRowHTML(x)).join(''):'<p class="muted">Заміри відсутні.</p>'}</div>`}
-function clientMeasurementsHTML(d,cid){return `<div class="card"><h2>Заміри</h2><p class="muted">Заповни актуальні заміри. Вони збережуться за сьогоднішню дату.</p><div class="measure-grid"><div><label>Вага, кг</label><input id="mWeight" type="number" step="0.1" placeholder="Напр. 89"></div><div><label>Талія, см</label><input id="mWaist" type="number" step="0.1" placeholder="Напр. 82"></div><div><label>Таз, см</label><input id="mHips" type="number" step="0.1" placeholder="Напр. 98"></div><div><label>Стегна, см</label><input id="mThighs" type="number" step="0.1" placeholder="Напр. 60"></div><div><label>Руки, см</label><input id="mArms" type="number" step="0.1" placeholder="Напр. 39"></div><div><label>Груди, см</label><input id="mChest" type="number" step="0.1" placeholder="Напр. 108"></div></div><button style="margin-top:14px" onclick="saveMeasurement(${cid})">Зберегти заміри</button>${d.measurements.length?`<div style="margin-top:18px"><div class="muted" style="margin-bottom:8px">Останній запис</div>${measurementRowHTML(d.measurements[d.measurements.length-1])}</div>`:''}</div>`}
+function measurementDaysLeft(lastDay){
+ if(!lastDay)return 0;
+ let last=new Date(lastDay+'T12:00:00'),next=new Date(last);next.setDate(next.getDate()+30);
+ return Math.ceil((next-new Date())/86400000);
+}
+function measurementMetricCards(last,prev){
+ let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
+ return `<div class="measurement-metric-grid">${metrics.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
+   let v=+last[k],pv=+prev?.[k],delta=pv>0?v-pv:null;
+   return `<div class="measurement-metric"><span>${n}</span><strong>${fmtProgress(v)} <small>${u}</small></strong>${delta===null?'<em>—</em>':`<em class="${delta<0?'down':delta>0?'up':''}">${delta>0?'+':''}${fmtProgress(delta)} ${u}</em>`}</div>`;
+ }).join('')}</div>`;
+}
+function measurementFormHTML(cid,early=false){
+ return `<div class="measurement-form ${early?'early':''}">
+  <div class="measurement-tip"><strong>Як робити заміри</strong><span>Вранці, натщесерце та в однакових умовах. Бажано — раз на 30 днів.</span></div>
+  <div class="measure-grid"><div><label>Вага, кг</label><input id="mWeight" type="number" step="0.1" placeholder="Напр. 89"></div><div><label>Талія, см</label><input id="mWaist" type="number" step="0.1" placeholder="Напр. 82"></div><div><label>Таз, см</label><input id="mHips" type="number" step="0.1" placeholder="Напр. 98"></div><div><label>Стегна, см</label><input id="mThighs" type="number" step="0.1" placeholder="Напр. 60"></div><div><label>Руки, см</label><input id="mArms" type="number" step="0.1" placeholder="Напр. 39"></div><div><label>Груди, см</label><input id="mChest" type="number" step="0.1" placeholder="Напр. 108"></div></div>
+  <div class="measurement-form-actions"><button onclick="saveMeasurement(${cid})">Зберегти заміри</button>${early?`<button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.add('hidden')">Скасувати</button>`:''}</div>
+ </div>`;
+}
+function measurementHistoryCard(x,prev){
+ let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
+ return `<div class="measurement-history-card"><div class="measurement-history-date">${formatProgressDate(x.day)}</div><div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div></div>`;
+}
+function clientMeasurementsHTML(d,cid){
+ let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)),last=xs[xs.length-1],prev=xs[xs.length-2],left=last?measurementDaysLeft(last.day):0,due=!last||left<=0;
+ let nextDate=last?(()=>{let z=new Date(last.day+'T12:00:00');z.setDate(z.getDate()+30);return z.toISOString().slice(0,10)})():isoToday();
+ return `<div class="measurements-page">
+  <div class="card measurement-next ${due?'due':''}">
+   <div><span class="measurement-kicker">${due?'Час зробити заміри':'Наступні заміри'}</span><h2>${due?'Можна оновити дані':`Через ${left} ${ukDays(left)}`}</h2><p class="muted">${last?`Орієнтовна дата: ${formatProgressDate(nextDate)}`:'Додай перші заміри, щоб почати відстежувати зміни.'}</p></div>
+   ${due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
+  </div>
+  ${due?`<div id="dueMeasurementForm" class="${last?'hidden':''} card">${measurementFormHTML(cid)}</div>`:''}
+  ${last?`<div class="card"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementMetricCards(last,prev)}</div>`:''}
+  ${last&&prev?`<div class="card"><h2>Зміни з минулого разу</h2><p class="muted">Порівняно з ${formatProgressDate(prev.day)}</p>${measurementChangesHTML(last,prev)}</div>`:''}
+  ${last&&!due?`<div class="card measurement-early"><p class="muted">Не обов’язково чекати 30 днів, якщо тренер попросив зробити контрольні заміри раніше.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати замір раніше</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>`:''}
+  ${xs.length?`<div class="card"><button class="exercise-toggle" onclick="toggleCalendar('measurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="measurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div>`:''}
+ </div>`;
+}
+function ukDays(n){let x=Math.abs(n)%100,y=x%10;return x>10&&x<20?'днів':y===1?'день':y>=2&&y<=4?'дні':'днів'}
+function measurementChangesHTML(a,b){
+ let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
+ return `<div class="measurement-changes">${metrics.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return `<div><span>${n}</span><strong>${fmtProgress(b[k])} → ${fmtProgress(a[k])} ${u}</strong><em class="${d<0?'down':d>0?'up':''}">${d===0?'без змін':`${d>0?'+':''}${fmtProgress(d)} ${u}`}</em></div>`}).join('')}</div>`;
+}
 async function saveMeasurement(cid){let body={client_id:cid,weight:+mWeight.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,thighs:+mThighs.value||0,arms:+mArms.value||0,chest:+mChest.value||0};if(!Object.values(body).slice(1).some(v=>v>0))return alert('Заповни хоча б один замір');await api('/measurements',{method:'POST',body:JSON.stringify(body)});let d=await api('/client/'+cid);window.currentClientData=d;showClientSection('measurements')}
 
 function todaySets(d,pid){return (d.result_sets||[]).filter(x=>x.program_id===pid&&x.day===isoToday()).sort((a,b)=>a.set_number-b.set_number)}
