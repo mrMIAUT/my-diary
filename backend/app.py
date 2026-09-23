@@ -9,6 +9,7 @@ import json, shutil, hashlib, hmac, secrets, urllib.request, urllib.error
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 import base64
 try:
     from pywebpush import webpush, WebPushException
@@ -25,6 +26,10 @@ UPLOADS.mkdir(exist_ok=True)
 app=FastAPI(title="Зроби себе зі мною V3")
 app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
 app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
+
+KYIV_TZ=ZoneInfo("Europe/Kyiv")
+def kyiv_today():
+    return datetime.now(KYIV_TZ).date()
 
 def con():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
@@ -78,7 +83,7 @@ def access_info(c:dict):
     if until:
         try:
             ud=until if isinstance(until,date) else date.fromisoformat(str(until)[:10])
-            days_left=(ud-date.today()).days; expired=days_left<0
+            days_left=(ud-kyiv_today()).days; expired=days_left<0
         except Exception: pass
     frozen=c.get("status")=="Заморожений"
     effective="free" if expired or frozen else code
@@ -413,7 +418,7 @@ def add_client(x:ClientIn):
     initial_password=secrets.token_urlsafe(32)
     try:
         i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
-        if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(date.today()),x.weight))
+        if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(kyiv_today()),x.weight))
         token=secrets.token_urlsafe(32)
         token_hash=hashlib.sha256(token.encode()).hexdigest()
         run("INSERT INTO password_resets(client_id,token_hash,expires_at) VALUES(?,?,?)",(i,token_hash,datetime.utcnow()+timedelta(hours=24)))
@@ -498,8 +503,8 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
 @app.post("/api/cardio")
 def save_cardio(x:CardioIn):
     require_active_client(x.client_id,'cardio')
-    d=x.day.strip() or str(date.today())
-    if d>str(date.today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
+    d=x.day.strip() or str(kyiv_today())
+    if d>str(kyiv_today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
     if x.cardio_type not in ("","Доріжка","Орбітрек","Велосипед"): raise HTTPException(400,"Невідомий тип кардіо")
     old=one("SELECT id FROM cardio_log WHERE client_id=? AND day=?",(x.client_id,d))
     vals=(x.cardio_type,max(0,x.minutes),max(0,x.speed),max(0,x.incline),max(0,x.steps))
@@ -591,14 +596,14 @@ def set_superset(pid:int,x:SupersetIn):
 def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
 @app.post("/api/results")
 def add_result(x:ResultIn):
-    i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(date.today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
+    i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(kyiv_today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
 
 @app.post("/api/result-sets")
 def add_result_sets(x:SetResultIn):
     require_active_client(x.client_id,'workouts')
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
-    today=str(date.today())
+    today=str(kyiv_today())
     # A completed exercise is locked in the UI. Explicit editing re-saves and replaces today's sets.
     run("DELETE FROM result_sets WHERE client_id=? AND program_id=? AND day=?",(x.client_id,x.program_id,today))
     ids=[]
@@ -677,7 +682,7 @@ def push_subscribe(x:PushSubscriptionIn):
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
     require_active_client(x.client_id,'workouts')
-    today=str(date.today())
+    today=str(kyiv_today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
     existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
@@ -707,7 +712,7 @@ def finish_workout(sid:int):
             full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
             client_name=full_name or client_info.get("name") or "Клієнт"
             workout_day=str(session.get("day_name") or "Тренування")
-            workout_date=str(session.get("started_at") or "")[:10] or str(date.today())
+            workout_date=str(session.get("started_at") or "")[:10] or str(kyiv_today())
             send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
             add_notification(session["client_id"],"trainer","workout_finished",
                 f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
@@ -717,7 +722,7 @@ def finish_workout(sid:int):
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn):
     require_active_client(x.client_id,'nutrition')
-    if x.day > str(date.today()):
+    if x.day > str(kyiv_today()):
         raise HTTPException(400,"Не можна додавати дані на майбутню дату")
     existing=one("SELECT id FROM nutrition WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
@@ -729,7 +734,7 @@ def historical_nutrition(x:HistoricalNutritionIn):
 @app.post("/api/history/workout")
 def historical_workout(x:HistoricalWorkoutIn):
     require_active_client(x.client_id,'workouts')
-    if x.day > str(date.today()):
+    if x.day > str(kyiv_today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
     existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
@@ -827,7 +832,7 @@ def read_notifications(cid:int,x:NotificationReadIn):
 @app.post("/api/nutrition")
 def add_nutrition(x:NutIn):
     require_active_client(x.client_id,'nutrition')
-    i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(date.today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
+    i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
 @app.patch("/api/nutrition/{nid}")
 def edit_nutrition(nid:int,x:NutIn):
     rec=one("SELECT id,client_id FROM nutrition WHERE id=?",(nid,))
@@ -846,7 +851,7 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
     require_active_client(x.client_id,'measurements')
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
 
