@@ -9,6 +9,13 @@ import json, shutil, hashlib, hmac, secrets, urllib.request, urllib.error
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta
+import base64
+try:
+    from pywebpush import webpush, WebPushException
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import serialization
+except Exception:
+    webpush=None; WebPushException=Exception; ec=None; serialization=None
 
 BASE=Path(__file__).resolve().parent
 DATABASE_URL=os.environ["DATABASE_URL"]
@@ -191,6 +198,14 @@ def init():
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_tab TEXT DEFAULT ''")
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_day TEXT DEFAULT ''")
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_program_id INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_session_id INTEGER DEFAULT 0")
+        c.execute("""CREATE TABLE IF NOT EXISTS push_subscriptions(
+            id SERIAL PRIMARY KEY, client_id INTEGER DEFAULT 0, recipient TEXT,
+            endpoint TEXT UNIQUE, p256dh TEXT, auth TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS app_settings(
+            key TEXT PRIMARY KEY, value TEXT
+        )""")
         c.execute("""CREATE TABLE IF NOT EXISTS password_resets(
             id SERIAL PRIMARY KEY, client_id INTEGER, token_hash TEXT UNIQUE,
             expires_at TIMESTAMP, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -253,6 +268,12 @@ class WorkoutReviewIn(BaseModel):
     comment:str=""
 class NotificationReadIn(BaseModel):
     recipient:str
+class PushSubscriptionIn(BaseModel):
+    client_id:int=0
+    recipient:str
+    endpoint:str
+    p256dh:str
+    auth:str
 class CommentIn(BaseModel):
     client_id:int; day:str; program_id:int=0; exercise:str=""; author:str; body:str
 class HistoricalNutritionIn(BaseModel):
@@ -566,6 +587,69 @@ def add_result_sets(x:SetResultIn):
 def result_set_history(cid:int):
     return rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,))
 
+
+def _b64url(data:bytes)->str:
+    return base64.urlsafe_b64encode(data).decode().rstrip("=")
+
+def vapid_keys():
+    if not ec or not serialization:
+        return None,None
+    priv=one("SELECT value FROM app_settings WHERE key='vapid_private'")
+    pub=one("SELECT value FROM app_settings WHERE key='vapid_public'")
+    if priv and pub:return priv["value"],pub["value"]
+    key=ec.generate_private_key(ec.SECP256R1())
+    private_pem=key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()).decode()
+    nums=key.public_key().public_numbers()
+    public_raw=b"\x04"+nums.x.to_bytes(32,"big")+nums.y.to_bytes(32,"big")
+    public_key=_b64url(public_raw)
+    with con() as c:
+        c.execute("INSERT INTO app_settings(key,value) VALUES(%s,%s) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",("vapid_private",private_pem))
+        c.execute("INSERT INTO app_settings(key,value) VALUES(%s,%s) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",("vapid_public",public_key))
+        c.commit()
+    return private_pem,public_key
+
+def send_push(client_id:int,recipient:str,title:str,body:str,url:str="/"):
+    if not webpush:return False
+    private_key,_=vapid_keys()
+    if not private_key:return False
+    subs=rows("SELECT * FROM push_subscriptions WHERE client_id=? AND recipient=?",(client_id,recipient))
+    payload=json.dumps({"title":title,"body":body,"url":url},ensure_ascii=False)
+    ok=False
+    for s in subs:
+        try:
+            webpush(subscription_info={"endpoint":s["endpoint"],"keys":{"p256dh":s["p256dh"],"auth":s["auth"]}},
+                    data=payload,vapid_private_key=private_key,
+                    vapid_claims={"sub":os.getenv("VAPID_SUBJECT","mailto:trainer@eplan.com.ua")})
+            ok=True
+        except Exception as e:
+            status=getattr(getattr(e,"response",None),"status_code",None)
+            if status in (404,410):
+                run("DELETE FROM push_subscriptions WHERE endpoint=?",(s["endpoint"],))
+            else:
+                print("WEB PUSH ERROR:",type(e).__name__,str(e)[:200],flush=True)
+    return ok
+
+def add_notification(client_id:int,recipient:str,kind:str,message:str,target_tab:str="",target_day:str="",target_program_id:int=0,target_session_id:int=0,push_title:str="Є ПЛАН"):
+    nid=run("""INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day,target_program_id,target_session_id)
+               VALUES(?,?,?,?,?,?,?,?)""",(client_id,recipient,kind,message,target_tab,target_day,target_program_id,target_session_id))
+    send_push(client_id,recipient,push_title,message,
+              f"/?notify={nid}&recipient={recipient}&client={client_id}")
+    return nid
+
+@app.get("/api/push/public-key")
+def push_public_key():
+    _,public=vapid_keys()
+    return {"public_key":public or ""}
+
+@app.post("/api/push/subscribe")
+def push_subscribe(x:PushSubscriptionIn):
+    if x.recipient not in ("client","trainer"): raise HTTPException(400,"Невірний отримувач")
+    if not x.endpoint or not x.p256dh or not x.auth: raise HTTPException(400,"Неповна push-підписка")
+    run("""INSERT INTO push_subscriptions(client_id,recipient,endpoint,p256dh,auth)
+           VALUES(?,?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET client_id=EXCLUDED.client_id,recipient=EXCLUDED.recipient,p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth""",
+        (x.client_id,x.recipient,x.endpoint,x.p256dh,x.auth))
+    return {"ok":True}
+
 @app.post("/api/workout/start")
 def start_workout(x:WorkoutStartIn):
     require_active_client(x.client_id,'workouts')
@@ -601,6 +685,9 @@ def finish_workout(sid:int):
             workout_day=str(session.get("day_name") or "Тренування")
             workout_date=str(session.get("started_at") or "")[:10] or str(date.today())
             send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
+            add_notification(session["client_id"],"trainer","workout_finished",
+                f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
+                "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
     return finished
 
 @app.post("/api/history/nutrition")
@@ -649,20 +736,25 @@ def add_comment(x:CommentIn):
 def review_workout(sid:int,x:WorkoutReviewIn):
     s=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
     if not s: raise HTTPException(404,"Тренування не знайдено")
-    run("UPDATE workout_sessions SET trainer_reviewed=TRUE,trainer_comment=? WHERE id=?",(x.comment.strip(),sid))
-    run("INSERT INTO notifications(client_id,recipient,kind,message) VALUES(?,?,?,?)",
-        (s["client_id"],"client","workout_review","Тренер перевірив тренування "+s["day_name"]))
+    comment=x.comment.strip()
+    run("UPDATE workout_sessions SET trainer_reviewed=TRUE,trainer_comment=? WHERE id=?",(comment,sid))
+    workout_day=str(s.get("day_name") or "Тренування")
+    workout_date=str(s.get("started_at") or "")[:10]
+    message=(f"Тренер перевірив тренування «{workout_day}» і залишив коментар: {comment}"
+             if comment else f"Тренер перевірив тренування «{workout_day}».")
+    add_notification(s["client_id"],"client","workout_review",message,
+                     "progress",workout_date,0,sid,"Є ПЛАН · Тренер перевірив тренування")
     return {"ok":True}
 
 @app.get("/api/notifications/trainer/all")
 def get_all_trainer_notifications():
     return rows("""SELECT n.*, COALESCE(NULLIF(c.first_name,''),c.name,'Клієнт') AS client_name
                    FROM notifications n LEFT JOIN clients c ON c.id=n.client_id
-                   WHERE n.recipient='trainer' AND n.kind='workout_review' ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
+                   WHERE n.recipient='trainer' AND n.kind IN ('workout_review','workout_finished','comment') ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
 
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str):
-    return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? AND kind='workout_review' ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
+    return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? AND kind IN ('workout_review','comment') ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
 
 @app.delete("/api/notifications/item/{nid}")
 def delete_notification_item(nid:int):
