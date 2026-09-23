@@ -1,10 +1,10 @@
 {
-  "id": "/app-v52",
+  "id": "/app-v53",
   "name": "Є ПЛАН",
   "short_name": "Є ПЛАН",
   "description": "Персональний тренувальний план",
   "lang": "uk",
-  "start_url": "/app?fresh=52",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#080909",

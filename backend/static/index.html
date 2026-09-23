@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-24-v52"><meta charset="utf-8"><style>html,body{background:#080909!important;color:#f5f5f7}</style><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-24-v53"><meta charset="utf-8"><style>html,body{background:#080909!important;color:#f5f5f7}</style><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Є ПЛАН">
-<link rel="manifest" href="/manifest.webmanifest?v=52">
+<link rel="manifest" href="/manifest.webmanifest?v=53">
 <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080909'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Arial,sans-serif' font-size='48' font-weight='700' fill='%23ffd000'%3EЄ%3C/text%3E%3C/svg%3E">
@@ -717,20 +717,7 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
     <span class="eplan-splash-plan-wrap"><span class="eplan-splash-plan">ПЛАН</span></span>
   </div>
 </div>
-<div id="app"></div>
-<script>
-(function(){
- document.documentElement.style.background='#080909';document.body.style.background='#080909';
- setTimeout(function(){
-  var app=document.getElementById('app'), splash=document.getElementById('eplanSplash');
-  if(!(app&&app.children&&app.children.length)){
-   if(splash)splash.style.display='none';
-   document.body.innerHTML=`<main style="min-height:100vh;background:#080909;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;padding:calc(48px + env(safe-area-inset-top)) 24px 32px;box-sizing:border-box"><div style="max-width:520px;margin:auto"><div style="font-size:34px;font-weight:900;margin-bottom:24px"><span style="color:#ffd000">Є</span> | ПЛАН</div><h1 style="font-size:28px;margin:0 0 12px">Не вдалося запустити застосунок</h1><p style="color:#a6a6ad;line-height:1.5;margin:0 0 22px">Старт застосунку на iPhone було перервано. Натисни кнопку нижче. Дані клієнтів на сервері не видаляються.</p><button id="bootRecover" style="width:100%;border:0;border-radius:16px;background:#ffd000;color:#080909;font-size:18px;font-weight:900;padding:17px">Відновити запуск</button><p style="color:#666;margin-top:18px;font-size:13px">Діагностика: boot-v52</p></div></main>`;
-   document.getElementById('bootRecover').onclick=function(){try{localStorage.clear()}catch(e){};try{sessionStorage.clear()}catch(e){};location.replace('/app?fresh=52')};
-  }
- },2500);
-})();
-</script><script>
+<div id="app"></div><script>
 console.info('Є ПЛАН build 2026-09-23-v37');
 
 const A='/api'; const $=s=>document.querySelector(s);
@@ -2395,13 +2382,11 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js?v=52', {scope:'/'});
+      const reg = await navigator.serviceWorker.register('/sw.js?v=53', {scope:'/'});
       reg.update();
       setTimeout(autoRegisterPhoneNotifications,300);
       setTimeout(handleNotificationDeepLink,450);
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.info('Є ПЛАН: service worker updated');
-      });
+      
     } catch (e) {
       console.warn('PWA service worker registration failed', e);
     }
