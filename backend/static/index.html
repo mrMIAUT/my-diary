@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v36.2"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v37"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -662,7 +662,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v36.2');
+console.info('Є ПЛАН build 2026-09-23-v37');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -913,24 +913,27 @@ function clientProgressHTML(d){
  let programDays=Object.keys(programGroups);
  if(window.clientProgressDay && !programGroups[window.clientProgressDay]) window.clientProgressDay=null;
  let selectedDay=window.clientProgressDay||null;
- let selectedNames=new Set(selectedDay?(programGroups[selectedDay]||[]).map(x=>(x.exercise||'').trim()).filter(Boolean):[]);
+ let selectedProgram=selectedDay?(programGroups[selectedDay]||[]):[];
+ let selectedIds=new Set(selectedProgram.map(x=>+x.id).filter(Boolean));
+ let currentProgramById=Object.fromEntries(selectedProgram.map(x=>[+x.id,x]));
 
- let sets=(d.result_sets||[]).filter(x=>x.day&&inPeriod(x.day)&&(selectedDay?selectedNames.has((x.exercise||'').trim()):false));
+ let sets=(d.result_sets||[]).filter(x=>x.day&&inPeriod(x.day)&&(selectedDay?selectedIds.has(+x.program_id):false));
  let byExercise={};
  sets.forEach(s=>{
-   let key=(s.exercise||'Вправа').trim();
+   let key=+s.program_id;
    (byExercise[key]||(byExercise[key]=[])).push(s);
  });
- let exerciseRows=Object.entries(byExercise).map(([name,xs])=>{
+ let exerciseRows=Object.entries(byExercise).map(([programId,xs])=>{
+   let pid=+programId,current=currentProgramById[pid]||{};
    let dates=[...new Set(xs.map(x=>x.day))].sort();
    let firstDay=dates[0],lastDay=dates[dates.length-1];
    let firstSets=xs.filter(x=>x.day===firstDay),lastSets=xs.filter(x=>x.day===lastDay);
    let best=a=>a.slice().sort((x,y)=>(+y.weight||0)-(+x.weight||0)||(+y.reps||0)-(+x.reps||0))[0]||{};
    let a=best(firstSets),b=best(lastSets);
-   return {name,dates,first:a,last:b,change:(+b.weight||0)-(+a.weight||0),count:dates.length};
+   return {program_id:pid,name:current.exercise||xs[xs.length-1]?.exercise||'Вправа',dates,first:a,last:b,change:(+b.weight||0)-(+a.weight||0),count:dates.length};
  }).sort((a,b)=>{
-   let order=selectedDay?(programGroups[selectedDay]||[]).findIndex(x=>(x.exercise||'').trim()===a.name):-1;
-   let orderB=selectedDay?(programGroups[selectedDay]||[]).findIndex(x=>(x.exercise||'').trim()===b.name):-1;
+   let order=selectedProgram.findIndex(x=>+x.id===+a.program_id);
+   let orderB=selectedProgram.findIndex(x=>+x.id===+b.program_id);
    return order-orderB;
  });
 
@@ -973,7 +976,7 @@ function strengthProgressCard(x,i){
  let firstText=(+first.weight||0)>0?`${fmtProgress(first.weight)} кг × ${first.reps||0}`:`${first.reps||0} повт.`;
  let trend=x.dates.length>1?(delta>0?`+${fmtProgress(delta)} кг ↑`:delta<0?`${fmtProgress(delta)} кг ↓`:'без зміни'):'перше тренування';
  let details=x.dates.slice().reverse().map(day=>{
-   let rows=(window.currentClientData.result_sets||[]).filter(s=>s.exercise===x.name&&s.day===day).sort((a,b)=>a.set_number-b.set_number);
+   let rows=(window.currentClientData.result_sets||[]).filter(s=>+s.program_id===+x.program_id&&s.day===day).sort((a,b)=>a.set_number-b.set_number);
    return `<div class="strength-history-row"><div><strong>${formatProgressDate(day)}</strong><span>${rows.map(s=>`${fmtProgress(s.weight||0)} кг × ${s.reps} · RIR ${s.rir}`).join(' · ')}</span></div></div>`;
  }).join('');
  return `<div class="strength-card">
@@ -1630,9 +1633,10 @@ function resultsHTML(d){
 
 
 function trainerMeasurementsResultsHTML(d){
+ let cid=d?.client?.id||0;
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let last=xs[xs.length-1],prev=xs[xs.length-2];
- if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Останній замір · ${formatProgressDate(last.day)} · ${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px">${measurementMetricCards(last,prev)}${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}<button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button><div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1],cid)).join('')}</div></div></div>`;
+ if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Клієнт ще не додав заміри</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px"><p class="muted">Після першого заміру тут з’являться актуальні показники та історія змін.</p></div></div>`;
  return `<div class="card trainer-measure-results">
   <div class="results-measure-head"><div><h2>Заміри тіла</h2><p class="muted">Останній замір · ${formatProgressDate(last.day)}</p></div><span class="trainer-meta-chip ok">${xs.length} ${xs.length===1?'запис':'записів'}</span></div>
   ${measurementMetricCards(last,prev)}
