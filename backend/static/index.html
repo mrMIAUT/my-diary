@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v31"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v32"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -562,8 +562,48 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .today-done-card{border-color:#2d6d43!important;background:linear-gradient(180deg,#142119,#171719)!important}
 .next-action-kicker.done{color:#66e58a!important}
-</style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v31');
+
+/* v32 — launch splash */
+.eplan-splash{
+ position:fixed;inset:0;z-index:99999;background:#050506;
+ display:flex;align-items:center;justify-content:center;
+ opacity:1;visibility:visible;
+ transition:opacity .24s ease,visibility .24s ease;
+}
+.eplan-splash.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.eplan-splash-logo{display:flex;align-items:center;height:64px}
+.eplan-splash-e{
+ color:#ffd000;font-size:58px;line-height:1;font-weight:900;
+ opacity:0;transform:scale(.84);
+ animation:eplanSplashE .30s cubic-bezier(.2,.8,.2,1) .04s forwards;
+}
+.eplan-splash-line{
+ width:2px;height:0;margin:0 17px;background:rgba(255,255,255,.72);
+ animation:eplanSplashLine .22s ease .30s forwards;
+}
+.eplan-splash-plan-wrap{overflow:hidden;display:block}
+.eplan-splash-plan{
+ display:block;color:#f5f5f7;font-size:31px;line-height:1;
+ font-weight:400;letter-spacing:.13em;white-space:nowrap;
+ opacity:0;transform:translateX(-108%);
+ animation:eplanSplashPlan .38s cubic-bezier(.2,.8,.2,1) .48s forwards;
+}
+@keyframes eplanSplashE{to{opacity:1;transform:scale(1)}}
+@keyframes eplanSplashLine{to{height:48px}}
+@keyframes eplanSplashPlan{to{opacity:1;transform:translateX(0)}}
+@media (prefers-reduced-motion:reduce){
+ .eplan-splash-e,.eplan-splash-line,.eplan-splash-plan{animation-duration:.01ms!important;animation-delay:0s!important}
+}
+</style></head><body>
+<div id="eplanSplash" class="eplan-splash" aria-hidden="true">
+  <div class="eplan-splash-logo">
+    <span class="eplan-splash-e">Є</span>
+    <span class="eplan-splash-line"></span>
+    <span class="eplan-splash-plan-wrap"><span class="eplan-splash-plan">ПЛАН</span></span>
+  </div>
+</div>
+<div id="app"></div><script>
+console.info('Є ПЛАН build 2026-09-23-v32');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -2055,6 +2095,24 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<script>
+(function(){
+  const splash=document.getElementById('eplanSplash');
+  if(!splash)return;
+  const started=performance.now();
+  const hide=()=>{
+    const wait=Math.max(0,900-(performance.now()-started));
+    setTimeout(()=>{
+      splash.classList.add('is-hidden');
+      setTimeout(()=>splash.remove(),280);
+    },wait);
+  };
+  if(document.readyState==='complete') hide();
+  else window.addEventListener('load',hide,{once:true});
+})();
+</script>
+
 </body></html><style>
 /* Align menu + logo with page content */
 .top-left{padding-left:0!important;margin-left:0!important}
