@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v25"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v26"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -518,8 +518,12 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.review-actions button{flex:1;min-width:180px}
 .trainer-measure-summary-toggle{width:100%;text-align:left}
 @media(max-width:700px){.today-mini-status{grid-template-columns:1fr}.client-card-actions{display:grid;grid-template-columns:1fr}.client-card-actions button{width:100%}}
+
+.measurement-saving,.measurement-saved{background:#183522!important;border-color:#356646!important;color:#baf3c9!important;box-shadow:none!important}
+.measurement-saved:disabled{opacity:1!important}
+.measurement-delete{margin-top:12px!important;background:#35191b!important;border-color:#653034!important;color:#ffb7bb!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v25');
+console.info('Є ПЛАН build 2026-09-23-v26');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1465,7 +1469,7 @@ function resultsHTML(d){
 function trainerMeasurementsResultsHTML(d){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let last=xs[xs.length-1],prev=xs[xs.length-2];
- if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Останній замір · ${formatProgressDate(last.day)} · ${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px">${measurementMetricCards(last,prev)}${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}<button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button><div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div></div>`;
+ if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Останній замір · ${formatProgressDate(last.day)} · ${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px">${measurementMetricCards(last,prev)}${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}<button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button><div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1],cid)).join('')}</div></div></div>`;
  return `<div class="card trainer-measure-results">
   <div class="results-measure-head"><div><h2>Заміри тіла</h2><p class="muted">Останній замір · ${formatProgressDate(last.day)}</p></div><span class="trainer-meta-chip ok">${xs.length} ${xs.length===1?'запис':'записів'}</span></div>
   ${measurementMetricCards(last,prev)}
@@ -1520,10 +1524,10 @@ function measurementFormHTML(cid,early=false){
  return `<div class="measurement-form ${early?'early':''}">
   <div class="measurement-tip"><strong>Як робити заміри</strong><span>Вранці, натщесерце та в однакових умовах. Бажано — раз на 30 днів.</span></div>
   <div class="measure-grid"><div><label>Вага, кг</label><input id="mWeight" type="number" step="0.1" placeholder="Напр. 89"></div><div><label>Талія, см</label><input id="mWaist" type="number" step="0.1" placeholder="Напр. 82"></div><div><label>Таз, см</label><input id="mHips" type="number" step="0.1" placeholder="Напр. 98"></div><div><label>Стегна, см</label><input id="mThighs" type="number" step="0.1" placeholder="Напр. 60"></div><div><label>Руки, см</label><input id="mArms" type="number" step="0.1" placeholder="Напр. 39"></div><div><label>Груди, см</label><input id="mChest" type="number" step="0.1" placeholder="Напр. 108"></div></div>
-  <div class="measurement-form-actions"><button onclick="saveMeasurement(${cid})">Зберегти заміри</button>${early?`<button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.add('hidden')">Скасувати</button>`:''}</div>
+  <div class="measurement-form-actions"><button onclick="saveMeasurement(${cid},event)">Зберегти заміри</button>${early?`<button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.add('hidden')">Скасувати</button>`:''}</div>
  </div>`;
 }
-function measurementHistoryCard(x,prev){
+function measurementHistoryCard(x,prev,cid=null){
  let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
  return `<div class="measurement-history-card"><div class="measurement-history-date">${formatProgressDate(x.day)}</div><div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div></div>`;
 }
@@ -1547,16 +1551,26 @@ function measurementChangesHTML(a,b){
  let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
  return `<div class="measurement-changes">${metrics.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return `<div><span>${n}</span><strong>${fmtProgress(b[k])} → ${fmtProgress(a[k])} ${u}</strong><em class="${d<0?'down':d>0?'up':''}">${d===0?'без змін':`${d>0?'+':''}${fmtProgress(d)} ${u}`}</em></div>`}).join('')}</div>`;
 }
-async function saveMeasurement(cid){let body={client_id:cid,weight:+mWeight.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,thighs:+mThighs.value||0,arms:+mArms.value||0,chest:+mChest.value||0};if(!Object.values(body).slice(1).some(v=>v>0))return alert('Заповни хоча б один замір');await api('/measurements',{method:'POST',body:JSON.stringify(body)});let d=await api('/client/'+cid);window.currentClientData=d;showClientSection('measurements')}
-
-function todaySets(d,pid){return (d.result_sets||[]).filter(x=>x.program_id===pid&&x.day===isoToday()).sort((a,b)=>a.set_number-b.set_number)}
-
-
-function signedDelta(v){
- let n=+v||0;
- if(n>0)return `<span class="delta-up">+${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
- if(n<0)return `<span class="delta-down">${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
- return `<span class="muted">0</span>`;
+async function saveMeasurement(cid,ev=null){
+ let btn=ev?.currentTarget||null;
+ let body={client_id:cid,weight:+mWeight.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,thighs:+mThighs.value||0,arms:+mArms.value||0,chest:+mChest.value||0};
+ if(!Object.values(body).slice(1).some(v=>v>0))return alert('Заповни хоча б один замір');
+ if(btn?.disabled)return;
+ if(btn){btn.disabled=true;btn.textContent='Зберігаємо…';btn.classList.add('measurement-saving')}
+ try{
+   await api('/measurements',{method:'POST',body:JSON.stringify(body)});
+   if(btn){btn.textContent='✓ Замір збережено';btn.classList.add('measurement-saved')}
+   let d=await api('/client/'+cid);window.currentClientData=d;
+   setTimeout(()=>showClientSection('measurements'),250);
+ }catch(e){
+   if(btn){btn.disabled=false;btn.textContent='Зберегти заміри';btn.classList.remove('measurement-saving')}
+   alert(e?.message||'Не вдалося зберегти заміри');
+ }
+}
+async function deleteMeasurement(cid,mid,day){
+ if(!confirm(`Видалити замір за ${formatProgressDate(day)}? Цю дію не можна скасувати.`))return;
+ await api('/measurements/'+mid+'?client_id='+cid,{method:'DELETE'});
+ let d=await api('/client/'+cid);window.currentClientData=d;showClientSection('measurements');
 }
 function exerciseHistoryDates(d,pid){
  return [...new Set((d.result_sets||[]).filter(r=>r.program_id===pid).map(r=>r.day))].sort();
