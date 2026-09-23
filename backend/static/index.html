@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v29"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v30"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -553,8 +553,14 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
  transform:scale(.96);
 }
 .measurement-history-date{padding-right:50px}
+
+/* v30 */
+.measurement-history-card{padding-right:52px!important;min-height:48px}
+.measurement-history-card .measurement-delete{top:2px!important;right:0!important;width:34px!important;height:34px!important;min-width:34px!important;border-radius:10px!important}
+.measurement-history-card .measurement-delete svg{width:16px!important;height:16px!important}
+.measurement-history-date{padding-right:0!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v29');
+console.info('Є ПЛАН build 2026-09-23-v30');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1177,7 +1183,7 @@ async function saveHistoryWorkout(day,cid,name){
 
 function showCalendarDay(day,btn,pushHistory=true){
  if(pushHistory){
-   let base=session?.role==='trainer'?{eplanPage:'client',eplanClient:selected,eplanTab:'calendar'}:{eplanPage:'clientHome',eplanClient:session?.client_id};
+   let base=session?.role==='trainer'?{eplanPage:'client',eplanClient:selected,eplanTab:'calendar'}:{eplanPage:'clientHome',eplanClient:session?.client_id,eplanSection:'history'};
    history.replaceState(base,'',location.href);
    history.pushState({...base,eplanPage:'calendarDay',eplanDay:day},'',location.pathname+location.search+'#day-'+day);
  }
@@ -1205,7 +1211,7 @@ function showCalendarDay(day,btn,pushHistory=true){
  window.calendarReturnHTML=app.innerHTML;
  app.innerHTML=shell(content);
 }
-function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'calendar');return}if(session&&session.role==='client'&&session.client_id){clientCabinet(session.client_id);return}route()}
+async function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'calendar');return}if(session&&session.role==='client'&&session.client_id){await clientCabinet(session.client_id);showClientSection('history');return}route()}
 
 
 
@@ -2007,7 +2013,7 @@ window.addEventListener('popstate',async e=>{
  if(session.role==='trainer'){
    if(st.eplanPage==='client'&&st.eplanClient){await openClient(st.eplanClient,st.eplanTab||'profile')}
    else{selected=null;window.currentClientData=null;await trainerHome()}
- }else if(session.role==='client'){await clientCabinet(session.client_id)}
+ }else if(session.role==='client'){await clientCabinet(session.client_id);if(st.eplanSection==='history')showClientSection('history')}
 });
 
 let startupResetToken=new URLSearchParams(location.search).get('reset');
