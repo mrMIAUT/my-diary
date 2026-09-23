@@ -750,17 +750,19 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 def get_all_trainer_notifications():
     run("""DELETE FROM notifications n
            WHERE n.recipient='trainer'
-             AND (COALESCE(n.client_id,0)=0 OR NOT EXISTS (SELECT 1 FROM clients c WHERE c.id=n.client_id))""")
+             AND (COALESCE(n.client_id,0)=0 OR NOT EXISTS (
+                 SELECT 1 FROM clients c WHERE c.id=n.client_id AND c.status<>'Видалений'
+             ))""")
 
     xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
                JOIN clients c ON c.id=n.client_id
-               WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0
+               WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0 AND c.status<>'Видалений'
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
     # Backfill a bell item for finished workouts that still need review and were
     # completed before workout-finished notifications were introduced.
     pending=rows("""SELECT s.id AS sid,s.client_id,s.day_name,s.started_at,s.finished_at,c.name AS client_name
                     FROM workout_sessions s JOIN clients c ON c.id=s.client_id
-                    WHERE s.status='finished' AND COALESCE(s.trainer_reviewed,FALSE)=FALSE
+                    WHERE c.status<>'Видалений' AND s.status='finished' AND COALESCE(s.trainer_reviewed,FALSE)=FALSE
                     ORDER BY COALESCE(s.finished_at,s.started_at) DESC""")
     existing={int(x.get("target_session_id") or 0) for x in xs}
     for s in pending:
