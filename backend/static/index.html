@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v36"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v36.1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -662,7 +662,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v36');
+console.info('Є ПЛАН build 2026-09-23-v36.1');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -909,7 +909,7 @@ function clientProgressHTML(d){
  let weightNow=lastM&&+lastM.weight>0?+lastM.weight:null;
  let weightDelta=firstM&&lastM&&+firstM.weight>0&&+lastM.weight>0?(+lastM.weight-+firstM.weight):null;
 
- let programGroups=groupProgram(d.program||[]);
+ let programGroups={};(d.program||[]).forEach(x=>{let day=x.day_name||'День';(programGroups[day]??=[]).push(x)});
  let programDays=Object.keys(programGroups);
  if(window.clientProgressDay && !programGroups[window.clientProgressDay]) window.clientProgressDay=null;
  let selectedDay=window.clientProgressDay||null;
