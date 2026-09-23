@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v26"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v27"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -522,8 +522,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .measurement-saving,.measurement-saved{background:#183522!important;border-color:#356646!important;color:#baf3c9!important;box-shadow:none!important}
 .measurement-saved:disabled{opacity:1!important}
 .measurement-delete{margin-top:12px!important;background:#35191b!important;border-color:#653034!important;color:#ffb7bb!important}
+
+.measurement-delete{display:inline-flex!important;align-items:center;justify-content:center;margin-top:14px!important;padding:10px 14px!important;background:#35191b!important;border:1px solid #653034!important;color:#ffb7bb!important;border-radius:12px!important;font-weight:800!important}
+.phone-notify-enable.push-enabled{background:#153e25!important;border-color:#2f7045!important;color:#baf3c9!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v26');
+console.info('Є ПЛАН build 2026-09-23-v27');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1182,12 +1185,18 @@ function urlBase64ToUint8Array(base64String){
  const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
  const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
 }
+function pushStorageKey(){
+ return 'eplanPushEnabled_'+(session?.role==='trainer'?'trainer':('client_'+(session?.client_id||0)));
+}
 async function phoneNotificationEnabled(){
  try{
-   if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)||Notification.permission!=='granted')return false;
+   if(!('Notification' in window)||Notification.permission!=='granted')return false;
+   if(localStorage.getItem(pushStorageKey())==='1')return true;
+   if(!('serviceWorker' in navigator)||!('PushManager' in window))return false;
    let reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
-   return !!sub;
- }catch(e){return false}
+   if(sub){localStorage.setItem(pushStorageKey(),'1');return true}
+   return false;
+ }catch(e){return localStorage.getItem(pushStorageKey())==='1'&&('Notification' in window)&&Notification.permission==='granted'}
 }
 async function refreshPhoneNotificationButton(btn){
  if(!btn)return;
@@ -1218,7 +1227,7 @@ async function enablePhoneNotifications(btn=null){
    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});
    let j=sub.toJSON(),recipient=session?.role==='trainer'?'trainer':'client',clientId=session?.role==='client'?session.client_id:0;
    await api('/push/subscribe',{method:'POST',body:JSON.stringify({client_id:clientId,recipient,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})});
-   localStorage.setItem('eplanPushEnabled','1');
+   localStorage.setItem(pushStorageKey(),'1');
    return done(true);
  }catch(e){
    console.warn('Push subscribe failed',e);
@@ -1292,6 +1301,7 @@ async function showNotifications(cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
  let body=xs.length?xs.map(x=>`<div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
+ setTimeout(()=>refreshPhoneNotificationButton(document.getElementById('phoneNotifyEnableBtn')),0);
 }
 async function openNotification(nid,cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient),n=xs.find(x=>x.id===nid);if(!n)return;
@@ -1475,7 +1485,7 @@ function trainerMeasurementsResultsHTML(d){
   ${measurementMetricCards(last,prev)}
   ${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}
   <button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button>
-  <div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div>
+  <div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1],cid)).join('')}</div>
  </div>`;
 }
 
@@ -1529,7 +1539,7 @@ function measurementFormHTML(cid,early=false){
 }
 function measurementHistoryCard(x,prev,cid=null){
  let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
- return `<div class="measurement-history-card"><div class="measurement-history-date">${formatProgressDate(x.day)}</div><div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div></div>`;
+ return `<div class="measurement-history-card"><div class="measurement-history-date">${formatProgressDate(x.day)}</div><div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div>${cid&&x.id?`<button class="measurement-delete" onclick="event.stopPropagation();deleteMeasurement(${cid},${x.id},'${x.day}')">Видалити замір</button>`:''}</div>`;
 }
 function clientMeasurementsHTML(d,cid){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)),last=xs[xs.length-1],prev=xs[xs.length-2],left=last?measurementDaysLeft(last.day):0,due=!last||left<=0;
