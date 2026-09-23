@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v34"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v35"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -646,7 +646,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v34');
+console.info('Є ПЛАН build 2026-09-23-v35');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1856,25 +1856,28 @@ function todayGuidanceHTML(d,cid,groups){
 function clientTrainingProgramHTML(d,cid,groups){
  let days=Object.entries(groups||{});
  if(!days.length)return `<div class="card"><h2>Твоя програма тренувань</h2><p class="muted">Тренер ще не додав тренування до програми.</p></div>`;
- if(!previewWorkoutDay || !groups[previewWorkoutDay]) previewWorkoutDay=days[0][0];
+ if(previewWorkoutDay && !groups[previewWorkoutDay]) previewWorkoutDay=null;
  let buttons=days.map(([day])=>`<button type="button" class="client-program-tab ${previewWorkoutDay===day?'active':''}" onclick="selectClientProgramDay('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('');
- let xs=groups[previewWorkoutDay]||[];
- let exercises=xs.map((x,i)=>{
-   let rest=restLabel(x),rp=rirPlan(x);
-   return `<div class="client-program-exercise">
-     <div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge">Суперсет</span>`:''}</div>
-     <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
-     <div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>
-     ${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">▶ Техніка</a>`:''}
-   </div>`;
- }).join('');
+ let selected='';
+ if(previewWorkoutDay){
+   let xs=groups[previewWorkoutDay]||[];
+   let exercises=xs.map((x,i)=>{
+     let rest=restLabel(x),rp=rirPlan(x);
+     return `<div class="client-program-exercise">
+       <div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge">Суперсет</span>`:''}</div>
+       <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
+       <div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>
+       ${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">▶ Техніка</a>`:''}
+     </div>`;
+   }).join('');
+   selected=`<div class="client-program-selected"><div class="client-program-selected-title"><strong>${esc(previewWorkoutDay)}</strong><span>${xs.length} ${xs.length===1?'вправа':(xs.length<5?'вправи':'вправ')}</span></div>${exercises}</div>`;
+ }
  return `<div class="card client-training-program"><h2>Твоя програма тренувань</h2><p class="muted">Обери тренувальний день, щоб переглянути вправи.</p>
-   <div class="client-program-tabs">${buttons}</div>
-   <div class="client-program-selected"><div class="client-program-selected-title"><strong>${esc(previewWorkoutDay)}</strong><span>${xs.length} ${xs.length===1?'вправа':(xs.length<5?'вправи':'вправ')}</span></div>${exercises}</div>
+   <div class="client-program-tabs">${buttons}</div>${selected}
  </div>`;
 }
 function selectClientProgramDay(day,cid){
- previewWorkoutDay=day;
+ previewWorkoutDay=previewWorkoutDay===day?null:day;
  clientCabinet(cid);
 }
 
@@ -2073,14 +2076,10 @@ async function clientCabinet(id){
    refreshNotificationBadge(id,'client','clientNotifyBtn');return;
  }
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
- if(active) previewWorkoutDay=active.day_name;
- let chosen=active?active.day_name:previewWorkoutDay;
  let programPart='';
  if(active){
    programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
- }else if(chosen){
-   programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
- }else programPart='';
+ }
  currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?todayGuidanceHTML(d,id,groups):''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
 
