@@ -656,7 +656,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{background:#18181b!important;border:1px solid #4a4a52!important;color:var(--text)!important;box-shadow:none!important}
 
-/* v45 — training day titles + collapsed trainer program */
+/* v46 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -667,11 +667,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
 
-/* v45 — minimalist password visibility icon */
+/* v46 — minimalist password visibility icon */
 .password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
 
-/* v45 — alternative selector + clearer rest timer controls */
+/* v46 — alternative selector + clearer rest timer controls */
 .rest-timer-choices button{
  border:1.5px solid #55565f!important;
  border-radius:14px!important;
@@ -683,6 +683,11 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
  background:#183522!important;
  box-shadow:0 0 0 2px rgba(95,155,112,.12)!important;
 }
+
+/* v46 — restore finish workout action */
+.finish-workout-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.finish-workout-btn{width:100%;background:#2a2a30!important;color:var(--text)!important;border:1px solid #4a4a52!important}
+.finish-workout-btn:active{transform:scale(.99)}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -2278,7 +2283,7 @@ async function clientCabinet(id){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
+   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id})">Завершити тренування</button></div></div>`;
  }
  currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
