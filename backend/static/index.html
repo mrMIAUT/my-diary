@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v23"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v24"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -493,8 +493,12 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
  display:flex!important;align-items:center!important;justify-content:center!important;
  box-shadow:0 4px 12px rgba(0,0,0,.45)!important;z-index:30!important;
 }
+
+.measure-collapse-title{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin-bottom:0!important}
+.measure-collapse-arrow{font-size:22px;font-weight:700;flex:0 0 auto}
+.trainer-measure-collapse{margin-top:18px}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v23');
+console.info('Є ПЛАН build 2026-09-23-v24');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1197,7 +1201,7 @@ async function refreshTrainerGlobalBadge(){
  try{let xs=await api('/notifications/trainer/all'),n=xs.filter(x=>!x.is_read).length,b=$('#trainerGlobalNotifyBtn');if(!b)return;b.querySelector('.notify-badge')?.remove();if(n)b.insertAdjacentHTML('beforeend',`<span class="notify-badge">${n>99?'99+':n}</span>`)}catch(e){}
 }
 async function showTrainerNotifications(){
- let xs=(await api('/notifications/trainer/all')).filter(x=>x.client_name&&+x.client_id>0);
+ let xs=(await api('/notifications/trainer/all')).filter(x=>x.client_name&&x.client_name!=='Незнакомец'&&+x.client_id>0);
  refreshTrainerGlobalBadge();
  let body=xs.length?xs.map(x=>`<div class="notification-swipe"><button class="notification-delete-bg" onclick="event.stopPropagation();deleteTrainerNotification(${x.id},this)">×</button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openTrainerNotification(${x.id},${x.client_id})">${x.is_read?'':'<span class="notification-dot"></span>'}<div class="muted" style="margin-bottom:5px">${esc(x.client_name||'Клієнт')}</div><strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);initNotificationSwipes();refreshPhoneNotificationButton($('#phoneNotifyEnableBtn'));
@@ -1405,6 +1409,24 @@ function resultsHTML(d){
  </div>
  <div>${trainerDayResultsHTML(d,selectedDay)}</div>
  ${trainerMeasurementsResultsHTML(d)}`;
+}
+
+
+function collapseTrainerMeasurementsByDefault(){
+ if(session?.role!=='trainer')return;
+ [...document.querySelectorAll('#results .card')].forEach(card=>{
+   let h=[...card.querySelectorAll('h2,h3')].find(x=>x.textContent.trim()==='Заміри тіла');
+   if(!h||card.dataset.measureCollapseReady)return;
+   card.dataset.measureCollapseReady='1';
+   let children=[...card.children],start=children.indexOf(h);
+   if(start<0)return;
+   let body=document.createElement('div');body.className='trainer-measure-collapse hidden';
+   children.slice(start+1).forEach(x=>body.appendChild(x));
+   card.appendChild(body);
+   h.style.cursor='pointer';h.classList.add('measure-collapse-title');
+   let arrow=document.createElement('span');arrow.textContent='⌄';arrow.className='measure-collapse-arrow';h.appendChild(arrow);
+   h.onclick=()=>{body.classList.toggle('hidden');arrow.textContent=body.classList.contains('hidden')?'⌄':'⌃'};
+ });
 }
 
 function trainerMeasurementsResultsHTML(d){
@@ -1873,6 +1895,9 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
  if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
  route()
 }
+
+const trainerMeasureObserver=new MutationObserver(()=>collapseTrainerMeasurementsByDefault());
+window.addEventListener('load',()=>{trainerMeasureObserver.observe(document.body,{childList:true,subtree:true});setTimeout(collapseTrainerMeasurementsByDefault,300)});
 </script>
 <script>
 if ('serviceWorker' in navigator) {
