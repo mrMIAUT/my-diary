@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v17"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v18"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -457,8 +457,12 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 @media(max-width:650px){
  .results-measure-head{align-items:flex-start}.results-measure-head .trainer-meta-chip{white-space:nowrap}
 }
+
+.rest-timer-card{margin-bottom:14px!important;border-color:#4e4520!important}.rest-timer-top{display:flex;justify-content:space-between;align-items:center;gap:14px}.rest-timer-label{display:block;color:var(--muted);font-size:13px;margin-bottom:5px}.rest-timer-top strong{display:block;font-size:26px}.rest-timer-main{min-width:92px}.rest-timer-choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:14px}.rest-timer-choices button{padding:11px 6px}.rest-timer-actions{display:flex;gap:8px;margin-top:12px}.rest-timer-actions button{flex:1}.rest-timer-note{color:var(--muted);font-size:11px;line-height:1.45;margin-top:11px}
+.floating-rest-timer{position:fixed!important;z-index:80;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:auto!important;min-width:112px;border-radius:999px!important;box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:16px!important;font-weight:900!important;padding:12px 16px!important}
+@media(max-width:650px){.rest-timer-top strong{font-size:24px}.rest-timer-choices{grid-template-columns:repeat(4,1fr)}.rest-timer-choices button:last-child{grid-column:1/5}.floating-rest-timer{right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v17');
+console.info('Є ПЛАН build 2026-09-23-v18');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1501,6 +1505,84 @@ function workoutChooser(d,cid,groups){
 }
 
 
+
+const REST_TIMER_KEY='eplanRestTimerEnd';
+let restTimerInterval=null,restTimerAudioCtx=null;
+function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
+function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
+function restTimerPanelHTML(){
+ return `<div class="card rest-timer-card"><div class="rest-timer-top"><div><span class="rest-timer-label">⏱ Відпочинок між підходами</span><strong id="restTimerDisplay">${restTimerRemaining()?formatRestTimer(restTimerRemaining()):'Готовий до старту'}</strong></div><button class="dark rest-timer-main" onclick="toggleRestTimerChoices()">Таймер</button></div>
+ <div id="restTimerChoices" class="rest-timer-choices hidden"><button onclick="startRestTimer(60)">1:00</button><button onclick="startRestTimer(90)">1:30</button><button onclick="startRestTimer(120)">2:00</button><button onclick="startRestTimer(180)">3:00</button><button class="dark" onclick="customRestTimer()">Свій час</button></div>
+ <div id="restTimerActions" class="rest-timer-actions ${restTimerRemaining()?'':'hidden'}"><button class="dark" onclick="addRestTimer(30)">+30 сек</button><button class="dark" onclick="cancelRestTimer()">Скасувати</button></div>
+ <div class="rest-timer-note">Можна згорнути застосунок — час не загубиться. Для сигналу у фоні дозволь сповіщення.</div></div>`;
+}
+function toggleRestTimerChoices(){let x=$('#restTimerChoices');if(x)x.classList.toggle('hidden')}
+function formatRestTimer(s){let m=Math.floor(s/60),q=s%60;return `${String(m).padStart(2,'0')}:${String(q).padStart(2,'0')}`}
+async function ensureTimerNotifications(){
+ if(!('Notification' in window))return false;
+ if(Notification.permission==='granted')return true;
+ if(Notification.permission==='denied')return false;
+ try{return (await Notification.requestPermission())==='granted'}catch(e){return false}
+}
+async function startRestTimer(seconds){
+ await unlockTimerSound();
+ await ensureTimerNotifications();
+ let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
+ $('#restTimerChoices')?.classList.add('hidden');$('#restTimerActions')?.classList.remove('hidden');
+ startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
+}
+function addRestTimer(seconds){
+ let end=Math.max(Date.now(),restTimerEnd())+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
+ startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
+}
+function cancelRestTimer(){
+ localStorage.removeItem(REST_TIMER_KEY);if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
+ navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
+ updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
+}
+function customRestTimer(){
+ let raw=prompt('Введи час відпочинку у секундах, наприклад 150');
+ let sec=parseInt(raw||'',10);if(sec>0&&sec<=3600)startRestTimer(sec);
+}
+function startRestTimerTicker(){
+ if(restTimerInterval)clearInterval(restTimerInterval);
+ updateRestTimerUI(restTimerRemaining());
+ restTimerInterval=setInterval(()=>{let s=restTimerRemaining();updateRestTimerUI(s);if(s<=0){clearInterval(restTimerInterval);restTimerInterval=null;finishRestTimer()}},250);
+}
+function updateRestTimerUI(s){
+ let d=$('#restTimerDisplay');if(d)d.textContent=s?formatRestTimer(s):'Готовий до старту';
+ let a=$('#restTimerActions');if(a)a.classList.toggle('hidden',!s);
+ let f=$('#floatingRestTimerValue');if(f)f.textContent=formatRestTimer(s);
+}
+async function unlockTimerSound(){
+ try{let AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;restTimerAudioCtx=restTimerAudioCtx||new AC();if(restTimerAudioCtx.state==='suspended')await restTimerAudioCtx.resume()}catch(e){}
+}
+function timerBeep(){
+ try{
+  let AC=window.AudioContext||window.webkitAudioContext,ctx=restTimerAudioCtx||new AC();restTimerAudioCtx=ctx;
+  [0,.22,.44].forEach(t=>{let o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.001,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.18,ctx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.16);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.18)});
+ }catch(e){}
+ try{navigator.vibrate?.([180,90,180,90,260])}catch(e){}
+}
+async function finishRestTimer(){
+ if(!restTimerEnd())return;
+ localStorage.removeItem(REST_TIMER_KEY);updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
+ if(document.visibilityState==='visible'&&Notification.permission==='granted'){
+  try{let reg=await navigator.serviceWorker.ready;reg.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true})}catch(e){}
+ }
+}
+async function syncRestTimerWorker(end){
+ try{let reg=await navigator.serviceWorker.ready;(reg.active||navigator.serviceWorker.controller)?.postMessage({type:'REST_TIMER',end})}catch(e){}
+}
+function renderFloatingRestTimer(){
+ let s=restTimerRemaining();if(!s){document.querySelector('#floatingRestTimer')?.remove();return}
+ let el=$('#floatingRestTimer');if(!el){document.body.insertAdjacentHTML('beforeend',`<button id="floatingRestTimer" class="floating-rest-timer" onclick="window.scrollTo({top:0,behavior:'smooth'})">⏱ <span id="floatingRestTimerValue">${formatRestTimer(s)}</span></button>`)}
+ else $('#floatingRestTimerValue').textContent=formatRestTimer(s);
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&restTimerEnd()){if(restTimerRemaining()<=0)finishRestTimer();else{startRestTimerTicker();renderFloatingRestTimer()}}});
+window.addEventListener('focus',()=>{if(restTimerEnd()){startRestTimerTicker();renderFloatingRestTimer()}});
+setTimeout(()=>{if(restTimerEnd()){if(restTimerRemaining()<=0)finishRestTimer();else{startRestTimerTicker();syncRestTimerWorker(restTimerEnd());renderFloatingRestTimer()}}},500);
+
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),html='';
  function card(x,inner=false){
@@ -1619,7 +1701,7 @@ async function clientCabinet(id){
  let chosen=active?active.day_name:previewWorkoutDay;
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1><div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
+   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='';

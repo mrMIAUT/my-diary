@@ -1,38 +1,19 @@
-const CACHE='eplan-pwa-v2-offline';
-const SHELL=['/','/manifest.webmanifest','/static/icons/icon-192.png','/static/icons/icon-512.png','/static/icons/apple-touch-icon.png'];
-
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+let restTimerHandle=null;
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+self.addEventListener('message',e=>{
+ const d=e.data||{};
+ if(d.type==='CANCEL_REST_TIMER'){if(restTimerHandle)clearTimeout(restTimerHandle);restTimerHandle=null;return}
+ if(d.type==='REST_TIMER'&&d.end){
+   if(restTimerHandle)clearTimeout(restTimerHandle);
+   const delay=Math.max(0,+d.end-Date.now());
+   restTimerHandle=setTimeout(()=>{self.registration.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true,vibrate:[180,90,180,90,260]});restTimerHandle=null},delay);
+ }
 });
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  const url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
-
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).then(res => {
-        const copy=res.clone();
-        caches.open(CACHE).then(c => c.put('/', copy));
-        return res;
-      }).catch(() => caches.match('/'))
-    );
-    return;
-  }
-
-  event.respondWith(
-    fetch(req).then(res => {
-      const copy=res.clone();
-      caches.open(CACHE).then(c => c.put(req, copy));
-      return res;
-    }).catch(() => caches.match(req))
-  );
+self.addEventListener('notificationclick',e=>{
+ e.notification.close();
+ e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(xs=>{
+   if(xs.length)return xs[0].focus();
+   return clients.openWindow('/');
+ }));
 });
