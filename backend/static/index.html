@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v18"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v19"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -461,8 +461,13 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .rest-timer-card{margin-bottom:14px!important;border-color:#4e4520!important}.rest-timer-top{display:flex;justify-content:space-between;align-items:center;gap:14px}.rest-timer-label{display:block;color:var(--muted);font-size:13px;margin-bottom:5px}.rest-timer-top strong{display:block;font-size:26px}.rest-timer-main{min-width:92px}.rest-timer-choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:14px}.rest-timer-choices button{padding:11px 6px}.rest-timer-actions{display:flex;gap:8px;margin-top:12px}.rest-timer-actions button{flex:1}.rest-timer-note{color:var(--muted);font-size:11px;line-height:1.45;margin-top:11px}
 .floating-rest-timer{position:fixed!important;z-index:80;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:auto!important;min-width:112px;border-radius:999px!important;box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:16px!important;font-weight:900!important;padding:12px 16px!important}
 @media(max-width:650px){.rest-timer-top strong{font-size:24px}.rest-timer-choices{grid-template-columns:repeat(4,1fr)}.rest-timer-choices button:last-child{grid-column:1/5}.floating-rest-timer{right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}}
+
+/* Timer presets: neutral by default; only the chosen preset gets a soft green state. */
+.rest-timer-choices button{background:#18181b!important;border-color:var(--line)!important;color:var(--text)!important;box-shadow:none!important}
+.rest-timer-choices button.selected{background:#183522!important;border-color:#356646!important;color:#baf3c9!important}
+.rest-timer-choices button.selected:hover{background:#1d4029!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v18');
+console.info('Є ПЛАН build 2026-09-23-v19');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1512,7 +1517,7 @@ function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
 function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
 function restTimerPanelHTML(){
  return `<div class="card rest-timer-card"><div class="rest-timer-top"><div><span class="rest-timer-label">⏱ Відпочинок між підходами</span><strong id="restTimerDisplay">${restTimerRemaining()?formatRestTimer(restTimerRemaining()):'Готовий до старту'}</strong></div><button class="dark rest-timer-main" onclick="toggleRestTimerChoices()">Таймер</button></div>
- <div id="restTimerChoices" class="rest-timer-choices hidden"><button onclick="startRestTimer(60)">1:00</button><button onclick="startRestTimer(90)">1:30</button><button onclick="startRestTimer(120)">2:00</button><button onclick="startRestTimer(180)">3:00</button><button class="dark" onclick="customRestTimer()">Свій час</button></div>
+ <div id="restTimerChoices" class="rest-timer-choices hidden"><button class="dark" data-rest-seconds="60" onclick="startRestTimer(60,this)">1:00</button><button class="dark" data-rest-seconds="90" onclick="startRestTimer(90,this)">1:30</button><button class="dark" data-rest-seconds="120" onclick="startRestTimer(120,this)">2:00</button><button class="dark" data-rest-seconds="180" onclick="startRestTimer(180,this)">3:00</button><button class="dark" onclick="customRestTimer()">Свій час</button></div>
  <div id="restTimerActions" class="rest-timer-actions ${restTimerRemaining()?'':'hidden'}"><button class="dark" onclick="addRestTimer(30)">+30 сек</button><button class="dark" onclick="cancelRestTimer()">Скасувати</button></div>
  <div class="rest-timer-note">Можна згорнути застосунок — час не загубиться. Для сигналу у фоні дозволь сповіщення.</div></div>`;
 }
@@ -1524,11 +1529,13 @@ async function ensureTimerNotifications(){
  if(Notification.permission==='denied')return false;
  try{return (await Notification.requestPermission())==='granted'}catch(e){return false}
 }
-async function startRestTimer(seconds){
+async function startRestTimer(seconds,sourceBtn=null){
+ document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));
+ if(sourceBtn)sourceBtn.classList.add('selected');
  await unlockTimerSound();
  await ensureTimerNotifications();
  let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
- $('#restTimerChoices')?.classList.add('hidden');$('#restTimerActions')?.classList.remove('hidden');
+ $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 function addRestTimer(seconds){
@@ -1536,7 +1543,7 @@ function addRestTimer(seconds){
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 function cancelRestTimer(){
- localStorage.removeItem(REST_TIMER_KEY);if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
+ localStorage.removeItem(REST_TIMER_KEY);document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
  updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
 }
@@ -1566,7 +1573,7 @@ function timerBeep(){
 }
 async function finishRestTimer(){
  if(!restTimerEnd())return;
- localStorage.removeItem(REST_TIMER_KEY);updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
+ localStorage.removeItem(REST_TIMER_KEY);document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
  if(document.visibilityState==='visible'&&Notification.permission==='granted'){
   try{let reg=await navigator.serviceWorker.ready;reg.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true})}catch(e){}
  }
