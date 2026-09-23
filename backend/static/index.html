@@ -2044,9 +2044,7 @@ function measurementReminderState(d){
 }
 function todayGuidanceHTML(d,cid,groups){
  let today=isoToday(),sessions=(d.workout_sessions||[]),active=sessions.find(x=>x.status==='training'),
-     todaySetsAll=(d.result_sets||[]).filter(x=>x.day===today),
-     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today)
-       ||(todaySetsAll.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),
+     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today),
      cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
  if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
