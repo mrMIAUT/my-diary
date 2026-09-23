@@ -822,9 +822,22 @@ async def screenshot(nid:int,file:UploadFile=File(...)):
 @app.post("/api/measurements")
 def measurement(x:MeasureIn):
     require_active_client(x.client_id,'measurements')
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(date.today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
+    today=str(date.today())
+    existing=one("SELECT id FROM measurements WHERE client_id=? AND day=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
+    if existing:
+        raise HTTPException(409,"Заміри за сьогодні вже збережені")
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,today,x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
+
+@app.delete("/api/measurements/{mid}")
+def delete_measurement(mid:int,client_id:int):
+    m=one("SELECT * FROM measurements WHERE id=? AND client_id=?",(mid,client_id))
+    if not m: raise HTTPException(404,"Замір не знайдено")
+    run("DELETE FROM measurements WHERE id=? AND client_id=?",(mid,client_id))
+    last=one("SELECT weight FROM measurements WHERE client_id=? AND weight>0 ORDER BY day DESC,id DESC LIMIT 1",(client_id,))
+    if last: run("UPDATE clients SET weight=? WHERE id=?",(last["weight"],client_id))
+    return {"ok":True}
 
 @app.put("/api/comments/{comment_id}")
 def edit_comment(comment_id:int,x:CommentIn):
