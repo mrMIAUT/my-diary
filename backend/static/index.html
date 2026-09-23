@@ -1606,30 +1606,69 @@ function applyCustomResultsPeriod(){
  document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData);
 }
 function resetCustomResultsPeriod(){window.trainerResultsFrom='';window.trainerResultsTo='';window.trainerResultsPeriod='90';window.trainerResultsLimit=5;let box=$('#results');if(box)box.innerHTML=resultsHTML(window.currentClientData)}
+function refreshTrainerResults(){let box=$('#results');if(box)box.innerHTML=resultsHTML(window.currentClientData||{})}
 function resultsHTML(d){
- let days=[...new Set((d.program||[]).map(x=>x.day_name))];
- if(!days.length)return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Програма ще порожня.</p></div>`;
- let selectedDay=window.trainerResultsDay&&days.includes(window.trainerResultsDay)?window.trainerResultsDay:days[0];
- window.trainerResultsDay=selectedDay;
- let period=window.trainerResultsPeriod||'90';
- return `<div class="card"><h2>Історія тренувань</h2><p class="muted">Обери тренувальний день і період. Спочатку показуються 5 останніх тренувань.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">${days.map(day=>`<button class="${day===selectedDay?'':'dark'}" onclick="window.trainerResultsDay='${esc(day).replace(/'/g,"&#39;")}';window.trainerResultsLimit=5;document.querySelector('#results').innerHTML=resultsHTML(window.currentClientData)">${esc(day)}</button>`).join('')}</div>
-  <div style="height:16px"></div>
-  <div class="muted" style="margin-bottom:8px">Період</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-   ${[['30','30 днів'],['90','3 місяці'],['180','6 місяців'],['all','Весь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="setResultsPeriod('${v}')">${t}</button>`).join('')}
-  </div>
-  <div class="results-date-range">
-   <div class="results-date-field"><div class="muted">З</div><input id="resultsFrom" type="date" value="${window.trainerResultsFrom||''}"></div>
-   <div class="results-date-field"><div class="muted">По</div><input id="resultsTo" type="date" value="${window.trainerResultsTo||''}"></div>
-   <button class="${period==='custom'?'':'dark'}" onclick="applyCustomResultsPeriod()">Показати період</button>
-   <button class="dark" onclick="resetCustomResultsPeriod()">Скинути дати</button>
-  </div>
- </div>
- <div>${trainerDayResultsHTML(d,selectedDay)}</div>
- ${trainerMeasurementsResultsHTML(d)}`;
-}
+ let c=d?.client||{};
+ let period=window.trainerResultsPeriod||'90',from=periodStart(period);
+ let inPeriod=day=>!from||!day||day>=from;
+ let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&inPeriod((x.finished_at||x.started_at||'').slice(0,10)));
+ let measures=(d.measurements||[]).filter(x=>x.day&&inPeriod(x.day)).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let allMeasures=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let firstM=measures[0],lastM=measures[measures.length-1];
+ let weightNow=lastM&&+lastM.weight>0?+lastM.weight:null;
+ let weightDelta=firstM&&lastM&&+firstM.weight>0&&+lastM.weight>0?(+lastM.weight-+firstM.weight):null;
 
+ let programGroups={};(d.program||[]).forEach(x=>{let day=x.day_name||'День';(programGroups[day]??=[]).push(x)});
+ let programDays=Object.keys(programGroups);
+ if(window.trainerResultsDay&&!programGroups[window.trainerResultsDay])window.trainerResultsDay=null;
+ let selectedDay=window.trainerResultsDay||null;
+ let selectedProgram=selectedDay?(programGroups[selectedDay]||[]):[];
+ let selectedIds=new Set(selectedProgram.map(x=>+x.id).filter(Boolean));
+ let currentProgramById=Object.fromEntries(selectedProgram.map(x=>[+x.id,x]));
+ let sets=(d.result_sets||[]).filter(x=>x.day&&inPeriod(x.day)&&(selectedDay?selectedIds.has(+x.program_id):false));
+ let byExercise={};
+ sets.forEach(x=>{let key=+x.program_id;(byExercise[key]||(byExercise[key]=[])).push(x)});
+ let exerciseRows=Object.entries(byExercise).map(([programId,xs])=>{
+   let pid=+programId,current=currentProgramById[pid]||{};
+   let dates=[...new Set(xs.map(x=>x.day))].sort();
+   let firstDay=dates[0],lastDay=dates[dates.length-1];
+   let firstSets=xs.filter(x=>x.day===firstDay),lastSets=xs.filter(x=>x.day===lastDay);
+   let best=a=>a.slice().sort((x,y)=>(+y.weight||0)-(+x.weight||0)||(+y.reps||0)-(+x.reps||0))[0]||{};
+   let a=best(firstSets),b=best(lastSets);
+   return {program_id:pid,name:current.exercise||xs[xs.length-1]?.exercise||'Вправа',dates,first:a,last:b,change:(+b.weight||0)-(+a.weight||0),count:dates.length};
+ }).sort((a,b)=>selectedProgram.findIndex(x=>+x.id===+a.program_id)-selectedProgram.findIndex(x=>+x.id===+b.program_id));
+
+ let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
+ let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
+ let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
+ let dayButtons=programDays.map(day=>{let safe=esc(day).replace(/'/g,"&#39;");return `<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.trainerResultsDay=(window.trainerResultsDay==='${safe}'?null:'${safe}');refreshTrainerResults()">${esc(day)}</button>`}).join('');
+
+ return `<div id="trainerResultsProgress" class="client-progress-new">
+  <div class="progress-hero">
+   <div><h1>Результати${c.name?` · ${esc(c.name)}`:''}</h1><p class="muted">Головне про прогрес клієнта в одному місці.</p></div>
+   <div class="progress-periods">${[['30','1 міс.'],['90','3 міс.'],['180','6 міс.'],['all','Увесь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="window.trainerResultsPeriod='${v}';refreshTrainerResults()">${t}</button>`).join('')}</div>
+  </div>
+
+  <div class="progress-stats">
+   <div class="progress-stat"><span>Тренувань</span><strong>${sessions.length}</strong><small>${periodLabel}</small></div>
+   <div class="progress-stat"><span>Вага</span><strong>${statWeight}</strong><small>${lastM?.day?formatProgressDate(lastM.day):'Немає даних'}</small></div>
+   <div class="progress-stat"><span>Зміна ваги</span><strong class="${weightDelta!==null&&weightDelta<0?'good':''}">${statDelta}</strong><small>за період</small></div>
+  </div>
+
+  <div class="card progress-section">
+   <div class="progress-section-head"><div><h2>Силові показники</h2><p class="muted">Обери тренувальний день і переглянь прогрес вправ за вибраний період.</p></div></div>
+   ${programDays.length?`<div class="progress-day-grid">${dayButtons}</div>`:'<div class="progress-empty">Тренувальна програма ще не додана.</div>'}
+   ${selectedDay?`<div class="progress-selected-day"><strong>${esc(selectedDay)}</strong><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,'trainer'+i)).join('')}</div>`:'<div class="progress-empty">За цей період ще немає результатів для вправ цього дня.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
+  </div>
+
+  <div class="card progress-section">
+   <button class="exercise-toggle" onclick="toggleCalendar('trainerBodyProgressDetails',this)">
+    <span><strong>Зміни тіла</strong><span class="muted" style="display:block;margin-top:5px">${lastM?'Останні актуальні заміри':'Заміри ще не додані'}</span></span><span class="arrow">⌄</span>
+   </button>
+   <div id="trainerBodyProgressDetails" class="hidden" style="margin-top:14px">${bodyProgressHTML(allMeasures,period)}</div>
+  </div>
+ </div>`;
+}
 
 
 function trainerMeasurementsResultsHTML(d){
