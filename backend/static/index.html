@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v24"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v25"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -497,8 +497,29 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .measure-collapse-title{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin-bottom:0!important}
 .measure-collapse-arrow{font-size:22px;font-weight:700;flex:0 0 auto}
 .trainer-measure-collapse{margin-top:18px}
+
+/* v25 guided UX */
+.next-action-card{border-color:#6b5b00;background:linear-gradient(180deg,#1d1a10,#171719)}
+.next-action-kicker{color:var(--yellow);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.next-action-card h2{margin:7px 0 5px}
+.next-action-card .primary-wide{width:100%;margin-top:14px;font-size:17px}
+.today-mini-status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.today-mini-status>div{background:#121214;border:1px solid var(--line);border-radius:13px;padding:11px}
+.today-mini-status span{display:block;color:var(--muted);font-size:12px}.today-mini-status strong{display:block;margin-top:4px}
+.trainer-stat.actionable{cursor:pointer;transition:.15s}.trainer-stat.actionable:hover{border-color:#777}.trainer-stat.active-filter{border-color:var(--yellow)!important;background:#2a2410!important}
+.trainer-queue-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 10px}
+.client-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.client-card-actions button{position:relative;z-index:2}
+.work-status{font-weight:900}
+.work-status.review{color:#ffe58a}.work-status.live{color:#baf3c9}.work-status.idle{color:var(--muted)}
+.finish-summary .summary-number{font-size:34px;font-weight:900}
+.finish-summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.finish-summary-grid>div{background:#121214;border:1px solid var(--line);border-radius:14px;padding:14px}
+.review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.review-actions button{flex:1;min-width:180px}
+.trainer-measure-summary-toggle{width:100%;text-align:left}
+@media(max-width:700px){.today-mini-status{grid-template-columns:1fr}.client-card-actions{display:grid;grid-template-columns:1fr}.client-card-actions button{width:100%}}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v24');
+console.info('Є ПЛАН build 2026-09-23-v25');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -770,6 +791,7 @@ function clientProgressHTML(d){
    <div class="progress-periods">${[['30','1 міс.'],['90','3 міс.'],['180','6 міс.'],['all','Увесь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="window.clientProgressPeriod='${v}';refreshClientProgress()">${t}</button>`).join('')}</div>
   </div>
 
+  ${exerciseRows.length?`<div class="card next-action-card"><span class="next-action-kicker">Найбільший прогрес</span><h2>${esc(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].name)}</h2><p class="muted">${fmtProgress(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].first.weight||0)} кг → <strong>${fmtProgress(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].last.weight||0)} кг</strong></p></div>`:''}
   <div class="progress-stats">
    <div class="progress-stat"><span>Тренувань</span><strong>${sessions.length}</strong><small>${periodLabel}</small></div>
    <div class="progress-stat"><span>Вага</span><strong>${statWeight}</strong><small>${lastM?.day?formatProgressDate(lastM.day):'Немає даних'}</small></div>
@@ -857,14 +879,34 @@ async function goToTrainerHome(){
 }
 async function trainerHome(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
- let cs=await api('/clients');
- let today=isoToday(),active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
- let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0),needsReviewTotal=needsReviewClients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
- app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Клієнти, яким сьогодні потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
- <div class="trainer-stats"><div class="trainer-stat"><strong>${needsReviewClients.length}</strong><span>Потрібно перевірити</span></div><div class="trainer-stat"><strong>${ending.length}</strong><span>Доступ завершується</span></div><div class="trainer-stat"><strong>${active.length}</strong><span>Активних клієнтів</span></div></div></div>
- <h1>Клієнти</h1>${cs.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let reviewChip=r?`<span class="trainer-meta-chip review-pending">● Не перевірено${r>1?` · ${r}`:''}</span>`:(c.review_state==='reviewed'?'<span class="trainer-meta-chip review-done">✓ Перевірено</span>':'<span class="trainer-meta-chip review-none">— Ще без тренувань</span>');return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div class="client-review-row">${reviewChip}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span>${c.live_status==='Тренується'?'<span class="trainer-meta-chip ok">Тренується зараз</span>':''}${r?`<span class="trainer-meta-chip warn">Потрібно перевірити тренування</span>`:''}</div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div></div>`}).join('')}`);
+ let cs=(await api('/clients')).filter(c=>c.status!=='Видалений');
+ let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
+ let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0),filter=window.trainerHomeFilter||'all';
+ let shown=filter==='review'?needsReviewClients:filter==='ending'?ending:filter==='active'?active:cs;
+ let stat=(key,n,label)=>`<div class="trainer-stat actionable ${filter===key?'active-filter':''}" onclick="window.trainerHomeFilter=window.trainerHomeFilter==='${key}'?'all':'${key}';trainerHome()"><strong>${n}</strong><span>${label}</span></div>`;
+ app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Кому зараз потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
+ <div class="trainer-stats">${stat('review',needsReviewClients.length,'Потрібно перевірити')}${stat('ending',ending.length,'Доступ завершується')}${stat('active',active.length,'Активних клієнтів')}</div></div>
+ <div class="trainer-queue-head"><h1 style="margin:0">${filter==='review'?'На перевірку':filter==='ending'?'Завершується доступ':filter==='active'?'Активні клієнти':'Клієнти'}</h1>${filter!=='all'?`<button class="dark" onclick="window.trainerHomeFilter='all';trainerHome()">Показати всіх</button>`:''}</div>
+ ${shown.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let workStatus=c.live_status==='Тренується'?'<span class="work-status live">● Тренується зараз</span>':r?'<span class="work-status review">● Очікує перевірки</span>':c.review_state==='reviewed'?'<span class="work-status idle">✓ Все перевірено</span>':'<span class="work-status idle">Ще без тренувань</span>';return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div>${workStatus}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span></div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div><div class="client-card-actions">${r?`<button onclick="event.stopPropagation();openClient(${c.id},'results');setTimeout(()=>openFirstPendingWorkout(),180)">Перевірити тренування →</button>`:''}${days!==null&&days!==undefined&&days<=7&&!exp?`<button class="dark" onclick="event.stopPropagation();quickExtendFromCard(${c.id},1)">+1 міс. доступу</button>`:''}</div></div>`}).join('')||'<div class="card"><p class="muted">У цій категорії зараз нікого немає.</p></div>'}`);
  refreshTrainerGlobalBadge()
 }
+
+function openFirstPendingWorkout(){
+ let cards=[...document.querySelectorAll('#results [data-workout-session]')];
+ let target=cards.find(c=>c.querySelector('textarea[id^="reviewComment"]'));
+ if(!target)return;
+ let body=target.querySelector('[id^="workoutResult_"]');if(body?.classList.contains('hidden'))target.querySelector('.exercise-toggle')?.click();
+ setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'center'}),80);
+}
+async function quickExtendFromCard(cid,months){
+ let clients=await api('/clients'),c=clients.find(x=>x.id===cid);if(!c)return;
+ let base=c.access?.access_until&&c.access.access_until>=isoToday()?new Date(c.access.access_until+'T12:00:00'):new Date();
+ base.setMonth(base.getMonth()+months);
+ let until=`${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
+ await api('/clients/'+cid+'/access',{method:'PATCH',body:JSON.stringify({plan_code:c.access?.plan_code||'coaching',access_until:until})});
+ trainerHome();
+}
+
 function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><p class="muted">Вкажи справжню пошту клієнта. Після створення він отримає посилання та сам встановить пароль.</p><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" type="email" autocomplete="email" placeholder="Email клієнта"><input id="g" placeholder="Ціль"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити та надіслати запрошення</button></div></div>`)}
 async function createClient(){
  let mail=(e.value||'').trim();
@@ -1266,10 +1308,17 @@ function sessionProgramForDate(d,dayName,day){
  }
  return (d.program||[]).filter(x=>x.day_name===dayName);
 }
-async function reviewWorkout(sid,cid){
- let t=$('#reviewComment'+sid),comment=t?t.value.trim():'';
+async function reviewWorkout(sid,cid,useComment=true){
+ let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
  await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
- openClient(cid);
+ let clients=await api('/clients'),remaining=clients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
+ await openClient(cid,'results');
+ if(remaining>0)setTimeout(()=>{document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="nextReviewModal"><div class="card"><h2>Тренування перевірено ✓</h2><p class="muted">Ще очікують перевірки: ${remaining}</p><button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступне →</button><button class="dark" style="width:100%;margin-top:8px" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div>`)},120);
+}
+async function openNextPendingClient(currentCid){
+ let cs=await api('/clients'),next=cs.find(c=>c.id!==currentCid&&(+c.needs_review_count||0)>0)||cs.find(c=>(+c.needs_review_count||0)>0);
+ if(!next)return trainerHome();
+ await openClient(next.id,'results');setTimeout(openFirstPendingWorkout,180);
 }
 
 function uniqueResultSets(xs){
@@ -1355,7 +1404,7 @@ function trainerDayResultsHTML(d,dayName){
     ${(()=>{
       let ws=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id)[0];
       if(!ws)return '';
-      return `<div class="exercise" style="margin-bottom:14px">${ws.trainer_reviewed?`<strong style="color:#6ee787">Перевірено тренером ✓</strong>${ws.trainer_comment?`<div style="margin-top:7px">${esc(ws.trainer_comment)}</div>`:''}`:`<strong style="color:var(--yellow)">Нове тренування</strong><textarea id="reviewComment${ws.id}" placeholder="Загальний коментар до тренування..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><button style="margin-top:8px" onclick="reviewWorkout(${ws.id},${d.client.id})">Перевірено ✓</button>`}</div>`;
+      return `<div class="exercise" style="margin-bottom:14px">${ws.trainer_reviewed?`<strong style="color:#6ee787">Перевірено тренером ✓</strong>${ws.trainer_comment?`<div style="margin-top:7px">${esc(ws.trainer_comment)}</div>`:''}`:`<strong style="color:var(--yellow)">Нове тренування</strong><textarea id="reviewComment${ws.id}" placeholder="Коментар клієнту (необов’язково)..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><div class="review-actions"><button onclick="reviewWorkout(${ws.id},${d.client.id},true)">Надіслати та позначити перевіреним</button><button class="dark" onclick="reviewWorkout(${ws.id},${d.client.id},false)">Перевірено без коментаря</button></div>`}</div>`;
     })()}
     ${exercises.map(x=>{
       let cur=uniqueResultSets((d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===day)).sort((a,b)=>a.set_number-b.set_number);
@@ -1412,27 +1461,11 @@ function resultsHTML(d){
 }
 
 
-function collapseTrainerMeasurementsByDefault(){
- if(session?.role!=='trainer')return;
- [...document.querySelectorAll('#results .card')].forEach(card=>{
-   let h=[...card.querySelectorAll('h2,h3')].find(x=>x.textContent.trim()==='Заміри тіла');
-   if(!h||card.dataset.measureCollapseReady)return;
-   card.dataset.measureCollapseReady='1';
-   let children=[...card.children],start=children.indexOf(h);
-   if(start<0)return;
-   let body=document.createElement('div');body.className='trainer-measure-collapse hidden';
-   children.slice(start+1).forEach(x=>body.appendChild(x));
-   card.appendChild(body);
-   h.style.cursor='pointer';h.classList.add('measure-collapse-title');
-   let arrow=document.createElement('span');arrow.textContent='⌄';arrow.className='measure-collapse-arrow';h.appendChild(arrow);
-   h.onclick=()=>{body.classList.toggle('hidden');arrow.textContent=body.classList.contains('hidden')?'⌄':'⌃'};
- });
-}
 
 function trainerMeasurementsResultsHTML(d){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let last=xs[xs.length-1],prev=xs[xs.length-2];
- if(!last)return `<div class="card trainer-measure-results"><div class="results-measure-head"><div><h2>Заміри тіла</h2><p class="muted">Клієнт ще не додав заміри.</p></div></div></div>`;
+ if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Останній замір · ${formatProgressDate(last.day)} · ${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px">${measurementMetricCards(last,prev)}${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}<button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button><div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div></div>`;
  return `<div class="card trainer-measure-results">
   <div class="results-measure-head"><div><h2>Заміри тіла</h2><p class="muted">Останній замір · ${formatProgressDate(last.day)}</p></div><span class="trainer-meta-chip ok">${xs.length} ${xs.length===1?'запис':'записів'}</span></div>
   ${measurementMetricCards(last,prev)}
@@ -1615,7 +1648,11 @@ async function startWorkout(cid,day){
 async function finishWorkout(cid,sid){
  if(!confirm('Завершити тренування?'))return;
  await api('/workout/'+sid+'/finish',{method:'POST'});
- localStorage.removeItem('activeWorkout_'+cid);previewWorkoutDay=null;clientCabinet(cid)
+ localStorage.removeItem('activeWorkout_'+cid);previewWorkoutDay=null;
+ let d=await api('/client/'+cid);window.currentClientData=d;
+ let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===(s.started_at||'').slice(0,10)));
+ let exercises=new Set(sets.map(x=>x.program_id)).size,cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{}));
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Робочих підходів</span><div class="summary-number">${sets.length}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
 }
 function workoutCycleState(d,groups){
  let days=Object.keys(groups||{}),done=[];
@@ -1640,6 +1677,20 @@ function workoutDayButtons(d,cid,groups){
    return `<button class="${cls}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}${mark}</button>`;
  }).join('');
 }
+
+function measurementReminderState(d){
+ let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let last=xs[xs.length-1];if(!last)return {due:true,text:'Потрібні перші заміри'};
+ let left=measurementDaysLeft(last.day);return {due:left<=0,text:left<=0?'Час зробити заміри':`Заміри через ${left} ${ukDays(left)}`};
+}
+function todayGuidanceHTML(d,cid,groups){
+ let active=(d.workout_sessions||[]).find(x=>x.status==='training'),cycle=workoutCycleState(d,groups),m=measurementReminderState(d);
+ let nutritionDone=(d.nutrition||[]).some(x=>x.day===isoToday());
+ if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
+ if(cycle.next)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>🏋️ ${esc(cycle.next)}</h2><p class="muted">Це наступне тренування за твоїм планом.</p><button class="primary-wide" onclick="startWorkout(${cid},'${esc(cycle.next).replace(/'/g,"&#39;")}')">Почати тренування</button><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
+ return '';
+}
+
 function workoutChooser(d,cid,groups){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  if(active)return `<div class="card"><div class="between"><div><h2 style="margin:0">${esc(active.day_name)}</h2></div><button onclick="finishWorkout(${cid},${active.id})">Завершити тренування</button></div></div>`;
@@ -1647,7 +1698,7 @@ function workoutChooser(d,cid,groups){
  let hint=cycle.next?`За планом сьогодні: <strong>${esc(cycle.next)}</strong>.`:'';
  let todayDone=(d.workout_sessions||[]).find(x=>(x.started_at||'').slice(0,10)===isoToday()&&x.status==='finished');
  if(todayDone)return `<div class="card"><h2>Тренування на сьогодні <span style="color:#39d353">завершено ✓</span></h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><p class="muted">${hint}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${workoutDayButtons(d,cid,groups)}</div></div>`;
- return `<div class="card"><h2>Тренування</h2><p class="muted">Обери день і натисни «Почати тренування».</p>${hint?`<p class="muted workout-plan-today">${hint}</p>`:''}<div class="rir-help"><strong>RIR</strong> — скільки повторів залишилося б у запасі до відмови. RIR 2 = ти міг би зробити ще приблизно 2 повтори.</div><div class="rir-help workout-warmup"><strong>Перед тренуванням</strong> — робимо розминку. Кожну вправу починаємо з розминочних підходів, а в тренування зараховуємо тільки робочі підходи.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">${workoutDayButtons(d,cid,groups)}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
+ return `<div class="card"><h2>Інші тренувальні дні</h2><p class="muted">Якщо потрібно відхилитися від плану, обери інший день.</p>${hint?`<p class="muted workout-plan-today">${hint}</p>`:''}<div class="rir-help"><strong>RIR</strong> — скільки повторів залишилося б у запасі до відмови. RIR 2 = ти міг би зробити ще приблизно 2 повтори.</div><div class="rir-help workout-warmup"><strong>Перед тренуванням</strong> — робимо розминку. Кожну вправу починаємо з розминочних підходів, а в тренування зараховуємо тільки робочі підходи.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">${workoutDayButtons(d,cid,groups)}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
 }
 
 
@@ -1853,8 +1904,16 @@ async function clientCabinet(id){
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='';
- currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?workoutChooser(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
+ currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?todayGuidanceHTML(d,id,groups):''}${hasFeature('workouts',c)?workoutChooser(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
+
+function focusNextUnfinishedExercise(pid){
+ let cards=[...document.querySelectorAll('[id^="exerciseBody"]')];
+ let current=cards.findIndex(x=>x.id==='exerciseBody'+pid);
+ let next=cards.slice(current+1).find(x=>!x.textContent.includes('Виконано ✓'))||cards.find(x=>!x.textContent.includes('Виконано ✓'));
+ if(next){let btn=next.previousElementSibling;if(next.classList.contains('hidden'))btn?.click();setTimeout(()=>btn?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
+}
+
 async function saveSets(cid,pid,exercise,count){
  let sets=[];
  for(let n=1;n<=count;n++){
@@ -1873,7 +1932,7 @@ async function saveSets(cid,pid,exercise,count){
  }
  let d=await api('/client/'+cid);window.currentClientData=d;
  let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
- setTimeout(()=>clientCabinet(cid),350);
+ setTimeout(async()=>{await clientCabinet(cid);focusNextUnfinishedExercise(pid)},250);
 }
 window.addEventListener('popstate',async e=>{
  if(!session)return;
@@ -1896,8 +1955,6 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
  route()
 }
 
-const trainerMeasureObserver=new MutationObserver(()=>collapseTrainerMeasurementsByDefault());
-window.addEventListener('load',()=>{trainerMeasureObserver.observe(document.body,{childList:true,subtree:true});setTimeout(collapseTrainerMeasurementsByDefault,300)});
 </script>
 <script>
 if ('serviceWorker' in navigator) {
