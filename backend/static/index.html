@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v19"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v20"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -466,8 +466,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .rest-timer-choices button{background:#18181b!important;border-color:var(--line)!important;color:var(--text)!important;box-shadow:none!important}
 .rest-timer-choices button.selected{background:#183522!important;border-color:#356646!important;color:#baf3c9!important}
 .rest-timer-choices button.selected:hover{background:#1d4029!important}
+
+.notification-focus{outline:2px solid var(--yellow)!important;box-shadow:0 0 0 4px rgba(255,212,0,.10),0 12px 34px rgba(0,0,0,.45)!important}
+.phone-notify-enable{width:100%;margin:0 0 12px}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v19');
+console.info('Є ПЛАН build 2026-09-23-v20');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1100,13 +1103,50 @@ function showCalendarDay(day,btn,pushHistory=true){
 function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'calendar');return}if(session&&session.role==='client'&&session.client_id){clientCabinet(session.client_id);return}route()}
 
 
+
+function urlBase64ToUint8Array(base64String){
+ const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+ const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+async function enablePhoneNotifications(){
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){alert('Push-сповіщення не підтримуються на цьому пристрої.');return false}
+ let permission=Notification.permission;
+ if(permission!=='granted')permission=await Notification.requestPermission();
+ if(permission!=='granted'){alert('Дозволь сповіщення для Є ПЛАН у налаштуваннях iPhone.');return false}
+ try{
+   let reg=await navigator.serviceWorker.ready,key=await api('/push/public-key');
+   if(!key.public_key)throw new Error('Push key unavailable');
+   let sub=await reg.pushManager.getSubscription();
+   if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});
+   let j=sub.toJSON(),recipient=session?.role==='trainer'?'trainer':'client',clientId=session?.role==='client'?session.client_id:0;
+   await api('/push/subscribe',{method:'POST',body:JSON.stringify({client_id:clientId,recipient,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})});
+   localStorage.setItem('eplanPushEnabled','1');return true;
+ }catch(e){console.warn('Push subscribe failed',e);alert('Не вдалося увімкнути push-сповіщення.');return false}
+}
+async function autoRegisterPhoneNotifications(){
+ if(Notification?.permission!=='granted'||!session)return;
+ try{await enablePhoneNotifications()}catch(e){}
+}
+async function handleNotificationDeepLink(){
+ let p=new URLSearchParams(location.search),nid=+p.get('notify')||0,recipient=p.get('recipient'),cid=+p.get('client')||0;
+ if(!nid||!session)return;
+ history.replaceState(history.state,'',location.pathname);
+ if(session.role==='trainer'&&recipient==='trainer'){await openTrainerNotification(nid,cid)}
+ else if(session.role==='client'&&recipient==='client'){
+   let xs=await api('/notifications/'+session.client_id+'?recipient=client'),n=xs.find(x=>x.id===nid);
+   if(n&&!n.is_read)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
+   await clientCabinet(session.client_id);
+   setTimeout(()=>showNotifications(session.client_id,'client'),180);
+ }
+}
+
 async function refreshTrainerGlobalBadge(){
  try{let xs=await api('/notifications/trainer/all'),n=xs.filter(x=>!x.is_read).length,b=$('#trainerGlobalNotifyBtn');if(!b)return;b.querySelector('.notify-badge')?.remove();if(n)b.insertAdjacentHTML('beforeend',`<span class="notify-badge">${n>99?'99+':n}</span>`)}catch(e){}
 }
 async function showTrainerNotifications(){
  let xs=await api('/notifications/trainer/all');
  let body=xs.length?xs.map(x=>`<div class="notification-swipe"><button class="notification-delete-bg" onclick="event.stopPropagation();deleteTrainerNotification(${x.id},this)">×</button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openTrainerNotification(${x.id},${x.client_id})">${x.is_read?'':'<span class="notification-dot"></span>'}<div class="muted" style="margin-bottom:5px">${esc(x.client_name||'Клієнт')}</div><strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div>${body}</div></div>`);initNotificationSwipes();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications()">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);initNotificationSwipes();
 }
 function initNotificationSwipes(){
  document.querySelectorAll('.notification-swipe').forEach(row=>{let item=row.querySelector('.notification-item'),sx=0,dx=0;item.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0},{passive:true});item.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-sx;if(dx<0)item.style.transform=`translateX(${Math.max(-72,dx)}px)`},{passive:true});item.addEventListener('touchend',()=>{row.classList.toggle('reveal',dx<-34);item.style.transform=''})})
@@ -1116,10 +1156,25 @@ async function openTrainerNotification(nid,cid){
  let xs=await api('/notifications/trainer/all'),n=xs.find(x=>x.id===nid);if(!n)return;
  if(!n.is_read)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
  $('#notificationModal')?.remove();
+ if(n.kind==='workout_finished'||n.target_tab==='results'){
+   window.trainerResultsDay=(n.message.match(/«([^»]+)»/)||[])[1]||window.trainerResultsDay;
+   window.trainerResultsPeriod='all';window.trainerResultsLimit=50;
+   await openClient(cid,'results');refreshTrainerGlobalBadge();
+   setTimeout(()=>focusTrainerWorkoutNotification(n),180);return;
+ }
  let tab=n.target_tab||(n.kind==='cardio'?'cardio':'profile');
- await openClient(cid,tab);
- refreshTrainerGlobalBadge();
- setTimeout(()=>{let pane=$('#'+tab);if(pane)pane.scrollIntoView({behavior:'smooth',block:'start'});if(n.target_day){let matches=[...document.querySelectorAll('#'+tab+' .exercise')].filter(el=>el.textContent.includes(n.target_day)||el.textContent.includes((n.message||'').split(':').pop().trim()));if(matches[0]){matches[0].style.outline='2px solid var(--yellow)';matches[0].scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>matches[0].style.outline='',3500)}}},120);
+ await openClient(cid,tab);refreshTrainerGlobalBadge();
+ setTimeout(()=>{let pane=$('#'+tab);if(pane)pane.scrollIntoView({behavior:'smooth',block:'start'})},120);
+}
+function focusTrainerWorkoutNotification(n){
+ let day=n.target_day||'',sid=+n.target_session_id||0;
+ let target=sid?document.querySelector(`[data-workout-session="${sid}"]`):null;
+ if(!target&&day)target=[...document.querySelectorAll('#results [data-workout-day]')].find(x=>x.dataset.workoutDay===day);
+ if(!target)return;
+ let body=target.querySelector('[id^="workoutResult_"]');
+ if(body&&body.classList.contains('hidden')){body.classList.remove('hidden');let a=target.querySelector('.arrow');if(a)a.textContent='⌃'}
+ target.classList.add('notification-focus');target.scrollIntoView({behavior:'smooth',block:'center'});
+ setTimeout(()=>target.classList.remove('notification-focus'),3500);
 }
 
 async function notificationBadge(cid,recipient){
@@ -1131,7 +1186,7 @@ async function notificationBadge(cid,recipient){
 async function showNotifications(cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
  let body=xs.length?xs.map(x=>`<div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div>${body}</div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications()">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
 }
 async function openNotification(nid,cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient),n=xs.find(x=>x.id===nid);if(!n)return;
@@ -1223,7 +1278,8 @@ function trainerDayResultsHTML(d,dayName){
    let program=sessionProgramForDate(d,dayName,day);
    let exercises=program.filter(x=>(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===day));
    let workoutBodyId=`workoutResult_${dayName.replace(/[^a-zA-Z0-9]/g,'_')}_${day.replaceAll('-','_')}`;
-   return `<div class="card" style="padding:0;overflow:hidden">
+   let cardSession=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id)[0];
+   return `<div class="card" data-workout-day="${esc(day)}" data-workout-session="${cardSession?.id||0}" style="padding:0;overflow:hidden">
     <button class="exercise-toggle" onclick="toggleWorkoutResult('${workoutBodyId}',this)" style="padding:20px 24px">
       <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong>${previous?`<span class="muted" style="display:block;margin-top:5px">порівняно з ${esc(previous)}</span>`:''}</span>
       <span class="arrow">⌄</span>
@@ -1761,6 +1817,8 @@ if ('serviceWorker' in navigator) {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', {scope:'/'});
       reg.update();
+      setTimeout(autoRegisterPhoneNotifications,300);
+      setTimeout(handleNotificationDeepLink,450);
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;

@@ -12,8 +12,17 @@ self.addEventListener('message',e=>{
 });
 self.addEventListener('notificationclick',e=>{
  e.notification.close();
+ const url=e.notification.data?.url||'/';
  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(xs=>{
-   if(xs.length)return xs[0].focus();
-   return clients.openWindow('/');
+   if(xs.length){xs[0].navigate(url);return xs[0].focus()}
+   return clients.openWindow(url);
+ }));
+});
+
+self.addEventListener('push',event=>{
+ let d={};try{d=event.data?event.data.json():{}}catch(e){d={body:event.data?event.data.text():'Нове сповіщення'}}
+ event.waitUntil(self.registration.showNotification(d.title||'Є ПЛАН',{
+   body:d.body||'Нове сповіщення',icon:'/static/icon-192.png',badge:'/static/icon-192.png',
+   tag:'eplan-'+Date.now(),data:{url:d.url||'/'}
  }));
 });
