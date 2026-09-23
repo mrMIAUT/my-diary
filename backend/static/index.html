@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v20"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v21"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -469,8 +469,14 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .notification-focus{outline:2px solid var(--yellow)!important;box-shadow:0 0 0 4px rgba(255,212,0,.10),0 12px 34px rgba(0,0,0,.45)!important}
 .phone-notify-enable{width:100%;margin:0 0 12px}
+
+.notification-modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.notification-modal-head h2{margin:0;min-width:0}
+.notification-close{flex:0 0 54px;width:54px;height:54px;padding:0;display:flex;align-items:center;justify-content:center}
+.phone-notify-enable{display:block;width:100%;margin:0 0 18px!important;white-space:normal;line-height:1.2}
+.phone-notify-enable:disabled{opacity:.72;transform:none!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v20');
+console.info('Є ПЛАН build 2026-09-23-v21');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1108,11 +1114,20 @@ function urlBase64ToUint8Array(base64String){
  const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
  const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
 }
-async function enablePhoneNotifications(){
- if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){alert('Push-сповіщення не підтримуються на цьому пристрої.');return false}
+async function enablePhoneNotifications(btn=null){
+ if(btn){btn.disabled=true;btn.textContent='Підключення…'}
+ const done=(ok,msg)=>{if(btn){btn.disabled=false;btn.textContent=msg||'🔔 Увімкнути сповіщення на телефоні'}return ok};
+ if(!window.isSecureContext)return done(false,'Потрібен HTTPS');
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+   alert('На iPhone push-сповіщення працюють у встановленому вебзастосунку «Є ПЛАН» (Додати на початковий екран), а не у звичайній вкладці браузера.');
+   return done(false);
+ }
  let permission=Notification.permission;
  if(permission!=='granted')permission=await Notification.requestPermission();
- if(permission!=='granted'){alert('Дозволь сповіщення для Є ПЛАН у налаштуваннях iPhone.');return false}
+ if(permission!=='granted'){
+   alert('Сповіщення не дозволені. На iPhone відкрий Налаштування → Сповіщення → Є ПЛАН та дозволь сповіщення.');
+   return done(false);
+ }
  try{
    let reg=await navigator.serviceWorker.ready,key=await api('/push/public-key');
    if(!key.public_key)throw new Error('Push key unavailable');
@@ -1120,8 +1135,13 @@ async function enablePhoneNotifications(){
    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});
    let j=sub.toJSON(),recipient=session?.role==='trainer'?'trainer':'client',clientId=session?.role==='client'?session.client_id:0;
    await api('/push/subscribe',{method:'POST',body:JSON.stringify({client_id:clientId,recipient,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})});
-   localStorage.setItem('eplanPushEnabled','1');return true;
- }catch(e){console.warn('Push subscribe failed',e);alert('Не вдалося увімкнути push-сповіщення.');return false}
+   localStorage.setItem('eplanPushEnabled','1');
+   return done(true,'✓ Сповіщення на телефоні увімкнено');
+ }catch(e){
+   console.warn('Push subscribe failed',e);
+   alert('Не вдалося підключити push-сповіщення. Перевір, що Є ПЛАН додано на початковий екран iPhone, і спробуй ще раз.');
+   return done(false);
+ }
 }
 async function autoRegisterPhoneNotifications(){
  if(Notification?.permission!=='granted'||!session)return;
@@ -1146,7 +1166,7 @@ async function refreshTrainerGlobalBadge(){
 async function showTrainerNotifications(){
  let xs=await api('/notifications/trainer/all');
  let body=xs.length?xs.map(x=>`<div class="notification-swipe"><button class="notification-delete-bg" onclick="event.stopPropagation();deleteTrainerNotification(${x.id},this)">×</button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openTrainerNotification(${x.id},${x.client_id})">${x.is_read?'':'<span class="notification-dot"></span>'}<div class="muted" style="margin-bottom:5px">${esc(x.client_name||'Клієнт')}</div><strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications()">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);initNotificationSwipes();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);initNotificationSwipes();
 }
 function initNotificationSwipes(){
  document.querySelectorAll('.notification-swipe').forEach(row=>{let item=row.querySelector('.notification-item'),sx=0,dx=0;item.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0},{passive:true});item.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-sx;if(dx<0)item.style.transform=`translateX(${Math.max(-72,dx)}px)`},{passive:true});item.addEventListener('touchend',()=>{row.classList.toggle('reveal',dx<-34);item.style.transform=''})})
@@ -1154,7 +1174,7 @@ function initNotificationSwipes(){
 async function deleteTrainerNotification(nid,btn){await api('/notifications/item/'+nid,{method:'DELETE'});btn.closest('.notification-swipe')?.remove();refreshTrainerGlobalBadge()}
 async function openTrainerNotification(nid,cid){
  let xs=await api('/notifications/trainer/all'),n=xs.find(x=>x.id===nid);if(!n)return;
- if(!n.is_read)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
+ if(!n.is_read&&nid>0)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
  $('#notificationModal')?.remove();
  if(n.kind==='workout_finished'||n.target_tab==='results'){
    window.trainerResultsDay=(n.message.match(/«([^»]+)»/)||[])[1]||window.trainerResultsDay;
@@ -1186,7 +1206,7 @@ async function notificationBadge(cid,recipient){
 async function showNotifications(cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
  let body=xs.length?xs.map(x=>`<div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications()">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
 }
 async function openNotification(nid,cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient),n=xs.find(x=>x.id===nid);if(!n)return;
