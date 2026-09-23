@@ -305,6 +305,19 @@ def home(): return FileResponse(BASE/"static"/"index.html")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
 @app.get("/manifest.webmanifest")
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
+
+@app.get("/pwa-test")
+def pwa_test():
+    return FileResponse(
+        BASE/"static"/"pwa-test.html",
+        media_type="text/html",
+        headers={
+            "Cache-Control":"no-store, no-cache, must-revalidate",
+            "Pragma":"no-cache",
+            "Expires":"0"
+        }
+    )
+
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
