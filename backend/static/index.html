@@ -656,7 +656,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{border-color:#665400!important;color:var(--yellow)!important}
 
-/* v40 — training day titles + collapsed trainer program */
+/* v42 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -666,6 +666,10 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-selected-title>div:first-child{display:flex;flex-direction:column;gap:4px}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
+
+/* v42 — minimalist password visibility icon */
+.password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -1039,6 +1043,27 @@ async function confirmPasswordReset(token){
  if(p!==r){resetMsg.textContent='Паролі не співпадають';return}
  try{await api('/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password:p})});localStorage.removeItem('fitSession');session=null;history.replaceState({},'',location.pathname);alert('Пароль змінено. Тепер увійдіть з новим паролем.');renderLogin()}catch(e){resetMsg.textContent=e.message}
 }
+function passwordEyeSVG(hidden){
+ return hidden
+  ? `<svg class="password-eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.7a2 2 0 0 0 2.7 2.7"/><path d="M9.9 4.2A10.7 10.7 0 0 1 12 4c5.5 0 9 5 9 5s-1.3 1.9-3.5 3.4"/><path d="M6.6 6.6C4.3 8 3 10 3 10s3.5 5 9 5c1 0 2-.2 2.8-.5"/></svg>`
+  : `<svg class="password-eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5z"/><circle cx="12" cy="12" r="2.4"/></svg>`;
+}
+function syncPasswordEye(btn,input){
+ if(!btn||!input)return;
+ btn.classList.add('password-eye-btn');
+ let hidden=input.type==='password';
+ btn.innerHTML=passwordEyeSVG(hidden);
+ btn.setAttribute('aria-label',hidden?'Показати пароль':'Сховати пароль');
+ btn.title=hidden?'Показати пароль':'Сховати пароль';
+}
+function syncAllPasswordEyes(){
+ document.querySelectorAll('input[type="password"],input[data-password-field="1"]').forEach(input=>{
+   input.dataset.passwordField='1';
+   let wrap=input.parentElement;
+   let btn=wrap&&[...wrap.querySelectorAll('button')].find(b=>/парол|👁|🙈|eye/i.test((b.getAttribute('aria-label')||'')+(b.title||'')+(b.textContent||'')));
+   if(btn)syncPasswordEye(btn,input);
+ });
+}
 function togglePassword(){let p=$('#pass');if(p)p.type=p.type==='password'?'text':'password'}
 async function login(){try{let em=email.value.trim();let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});session=s;localStorage.setItem('fitSession',JSON.stringify(s));if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');route()}catch(e){err.textContent=e.message}}
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}
@@ -1046,6 +1071,9 @@ async function goToTrainerHome(){
  history.pushState({eplanPage:'clients'},'',location.pathname+location.search);
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
  await trainerHome();
+ let _btn=(typeof event!=='undefined'&&event.currentTarget)?event.currentTarget:null;
+ let _input=_btn?(_btn.parentElement?.querySelector('input[data-password-field="1"],input[type="password"],input[type="text"]')):null;
+ if(_btn&&_input)syncPasswordEye(_btn,_input);
 }
 async function trainerHome(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
@@ -1914,9 +1942,24 @@ function previewWorkout(day,cid){
  previewWorkoutDay=previewWorkoutDay===day?null:day;
  clientCabinet(cid)
 }
-async function startWorkout(cid,day){
- let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day})});
- localStorage.setItem('activeWorkout_'+cid,JSON.stringify(s));clientCabinet(cid)
+async function startWorkout(cid,day,btn=null){
+ let button=btn||(typeof event!=='undefined'?event.currentTarget:null);
+ if(button?.dataset.starting==='1')return;
+ if(button){button.dataset.starting='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Запускаємо…'}
+ try{
+   let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day})});
+   if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
+   localStorage.setItem('activeWorkout_'+cid,JSON.stringify(s));
+   previewWorkoutDay=null;
+   await clientCabinet(cid);
+   requestAnimationFrame(()=>{
+     let live=document.querySelector('.training-live');
+     if(live)live.scrollIntoView({behavior:'smooth',block:'start'});
+   });
+ }catch(e){
+   alert(e?.message||'Не вдалося почати тренування. Спробуй ще раз.');
+   if(button){button.disabled=false;button.dataset.starting='0';button.textContent=button.dataset.oldText||'Почати тренування'}
+ }
 }
 async function finishWorkout(cid,sid){
  if(!confirm('Завершити тренування?'))return;
@@ -2203,7 +2246,7 @@ async function clientCabinet(id){
  if(active){
    programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}</div>`;
  }
- currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?todayGuidanceHTML(d,id,groups):''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
+ currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
 
 function focusNextUnfinishedExercise(pid){
@@ -2291,6 +2334,10 @@ if ('serviceWorker' in navigator) {
   if(document.readyState==='complete') hide();
   else window.addEventListener('load',hide,{once:true});
 })();
+
+document.addEventListener('DOMContentLoaded',()=>setTimeout(syncAllPasswordEyes,0));
+const passwordEyeObserver=new MutationObserver(()=>syncAllPasswordEyes());
+passwordEyeObserver.observe(document.documentElement,{childList:true,subtree:true});
 </script>
 
 </body></html><style>
