@@ -655,6 +655,17 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .progress-day-hint{margin-top:14px}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{border-color:#665400!important;color:var(--yellow)!important}
+
+/* v40 — training day titles + collapsed trainer program */
+.program-day-header-row{display:flex;align-items:center;gap:10px}
+.program-day-header-row .program-day-head{flex:1;min-width:0}
+.program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.program-day-heading h2{margin:0}
+.program-day-heading small{font-size:13px;color:var(--muted);font-weight:650}
+.program-day-title-edit{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;border-radius:12px!important}
+.client-program-selected-title>div:first-child{display:flex;flex-direction:column;gap:4px}
+.client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
+.progress-selected-day>div:first-child{display:flex;flex-direction:column}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -959,7 +970,7 @@ function clientProgressHTML(d){
   <div class="card progress-section">
    <div class="progress-section-head"><div><h2>Силові показники</h2><p class="muted">Обери тренувальний день і подивись прогрес вправ за вибраний період.</p></div></div>
    ${programDays.length?`<div class="progress-day-grid">${dayButtons}</div>`:'<div class="progress-empty">Тренувальна програма ще не додана.</div>'}
-   ${selectedDay?`<div class="progress-selected-day"><strong>${esc(selectedDay)}</strong><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,i)).join('')}</div>`:'<div class="progress-empty">За цей період ще немає результатів для вправ цього дня.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
+   ${selectedDay?`<div class="progress-selected-day"><div><strong>${esc(selectedDay)}</strong>${programDayTitle(d,selectedDay)?`<small class="progress-day-title">${esc(programDayTitle(d,selectedDay))}</small>`:''}</div><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,i)).join('')}</div>`:'<div class="progress-empty">За цей період ще немає результатів для вправ цього дня.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
   </div>
 
   <div class="card progress-section">
@@ -1175,12 +1186,16 @@ function autofillTechnique(name,targetId){
  let el=document.getElementById(targetId);if(item&&el&&!el.value.trim())el.value=item.technique_url||'';
 }
 async function loadExerciseLibrary(){try{window.exerciseLibrary=await api('/exercise-library')}catch(e){window.exerciseLibrary={groups:[],exercises:[]}}}
+function programDayTitle(d,day){
+ let x=(d?.program_days||[]).find(v=>v.day_name===day);
+ return String(x?.title||'').trim();
+}
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
  let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"><input id="alternatives" list="exerciseLibraryNames" placeholder="Альтернативи через кому, напр. Гак-присідання, Сміт"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><div class="rir-help"><strong>RIR (Reps In Reserve)</strong> — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 повтори.</div><br><button onclick="addExercise()">+ Додати вправу</button></div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
-   let bodyId='programDay_'+di, blocks=[];
+   let bodyId='programDay_'+di,title=programDayTitle(d,day),blocks=[];
    xs.forEach(x=>{
      if(x.superset_group){
        let b=blocks.find(v=>v.group===x.superset_group);
@@ -1192,7 +1207,16 @@ function programHTML(d){
      let info=b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${isSuper?`<span class="badge" style="color:var(--yellow)">Суперсет</span>`:''}</div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">▶ Техніка</a>`:''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
      return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" onclick="event.stopPropagation();addSupersetExercise(${first.id},'${esc(first.day_name).replace(/'/g,"&#39;")}')">＋</button>`:''}</div></div>`;
    }).join('');
-   return `<div class="card"><button class="program-day-head" onclick="toggleProgramDay('${bodyId}',this)"><h2 style="margin:0">${esc(day)}</h2><span class="program-day-arrow">⌃</span></button><div id="${bodyId}" style="margin-top:18px">${rows}</div></div>`;
+   return `<div class="card program-day-card">
+     <div class="program-day-header-row">
+       <button class="program-day-head" onclick="toggleProgramDay('${bodyId}',this)">
+         <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
+         <span class="program-day-arrow">⌄</span>
+       </button>
+       <button class="dark program-day-title-edit" title="Назва дня" onclick="event.stopPropagation();editProgramDayTitle('${esc(day).replace(/'/g,"&#39;")}')">✎</button>
+     </div>
+     <div id="${bodyId}" class="hidden" style="margin-top:18px">${rows}</div>
+   </div>`;
  }).join(''):'<div class="card muted">Програма ще порожня.</div>';
  return form+list;
 }
@@ -1200,6 +1224,20 @@ function toggleProgramDay(id,btn){
  let el=$('#'+id);if(!el)return;el.classList.toggle('hidden');
  let a=btn.querySelector('.program-day-arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
+function editProgramDayTitle(day){
+ let d=window.currentClientData||{},current=programDayTitle(d,day);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="dayTitleModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><div><h2>Назва тренувального дня</h2><div class="muted">${esc(day)}</div></div><button class="dark edit-exercise-close" onclick="dayTitleModal.remove()">✕</button></div><input id="dayTitleInput" value="${esc(current)}" placeholder="Напр. Груди + Спина"><p class="muted" style="margin-top:10px">Клієнт побачить цю назву після вибору тренувального дня.</p><button style="width:100%;margin-top:14px" onclick="saveProgramDayTitle('${esc(day).replace(/'/g,"&#39;")}')">Зберегти назву</button></div></div>`);
+ setTimeout(()=>document.getElementById('dayTitleInput')?.focus(),30);
+}
+async function saveProgramDayTitle(day){
+ let d=window.currentClientData||{},cid=d.client?.id||selected,title=(document.getElementById('dayTitleInput')?.value||'').trim();
+ try{
+   await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:cid,day_name:day,title})});
+   dayTitleModal.remove();
+   await openClient(cid);
+ }catch(e){alert(e.message||'Не вдалося зберегти назву дня')}
+}
+
 async function moveProgramBlock(dayName,blockIndex,direction){
  try{
    let d=window.currentClientData||{}, xs=(d.program||[]).filter(x=>x.day_name===dayName);
@@ -1946,7 +1984,8 @@ function clientTrainingProgramHTML(d,cid,groups){
        ${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">▶ Техніка</a>`:''}
      </div>`;
    }).join('');
-   selected=`<div class="client-program-selected"><div class="client-program-selected-title"><strong>${esc(previewWorkoutDay)}</strong><span>${xs.length} ${xs.length===1?'вправа':(xs.length<5?'вправи':'вправ')}</span></div>${exercises}</div>`;
+   let dayTitle=programDayTitle(d,previewWorkoutDay);
+   selected=`<div class="client-program-selected"><div class="client-program-selected-title"><div><strong>${esc(previewWorkoutDay)}</strong>${dayTitle?`<small class="client-program-day-title">${esc(dayTitle)}</small>`:''}</div><span>${xs.length} ${xs.length===1?'вправа':(xs.length<5?'вправи':'вправ')}</span></div>${exercises}</div>`;
  }
  return `<div class="card client-training-program"><h2>Твоя програма тренувань</h2><p class="muted">Обери тренувальний день, щоб переглянути вправи.</p>
    <div class="client-program-tabs">${buttons}</div>${selected}
