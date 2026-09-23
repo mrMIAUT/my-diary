@@ -162,6 +162,12 @@ def init():
         )""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS alternatives_json TEXT DEFAULT '[]'")
+        c.execute("""CREATE TABLE IF NOT EXISTS program_days(
+            client_id INTEGER NOT NULL,
+            day_name TEXT NOT NULL,
+            title TEXT DEFAULT '',
+            PRIMARY KEY(client_id,day_name)
+        )""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
@@ -245,6 +251,10 @@ class ProgramOrderIn(BaseModel):
     client_id:int
     day_name:str
     ordered_ids:list[int]
+class ProgramDayTitleIn(BaseModel):
+    client_id:int
+    day_name:str
+    title:str=""
 class ResultIn(BaseModel):
     client_id:int; exercise:str; weight:float; reps:int; sets:int; rir:int
 class SupersetIn(BaseModel):
@@ -448,6 +458,7 @@ def client(cid:int):
     c["access"]=access_info(c)
     return {"client":c,
             "program":rows("SELECT * FROM program WHERE client_id=? ORDER BY day_name,sort,id",(cid,)),
+            "program_days":rows("SELECT * FROM program_days WHERE client_id=? ORDER BY day_name",(cid,)),
             "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
             "result_sets":rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,)),
             "nutrition":rows("SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
@@ -544,6 +555,18 @@ def edit_program(pid:int,x:ProgramIn):
     if not p: raise HTTPException(404,"Вправу не знайдено")
     run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]",pid))
+    return {"ok":True}
+
+@app.put("/api/program-day-title")
+def save_program_day_title(x:ProgramDayTitleIn):
+    day=x.day_name.strip()
+    if not day: raise HTTPException(400,"Вкажіть день")
+    title=x.title.strip()
+    with con() as c:
+        c.execute("""INSERT INTO program_days(client_id,day_name,title) VALUES(%s,%s,%s)
+                     ON CONFLICT(client_id,day_name) DO UPDATE SET title=EXCLUDED.title""",
+                  (x.client_id,day,title))
+        c.commit()
     return {"ok":True}
 
 @app.post("/api/program/reorder")
