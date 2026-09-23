@@ -748,11 +748,13 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 
 @app.get("/api/notifications/trainer/all")
 def get_all_trainer_notifications():
-    run("DELETE FROM notifications WHERE client_id NOT IN (SELECT id FROM clients)")
+    run("""DELETE FROM notifications n
+           WHERE n.recipient='trainer'
+             AND (COALESCE(n.client_id,0)=0 OR NOT EXISTS (SELECT 1 FROM clients c WHERE c.id=n.client_id))""")
 
     xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
                JOIN clients c ON c.id=n.client_id
-               WHERE n.recipient='trainer'
+               WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
     # Backfill a bell item for finished workouts that still need review and were
     # completed before workout-finished notifications were introduced.
