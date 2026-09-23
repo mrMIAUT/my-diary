@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v30"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v31"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -559,8 +559,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .measurement-history-card .measurement-delete{top:2px!important;right:0!important;width:34px!important;height:34px!important;min-width:34px!important;border-radius:10px!important}
 .measurement-history-card .measurement-delete svg{width:16px!important;height:16px!important}
 .measurement-history-date{padding-right:0!important}
+
+.today-done-card{border-color:#2d6d43!important;background:linear-gradient(180deg,#142119,#171719)!important}
+.next-action-kicker.done{color:#66e58a!important}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v30');
+console.info('Є ПЛАН build 2026-09-23-v31');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1130,7 +1133,13 @@ async function saveSupersetExercise(sourceId,dayName){
 async function deleteExercise(id){if(confirm('Видалити вправу?')){await api('/program/'+id,{method:'DELETE'});openClient(selected)}}
 
 function toggleExercise(id,btn){let b=$('#'+id);if(!b)return;b.classList.toggle('hidden');btn.classList.toggle('open')}
-function isoToday(){let x=new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+function isoToday(){
+ try{
+   let parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+   let p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+   return `${p.year}-${p.month}-${p.day}`;
+ }catch(e){let x=new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+}
 function monthKey(day){return day ? day.slice(0,7) : ''}
 function calendarHTML(d,mode='trainer'){
  let days=[...(d.result_sets||[]).map(x=>x.day),...(d.results||[]).map(x=>x.day),...(d.nutrition||[]).map(x=>x.day),...(d.measurements||[]).map(x=>x.day),...(d.cardio||[]).map(x=>x.day)].filter(Boolean);
@@ -1751,9 +1760,12 @@ function measurementReminderState(d){
  let left=measurementDaysLeft(last.day);return {due:left<=0,text:left<=0?'Час зробити заміри':`Заміри через ${left} ${ukDays(left)}`};
 }
 function todayGuidanceHTML(d,cid,groups){
- let active=(d.workout_sessions||[]).find(x=>x.status==='training'),cycle=workoutCycleState(d,groups),m=measurementReminderState(d);
- let nutritionDone=(d.nutrition||[]).some(x=>x.day===isoToday());
+ let today=isoToday(),sessions=(d.workout_sessions||[]),active=sessions.find(x=>x.status==='training'),
+     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today),
+     cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
+     nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
  if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
+ if(todaySession&&todaySession.status==='finished')return `<div class="card next-action-card today-done-card"><span class="next-action-kicker done">На сьогодні все ✓</span><h2>Тренування виконано</h2><p class="muted">${esc(todaySession.day_name||'Тренування')} завершено. Наступне тренування буде доступне завтра.</p><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
  if(cycle.next)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>🏋️ ${esc(cycle.next)}</h2><p class="muted">Це наступне тренування за твоїм планом.</p><button class="primary-wide" onclick="startWorkout(${cid},'${esc(cycle.next).replace(/'/g,"&#39;")}')">Почати тренування</button><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
  return '';
 }
