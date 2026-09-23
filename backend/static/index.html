@@ -707,6 +707,10 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
 }
 .finish-workout-btn:active{transform:scale(.99)}
 </style></head><body>
+<div id="v47DiagMarker" style="position:fixed;z-index:2147483647;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));padding:14px 16px;border:2px solid #ffd400;border-radius:14px;background:#080909;color:#fff;font:700 16px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:center;box-sizing:border-box">
+<span style="color:#ffd400">Є ПЛАН</span> · V47 DIAG 1<br>
+<span style="font-size:13px;font-weight:500;color:#bbb">HTML + CSS завантажено · JavaScript вимкнено</span>
+</div>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
     <span class="eplan-splash-e">Є</span>
@@ -714,7 +718,7 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
     <span class="eplan-splash-plan-wrap"><span class="eplan-splash-plan">ПЛАН</span></span>
   </div>
 </div>
-<div id="app"></div><script>
+<div id="app"></div><script type="application/x-eplan-disabled">
 console.info('Є ПЛАН build 2026-09-23-v37');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
@@ -2355,7 +2359,7 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
 }
 
 </script>
-<script>
+<script type="application/x-eplan-disabled">
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
@@ -2376,7 +2380,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script>
+<script type="application/x-eplan-disabled">
 (function(){
   const splash=document.getElementById('eplanSplash');
   if(!splash)return;
