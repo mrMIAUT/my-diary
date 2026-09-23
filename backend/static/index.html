@@ -654,9 +654,9 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .progress-selected-day span{font-size:13px;color:var(--muted);font-weight:600}
 .progress-day-hint{margin-top:14px}
 
-.exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{border-color:#665400!important;color:var(--yellow)!important}
+.exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{background:#18181b!important;border:1px solid #4a4a52!important;color:var(--text)!important;box-shadow:none!important}
 
-/* v44 — training day titles + collapsed trainer program */
+/* v45 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -667,9 +667,22 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
 
-/* v44 — minimalist password visibility icon */
+/* v45 — minimalist password visibility icon */
 .password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
+
+/* v45 — alternative selector + clearer rest timer controls */
+.rest-timer-choices button{
+ border:1.5px solid #55565f!important;
+ border-radius:14px!important;
+ background:#18181b!important;
+ box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)!important;
+}
+.rest-timer-choices button.selected{
+ border:2px solid #5f9b70!important;
+ background:#183522!important;
+ box-shadow:0 0 0 2px rgba(95,155,112,.12)!important;
+}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -2134,7 +2147,21 @@ function chooseWorkoutExercise(pid,cid){
  let opts=[x.exercise,...exerciseAlternatives(x)],cur=workoutExerciseName(x);
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="alternativeExerciseModal"><div class="card"><div class="edit-exercise-head"><div><h2>Обрати вправу</h2><p class="muted" style="margin:4px 0 0">Заміна діє тільки для цього тренування.</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="alternative-modal-list">${opts.map((v,i)=>`<button class="${v===cur?'alternative-current':'dark'}" onclick="selectWorkoutExercise(${pid},${cid},${i})">${i===0?'За планом: ':''}${esc(v)}</button>`).join('')}</div></div></div>`);
 }
-function selectWorkoutExercise(pid,cid,index){let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;let opts=[x.exercise,...exerciseAlternatives(x)];window.workoutExerciseChoices[pid]=opts[index]||x.exercise;alternativeExerciseModal.remove();clientCabinet(cid)}
+async function selectWorkoutExercise(pid,cid,index){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
+ let opts=[x.exercise,...exerciseAlternatives(x)];
+ window.workoutExerciseChoices[pid]=opts[index]||x.exercise;
+ alternativeExerciseModal.remove();
+ await clientCabinet(cid);
+ requestAnimationFrame(()=>{
+   let body=document.getElementById('exerciseBody'+pid);
+   if(!body)return;
+   body.classList.remove('hidden');
+   let toggle=body.previousElementSibling;
+   if(toggle){toggle.classList.add('open');let a=toggle.querySelector('.arrow');if(a)a.textContent='⌃'}
+   setTimeout(()=>toggle?.scrollIntoView({behavior:'smooth',block:'center'}),60);
+ });
+}
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),html='';
  function card(x,inner=false){
