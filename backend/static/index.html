@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v32"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v33"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -594,6 +594,26 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 @media (prefers-reduced-motion:reduce){
  .eplan-splash-e,.eplan-splash-line,.eplan-splash-plan{animation-duration:.01ms!important;animation-delay:0s!important}
 }
+
+/* v33 — client training program */
+.client-training-program>h2{margin-bottom:6px}
+.client-program-days{display:grid;gap:10px;margin-top:18px}
+.client-program-day{border:1px solid var(--line);border-radius:18px;background:#111113;overflow:hidden}
+.client-program-day-head{
+ width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;
+ padding:17px 18px;background:transparent!important;border:0!important;color:var(--text)!important;
+ text-align:left;box-shadow:none!important;
+}
+.client-program-day-head>span:first-child{display:flex;flex-direction:column;gap:4px}
+.client-program-day-head strong{font-size:18px}
+.client-program-day-head small{font-size:13px;color:var(--muted);font-weight:600}
+.client-program-day-head .arrow{font-size:20px;color:var(--muted)}
+.client-program-day-body{padding:0 14px 14px}
+.client-program-exercise{padding:15px 4px;border-top:1px solid var(--line)}
+.client-program-exercise-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px}
+.client-program-exercise-top strong{font-size:16px;line-height:1.35}
+.client-program-exercise .program-extra{margin-top:9px}
+.client-program-exercise .tech-link{display:inline-block;margin-top:10px}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -603,7 +623,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v32');
+console.info('Є ПЛАН build 2026-09-23-v33');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1810,14 +1830,34 @@ function todayGuidanceHTML(d,cid,groups){
  return '';
 }
 
-function workoutChooser(d,cid,groups){
- let active=(d.workout_sessions||[]).find(x=>x.status==='training');
- if(active)return `<div class="card"><div class="between"><div><h2 style="margin:0">${esc(active.day_name)}</h2></div><button onclick="finishWorkout(${cid},${active.id})">Завершити тренування</button></div></div>`;
- let cycle=workoutCycleState(d,groups);
- let hint=cycle.next?`За планом сьогодні: <strong>${esc(cycle.next)}</strong>.`:'';
- let todayDone=(d.workout_sessions||[]).find(x=>(x.started_at||'').slice(0,10)===isoToday()&&x.status==='finished');
- if(todayDone)return `<div class="card"><h2>Тренування на сьогодні <span style="color:#39d353">завершено ✓</span></h2><p class="muted">${esc(todayDone.day_name)}. Нове тренування можна буде почати наступного дня.</p><p class="muted">${hint}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${workoutDayButtons(d,cid,groups)}</div></div>`;
- return `<div class="card"><h2>Інші тренувальні дні</h2><p class="muted">Якщо потрібно відхилитися від плану, обери інший день.</p>${hint?`<p class="muted workout-plan-today">${hint}</p>`:''}<div class="rir-help"><strong>RIR</strong> — скільки повторів залишилося б у запасі до відмови. RIR 2 = ти міг би зробити ще приблизно 2 повтори.</div><div class="rir-help workout-warmup"><strong>Перед тренуванням</strong> — робимо розминку. Кожну вправу починаємо з розминочних підходів, а в тренування зараховуємо тільки робочі підходи.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">${workoutDayButtons(d,cid,groups)}</div>${previewWorkoutDay?`<div class="exercise" style="margin-top:16px"><div class="between"><div><div class="muted">Перегляд</div><strong>${esc(previewWorkoutDay)}</strong></div><button onclick="startWorkout(${cid},'${esc(previewWorkoutDay).replace(/'/g,"&#39;")}')">Почати тренування</button></div></div>`:''}</div>`;
+function clientTrainingProgramHTML(d,cid,groups){
+ let days=Object.entries(groups||{});
+ if(!days.length)return `<div class="card"><h2>Твоя програма тренувань</h2><p class="muted">Тренер ще не додав тренування до програми.</p></div>`;
+ let rows=days.map(([day,xs],di)=>{
+   let bodyId='clientProgramDay_'+di;
+   let exercises=xs.map((x,i)=>{
+     let rest=restLabel(x),rp=rirPlan(x);
+     return `<div class="client-program-exercise">
+       <div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong>${x.superset_group?`<span class="badge">Суперсет</span>`:''}</div>
+       <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
+       <div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>
+       ${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">▶ Техніка</a>`:''}
+     </div>`;
+   }).join('');
+   return `<div class="client-program-day">
+     <button type="button" class="client-program-day-head" onclick="toggleClientProgramDay('${bodyId}',this)">
+       <span><strong>${esc(day)}</strong><small>${xs.length} ${xs.length===1?'вправа':(xs.length<5?'вправи':'вправ')}</small></span>
+       <span class="arrow">⌄</span>
+     </button>
+     <div id="${bodyId}" class="client-program-day-body hidden">${exercises}</div>
+   </div>`;
+ }).join('');
+ return `<div class="card client-training-program"><h2>Твоя програма тренувань</h2><p class="muted">Переглянь вправи, підходи, повторення та техніку.</p><div class="client-program-days">${rows}</div></div>`;
+}
+function toggleClientProgramDay(id,btn){
+ let el=document.getElementById(id);if(!el)return;
+ el.classList.toggle('hidden');
+ let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
 
 
@@ -2023,7 +2063,7 @@ async function clientCabinet(id){
  }else if(chosen){
    programPart=`<h1>Перегляд: ${esc(chosen)}</h1><div class="card">${previewExercisesHTML(groups[chosen]||[])}</div>`;
  }else programPart='';
- currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?todayGuidanceHTML(d,id,groups):''}${hasFeature('workouts',c)?workoutChooser(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
+ currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)?todayGuidanceHTML(d,id,groups):''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
 
 function focusNextUnfinishedExercise(pid){
