@@ -264,6 +264,10 @@ class HistoricalWorkoutIn(BaseModel):
 
 @app.get("/")
 def home(): return FileResponse(BASE/"static"/"index.html")
+@app.get("/sw.js")
+def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
+@app.get("/manifest.webmanifest")
+def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
