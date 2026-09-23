@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v35"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v36"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -637,6 +637,22 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-selected-title strong{font-size:19px}
 .client-program-selected-title span{font-size:13px;color:var(--muted);font-weight:600}
 @media(max-width:390px){.client-program-tabs{gap:8px}.client-program-tab{padding:13px 9px}}
+
+/* v36 — simplified client progress */
+.progress-day-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.progress-day-btn{
+ width:100%;min-width:0;padding:14px 10px;border-radius:15px;
+ background:#29292f!important;color:var(--text)!important;border:1px solid var(--line)!important;
+ box-shadow:none!important;font-weight:800
+}
+.progress-day-btn.active{background:var(--yellow)!important;color:#111!important;border-color:var(--yellow)!important}
+.progress-selected-day{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ margin:16px 0 10px;padding:0 2px
+}
+.progress-selected-day strong{font-size:18px}
+.progress-selected-day span{font-size:13px;color:var(--muted);font-weight:600}
+.progress-day-hint{margin-top:14px}
 </style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -646,7 +662,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v35');
+console.info('Є ПЛАН build 2026-09-23-v36');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -893,7 +909,13 @@ function clientProgressHTML(d){
  let weightNow=lastM&&+lastM.weight>0?+lastM.weight:null;
  let weightDelta=firstM&&lastM&&+firstM.weight>0&&+lastM.weight>0?(+lastM.weight-+firstM.weight):null;
 
- let sets=(d.result_sets||[]).filter(x=>x.day&&inPeriod(x.day));
+ let programGroups=groupProgram(d.program||[]);
+ let programDays=Object.keys(programGroups);
+ if(window.clientProgressDay && !programGroups[window.clientProgressDay]) window.clientProgressDay=null;
+ let selectedDay=window.clientProgressDay||null;
+ let selectedNames=new Set(selectedDay?(programGroups[selectedDay]||[]).map(x=>(x.exercise||'').trim()).filter(Boolean):[]);
+
+ let sets=(d.result_sets||[]).filter(x=>x.day&&inPeriod(x.day)&&(selectedDay?selectedNames.has((x.exercise||'').trim()):false));
  let byExercise={};
  sets.forEach(s=>{
    let key=(s.exercise||'Вправа').trim();
@@ -906,11 +928,16 @@ function clientProgressHTML(d){
    let best=a=>a.slice().sort((x,y)=>(+y.weight||0)-(+x.weight||0)||(+y.reps||0)-(+x.reps||0))[0]||{};
    let a=best(firstSets),b=best(lastSets);
    return {name,dates,first:a,last:b,change:(+b.weight||0)-(+a.weight||0),count:dates.length};
- }).sort((a,b)=>b.count-a.count||b.change-a.change);
+ }).sort((a,b)=>{
+   let order=selectedDay?(programGroups[selectedDay]||[]).findIndex(x=>(x.exercise||'').trim()===a.name):-1;
+   let orderB=selectedDay?(programGroups[selectedDay]||[]).findIndex(x=>(x.exercise||'').trim()===b.name):-1;
+   return order-orderB;
+ });
 
  let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
+ let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.clientProgressDay='${esc(day).replace(/'/g,"&#39;")}';refreshClientProgress()">${esc(day)}</button>`).join('');
 
  return `<div id="clientProgress" class="client-progress-new">
   <div class="progress-hero">
@@ -918,7 +945,6 @@ function clientProgressHTML(d){
    <div class="progress-periods">${[['30','1 міс.'],['90','3 міс.'],['180','6 міс.'],['all','Увесь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="window.clientProgressPeriod='${v}';refreshClientProgress()">${t}</button>`).join('')}</div>
   </div>
 
-  ${exerciseRows.length?`<div class="card next-action-card"><span class="next-action-kicker">Найбільший прогрес</span><h2>${esc(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].name)}</h2><p class="muted">${fmtProgress(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].first.weight||0)} кг → <strong>${fmtProgress(exerciseRows.slice().sort((a,b)=>b.change-a.change)[0].last.weight||0)} кг</strong></p></div>`:''}
   <div class="progress-stats">
    <div class="progress-stat"><span>Тренувань</span><strong>${sessions.length}</strong><small>${periodLabel}</small></div>
    <div class="progress-stat"><span>Вага</span><strong>${statWeight}</strong><small>${lastM?.day?formatProgressDate(lastM.day):'Немає даних'}</small></div>
@@ -926,8 +952,9 @@ function clientProgressHTML(d){
   </div>
 
   <div class="card progress-section">
-   <div class="progress-section-head"><div><h2>Силові показники</h2><p class="muted">Як змінюються твої робочі ваги.</p></div></div>
-   ${exerciseRows.length?`<div class="strength-list">${exerciseRows.slice(0,window.clientStrengthAll?exerciseRows.length:5).map((x,i)=>strengthProgressCard(x,i)).join('')}</div>${exerciseRows.length>5?`<button class="dark progress-more" onclick="window.clientStrengthAll=!window.clientStrengthAll;refreshClientProgress()">${window.clientStrengthAll?'Згорнути':'Усі вправи'}</button>`:''}`:'<div class="progress-empty">Після кількох тренувань тут з’явиться динаміка робочих ваг.</div>'}
+   <div class="progress-section-head"><div><h2>Силові показники</h2><p class="muted">Обери тренувальний день і подивись прогрес вправ за вибраний період.</p></div></div>
+   ${programDays.length?`<div class="progress-day-grid">${dayButtons}</div>`:'<div class="progress-empty">Тренувальна програма ще не додана.</div>'}
+   ${selectedDay?`<div class="progress-selected-day"><strong>${esc(selectedDay)}</strong><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,i)).join('')}</div>`:'<div class="progress-empty">За цей період ще немає результатів для вправ цього дня.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
   </div>
 
   <div class="card progress-section">
