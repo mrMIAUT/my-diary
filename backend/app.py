@@ -748,6 +748,8 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 
 @app.get("/api/notifications/trainer/all")
 def get_all_trainer_notifications():
+    run("DELETE FROM notifications WHERE client_id NOT IN (SELECT id FROM clients)")
+
     xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
                JOIN clients c ON c.id=n.client_id
                WHERE n.recipient='trainer'
@@ -760,6 +762,7 @@ def get_all_trainer_notifications():
                     ORDER BY COALESCE(s.finished_at,s.started_at) DESC""")
     existing={int(x.get("target_session_id") or 0) for x in xs}
     for s in pending:
+        if not s.get("client_name"): continue
         if int(s["sid"]) in existing: continue
         dt=s.get("finished_at") or s.get("started_at")
         xs.append({"id":-int(s["sid"]),"client_id":s["client_id"],"recipient":"trainer",
