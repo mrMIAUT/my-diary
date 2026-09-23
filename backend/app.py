@@ -748,9 +748,27 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 
 @app.get("/api/notifications/trainer/all")
 def get_all_trainer_notifications():
-    return rows("""SELECT n.*, COALESCE(NULLIF(c.first_name,''),c.name,'Клієнт') AS client_name
-                   FROM notifications n LEFT JOIN clients c ON c.id=n.client_id
-                   WHERE n.recipient='trainer' AND n.kind IN ('workout_review','workout_finished','comment') ORDER BY n.created_at DESC,n.id DESC LIMIT 100""")
+    xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
+               LEFT JOIN clients c ON c.id=n.client_id
+               WHERE n.recipient='trainer'
+               ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
+    # Backfill a bell item for finished workouts that still need review and were
+    # completed before workout-finished notifications were introduced.
+    pending=rows("""SELECT s.id AS sid,s.client_id,s.day_name,s.started_at,s.finished_at,c.name AS client_name
+                    FROM workout_sessions s JOIN clients c ON c.id=s.client_id
+                    WHERE s.status='finished' AND COALESCE(s.trainer_reviewed,FALSE)=FALSE
+                    ORDER BY COALESCE(s.finished_at,s.started_at) DESC""")
+    existing={int(x.get("target_session_id") or 0) for x in xs}
+    for s in pending:
+        if int(s["sid"]) in existing: continue
+        dt=s.get("finished_at") or s.get("started_at")
+        xs.append({"id":-int(s["sid"]),"client_id":s["client_id"],"recipient":"trainer",
+                   "kind":"workout_finished","message":f"{s['client_name']} завершив тренування «{s['day_name']}». Потрібно перевірити.",
+                   "is_read":False,"created_at":dt,"client_name":s["client_name"],
+                   "target_tab":"results","target_day":str(s.get("started_at") or "")[:10],
+                   "target_program_id":0,"target_session_id":s["sid"]})
+    xs.sort(key=lambda x:str(x.get("created_at") or ""),reverse=True)
+    return xs[:200]
 
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str):
