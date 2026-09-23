@@ -749,7 +749,7 @@ def review_workout(sid:int,x:WorkoutReviewIn):
 @app.get("/api/notifications/trainer/all")
 def get_all_trainer_notifications():
     xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
-               LEFT JOIN clients c ON c.id=n.client_id
+               JOIN clients c ON c.id=n.client_id
                WHERE n.recipient='trainer'
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
     # Backfill a bell item for finished workouts that still need review and were
