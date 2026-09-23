@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v36.1"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v36.2"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -662,7 +662,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
   </div>
 </div>
 <div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v36.1');
+console.info('Є ПЛАН build 2026-09-23-v36.2');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -937,7 +937,7 @@ function clientProgressHTML(d){
  let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
- let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.clientProgressDay='${esc(day).replace(/'/g,"&#39;")}';refreshClientProgress()">${esc(day)}</button>`).join('');
+ let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.clientProgressDay=(window.clientProgressDay==='${esc(day).replace(/'/g,"&#39;")}'?null:'${esc(day).replace(/'/g,"&#39;")}');refreshClientProgress()">${esc(day)}</button>`).join('');
 
  return `<div id="clientProgress" class="client-progress-new">
   <div class="progress-hero">
