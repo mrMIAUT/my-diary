@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v27"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-23-v28"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -525,8 +525,14 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .measurement-delete{display:inline-flex!important;align-items:center;justify-content:center;margin-top:14px!important;padding:10px 14px!important;background:#35191b!important;border:1px solid #653034!important;color:#ffb7bb!important;border-radius:12px!important;font-weight:800!important}
 .phone-notify-enable.push-enabled{background:#153e25!important;border-color:#2f7045!important;color:#baf3c9!important}
+
+.measurement-history-card .measurement-delete{
+ display:flex!important;width:100%!important;margin-top:16px!important;padding:12px 14px!important;
+ background:#3a191c!important;border:1px solid #7a343a!important;color:#ffb9bd!important;
+ border-radius:14px!important;font-size:15px!important;font-weight:800!important;
+}
 </style></head><body><div id="app"></div><script>
-console.info('Є ПЛАН build 2026-09-23-v27');
+console.info('Є ПЛАН build 2026-09-23-v28');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
 const OFFDB='eplan-offline-v1', OFFVER=1;
@@ -1539,7 +1545,13 @@ function measurementFormHTML(cid,early=false){
 }
 function measurementHistoryCard(x,prev,cid=null){
  let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
- return `<div class="measurement-history-card"><div class="measurement-history-date">${formatProgressDate(x.day)}</div><div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div>${cid&&x.id?`<button class="measurement-delete" onclick="event.stopPropagation();deleteMeasurement(${cid},${x.id},'${x.day}')">Видалити замір</button>`:''}</div>`;
+ let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0);
+ let canDelete=ownerId>0&&session&&session.role==='client'&&x.id;
+ return `<div class="measurement-history-card">
+   <div class="measurement-history-date">${formatProgressDate(x.day)}</div>
+   <div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div>
+   ${canDelete?`<button type="button" class="measurement-delete" onclick="deleteMeasurement(${ownerId},${+x.id},'${x.day}')">🗑 Видалити цей замір</button>`:''}
+ </div>`;
 }
 function clientMeasurementsHTML(d,cid){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)),last=xs[xs.length-1],prev=xs[xs.length-2],left=last?measurementDaysLeft(last.day):0,due=!last||left<=0;
@@ -1579,8 +1591,11 @@ async function saveMeasurement(cid,ev=null){
 }
 async function deleteMeasurement(cid,mid,day){
  if(!confirm(`Видалити замір за ${formatProgressDate(day)}? Цю дію не можна скасувати.`))return;
- await api('/measurements/'+mid+'?client_id='+cid,{method:'DELETE'});
- let d=await api('/client/'+cid);window.currentClientData=d;showClientSection('measurements');
+ try{
+   await api('/measurements/'+mid+'?client_id='+cid,{method:'DELETE'});
+   let d=await api('/client/'+cid);window.currentClientData=d;
+   showClientSection('measurements');
+ }catch(e){alert(e?.message||'Не вдалося видалити замір')}
 }
 function exerciseHistoryDates(d,pid){
  return [...new Set((d.result_sets||[]).filter(r=>r.program_id===pid).map(r=>r.day))].sort();
