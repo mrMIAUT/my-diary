@@ -1261,7 +1261,7 @@ function cardioHTML(d,cid,readonly=false){
  return `<div class="card client-collapsible"><button class="exercise-toggle" onclick="toggleClientPanel('cardioPanel',this)"><span><strong>Кардіо та активність сьогодні</strong></span><span class="arrow">⌄</span></button><div id="cardioPanel" class="client-collapsible-body hidden">${cardioEditHTML(cid,cur).replace(/^<div class="card">|<\/div>$/g,'')}</div></div>`;
 }
 function cardioEditHTML(cid,cur={}){
- return `<div class="card"><h2>Кардіо та активність за сьогодні</h2><p class="muted">Можна заповнити кроки, кардіо або обидва.</p><div class="grid"><select id="cardioType" onchange="toggleCardioFields()"><option value="">Без окремого кардіо</option>${['Доріжка','Орбітрек','Велосипед'].map(v=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="Кроків за день"></div><div id="cardioFields" class="grid" style="margin-top:12px"><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="Хвилин"><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="Швидкість"><input id="cardioIncline" type="number" min="0" step="0.5" value="${cur.incline||''}" placeholder="Нахил, %"></div><button style="margin-top:12px" onclick="saveCardio(${cid})">Зберегти активність</button></div>`;
+ return `<div class="card"><h2>Кардіо та активність за сьогодні</h2><p class="muted">Можна заповнити кроки, кардіо або обидва.</p><div class="grid"><select id="cardioType" onchange="toggleCardioFields()"><option value="">Без окремого кардіо</option>${['Доріжка','Орбітрек','Велосипед'].map(v=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="Кроків за день"></div><div id="cardioFields" class="grid" style="margin-top:12px"><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="Хвилин"><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="Швидкість"><input id="cardioIncline" type="number" min="0" step="0.5" value="${cur.incline||''}" placeholder="Нахил, %"></div><button style="margin-top:12px" onclick="saveCardio(${cid},event.currentTarget)">Зберегти активність</button></div>`;
 }
 function editCardio(cid){
  let d=window.clientData||window.currentClientData;
@@ -1271,11 +1271,15 @@ function editCardio(cid){
  if(card){let holder=document.createElement('div');holder.innerHTML=cardioEditHTML(cid,cur);card.replaceWith(holder.firstElementChild);setTimeout(toggleCardioFields,0)}
 }
 function toggleCardioFields(){let f=$('#cardioFields'),t=$('#cardioType');if(f&&t)f.style.display=t.value?'grid':'none'}
-async function saveCardio(cid){
+async function saveCardio(cid,button=null){
  let body={client_id:cid,day:isoToday(),cardio_type:cardioType.value,minutes:+cardioMinutes.value||0,speed:+cardioSpeed.value||0,incline:+cardioIncline.value||0,steps:+dailySteps.value||0};
  if(!body.cardio_type&&!body.steps)return alert('Вкажи кроки або обери вид кардіо');
  if(body.cardio_type&&!body.minutes)return alert('Вкажи тривалість кардіо');
- await api('/cardio',{method:'POST',body:JSON.stringify(body)});clientCabinet(cid)
+ let restore=setActionLoading(button,'Зберігаємо…');
+ try{
+  await api('/cardio',{method:'POST',body:JSON.stringify(body)});
+  await clientCabinet(cid);
+ }catch(e){restore();alert(e.message||'Не вдалося зберегти активність. Перевір інтернет і спробуй ще раз.')}
 }
 function rirPlan(x){
  let a=String(x?.rir_by_set||'').split(',').map(v=>v.trim()).filter(Boolean);
@@ -2043,22 +2047,25 @@ function previousSets(d,pid){
 }
 function setRows(x,d){let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`,rp=rirPlan(x);for(let n=1;n<=x.sets;n++)h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" placeholder="кг"><input id="r${x.id}_${n}" type="number" placeholder="${esc(x.reps)}"><input id="i${x.id}_${n}" type="number" value="${rp[n-1]}" min="0" max="10"></div>`;return previousSets(d,x.id)+h}
 
-async function addDailyNutrition(cid,nid=null){
+async function addDailyNutrition(cid,nid=null,button=null){
  let k=+$('#dkcal').value||0,p=+$('#dprotein').value||0,f=+$('#dfat').value||0,c=+$('#dcarbs').value||0;
  if(!k&&!p&&!f&&!c)return alert('Вкажи дані харчування');
- if(nid) await api('/nutrition/'+nid,{method:'PATCH',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
- else await api('/nutrition',{method:'POST',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
- clientCabinet(cid)
+ let restore=setActionLoading(button,'Зберігаємо…');
+ try{
+  if(nid) await api('/nutrition/'+nid,{method:'PATCH',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
+  else await api('/nutrition',{method:'POST',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
+  await clientCabinet(cid);
+ }catch(e){restore();alert(e.message||'Не вдалося зберегти БЖВ. Перевір інтернет і спробуй ще раз.')}
 }
 function editDailyNutrition(cid,nid){
  let d=window.currentClientData||{},x=(d.nutrition||[]).find(z=>z.id===nid);if(!x)return;
  let box=$('#dailyNutritionBox');if(!box)return;
- box.innerHTML=`<h2>Редагувати БЖВ</h2><div class="grid"><input id="dkcal" type="number" value="${x.kcal||0}" placeholder="Ккал"><input id="dprotein" type="number" value="${x.protein||0}" placeholder="Білки, г"><input id="dfat" type="number" value="${x.fat||0}" placeholder="Жири, г"><input id="dcarbs" type="number" value="${x.carbs||0}" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid},${nid})">Зберегти зміни</button>`;
+ box.innerHTML=`<h2>Редагувати БЖВ</h2><div class="grid"><input id="dkcal" type="number" value="${x.kcal||0}" placeholder="Ккал"><input id="dprotein" type="number" value="${x.protein||0}" placeholder="Білки, г"><input id="dfat" type="number" value="${x.fat||0}" placeholder="Жири, г"><input id="dcarbs" type="number" value="${x.carbs||0}" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid},${nid},event.currentTarget)">Зберегти зміни</button>`;
 }
 function dailyNutritionHTML(d,cid){
  let today=(d.nutrition||[]).filter(x=>x.day===isoToday()).sort((a,b)=>b.id-a.id),x=today[0];
  if(x)return `<div class="card client-collapsible done" id="dailyNutritionBox"><button class="exercise-toggle" onclick="toggleClientPanel('bjuPanel',this)"><span><strong>БЖВ за сьогодні</strong><span class="client-status" style="display:block;margin-top:5px">Виконано ✓</span></span><span class="arrow">⌄</span></button><div id="bjuPanel" class="client-collapsible-body hidden"><div class="daily-macros-line"><div class="daily-macro"><strong>${x.kcal}</strong><br>ккал</div><div class="daily-macro"><strong>${x.protein}</strong><br>Б</div><div class="daily-macro"><strong>${x.fat}</strong><br>Ж</div><div class="daily-macro"><strong>${x.carbs}</strong><br>В</div></div><button class="dark compact-edit" style="margin-top:12px" onclick="editDailyNutrition(${cid},${x.id})">Редагувати</button></div></div>`;
- return `<div class="card client-collapsible" id="dailyNutritionBox"><button class="exercise-toggle" onclick="toggleClientPanel('bjuPanel',this)"><span><strong>БЖВ за сьогодні</strong></span><span class="arrow">⌄</span></button><div id="bjuPanel" class="client-collapsible-body hidden"><div class="grid"><input id="dkcal" type="number" placeholder="Ккал"><input id="dprotein" type="number" placeholder="Білки, г"><input id="dfat" type="number" placeholder="Жири, г"><input id="dcarbs" type="number" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid})">Зберегти БЖВ</button></div></div>`;
+ return `<div class="card client-collapsible" id="dailyNutritionBox"><button class="exercise-toggle" onclick="toggleClientPanel('bjuPanel',this)"><span><strong>БЖВ за сьогодні</strong></span><span class="arrow">⌄</span></button><div id="bjuPanel" class="client-collapsible-body hidden"><div class="grid"><input id="dkcal" type="number" placeholder="Ккал"><input id="dprotein" type="number" placeholder="Білки, г"><input id="dfat" type="number" placeholder="Жири, г"><input id="dcarbs" type="number" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid},null,event.currentTarget)">Зберегти БЖВ</button></div></div>`;
 }
 function toggleClientPanel(id,btn){let el=$('#'+id);if(!el)return;el.classList.toggle('hidden');let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';setTimeout(toggleCardioFields,0)}
 let previewWorkoutDay=null;
