@@ -1,4 +1,4 @@
-const VERSION='eplan-v56';
+const VERSION='eplan-v57';
 let restTimerHandle=null;
 
 self.addEventListener('install',event=>{
