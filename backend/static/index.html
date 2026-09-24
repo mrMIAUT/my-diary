@@ -1290,6 +1290,21 @@ function showTab(id,btn,push=true){
  // Cabinet sections stay inside the same browser-history entry, but remember the current section.
  if(session?.role==='trainer'&&selected&&history.state?.eplanPage==='client') history.replaceState({...history.state,eplanTab:id},'',location.href);
 }
+// Unsaved daily entries are private drafts on this device, not completed records.
+const dailyDraftFields={cardio:['cardioType','dailySteps','cardioMinutes','cardioSpeed','cardioIncline'],nutrition:['dkcal','dprotein','dfat','dcarbs']};
+function dailyDraftKey(kind,cid){return 'eplanDailyDraftV1_'+kind+'_'+cid+'_'+isoToday()}
+function getDailyDraft(kind,cid){try{return JSON.parse(localStorage.getItem(dailyDraftKey(kind,cid))||'null')}catch(e){return null}}
+function clearDailyDraft(kind,cid){try{localStorage.removeItem(dailyDraftKey(kind,cid))}catch(e){}}
+function storeDailyDraft(kind,cid){if(!cid)return;let data={};for(let id of dailyDraftFields[kind]){let el=document.getElementById(id);if(el)data[id]=el.value}if(!Object.keys(data).length)return;try{localStorage.setItem(dailyDraftKey(kind,cid),JSON.stringify(data))}catch(e){}}
+function restoreDailyDraft(kind,cid){let data=getDailyDraft(kind,cid);if(!data)return false;let any=false;for(let id of dailyDraftFields[kind]){let el=document.getElementById(id);if(el&&Object.prototype.hasOwnProperty.call(data,id)){el.value=data[id];any=true}}if(kind==='cardio')toggleCardioFields();return any}
+function restoreTodayDrafts(cid,hasCardio,hasNutrition){
+ if(hasCardio&&getDailyDraft('cardio',cid)){let p=document.getElementById('cardioPanel');if(p){p.classList.remove('hidden');let t=p.closest('.client-collapsible')?.querySelector('.exercise-toggle');t?.classList.add('open');let a=t?.querySelector('.arrow');if(a)a.textContent='⌃';restoreDailyDraft('cardio',cid)}}
+ if(hasNutrition&&getDailyDraft('nutrition',cid)){let p=document.getElementById('bjuPanel');if(p){p.classList.remove('hidden');let t=p.closest('.client-collapsible')?.querySelector('.exercise-toggle');t?.classList.add('open');let a=t?.querySelector('.arrow');if(a)a.textContent='⌃';restoreDailyDraft('nutrition',cid)}}
+}
+// Delegation survives rerenders and captures typing as well as select changes.
+document.addEventListener('input',captureDailyDraft,true);
+document.addEventListener('change',captureDailyDraft,true);
+function captureDailyDraft(e){if(session?.role!=='client')return;let id=e.target?.id,cid=session.client_id;if(!cid||!id)return;if(dailyDraftFields.cardio.includes(id))storeDailyDraft('cardio',cid);else if(dailyDraftFields.nutrition.includes(id))storeDailyDraft('nutrition',cid)}
 function cardioHTML(d,cid,readonly=false){
  let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
  if(readonly)return `<div class="card"><h2>Кардіо та активність</h2>${xs.length?xs.slice(0,30).map(x=>`<div class="exercise"><div class="between"><strong>${esc(x.day)}</strong><span>${x.steps||0} кроків</span></div>${x.cardio_type?`<div class="muted" style="margin-top:6px">${esc(x.cardio_type)} · ${x.minutes||0} хв${x.speed?` · швидкість ${x.speed}`:''}${x.incline?` · нахил ${x.incline}%`:''}</div>`:'<div class="muted" style="margin-top:6px">Без окремого кардіо</div>'}</div>`).join(''):'<p class="muted">Даних ще немає.</p>'}</div>`;
@@ -1309,7 +1324,7 @@ function editCardio(cid){
  panel.innerHTML=cardioEditHTML(cid,cur).replace(/^<div class="card">|<\/div>$/g,'');
  let toggle=panel.closest('.client-collapsible')?.querySelector('.exercise-toggle');
  if(toggle){toggle.classList.add('open');let arrow=toggle.querySelector('.arrow');if(arrow)arrow.textContent='⌃'}
- setTimeout(toggleCardioFields,0);
+ setTimeout(()=>{restoreDailyDraft('cardio',cid);toggleCardioFields()},0);
 }
 function toggleCardioFields(){let f=$('#cardioFields'),t=$('#cardioType');if(f&&t)f.style.display=t.value?'grid':'none'}
 async function saveCardio(cid,button=null){
@@ -1319,6 +1334,7 @@ async function saveCardio(cid,button=null){
  let restore=setActionLoading(button,'Зберігаємо…');
  try{
   await api('/cardio',{method:'POST',body:JSON.stringify(body)});
+  clearDailyDraft('cardio',cid);
   await clientCabinet(cid);
  }catch(e){restore();alert(e.message||'Не вдалося зберегти активність. Перевір інтернет і спробуй ще раз.')}
 }
@@ -2107,13 +2123,14 @@ async function addDailyNutrition(cid,nid=null,button=null){
  try{
   if(nid) await api('/nutrition/'+nid,{method:'PATCH',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
   else await api('/nutrition',{method:'POST',body:JSON.stringify({client_id:cid,kcal:k,protein:p,fat:f,carbs:c})});
+  clearDailyDraft('nutrition',cid);
   await clientCabinet(cid);
  }catch(e){restore();alert(e.message||'Не вдалося зберегти БЖВ. Перевір інтернет і спробуй ще раз.')}
 }
 function editDailyNutrition(cid,nid){
  let d=window.currentClientData||{},x=(d.nutrition||[]).find(z=>z.id===nid);if(!x)return;
  let box=$('#dailyNutritionBox');if(!box)return;
- box.innerHTML=`<h2>Редагувати БЖВ</h2><div class="grid"><input id="dkcal" type="number" value="${x.kcal||0}" placeholder="Ккал"><input id="dprotein" type="number" value="${x.protein||0}" placeholder="Білки, г"><input id="dfat" type="number" value="${x.fat||0}" placeholder="Жири, г"><input id="dcarbs" type="number" value="${x.carbs||0}" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid},${nid},event.currentTarget)">Зберегти зміни</button>`;
+ box.innerHTML=`<h2>Редагувати БЖВ</h2><div class="grid"><input id="dkcal" type="number" value="${x.kcal||0}" placeholder="Ккал"><input id="dprotein" type="number" value="${x.protein||0}" placeholder="Білки, г"><input id="dfat" type="number" value="${x.fat||0}" placeholder="Жири, г"><input id="dcarbs" type="number" value="${x.carbs||0}" placeholder="Вуглеводи, г"></div><br><button onclick="addDailyNutrition(${cid},${nid},event.currentTarget)">Зберегти зміни</button>`;restoreDailyDraft('nutrition',cid);
 }
 function dailyNutritionHTML(d,cid){
  let today=(d.nutrition||[]).filter(x=>x.day===isoToday()).sort((a,b)=>b.id-a.id),x=today[0];
@@ -2465,7 +2482,7 @@ async function clientCabinet(id){
  if(active){
    programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id},this)">Завершити тренування</button></div></div>`;
  }
- currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0);setTimeout(maybeShowClientOnboarding,180)
+ currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(()=>restoreTodayDrafts(id,hasFeature('cardio',c)&&!(d.cardio||[]).some(x=>x.day===isoToday()),hasFeature('nutrition',c)&&!(d.nutrition||[]).some(x=>x.day===isoToday())),0);setTimeout(toggleCardioFields,0);setTimeout(maybeShowClientOnboarding,180)
 }
 
 function focusNextUnfinishedExercise(pid){
