@@ -738,16 +738,22 @@ def start_workout(x:WorkoutStartIn):
 
 @app.post("/api/workout/{sid}/finish")
 def finish_workout(sid:int):
-    # Serialize finish requests so a double tap/retry cannot create duplicate notifications.
-    with db() as lock_conn:
-        lock_conn.execute("SELECT pg_advisory_xact_lock(%s)",(sid,))
-        session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
-        if not session:
+    # Lock this workout row in one DB transaction. This makes finish idempotent:
+    # simultaneous taps/retries cannot finish it twice or create duplicate notifications.
+    with con() as c:
+        row=c.execute("SELECT * FROM workout_sessions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
+        if not row:
             raise HTTPException(404,"Тренування не знайдено")
+        session=dict(row)
         was_finished=session.get("status")=="finished"
         if not was_finished:
-            run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE id=?",(sid,))
-        finished=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+            row=c.execute("""UPDATE workout_sessions
+                             SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP)
+                             WHERE id=%s RETURNING *""",(sid,)).fetchone()
+            finished=dict(row)
+        else:
+            finished=session
+        c.commit()
     if not was_finished:
         client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
         if client_info:
