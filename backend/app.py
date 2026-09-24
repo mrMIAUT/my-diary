@@ -310,28 +310,28 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V61 diagnostic: serve the real deployed index.html with ONLY its first
-    # inline <script>. Scripts 2+ are removed server-side.
+    # V62 diagnostic: corrected script isolation. Serve the real deployed index.html
+    # with ONLY its first inline <script>. Scripts 2+ are removed server-side.
     import re
     html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
-    scripts=list(re.finditer(r"<script\\b[^>]*>[\\s\\S]*?</script\\s*>", html, flags=re.IGNORECASE))
+    scripts=list(re.finditer(r"<script\b[^>]*>[\s\S]*?</script\s*>", html, flags=re.IGNORECASE))
     total=len(scripts)
     if scripts:
         first=scripts[0]
         html=html[:first.end()] + re.sub(
-            r"<script\\b[^>]*>[\\s\\S]*?</script\\s*>", "", html[first.end():], flags=re.IGNORECASE
+            r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html[first.end():], flags=re.IGNORECASE
         )
     probe=r"""
 <style>
-#v61Probe{position:fixed!important;z-index:2147483647!important;left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px)!important;background:#111214!important;border:1px solid #ffd000!important;border-radius:14px!important;padding:12px 14px!important;color:#f5f5f5!important;font:13px/1.35 system-ui,-apple-system,sans-serif!important;display:block!important;visibility:visible!important;opacity:1!important}
-#v61Probe b{color:#ffd000!important}#v61Probe code{color:#ddd!important}
+#v62Probe{position:fixed!important;z-index:2147483647!important;left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px)!important;background:#111214!important;border:1px solid #ffd000!important;border-radius:14px!important;padding:12px 14px!important;color:#f5f5f5!important;font:13px/1.35 system-ui,-apple-system,sans-serif!important;display:block!important;visibility:visible!important;opacity:1!important}
+#v62Probe b{color:#ffd000!important}#v62Probe code{color:#ddd!important}
 </style>
-<div id="v61Probe"><b>V61 · SCRIPT 1 ONLY</b><br><code>/app · script 1 enabled · scripts 2+ disabled</code></div>
+<div id="v62Probe"><b>V62 · SCRIPT 1 ONLY · CORRECTED</b><br><code>/app · script 1 enabled · scripts 2+ disabled</code></div>
 """
     # Put the marker immediately after <body>, outside #app, so app rendering
     # cannot erase it merely by replacing #app contents.
-    html=re.sub(r"(<body\\b[^>]*>)", r"\\1"+probe, html, count=1, flags=re.IGNORECASE)
-    html=html.replace('</body>', f'<div style="display:none" data-v61-total-scripts="{total}"></div></body>', 1)
+    html=re.sub(r"(<body\b[^>]*>)", r"\1"+probe, html, count=1, flags=re.IGNORECASE)
+    html=html.replace('</body>', f'<div style="display:none" data-v62-total-scripts="{total}"></div></body>', 1)
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate",
         "Pragma":"no-cache", "Expires":"0"
