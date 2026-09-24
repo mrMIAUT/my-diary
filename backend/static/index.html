@@ -776,8 +776,13 @@ async function offlineStatus(msg,kind=''){
  el.textContent=msg;el.className='offline-pill show '+kind;
  if(msg==='✓ Синхронізовано')setTimeout(()=>el.classList.remove('show'),1800);
 }
+const apiMutationsInFlight=new Map();
 async function api(path,opt={}){
  let method=(opt.method||'GET').toUpperCase();
+ let mutation=!['GET','HEAD','OPTIONS'].includes(method);
+ let mutationKey=mutation?method+'|'+path+'|'+String(opt.body||''):'';
+ if(mutation&&apiMutationsInFlight.has(mutationKey))return apiMutationsInFlight.get(mutationKey);
+ let task=(async()=>{
  try{
    let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
    if(!r.ok){let x;try{x=await r.json()}catch{};throw Object.assign(new Error(x?.detail||'Помилка сервера'),{server:true,status:r.status})}
@@ -800,6 +805,10 @@ async function api(path,opt={}){
    }
    throw new Error('Ця дія потребує інтернету.');
  }
+ })();
+ if(!mutation)return task;
+ apiMutationsInFlight.set(mutationKey,task);
+ try{return await task}finally{apiMutationsInFlight.delete(mutationKey)}
 }
 let offSyncing=false;
 async function syncOfflineQueue(){
@@ -2052,14 +2061,21 @@ async function startWorkout(cid,day,btn=null){
    if(button){button.disabled=false;button.dataset.starting='0';button.textContent=button.dataset.oldText||'Почати тренування'}
  }
 }
-async function finishWorkout(cid,sid){
+async function finishWorkout(cid,sid,button=null){
+ if(button?.dataset.finishing==='1')return;
  if(!confirm('Завершити тренування?'))return;
+ if(button){button.dataset.finishing='1';button.disabled=true}
+ try{
  await api('/workout/'+sid+'/finish',{method:'POST'});
  localStorage.removeItem('activeWorkout_'+cid);previewWorkoutDay=null;window.workoutExerciseChoices={};
  let d=await api('/client/'+cid);window.currentClientData=d;
  let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===sessionDay(s)));
  let exercises=new Set(sets.map(x=>x.program_id)).size,cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{}));
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Робочих підходів</span><div class="summary-number">${sets.length}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
+ }catch(e){
+  alert(e?.message||'Не вдалося завершити тренування. Перевір інтернет і спробуй ще раз.');
+  if(button){button.dataset.finishing='0';button.disabled=false}
+ }
 }
 function workoutCycleState(d,groups){
  let days=Object.keys(groups||{}),done=[];
@@ -2351,7 +2367,7 @@ async function clientCabinet(id){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id})">Завершити тренування</button></div></div>`;
+   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id},this)">Завершити тренування</button></div></div>`;
  }
  currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
 }
