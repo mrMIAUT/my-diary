@@ -175,6 +175,16 @@ def init():
         )""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
+        # A program exercise can have only one saved value for a given set number on a given day.
+        # Clean legacy duplicate rows first, then prevent them from being created again.
+        c.execute("""DELETE FROM result_sets a USING result_sets b
+                     WHERE a.id>b.id
+                       AND a.client_id=b.client_id
+                       AND a.program_id=b.program_id
+                       AND a.day=b.day
+                       AND a.set_number=b.set_number""")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_result_sets_client_program_day_set
+                     ON result_sets(client_id,program_id,day,set_number)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
