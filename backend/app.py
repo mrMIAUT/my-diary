@@ -300,7 +300,25 @@ class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
 @app.get("/")
-def home(): return FileResponse(BASE/"static"/"index.html")
+def home():
+    return FileResponse(BASE/"static"/"index.html", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
+
+@app.get("/app")
+def pwa_app():
+    return FileResponse(BASE/"static"/"index.html", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
+
+@app.get("/app-diag")
+def pwa_app_diag():
+    p=BASE/"static"/"index.html"
+    html=p.read_text(encoding="utf-8")
+    html=html.replace("},2500);", "},15000);", 1)
+    diag = '<script id="eplanDiag3">\n(function(){\n var events=[],started=Date.now();\n function safe(v){try{return String(v)}catch(_){return \'[unprintable]\'}}\n function esc(s){return safe(s).replace(/[&<>]/g,function(c){return {\'&\':\'&amp;\',\'<\':\'&lt;\',\'>\':\'&gt;\'}[c]})}\n function standalone(){return !!(window.matchMedia&&matchMedia(\'(display-mode: standalone)\').matches)||navigator.standalone===true}\n function snapshot(){var app=document.getElementById(\'app\'),sp=document.getElementById(\'eplanSplash\'),storage=\'OK\';try{localStorage.setItem(\'eplan_diag3\',\'1\');localStorage.removeItem(\'eplan_diag3\')}catch(e){storage=e.name+\': \'+e.message}return [\'DIAG 3 · \'+new Date().toISOString(),\'standalone: \'+standalone(),\'url: \'+location.href,\'readyState: \'+document.readyState,\'app children: \'+(app&&app.children?app.children.length:\'missing\'),\'app text length: \'+(app?safe(app.textContent||\'\').length:\'missing\'),\'splash: \'+(sp?\'present\':\'missing\'),\'localStorage: \'+storage,\'serviceWorker controller: \'+(navigator.serviceWorker&&navigator.serviceWorker.controller?\'YES\':\'NO\'),\'events: \'+events.length].join(\'\\n\')}\n function show(force){var box=document.getElementById(\'eplanDiag3Box\');if(!box){box=document.createElement(\'div\');box.id=\'eplanDiag3Box\';box.style.cssText=\'position:fixed;z-index:2147483647;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-height:70vh;overflow:auto;background:#0b0b0d;color:#f4f4f5;border:2px solid #ffd000;border-radius:18px;padding:14px;font:13px/1.45 -apple-system,BlinkMacSystemFont,Arial,sans-serif;box-shadow:0 12px 50px #000\';document.body.appendChild(box)}if(!force&&events.length===0){box.style.display=\'none\';return}box.style.display=\'block\';var ev=events.map(function(e,i){return \'\\n#\'+(i+1)+\' [\'+e.t+\'ms] \'+e.kind+\'\\n\'+e.msg+(e.src?\'\\n\'+e.src+\':\'+e.line+\':\'+e.col:\'\')}).join(\'\\n\');box.innerHTML=\'<div style="font-size:18px;font-weight:900;margin-bottom:8px"><span style="color:#ffd000">Є ПЛАН</span> · JS DIAG 3</div><pre style="white-space:pre-wrap;word-break:break-word;margin:0;color:#ddd">\'+esc(snapshot()+ev)+\'</pre><button id="eplanDiagRefresh" style="margin-top:12px;width:100%;padding:12px;border:0;border-radius:12px;background:#ffd000;color:#090909;font-weight:900">Оновити діагностику</button>\';document.getElementById(\'eplanDiagRefresh\').onclick=function(){show(true)}}\n function add(kind,msg,src,line,col){events.push({t:Date.now()-started,kind:kind,msg:safe(msg),src:safe(src||\'\'),line:line||0,col:col||0});show(true)}\n window.addEventListener(\'error\',function(e){add(\'error\',e.message,e.filename,e.lineno,e.colno)},true);\n window.addEventListener(\'unhandledrejection\',function(e){var r=e.reason;add(\'unhandledrejection\',r&&r.stack?r.stack:(r&&r.message?r.message:r),\'\',0,0)});\n window.__eplanDiag3={add:add,show:show,events:events};\n document.addEventListener(\'DOMContentLoaded\',function(){setTimeout(function(){var app=document.getElementById(\'app\');if(!(app&&app.children&&app.children.length))add(\'boot-timeout\',\'Через 4 секунди #app порожній. Основний код не відрендерив інтерфейс.\',\'\',0,0)},4000)});\n setTimeout(function(){show(false)},50);\n})();\n</script>'
+    marker='<div id="app"></div>'
+    if marker in html:
+        html=html.replace(marker, marker+diag, 1)
+    else:
+        html=html.replace('<body>', '<body>'+diag, 1)
+    return HTMLResponse(html, headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
 @app.get("/sw.js")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
 @app.get("/manifest.webmanifest")
