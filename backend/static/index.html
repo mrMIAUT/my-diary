@@ -1070,7 +1070,16 @@ new MutationObserver(()=>syncOverlayLock()).observe(document.body,{childList:tru
 new MutationObserver(ms=>{if(appLanguage==='en')ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)translateTree(n);else if(n.nodeType===3)n.nodeValue=enText(n.nodeValue)}))}).observe(document.body,{childList:true,subtree:true});
 setTimeout(()=>translateTree(document.body),0);
 
-function logout(){localStorage.removeItem('fitSession');session=null;renderLogin()}
+function logout(){
+ try{localStorage.removeItem('fitSession')}catch(e){}
+ session=null;selected=null;window.currentClientData=null;
+ document.querySelectorAll('.modal,#sideOverlay,#sideDrawer').forEach(x=>x.remove());
+ document.body.classList.remove('overlay-open');
+ if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
+ document.querySelector('#floatingRestTimer')?.remove();
+ try{history.replaceState({},'',location.pathname)}catch(e){}
+ requestAnimationFrame(()=>renderLogin());
+}
 function renderLogin(){
  let token=new URLSearchParams(location.search).get('reset');
  if(token)return renderResetPassword(token);
@@ -1101,9 +1110,12 @@ function syncPasswordEye(btn,input){
  if(!btn||!input)return;
  btn.classList.add('password-eye-btn');
  let hidden=input.type==='password';
- let icon=passwordEyeSVG(hidden);
- if(btn.innerHTML!==icon)btn.innerHTML=icon;
+ let state=hidden?'hidden':'visible';
  let label=hidden?'Показати пароль':'Сховати пароль';
+ if(btn.dataset.eyeState!==state){
+   btn.dataset.eyeState=state;
+   btn.innerHTML=passwordEyeSVG(hidden);
+ }
  if(btn.getAttribute('aria-label')!==label)btn.setAttribute('aria-label',label);
  if(btn.title!==label)btn.title=label;
 }
