@@ -310,23 +310,26 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V63 diagnostic: corrected script isolation. Serve the real deployed index.html
-    # with ONLY its first inline <script>. Scripts 2+ are removed server-side.
+    # V64 diagnostic: serve the real deployed index.html with exactly the first two scripts. Scripts 3+ are removed server-side.
     import re
     html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
     scripts=list(re.finditer(r"<script\b[^>]*>[\s\S]*?</script\s*>", html, flags=re.IGNORECASE))
     total=len(scripts)
-    if scripts:
-        first=scripts[0]
-        html=html[:first.end()] + re.sub(
-            r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html[first.end():], flags=re.IGNORECASE
+    if len(scripts) >= 2:
+        second=scripts[1]
+        html=html[:second.end()] + re.sub(
+            r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html[second.end():], flags=re.IGNORECASE
+        )
+    elif len(scripts) == 1:
+        html=html[:scripts[0].end()] + re.sub(
+            r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html[scripts[0].end():], flags=re.IGNORECASE
         )
     probe=r"""
 <style>
 #v62Probe{position:fixed!important;z-index:2147483647!important;left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px)!important;background:#111214!important;border:1px solid #ffd000!important;border-radius:14px!important;padding:12px 14px!important;color:#f5f5f5!important;font:13px/1.35 system-ui,-apple-system,sans-serif!important;display:block!important;visibility:visible!important;opacity:1!important}
 #v62Probe b{color:#ffd000!important}#v62Probe code{color:#ddd!important}
 </style>
-<div id="v62Probe"><b>V63 · SCRIPTS 1 + 2</b><br><code>/app · scripts 1 + 2 enabled · script 3+ disabled</code></div>
+<div id="v62Probe"><b>V64 · REAL SCRIPTS 1 + 2</b><br><code>/app · exactly scripts 1 + 2 enabled · scripts 3+ disabled</code></div>
 """
     # Put the marker immediately after <body>, outside #app, so app rendering
     # cannot erase it merely by replacing #app contents.
