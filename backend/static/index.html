@@ -787,6 +787,20 @@ function setActionLoading(btn,text='Зберігаємо…'){
  return ()=>{btn.disabled=oldDisabled;btn.dataset.actionLoading='0';btn.textContent=oldText};
 }
 const apiMutationsInFlight=new Map();
+async function eplanFetch(url,opt={},timeoutMs=15000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ try{return await fetch(url,{...opt,signal:controller.signal})}
+ catch(e){
+  if(e?.name==='AbortError')throw Object.assign(new Error('Сервер довго не відповідає. Перевір інтернет і спробуй ще раз.'),{network:true,timeout:true});
+  throw Object.assign(e||new Error('Помилка мережі'),{network:true});
+ }finally{clearTimeout(timer)}
+}
+function friendlyApiError(status,detail=''){
+ if(status>=500)return 'Сервіс тимчасово недоступний. Дані не втрачено — спробуй ще раз через кілька секунд.';
+ if(status===429)return 'Забагато запитів. Зачекай кілька секунд і спробуй ще раз.';
+ return detail||'Не вдалося виконати дію. Спробуй ще раз.';
+}
 async function api(path,opt={}){
  let method=(opt.method||'GET').toUpperCase();
  let mutation=!['GET','HEAD','OPTIONS'].includes(method);
@@ -794,8 +808,8 @@ async function api(path,opt={}){
  if(mutation&&apiMutationsInFlight.has(mutationKey))return apiMutationsInFlight.get(mutationKey);
  let task=(async()=>{
  try{
-   let r=await fetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
-   if(!r.ok){let x;try{x=await r.json()}catch{};throw Object.assign(new Error(x?.detail||'Помилка сервера'),{server:true,status:r.status})}
+   let r=await eplanFetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
+   if(!r.ok){let x;try{x=await r.json()}catch{};throw Object.assign(new Error(friendlyApiError(r.status,x?.detail)),{server:true,status:r.status})}
    let data=r.status===204?null:await r.json();
    if(method==='GET')await offPut('cache',data,path);
    return data;
@@ -804,7 +818,7 @@ async function api(path,opt={}){
    if(method==='GET'){
      let cached=await offGet('cache',path);
      if(cached!==undefined){offlineStatus('● Офлайн · показано збережені дані');return cached}
-     throw new Error('Немає інтернету. Відкрий цей розділ хоча б один раз онлайн, щоб він був доступний офлайн.');
+     throw new Error(e?.timeout?'Сервер довго не відповідає. Перевір інтернет і спробуй ще раз.':'Не вдалося завантажити дані. Перевір інтернет і спробуй ще раз.');
    }
    if(offCanQueue(path,opt)){
      let localSid=path==='/workout/start'?-Date.now():null;
@@ -813,7 +827,7 @@ async function api(path,opt={}){
      offlineStatus('● Офлайн · зміни збережено на телефоні');
      return offResponse(path,opt,localSid);
    }
-   throw new Error('Ця дія потребує інтернету.');
+   throw new Error(e?.timeout?'Не вдалося зберегти: сервер довго не відповідає. Перевір інтернет і спробуй ще раз.':'Не вдалося зберегти. Перевір інтернет і спробуй ще раз.');
  }
  })();
  if(!mutation)return task;
@@ -829,13 +843,13 @@ async function syncOfflineQueue(){
    for(let item of q){
      let path=item.path;
      let neg=path.match(/^\/workout\/(-\d+)\/finish$/);if(neg&&sidMap[neg[1]])path='/workout/'+sidMap[neg[1]]+'/finish';
-     let r=await fetch(A+path,{headers:{'Content-Type':'application/json'},method:item.opt.method,body:item.opt.body||undefined});
+     let r=await eplanFetch(A+path,{headers:{'Content-Type':'application/json'},method:item.opt.method,body:item.opt.body||undefined},15000);
      if(!r.ok)throw new Error('sync');
      let data=null;try{data=await r.clone().json()}catch{}
      if(item.localSid&&data?.id)sidMap[String(item.localSid)]=data.id;
      await offDel('queue',item.id);
    }
-   if(session?.client_id){try{let r=await fetch(A+'/client/'+session.client_id);if(r.ok){let d=await r.json();await offSaveClient(session.client_id,d);window.currentClientData=d}}catch{}}
+   if(session?.client_id){try{let r=await eplanFetch(A+'/client/'+session.client_id,{},15000);if(r.ok){let d=await r.json();await offSaveClient(session.client_id,d);window.currentClientData=d}}catch{}}
    offlineStatus('✓ Синхронізовано');
  }catch{offlineStatus('● Є дані, що очікують синхронізації')}
  offSyncing=false;
