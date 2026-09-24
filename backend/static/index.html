@@ -718,6 +718,12 @@ button[data-action-loading="1"]{background:#29292e!important;color:#b8b8b8!impor
 .onboarding-card{width:min(100%,520px);background:#19191c;border:1px solid #34343a;border-radius:26px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
 .onboarding-step{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#ffd400;margin-bottom:14px}.onboarding-card h2{font-size:28px;margin:0 0 10px}.onboarding-card p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 24px}
 .onboarding-dots{display:flex;gap:7px;margin-bottom:20px}.onboarding-dots span{width:7px;height:7px;border-radius:99px;background:#444}.onboarding-dots span.active{width:24px;background:#ffd400}.onboarding-actions{display:flex;gap:10px}.onboarding-actions button{flex:1}.onboarding-skip{background:#29292e!important;color:#ddd!important}
+
+.password-field-wrap{position:relative}
+.password-field-wrap input{padding-right:52px!important}
+button.password-eye-btn{position:absolute!important;right:8px!important;top:50%!important;transform:translateY(-50%)!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;margin:0!important;border:0!important;outline:0!important;background:transparent!important;color:#a7a7ad!important;box-shadow:none!important;border-radius:0!important}
+button.password-eye-btn:hover,button.password-eye-btn:focus,button.password-eye-btn:active{background:transparent!important;color:#f2f2f3!important;border:0!important;box-shadow:none!important;transform:translateY(-50%)!important}
+button.password-eye-btn[data-eye-state="visible"]{background:transparent!important;color:#f2f2f3!important}
 </style><style>.today-date{margin:8px 0 4px;font-size:17px;font-weight:700;color:#ffd400}</style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -1128,7 +1134,7 @@ function renderLogin(){
  let token=new URLSearchParams(location.search).get('reset');
  if(token)return renderResetPassword(token);
  let rememberedEmail=localStorage.getItem('rememberedEmail')||'';
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><form class="card" onsubmit="event.preventDefault();login()" autocomplete="on"><h1>Вхід</h1><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="Email"><div style="position:relative"><input id="pass" name="password" type="password" autocomplete="current-password" placeholder="Пароль" style="padding-right:52px"><button type="button" class="dark" onclick="togglePassword()" style="position:absolute;right:6px;top:13px;padding:8px 11px">👁</button></div><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати email на цьому пристрої</span></label><p id="err" class="muted"></p><button type="submit">Увійти</button><button type="button" class="dark" style="margin-left:8px" onclick="renderForgotPassword()">Забули пароль?</button><p class="muted" style="font-size:13px;margin-top:16px">Пароль може зберегти браузер або менеджер паролів. Сам сайт не зберігає пароль у відкритому вигляді.</p></form></div>`
+ app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><form class="card" onsubmit="event.preventDefault();login()" autocomplete="on"><h1>Вхід</h1><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="Email"><div class="password-field-wrap"><input id="pass" name="password" type="password" data-password-field="1" autocomplete="current-password" placeholder="Пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'pass')">${passwordEyeSVG(true)}</button></div><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати email на цьому пристрої</span></label><p id="err" class="muted"></p><button type="submit">Увійти</button><button type="button" class="dark" style="margin-left:8px" onclick="renderForgotPassword()">Забули пароль?</button><p class="muted" style="font-size:13px;margin-top:16px">Пароль може зберегти браузер або менеджер паролів. Сам сайт не зберігає пароль у відкритому вигляді.</p></form></div>`
 }
 function renderForgotPassword(){
  app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Відновлення пароля</h1><p class="muted">Введіть справжній email, який тренер вказав під час створення акаунта.</p><input id="resetEmail" type="email" placeholder="Email"><p id="resetMsg" class="muted"></p><button onclick="requestPasswordReset()">Надіслати посилання</button><button class="dark" style="margin-left:8px" onclick="renderLogin()">Назад</button></div></div>`
@@ -1137,7 +1143,7 @@ async function requestPasswordReset(){
  try{let r=await api('/password-reset/request',{method:'POST',body:JSON.stringify({email:resetEmail.value})});resetMsg.textContent=r.message}catch(e){resetMsg.textContent=e.message}
 }
 function renderResetPassword(token){
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><input id="newPass" type="password" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><input id="newPassRepeat" type="password" autocomplete="new-password" placeholder="Повторіть новий пароль"><p id="resetMsg" class="muted"></p><button onclick="confirmPasswordReset('${esc(token)}')">Зберегти пароль</button></div></div>`
+ app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><div class="password-field-wrap"><input id="newPass" type="password" data-password-field="1" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPass')">${passwordEyeSVG(true)}</button></div><div class="password-field-wrap"><input id="newPassRepeat" type="password" data-password-field="1" autocomplete="new-password" placeholder="Повторіть новий пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPassRepeat')">${passwordEyeSVG(true)}</button></div><p id="resetMsg" class="muted"></p><button onclick="confirmPasswordReset('${esc(token)}')">Зберегти пароль</button></div></div>`
 }
 async function confirmPasswordReset(token){
  let p=newPass.value,r=newPassRepeat.value;
@@ -1171,7 +1177,8 @@ function syncAllPasswordEyes(){
    if(btn)syncPasswordEye(btn,input);
  });
 }
-function togglePassword(){let p=$('#pass');if(p)p.type=p.type==='password'?'text':'password'}
+function togglePasswordField(btn,inputId){let p=document.getElementById(inputId);if(!p)return;p.type=p.type==='password'?'text':'password';syncPasswordEye(btn,p)}
+function togglePassword(){let p=$('#pass'),btn=p?.parentElement?.querySelector('.password-eye-btn');if(p){p.type=p.type==='password'?'text':'password';syncPasswordEye(btn,p)}}
 async function login(){try{let em=email.value.trim();let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});session=s;localStorage.setItem('fitSession',JSON.stringify(s));if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');route()}catch(e){err.textContent=e.message}}
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}
 async function goToTrainerHome(){
@@ -1980,7 +1987,7 @@ function clientMeasurementsHTML(d,cid){
    <div><span class="measurement-kicker">${due?'Час зробити заміри':'Наступні заміри'}</span><h2>${due?'Можна оновити дані':`Через ${left} ${ukDays(left)}`}</h2><p class="muted">${last?`Орієнтовна дата: ${formatProgressDate(nextDate)}`:'Додай перші заміри, щоб почати відстежувати зміни.'}</p></div>
    ${due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
   </div>
-  ${due?`<div id="dueMeasurementForm" class="${last?'hidden':''} card">${measurementFormHTML(cid)}</div>`:''}
+  ${due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
   ${last?`<div class="card"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementMetricCards(last,prev)}</div>`:''}
   ${last&&prev?`<div class="card"><h2>Зміни з минулого разу</h2><p class="muted">Порівняно з ${formatProgressDate(prev.day)}</p>${measurementChangesHTML(last,prev)}</div>`:''}
   ${last&&!due?`<div class="card measurement-early"><p class="muted">Не обов’язково чекати 30 днів, якщо тренер попросив зробити контрольні заміри раніше.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати замір раніше</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>`:''}
