@@ -728,7 +728,7 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 
 .trainer-superset-head{margin:-1px -1px 10px;padding:12px 16px;background:#232116;border:1px solid #6b5b00;border-radius:14px 14px 0 0;color:var(--yellow);font-weight:900;font-size:18px}
 .superset-block{padding:0 14px 14px!important;border-color:#6b5b00!important;overflow:hidden!important}
-.superset-block .trainer-superset-head{margin:0 -14px 10px}
+.superset-block .trainer-superset-head{margin:0 -14px 10px;border-left:0;border-right:0;border-top:0;border-radius:13px 13px 0 0}
 </style><style>.today-date{margin:8px 0 4px;font-size:17px;font-weight:700;color:#ffd400}</style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -1364,7 +1364,7 @@ function programExtraHTML(x){
 }
 function autofillTechnique(name,targetId){
  let q=String(name||'').trim().toLowerCase(),item=(window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===q);
- let el=document.getElementById(targetId);if(item&&el&&!el.value.trim())el.value=item.technique_url||'';
+ let el=document.getElementById(targetId);if(el)el.value=item?.technique_url||'';
 }
 async function loadExerciseLibrary(){try{window.exerciseLibrary=await api('/exercise-library')}catch(e){window.exerciseLibrary={groups:[],exercises:[]}}}
 function programDayTitle(d,day){
@@ -1445,7 +1445,7 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
 }
 async function saveExerciseEdit(pid,cid){
  let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+((editRirSet.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(editAlternatives.value,editName.value))};
