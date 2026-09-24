@@ -968,7 +968,7 @@ function showClientSection(section){
 function clientProgressHTML(d){
  let period=window.clientProgressPeriod||'90',from=periodStart(period);
  let inPeriod=day=>!from||!day||day>=from;
- let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&inPeriod((x.finished_at||x.started_at||'').slice(0,10)));
+ let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&inPeriod(sessionDay(x)));
  let measures=(d.measurements||[]).filter(x=>x.day&&inPeriod(x.day)).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let allMeasures=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let firstM=measures[0],lastM=measures[measures.length-1];
@@ -1159,7 +1159,7 @@ async function openPendingWorkoutForClient(cid){
    .filter(s=>s.status==='finished'&&!s.trainer_reviewed)
    .sort((a,b)=>(+b.id||0)-(+a.id||0))[0];
  if(!pending)return;
- let day=String(pending.started_at||pending.finished_at||'').slice(0,10);
+ let day=sessionDay(pending);
  if(day)showCalendarDay(day,null,true,pending.id);
 }
 async function quickExtendFromCard(cid,months){
@@ -1391,6 +1391,7 @@ function isoToday(){
    return `${p.year}-${p.month}-${p.day}`;
  }catch(e){let x=new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 }
+function sessionDay(s){return String(s?.workout_day||s?.started_at||s?.finished_at||'').slice(0,10)}
 function monthKey(day){return day ? day.slice(0,7) : ''}
 function calendarHTML(d,mode='trainer'){
  let days=[...(d.result_sets||[]).map(x=>x.day),...(d.results||[]).map(x=>x.day),...(d.nutrition||[]).map(x=>x.day),...(d.measurements||[]).map(x=>x.day),...(d.cardio||[]).map(x=>x.day)].filter(Boolean);
@@ -1451,7 +1452,7 @@ function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
  let sets=(d.result_sets||[]).filter(x=>x.day===day);
  let old=(d.results||[]).filter(x=>x.day===day);
  let nut=(d.nutrition||[]).filter(x=>x.day===day).sort((a,b)=>b.id-a.id);
- let sessions=(d.workout_sessions||[]).filter(x=>(x.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
+ let sessions=(d.workout_sessions||[]).filter(x=>sessionDay(x)===day).sort((a,b)=>b.id-a.id);
  let workoutSession=(targetSessionId?sessions.find(s=>+s.id===+targetSessionId):null)||sessions[0]||null;
  let meas=(d.measurements||[]).filter(x=>x.day===day);
 
@@ -1576,7 +1577,7 @@ async function openTrainerNotification(nid,cid){
    let day=n.target_day||'';
    if(!day&&n.target_session_id){
      let ws=(window.currentClientData?.workout_sessions||[]).find(s=>+s.id===+n.target_session_id);
-     day=String(ws?.started_at||ws?.finished_at||'').slice(0,10);
+     day=sessionDay(ws);
    }
    if(day)showCalendarDay(day,null,true,+n.target_session_id||0);
    return;
@@ -1621,7 +1622,7 @@ async function markNotificationsRead(cid,recipient){
  if(session.role==='trainer')openClient(cid);else clientCabinet(cid)
 }
 function sessionProgramForDate(d,dayName,day){
- let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
+ let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id);
  if(sessions.length&&sessions[0].program_snapshot){
   try{let snap=JSON.parse(sessions[0].program_snapshot);if(Array.isArray(snap)&&snap.length)return snap}catch(e){}
  }
@@ -1676,7 +1677,7 @@ function trainerResultDates(d,dayName){
  let ss=(d.workout_sessions||[]).filter(s=>s.day_name===dayName);
  ss.forEach(s=>{if(s.program_snapshot){try{JSON.parse(s.program_snapshot).forEach(x=>pids.add(x.id))}catch(e){}}});
  let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&s.status==='finished');
- let sessionDates=sessions.map(s=>(s.started_at||'').slice(0,10)).filter(Boolean);
+ let sessionDates=sessions.map(s=>sessionDay(s)).filter(Boolean);
  let setDates=(d.result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day);
  return [...new Set([...sessionDates,...setDates])].sort().reverse();
 }
@@ -1713,7 +1714,7 @@ function trainerDayResultsHTML(d,dayName){
    let program=sessionProgramForDate(d,dayName,day);
    let exercises=program.filter(x=>(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===day));
    let workoutBodyId=`workoutResult_${dayName.replace(/[^a-zA-Z0-9]/g,'_')}_${day.replaceAll('-','_')}`;
-   let cardSession=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id)[0];
+   let cardSession=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id)[0];
    return `<div class="card" data-workout-day="${esc(day)}" data-workout-session="${cardSession?.id||0}" style="padding:0;overflow:hidden">
     <button class="exercise-toggle" onclick="toggleWorkoutResult('${workoutBodyId}',this)" style="padding:20px 24px">
       <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong>${previous?`<span class="muted" style="display:block;margin-top:5px">порівняно з ${esc(previous)}</span>`:''}</span>
@@ -1721,7 +1722,7 @@ function trainerDayResultsHTML(d,dayName){
     </button>
     <div id="${workoutBodyId}" class="hidden" style="padding:0 24px 22px">
     ${(()=>{
-      let ws=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&(s.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id)[0];
+      let ws=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id)[0];
       if(!ws)return '';
       return `<div class="exercise" style="margin-bottom:14px">${ws.trainer_reviewed?`<strong style="color:#6ee787">Перевірено тренером ✓</strong>${ws.trainer_comment?`<div style="margin-top:7px">${esc(ws.trainer_comment)}</div>`:''}`:`<strong style="color:var(--yellow)">Нове тренування</strong><textarea id="reviewComment${ws.id}" placeholder="Коментар клієнту (необов’язково)..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><div class="review-actions"><button onclick="reviewWorkout(${ws.id},${d.client.id},true)">Надіслати та позначити перевіреним</button><button class="dark" onclick="reviewWorkout(${ws.id},${d.client.id},false)">Перевірено без коментаря</button></div>`}</div>`;
     })()}
@@ -1760,7 +1761,7 @@ function resultsHTML(d){
  let c=d?.client||{};
  let period=window.trainerResultsPeriod||'90',from=periodStart(period);
  let inPeriod=day=>!from||!day||day>=from;
- let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&inPeriod((x.finished_at||x.started_at||'').slice(0,10)));
+ let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&inPeriod(sessionDay(x)));
  let measures=(d.measurements||[]).filter(x=>x.day&&inPeriod(x.day)).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let allMeasures=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
  let firstM=measures[0],lastM=measures[measures.length-1];
@@ -2050,7 +2051,7 @@ async function finishWorkout(cid,sid){
  await api('/workout/'+sid+'/finish',{method:'POST'});
  localStorage.removeItem('activeWorkout_'+cid);previewWorkoutDay=null;window.workoutExerciseChoices={};
  let d=await api('/client/'+cid);window.currentClientData=d;
- let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===(s.started_at||'').slice(0,10)));
+ let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===sessionDay(s)));
  let exercises=new Set(sets.map(x=>x.program_id)).size,cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{}));
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Робочих підходів</span><div class="summary-number">${sets.length}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
 }
@@ -2086,7 +2087,7 @@ function measurementReminderState(d){
 function todayGuidanceHTML(d,cid,groups){
  let today=isoToday(),sessions=(d.workout_sessions||[]),active=sessions.find(x=>x.status==='training'),
      todaySetsAll=(d.result_sets||[]).filter(x=>x.day===today),
-     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today)
+     todaySession=sessions.find(x=>sessionDay(x)===today)
        ||(todaySetsAll.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),
      cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
@@ -2318,7 +2319,7 @@ function clientProfileHTML(c){
 }
 function trainerProfileHTML(c){
  let d=window.currentClientData||{},lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>(b.finished_at||b.started_at||'').localeCompare(a.finished_at||a.started_at||''))[0],lastCardio=(d.cardio||[])[0];
- return `<div class="card"><h2>Огляд клієнта</h2><div class="trainer-client-meta">${lastWorkout?`<span class="trainer-meta-chip ok">Останнє тренування: ${esc(String(lastWorkout.finished_at||lastWorkout.started_at||'').slice(0,10))}</span>`:'<span class="trainer-meta-chip">Тренувань ще немає</span>'}${lastCardio?`<span class="trainer-meta-chip">Активність: ${esc(lastCardio.day)}</span>`:''}</div></div><div class="card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
+ return `<div class="card"><h2>Огляд клієнта</h2><div class="trainer-client-meta">${lastWorkout?`<span class="trainer-meta-chip ok">Останнє тренування: ${esc(sessionDay(lastWorkout))}</span>`:'<span class="trainer-meta-chip">Тренувань ще немає</span>'}${lastCardio?`<span class="trainer-meta-chip">Активність: ${esc(lastCardio.day)}</span>`:''}</div></div><div class="card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
 }
 function showClientProfile(cid){
  let c=(window.currentClientData||{}).client||{};currentClientView='profile';
