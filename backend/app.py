@@ -738,12 +738,16 @@ def start_workout(x:WorkoutStartIn):
 
 @app.post("/api/workout/{sid}/finish")
 def finish_workout(sid:int):
-    session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
-    if not session:
-        raise HTTPException(404,"Тренування не знайдено")
-    was_finished=session.get("status")=="finished"
-    run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE id=?",(sid,))
-    finished=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    # Serialize finish requests so a double tap/retry cannot create duplicate notifications.
+    with db() as lock_conn:
+        lock_conn.execute("SELECT pg_advisory_xact_lock(%s)",(sid,))
+        session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+        if not session:
+            raise HTTPException(404,"Тренування не знайдено")
+        was_finished=session.get("status")=="finished"
+        if not was_finished:
+            run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE id=?",(sid,))
+        finished=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
     if not was_finished:
         client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
         if client_info:
