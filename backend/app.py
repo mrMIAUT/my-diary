@@ -310,7 +310,7 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V62 diagnostic: corrected script isolation. Serve the real deployed index.html
+    # V63 diagnostic: corrected script isolation. Serve the real deployed index.html
     # with ONLY its first inline <script>. Scripts 2+ are removed server-side.
     import re
     html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
@@ -326,7 +326,7 @@ def pwa_app():
 #v62Probe{position:fixed!important;z-index:2147483647!important;left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px)!important;background:#111214!important;border:1px solid #ffd000!important;border-radius:14px!important;padding:12px 14px!important;color:#f5f5f5!important;font:13px/1.35 system-ui,-apple-system,sans-serif!important;display:block!important;visibility:visible!important;opacity:1!important}
 #v62Probe b{color:#ffd000!important}#v62Probe code{color:#ddd!important}
 </style>
-<div id="v62Probe"><b>V62 · SCRIPT 1 ONLY · CORRECTED</b><br><code>/app · script 1 enabled · scripts 2+ disabled</code></div>
+<div id="v62Probe"><b>V63 · SCRIPTS 1 + 2</b><br><code>/app · scripts 1 + 2 enabled · script 3+ disabled</code></div>
 """
     # Put the marker immediately after <body>, outside #app, so app rendering
     # cannot erase it merely by replacing #app contents.
