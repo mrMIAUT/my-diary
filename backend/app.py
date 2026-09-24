@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
@@ -299,67 +299,35 @@ class HistoricalSetIn(BaseModel):
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
+def _app_index():
+    return FileResponse(BASE/"static"/"index.html", headers={
+        "Cache-Control":"no-store, no-cache, must-revalidate",
+        "Pragma":"no-cache", "Expires":"0"
+    })
+
 @app.get("/")
-def home():
-    return FileResponse(BASE/"static"/"index.html", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
+def home(): return _app_index()
 
 @app.get("/app")
-def pwa_app():
-    return FileResponse(BASE/"static"/"index.html", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
+def pwa_app(): return _app_index()
 
-@app.get("/app-diag")
-def pwa_app_diag():
-    p=BASE/"static"/"index.html"
-    html=p.read_text(encoding="utf-8")
-    import re
-    html=re.sub(r'<link\s+rel=["\']manifest["\'][^>]*>', '<link rel="manifest" href="/app-diag-manifest.webmanifest?v=55">', html, count=1, flags=re.I)
-    html=html.replace('<meta name="apple-mobile-web-app-title" content="Є ПЛАН">','<meta name="apple-mobile-web-app-title" content="Є ПЛАН DIAG">',1)
-    html=html.replace('<title>Є | ПЛАН</title>','<title>Є ПЛАН · DIAG 4</title>',1)
-    html=html.replace("},2500);", "},30000);", 1)
-    diag = """<script id="eplanDiag4">
-(function(){
- var events=[],started=Date.now();
- function safe(v){try{return String(v)}catch(_){return '[unprintable]'}}
- function esc(s){return safe(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
- function standalone(){return !!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}
- function add(kind,msg,src,line,col){events.push({t:Date.now()-started,kind:kind,msg:safe(msg),src:safe(src||''),line:line||0,col:col||0});show(true)}
- function snapshot(){var app=document.getElementById('app'),sp=document.getElementById('eplanSplash'),storage='OK';try{localStorage.setItem('eplan_diag4','1');localStorage.removeItem('eplan_diag4')}catch(e){storage=e.name+': '+e.message}return ['DIAG 4 · '+new Date().toISOString(),'standalone: '+standalone(),'url: '+location.href,'readyState: '+document.readyState,'main-start: '+safe(window.__eplanMainStart||'NO'),'before-route: '+safe(window.__eplanBeforeRoute||'NO'),'route-called: '+safe(window.__eplanRouteCalled||'NO'),'app children: '+(app&&app.children?app.children.length:'missing'),'app text length: '+(app?safe(app.textContent||'').length:'missing'),'splash: '+(sp?'present':'missing'),'localStorage: '+storage,'serviceWorker controller: '+(navigator.serviceWorker&&navigator.serviceWorker.controller?'YES':'NO'),'events: '+events.length].join('\n')}
- function show(force){var box=document.getElementById('eplanDiag4Box');if(!box){box=document.createElement('div');box.id='eplanDiag4Box';box.style.cssText='position:fixed;z-index:2147483647;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-height:72vh;overflow:auto;background:#0b0b0d;color:#f4f4f5;border:2px solid #ffd000;border-radius:18px;padding:14px;font:13px/1.45 -apple-system,BlinkMacSystemFont,Arial,sans-serif;box-shadow:0 12px 50px #000';document.body.appendChild(box)}if(!force&&events.length===0){box.style.display='none';return}box.style.display='block';var ev=events.map(function(e,i){return '\n#'+(i+1)+' ['+e.t+'ms] '+e.kind+'\n'+e.msg+(e.src?'\n'+e.src+':'+e.line+':'+e.col:'')}).join('\n');box.innerHTML='<div style="font-size:18px;font-weight:900;margin-bottom:8px"><span style="color:#ffd000">Є ПЛАН</span> · JS DIAG 4</div><pre style="white-space:pre-wrap;word-break:break-word;margin:0;color:#ddd">'+esc(snapshot()+ev)+'</pre><button id="eplanDiagRefresh" style="margin-top:12px;width:100%;padding:12px;border:0;border-radius:12px;background:#ffd000;color:#090909;font-weight:900">Оновити діагностику</button>';document.getElementById('eplanDiagRefresh').onclick=function(){show(true)}}
- window.addEventListener('error',function(e){add('error',e.message,e.filename,e.lineno,e.colno)},true);
- window.addEventListener('unhandledrejection',function(e){var r=e.reason;add('unhandledrejection',r&&r.stack?r.stack:(r&&r.message?r.message:r),'',0,0)});
- window.__eplanDiag4={add:add,show:show,events:events};
- document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){var app=document.getElementById('app');if(!(app&&app.children&&app.children.length))add('boot-timeout','Через 5 секунд #app порожній. Дивись main-start / before-route / route-called.','',0,0)},5000)});
- setTimeout(function(){show(false)},50);
-})();
-</script>"""
-    marker='<div id="app"></div>'
-    html=html.replace(marker, marker+diag, 1) if marker in html else html.replace('<body>', '<body>'+diag, 1)
-    needle="console.info('Є ПЛАН build 2026-09-23-v37');"
-    html=html.replace(needle, needle+"\nwindow.__eplanMainStart='YES'; window.__eplanDiag4&&window.__eplanDiag4.add('checkpoint','Основний script почав виконання');",1)
-    needle2="let startupResetToken=new URLSearchParams(location.search).get('reset');"
-    html=html.replace(needle2,"window.__eplanBeforeRoute='YES'; window.__eplanDiag4&&window.__eplanDiag4.add('checkpoint','Код дійшов до startup/route');\n"+needle2,1)
-    html=html.replace(" route()\n}"," window.__eplanRouteCalled='YES'; window.__eplanDiag4&&window.__eplanDiag4.add('checkpoint','Викликаю route()'); route()\n}",1)
-    return HTMLResponse(html, headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
-
-@app.get("/app-diag-manifest.webmanifest")
-def pwa_app_diag_manifest():
-    manifest={"name":"Є ПЛАН · DIAG 4","short_name":"Є ПЛАН D4","id":"/app-diag-v55","start_url":"/app-diag?installed=1&v=55","scope":"/","display":"standalone","background_color":"#080909","theme_color":"#080909","icons":[{"src":"/static/icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"/static/icons/icon-512.png","sizes":"512x512","type":"image/png"},{"src":"/static/icons/apple-touch-icon.png","sizes":"180x180","type":"image/png"}]}
-    return Response(content=json.dumps(manifest,ensure_ascii=False),media_type="application/manifest+json",headers={"Cache-Control":"no-store"})
+@app.get("/pwa-reset")
+def pwa_reset():
+    return HTMLResponse(r"""<!doctype html><html lang="uk"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080909"><title>Є ПЛАН · PWA RESET</title>
+<style>body{margin:0;background:#080909;color:#f4f4f5;font:16px system-ui,-apple-system;padding:32px}main{max-width:620px;margin:10vh auto;border:2px solid #ffd000;border-radius:24px;padding:24px}.y{color:#ffd000}pre{white-space:pre-wrap;color:#aaa}button{width:100%;padding:16px;border:0;border-radius:14px;background:#ffd000;color:#080909;font-weight:800;font-size:17px}</style></head><body><main><h1><span class="y">Є ПЛАН</span> · RESET</h1><p id="status">Очищаю стару PWA-конфігурацію…</p><pre id="log"></pre><button id="go" hidden>Відкрити чистий застосунок</button></main>
+<script>
+(async()=>{const log=document.getElementById('log'),status=document.getElementById('status'),go=document.getElementById('go');const say=x=>log.textContent+=x+'\n';
+try{if('serviceWorker'in navigator){const regs=await navigator.serviceWorker.getRegistrations();say('Service workers: '+regs.length);for(const r of regs){say('unregister '+r.scope+' → '+await r.unregister())}}else say('Service Worker API: unavailable');}catch(e){say('SW error: '+e)}
+try{if('caches'in window){const keys=await caches.keys();say('Caches: '+keys.length);for(const k of keys){say('delete '+k+' → '+await caches.delete(k))}}}catch(e){say('Cache error: '+e)}
+status.textContent='Готово. Старі Service Worker та кеші очищено.';go.hidden=false;go.onclick=()=>location.replace('/app?clean=56');
+})();</script></body></html>""",headers={"Cache-Control":"no-store, no-cache, must-revalidate","Clear-Site-Data":"\"cache\""})
 
 @app.get("/sw.js")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
 @app.get("/manifest.webmanifest")
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
-@app.get("/pwa-js-test")
-def pwa_js_test():
-    html = '<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080909"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Є ПЛАН TEST"><title>Є ПЛАН · JS TEST</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#080909;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;min-height:100vh;padding:max(28px,env(safe-area-inset-top)) 18px max(28px,env(safe-area-inset-bottom))}.box{max-width:720px;margin:0 auto;border:2px solid #ffd000;border-radius:24px;padding:22px}.brand{font-size:26px;font-weight:800;margin-bottom:8px}.brand b{color:#ffd000}.muted{color:#aaa}.tests{display:grid;gap:10px;margin-top:22px}.test{padding:14px;border:1px solid #3a3a3f;border-radius:14px;background:#151517}.ok{border-color:#2e7d4f;background:#10271a}.bad{border-color:#8a3b3b;background:#2b1414}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#777;margin-right:9px}.ok .dot{background:#4bd37b}.bad .dot{background:#ff6b6b}button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:14px;background:#ffd000;color:#080808;font-weight:800;font-size:16px}.foot{margin-top:18px;color:#888;font-size:13px;line-height:1.45}</style></head><body><div class="box"><div class="brand"><b>Є ПЛАН</b> · JS DIAG 2</div><div class="muted" id="summary">HTML + CSS завантажено. Перевіряю JavaScript…</div><div class="tests"><div class="test" id="classic"><span class="dot"></span>1. Inline classic script: очікування</div><div class="test" id="external"><span class="dot"></span>2. External same-origin script: очікування</div><div class="test" id="module"><span class="dot"></span>3. Module script: очікування</div><div class="test" id="storage"><span class="dot"></span>4. localStorage: очікування</div><div class="test" id="fetch"><span class="dot"></span>5. fetch() до сервера: очікування</div><div class="test" id="timer"><span class="dot"></span>6. setTimeout: очікування</div><div class="test" id="click"><span class="dot"></span>7. Натискання кнопки: очікування</div></div><button id="btn" onclick="document.getElementById(\'click\').className=\'test ok\';document.getElementById(\'click\').innerHTML=\'<span class=dot></span>7. Натискання кнопки: ПРАЦЮЄ\'">Натисни для тесту</button><div class="foot">Версія: JS-DIAG-2 · 2026-09-24<br>Ця сторінка не використовує основний код застосунку, service worker або manifest.</div></div><script>(function(){function ok(id,text){var e=document.getElementById(id);e.className=\'test ok\';e.innerHTML=\'<span class="dot"></span>\'+text}function bad(id,text){var e=document.getElementById(id);e.className=\'test bad\';e.innerHTML=\'<span class="dot"></span>\'+text}ok(\'classic\',\'1. Inline classic script: ПРАЦЮЄ\');document.getElementById(\'summary\').textContent=\'JavaScript запустився. Виконую окремі перевірки…\';try{localStorage.setItem(\'eplan_js_diag\',\'ok\');ok(\'storage\',\'4. localStorage: ПРАЦЮЄ\')}catch(e){bad(\'storage\',\'4. localStorage: ПОМИЛКА · \'+e.name)}fetch(\'/health?diag=2\',{cache:\'no-store\'}).then(function(r){if(!r.ok)throw new Error(\'HTTP \'+r.status);return r.json()}).then(function(){ok(\'fetch\',\'5. fetch() до сервера: ПРАЦЮЄ\')}).catch(function(e){bad(\'fetch\',\'5. fetch() до сервера: ПОМИЛКА · \'+e.message)});setTimeout(function(){ok(\'timer\',\'6. setTimeout: ПРАЦЮЄ\')},700);window.__diagOk=ok;})();</script><script src="/pwa-js-test.js?v=2"></script><script type="module">document.getElementById(\'module\').className=\'test ok\';document.getElementById(\'module\').innerHTML=\'<span class="dot"></span>3. Module script: ПРАЦЮЄ\';</script><noscript><style>#summary{color:#ff7777;font-weight:800}#summary:after{content:\' JavaScript реально вимкнено або заблоковано.\'}</style></noscript></body></html>'
-    return HTMLResponse(html, headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
-
-@app.get("/pwa-js-test.js")
-def pwa_js_test_script():
-    js = "window.__diagOk && window.__diagOk('external','2. External same-origin script: ПРАЦЮЄ');"
-    return Response(content=js, media_type="application/javascript", headers={"Cache-Control":"no-store"})
-
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
