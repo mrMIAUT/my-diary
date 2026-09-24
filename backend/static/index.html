@@ -1449,7 +1449,7 @@ function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
    history.pushState({...base,eplanPage:'calendarDay',eplanDay:day},'',location.pathname+location.search+'#day-'+day);
  }
  let d=window.currentClientData||{};
- let sets=(d.result_sets||[]).filter(x=>x.day===day);
+ let sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===day));
  let old=(d.results||[]).filter(x=>x.day===day);
  let nut=(d.nutrition||[]).filter(x=>x.day===day).sort((a,b)=>b.id-a.id);
  let sessions=(d.workout_sessions||[]).filter(x=>sessionDay(x)===day).sort((a,b)=>b.id-a.id);
@@ -1976,8 +1976,8 @@ function completedComparisonHTML(x,d){
 
 
 function todaySets(d,pid){
- return (d?.result_sets||[])
-   .filter(s=>+s.program_id===+pid&&s.day===isoToday())
+ return uniqueResultSets((d?.result_sets||[])
+   .filter(s=>+s.program_id===+pid&&s.day===isoToday()))
    .slice()
    .sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
 }
