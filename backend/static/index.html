@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-09-23-v37"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-09-24-v50"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#080909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Є ПЛАН">
-<link rel="manifest" href="/manifest.webmanifest">
+<link rel="manifest" href="/manifest.webmanifest?v=56">
 <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080909'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Arial,sans-serif' font-size='48' font-weight='700' fill='%23ffd000'%3EЄ%3C/text%3E%3C/svg%3E">
@@ -656,7 +656,7 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 
 .exercise-alternatives{margin-top:10px;padding:10px 12px;border:1px solid #3a3a41;border-radius:12px;background:#151519}.exercise-alternatives strong{font-size:12px;color:var(--muted)}.alternative-chip{display:inline-block;margin:6px 6px 0 0;padding:6px 9px;border-radius:999px;background:#26262c;font-size:12px}.swap-exercise-btn{margin-top:10px;padding:9px 12px!important;font-size:13px}.alternative-modal-list{display:grid;gap:9px;margin-top:16px}.alternative-modal-list button{text-align:left}.alternative-current{background:#18181b!important;border:1px solid #4a4a52!important;color:var(--text)!important;box-shadow:none!important}
 
-/* v47 — training day titles + collapsed trainer program */
+/* v50 — training day titles + collapsed trainer program */
 .program-day-header-row{display:flex;align-items:center;gap:10px}
 .program-day-header-row .program-day-head{flex:1;min-width:0}
 .program-day-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
@@ -667,11 +667,11 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 .client-program-day-title,.progress-day-title{display:block;margin-top:4px;font-size:13px;color:var(--muted);font-weight:650}
 .progress-selected-day>div:first-child{display:flex;flex-direction:column}
 
-/* v47 — minimalist password visibility icon */
+/* v50 — minimalist password visibility icon */
 .password-eye-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 button.password-eye-btn{display:inline-flex;align-items:center;justify-content:center}
 
-/* v47 — alternative selector + clearer rest timer controls */
+/* v50 — alternative selector + clearer rest timer controls */
 .rest-timer-choices button{
  border:1.5px solid #55565f!important;
  border-radius:14px!important;
@@ -684,12 +684,12 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
  box-shadow:0 0 0 2px rgba(95,155,112,.12)!important;
 }
 
-/* v47 — restore finish workout action */
+/* v50 — restore finish workout action */
 .finish-workout-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .finish-workout-btn{width:100%;background:#2a2a30!important;color:var(--text)!important;border:1px solid #4a4a52!important}
 .finish-workout-btn:active{transform:scale(.99)}
 
-/* v47 — completion badge + visible finish workout CTA */
+/* v50 — completion badge + visible finish workout CTA */
 .exercise-done-badge{
  display:inline-block;
  white-space:nowrap;
@@ -706,11 +706,10 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
  box-shadow:0 0 0 1px rgba(255,212,0,.12),0 8px 24px rgba(0,0,0,.22)!important;
 }
 .finish-workout-btn:active{transform:scale(.99)}
+
+/* v50 — exact trainer review target */
+.trainer-calendar-review{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 </style></head><body>
-<div id="v47DiagMarker" style="position:fixed;z-index:2147483647;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));padding:14px 16px;border:2px solid #ffd400;border-radius:14px;background:#080909;color:#fff;font:700 16px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:center;box-sizing:border-box">
-<span style="color:#ffd400">Є ПЛАН</span> · V47 DIAG 1<br>
-<span style="font-size:13px;font-weight:500;color:#bbb">HTML + CSS завантажено · JavaScript вимкнено</span>
-</div>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
     <span class="eplan-splash-e">Є</span>
@@ -718,7 +717,7 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
     <span class="eplan-splash-plan-wrap"><span class="eplan-splash-plan">ПЛАН</span></span>
   </div>
 </div>
-<div id="app"></div><script type="application/x-eplan-disabled">
+<div id="app"></div><script>
 console.info('Є ПЛАН build 2026-09-23-v37');
 
 const A='/api'; const $=s=>document.querySelector(s);let session=JSON.parse(localStorage.getItem('fitSession')||'null');let selected=null;let calendarMonth=null;let currentTrainerTab='profile';let currentTrainerMainView='clients';
@@ -1125,16 +1124,19 @@ async function trainerHome(){
  app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Кому зараз потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
  <div class="trainer-stats">${stat('review',needsReviewClients.length,'Потрібно перевірити')}${stat('ending',ending.length,'Доступ завершується')}${stat('active',active.length,'Активних клієнтів')}</div></div>
  <div class="trainer-queue-head"><h1 style="margin:0">${filter==='review'?'На перевірку':filter==='ending'?'Завершується доступ':filter==='active'?'Активні клієнти':'Клієнти'}</h1>${filter!=='all'?`<button class="dark" onclick="window.trainerHomeFilter='all';trainerHome()">Показати всіх</button>`:''}</div>
- ${shown.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let workStatus=c.live_status==='Тренується'?'<span class="work-status live">● Тренується зараз</span>':r?'<span class="work-status review">● Очікує перевірки</span>':c.review_state==='reviewed'?'<span class="work-status idle">✓ Все перевірено</span>':'<span class="work-status idle">Ще без тренувань</span>';return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div>${workStatus}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span></div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div><div class="client-card-actions">${r?`<button onclick="event.stopPropagation();openClient(${c.id},'results');setTimeout(()=>openFirstPendingWorkout(),180)">Перевірити тренування →</button>`:''}${days!==null&&days!==undefined&&days<=7&&!exp?`<button class="dark" onclick="event.stopPropagation();quickExtendFromCard(${c.id},1)">+1 міс. доступу</button>`:''}</div></div>`}).join('')||'<div class="card"><p class="muted">У цій категорії зараз нікого немає.</p></div>'}`);
+ ${shown.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let workStatus=c.live_status==='Тренується'?'<span class="work-status live">● Тренується зараз</span>':r?'<span class="work-status review">● Очікує перевірки</span>':c.review_state==='reviewed'?'<span class="work-status idle">✓ Все перевірено</span>':'<span class="work-status idle">Ще без тренувань</span>';return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div>${workStatus}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span></div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div><div class="client-card-actions">${r?`<button onclick="event.stopPropagation();openPendingWorkoutForClient(${c.id})">Перевірити тренування →</button>`:''}${days!==null&&days!==undefined&&days<=7&&!exp?`<button class="dark" onclick="event.stopPropagation();quickExtendFromCard(${c.id},1)">+1 міс. доступу</button>`:''}</div></div>`}).join('')||'<div class="card"><p class="muted">У цій категорії зараз нікого немає.</p></div>'}`);
  refreshTrainerGlobalBadge()
 }
 
-function openFirstPendingWorkout(){
- let cards=[...document.querySelectorAll('#results [data-workout-session]')];
- let target=cards.find(c=>c.querySelector('textarea[id^="reviewComment"]'));
- if(!target)return;
- let body=target.querySelector('[id^="workoutResult_"]');if(body?.classList.contains('hidden'))target.querySelector('.exercise-toggle')?.click();
- setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'center'}),80);
+async function openPendingWorkoutForClient(cid){
+ await openClient(cid,'calendar');
+ let d=window.currentClientData||{};
+ let pending=(d.workout_sessions||[])
+   .filter(s=>s.status==='finished'&&!s.trainer_reviewed)
+   .sort((a,b)=>(+b.id||0)-(+a.id||0))[0];
+ if(!pending)return;
+ let day=String(pending.started_at||pending.finished_at||'').slice(0,10);
+ if(day)showCalendarDay(day,null,true,pending.id);
 }
 async function quickExtendFromCard(cid,months){
  let clients=await api('/clients'),c=clients.find(x=>x.id===cid);if(!c)return;
@@ -1415,7 +1417,7 @@ async function saveHistoryWorkout(day,cid,name){
  let nd=await api('/client/'+cid);window.currentClientData=nd;showCalendarDay(day,null,false)
 }
 
-function showCalendarDay(day,btn,pushHistory=true){
+function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
  if(pushHistory){
    let base=session?.role==='trainer'?{eplanPage:'client',eplanClient:selected,eplanTab:'calendar'}:{eplanPage:'clientHome',eplanClient:session?.client_id,eplanSection:'history'};
    history.replaceState(base,'',location.href);
@@ -1426,7 +1428,7 @@ function showCalendarDay(day,btn,pushHistory=true){
  let old=(d.results||[]).filter(x=>x.day===day);
  let nut=(d.nutrition||[]).filter(x=>x.day===day).sort((a,b)=>b.id-a.id);
  let sessions=(d.workout_sessions||[]).filter(x=>(x.started_at||'').slice(0,10)===day).sort((a,b)=>b.id-a.id);
- let workoutSession=sessions[0]||null;
+ let workoutSession=(targetSessionId?sessions.find(s=>+s.id===+targetSessionId):null)||sessions[0]||null;
  let meas=(d.measurements||[]).filter(x=>x.day===day);
 
  let by={};sets.forEach(x=>{let k=x.program_id+'|'+x.exercise;(by[k]??=[]).push(x)});
@@ -1437,13 +1439,20 @@ function showCalendarDay(day,btn,pushHistory=true){
    workoutHTML=old.map((x,gi)=>{let bid=`calOldWorkout_${day.replaceAll('-','_')}_${gi}`;return `<div class="exercise"><button class="exercise-toggle" onclick="toggleExercise('${bid}',this)"><span><strong>${esc(x.exercise)}</strong></span><span class="arrow">⌄</span></button><div id="${bid}" class="hidden">${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-size:13px">▶ Техніка</a>`:''}<div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div></div>`}).join('');
  }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>'+((session?.role==='trainer')?'':(d.client.status==='Заморожений'?'<div class="exercise muted">Акаунт на паузі: доступний лише перегляд історії.</div>':day<=isoToday()?historyWorkoutForm(day,d.client.id,d):'<div class="exercise muted">На майбутню дату дані додавати не можна.</div>'));
 
- let sessionHTML=workoutSession?`<div class="exercise"><div class="muted">Тренування</div><strong>${esc(workoutSession.day_name)}</strong><div class="muted" style="margin-top:5px">${workoutSession.status==='finished'?'Завершено':'Тренування триває'}</div>${workoutSession.trainer_reviewed?`<div style="margin-top:10px"><strong style="color:#6ee787">Перевірено тренером ✓</strong>${workoutSession.trainer_comment?`<div style="margin-top:6px">${esc(workoutSession.trainer_comment)}</div>`:''}</div>`:''}</div>`:'';
+ let sessionHTML=workoutSession?`<div class="exercise" id="calendarWorkoutSession_${workoutSession.id}"><div class="muted">Тренування</div><strong>${esc(workoutSession.day_name)}</strong><div class="muted" style="margin-top:5px">${workoutSession.status==='finished'?'Завершено':'Тренування триває'}</div>${workoutSession.trainer_reviewed?`<div style="margin-top:10px"><strong style="color:#6ee787">Перевірено тренером ✓</strong>${workoutSession.trainer_comment?`<div style="margin-top:6px">${esc(workoutSession.trainer_comment)}</div>`:''}</div>`:(session?.role==='trainer'&&workoutSession.status==='finished'?`<div class="trainer-calendar-review"><strong style="color:var(--yellow)">Потрібно перевірити</strong><textarea id="reviewComment${workoutSession.id}" placeholder="Коментар клієнту (необов’язково)..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><div class="review-actions"><button onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},'${day}',true)">Надіслати та позначити перевіреним</button><button class="dark" onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},'${day}',false)">Перевірено без коментаря</button></div></div>`:'')}</div>`:'';
  let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>'+((session?.role==='client'&&d.client.status!=='Заморожений'&&day<=isoToday())?historyNutritionForm(day,d.client.id):'');
  let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>measurementRowHTML(x)).join('')}</div>`:'';
 
  let content=`<button class="dark" onclick="returnFromCalendarDay()">← До календаря</button><div style="height:16px"></div><div class="card"><div class="muted">Щоденник</div><h1>${esc(day)}</h1></div><div class="card"><h2>Тренування</h2>${sessionHTML}${workoutHTML}</div><div class="card"><h2>Харчування</h2>${nutritionHTML}</div>${measures}`;
  window.calendarReturnHTML=app.innerHTML;
  app.innerHTML=shell(content);
+}
+async function reviewWorkoutFromCalendar(sid,cid,day,useComment=true){
+ let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
+ await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
+ let nd=await api('/client/'+cid);window.currentClientData=nd;
+ showCalendarDay(day,null,false,sid);
+ refreshTrainerGlobalBadge();
 }
 async function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'calendar');return}if(session&&session.role==='client'&&session.client_id){await clientCabinet(session.client_id);showClientSection('history');return}route()}
 
@@ -1539,10 +1548,14 @@ async function openTrainerNotification(nid,cid){
  if(!n.is_read&&nid>0)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
  $('#notificationModal')?.remove();
  if(n.kind==='workout_finished'||n.target_tab==='results'){
-   window.trainerResultsDay=(n.message.match(/«([^»]+)»/)||[])[1]||window.trainerResultsDay;
-   window.trainerResultsPeriod='all';window.trainerResultsLimit=50;
-   await openClient(cid,'results');refreshTrainerGlobalBadge();
-   setTimeout(()=>focusTrainerWorkoutNotification(n),180);return;
+   await openClient(cid,'calendar');refreshTrainerGlobalBadge();
+   let day=n.target_day||'';
+   if(!day&&n.target_session_id){
+     let ws=(window.currentClientData?.workout_sessions||[]).find(s=>+s.id===+n.target_session_id);
+     day=String(ws?.started_at||ws?.finished_at||'').slice(0,10);
+   }
+   if(day)showCalendarDay(day,null,true,+n.target_session_id||0);
+   return;
  }
  let tab=n.target_tab||(n.kind==='cardio'?'cardio':'profile');
  await openClient(cid,tab);refreshTrainerGlobalBadge();
@@ -2048,7 +2061,9 @@ function measurementReminderState(d){
 }
 function todayGuidanceHTML(d,cid,groups){
  let today=isoToday(),sessions=(d.workout_sessions||[]),active=sessions.find(x=>x.status==='training'),
-     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today),
+     todaySetsAll=(d.result_sets||[]).filter(x=>x.day===today),
+     todaySession=sessions.find(x=>String(x.started_at||'').slice(0,10)===today)
+       ||(todaySetsAll.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),
      cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
  if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
@@ -2359,19 +2374,16 @@ if(startupResetToken){renderResetPassword(startupResetToken)}else{
 }
 
 </script>
-<script type="application/x-eplan-disabled">
+<script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js', {scope:'/'});
+      const reg = await navigator.serviceWorker.register('/sw.js?v=56', {scope:'/'});
       reg.update();
       setTimeout(autoRegisterPhoneNotifications,300);
       setTimeout(handleNotificationDeepLink,450);
-      let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        refreshing = true;
-        location.reload();
+        console.info('Є ПЛАН: service worker updated');
       });
     } catch (e) {
       console.warn('PWA service worker registration failed', e);
@@ -2380,7 +2392,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script type="application/x-eplan-disabled">
+<script>
 (function(){
   const splash=document.getElementById('eplanSplash');
   if(!splash)return;
