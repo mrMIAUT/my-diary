@@ -310,21 +310,28 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V60 diagnostic: serve the real production HTML/CSS, but remove every script.
-    # This isolates WebKit rendering from all application JavaScript.
+    # V61 diagnostic: serve the real deployed index.html with ONLY its first
+    # inline <script>. Scripts 2+ are removed server-side.
     import re
     html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
-    html=re.sub(r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html, flags=re.IGNORECASE)
+    scripts=list(re.finditer(r"<script\\b[^>]*>[\\s\\S]*?</script\\s*>", html, flags=re.IGNORECASE))
+    total=len(scripts)
+    if scripts:
+        first=scripts[0]
+        html=html[:first.end()] + re.sub(
+            r"<script\\b[^>]*>[\\s\\S]*?</script\\s*>", "", html[first.end():], flags=re.IGNORECASE
+        )
     probe=r"""
 <style>
-#eplanSplash{display:none!important}
-#app{display:block!important;min-height:100vh;padding:calc(env(safe-area-inset-top) + 34px) 20px 40px;box-sizing:border-box}
-.v60-probe{max-width:560px;margin:18vh auto 0;background:#111214;border:1px solid #34363b;border-radius:22px;padding:24px;color:#f5f5f5;font-family:system-ui,-apple-system,sans-serif}
-.v60-logo{font-size:31px;font-weight:900;margin-bottom:28px}.v60-logo b,.v60-title{color:#ffd000}.v60-title{font-size:24px;font-weight:900;margin-bottom:14px}.v60-copy{color:#b7b7bd;line-height:1.55;font-size:17px}.v60-code{margin-top:20px;padding:14px 16px;border-radius:14px;background:#191a1d;font:15px ui-monospace,SFMono-Regular,Menlo,monospace}
+#v61Probe{position:fixed!important;z-index:2147483647!important;left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px)!important;background:#111214!important;border:1px solid #ffd000!important;border-radius:14px!important;padding:12px 14px!important;color:#f5f5f5!important;font:13px/1.35 system-ui,-apple-system,sans-serif!important;display:block!important;visibility:visible!important;opacity:1!important}
+#v61Probe b{color:#ffd000!important}#v61Probe code{color:#ddd!important}
 </style>
-<div class="v60-probe"><div class="v60-logo"><b>Є</b> | ПЛАН</div><div class="v60-title">V60 · REAL HTML / NO JS</div><div class="v60-copy">Це справжній index.html та його CSS. Усі &lt;script&gt; видалені сервером до відправлення сторінки.</div><div class="v60-code">/app · scripts: 0</div></div>
+<div id="v61Probe"><b>V61 · SCRIPT 1 ONLY</b><br><code>/app · script 1 enabled · scripts 2+ disabled</code></div>
 """
-    html=html.replace('<div id="app"></div>', '<div id="app">'+probe+'</div>', 1)
+    # Put the marker immediately after <body>, outside #app, so app rendering
+    # cannot erase it merely by replacing #app contents.
+    html=re.sub(r"(<body\\b[^>]*>)", r"\\1"+probe, html, count=1, flags=re.IGNORECASE)
+    html=html.replace('</body>', f'<div style="display:none" data-v61-total-scripts="{total}"></div></body>', 1)
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate",
         "Pragma":"no-cache", "Expires":"0"
