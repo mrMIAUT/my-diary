@@ -203,6 +203,10 @@ def init():
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS program_snapshot TEXT DEFAULT ''")
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS workout_day DATE")
+        # Legacy live sessions used PostgreSQL CURRENT_TIMESTAMP in a timezone-naive column (UTC wall time).
+        # Convert that timestamp to the Kyiv calendar day once; manual daytime history remains on the same date.
+        c.execute("""UPDATE workout_sessions SET workout_day=((started_at AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Kyiv')::date WHERE workout_day IS NULL AND started_at IS NOT NULL""")
         c.execute("""CREATE TABLE IF NOT EXISTS notifications(
             id SERIAL PRIMARY KEY, client_id INTEGER, recipient TEXT, kind TEXT,
             message TEXT, is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -211,6 +215,7 @@ def init():
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_day TEXT DEFAULT ''")
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_program_id INTEGER DEFAULT 0")
         c.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_session_id INTEGER DEFAULT 0")
+        c.execute("""UPDATE notifications n SET target_day=s.workout_day::text FROM workout_sessions s WHERE n.target_session_id=s.id AND s.workout_day IS NOT NULL AND COALESCE(n.target_day,'')<>s.workout_day::text""")
         c.execute("""CREATE TABLE IF NOT EXISTS push_subscriptions(
             id SERIAL PRIMARY KEY, client_id INTEGER DEFAULT 0, recipient TEXT,
             endpoint TEXT UNIQUE, p256dh TEXT, auth TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -708,11 +713,11 @@ def start_workout(x:WorkoutStartIn):
     today=str(kyiv_today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
     if active:return active
-    existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
+    existing=one("SELECT * FROM workout_sessions WHERE client_id=? AND COALESCE(workout_day,CAST(started_at AS DATE))=? ORDER BY id DESC LIMIT 1",(x.client_id,today))
     if existing:
         raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
     snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
-    i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot) VALUES(?,?,?,?)",(x.client_id,x.day_name,"training",snapshot))
+    i=run("INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,workout_day) VALUES(?,?,?,?,CAST(? AS DATE))",(x.client_id,x.day_name,"training",snapshot,today))
     session=one("SELECT * FROM workout_sessions WHERE id=?",(i,))
     client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(x.client_id,))
     if client_info:
@@ -735,7 +740,7 @@ def finish_workout(sid:int):
             full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
             client_name=full_name or client_info.get("name") or "Клієнт"
             workout_day=str(session.get("day_name") or "Тренування")
-            workout_date=str(session.get("started_at") or "")[:10] or str(kyiv_today())
+            workout_date=str(session.get("workout_day") or "")[:10] or str(kyiv_today())
             send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
             add_notification(session["client_id"],"trainer","workout_finished",
                 f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
@@ -759,7 +764,7 @@ def historical_workout(x:HistoricalWorkoutIn):
     require_active_client(x.client_id,'workouts')
     if x.day > str(kyiv_today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
-    existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND CAST(started_at AS DATE)=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
+    existing=one("SELECT id FROM workout_sessions WHERE client_id=? AND COALESCE(workout_day,CAST(started_at AS DATE))=? ORDER BY id DESC LIMIT 1",(x.client_id,x.day))
     if existing:
         raise HTTPException(400,"Тренування за цей день уже записано")
     for s in x.sets:
@@ -767,8 +772,8 @@ def historical_workout(x:HistoricalWorkoutIn):
             (x.client_id,s.program_id,s.exercise,x.day,s.set_number,s.weight,s.reps,s.rir))
     # Noon avoids timezone/date rollover ambiguity for historical display.
     snapshot=json.dumps(rows("SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name)),ensure_ascii=False)
-    run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status,program_snapshot) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished',?)",
-        (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00",snapshot))
+    run("INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status,program_snapshot,workout_day) VALUES(?,?,CAST(? AS TIMESTAMP),CAST(? AS TIMESTAMP),'finished',?,CAST(? AS DATE))",
+        (x.client_id,x.day_name,x.day+" 12:00:00",x.day+" 13:00:00",snapshot,x.day))
     return {"ok":True}
 
 @app.post("/api/comments")
@@ -791,7 +796,7 @@ def review_workout(sid:int,x:WorkoutReviewIn):
     comment=x.comment.strip()
     run("UPDATE workout_sessions SET trainer_reviewed=TRUE,trainer_comment=? WHERE id=?",(comment,sid))
     workout_day=str(s.get("day_name") or "Тренування")
-    workout_date=str(s.get("started_at") or "")[:10]
+    workout_date=str(s.get("workout_day") or s.get("started_at") or "")[:10]
     message=(f"Тренер перевірив тренування «{workout_day}» і залишив коментар: {comment}"
              if comment else f"Тренер перевірив тренування «{workout_day}».")
     add_notification(s["client_id"],"client","workout_review",message,
@@ -824,7 +829,7 @@ def get_all_trainer_notifications():
         xs.append({"id":-int(s["sid"]),"client_id":s["client_id"],"recipient":"trainer",
                    "kind":"workout_finished","message":f"{s['client_name']} завершив тренування «{s['day_name']}». Потрібно перевірити.",
                    "is_read":False,"created_at":dt,"client_name":s["client_name"],
-                   "target_tab":"results","target_day":str(s.get("started_at") or "")[:10],
+                   "target_tab":"results","target_day":str(s.get("workout_day") or s.get("started_at") or "")[:10],
                    "target_program_id":0,"target_session_id":s["sid"]})
     xs.sort(key=lambda x:str(x.get("created_at") or ""),reverse=True)
     return xs[:200]
