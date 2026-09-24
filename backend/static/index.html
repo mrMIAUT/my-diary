@@ -858,7 +858,7 @@ const EN_MAP={
 'Почати тренування':'Start workout','Завершити тренування':'Finish workout','Перевірено тренером ✓':'Reviewed by trainer ✓',
 'БЖВ за сьогодні':'Macros today','Моє харчування':'My nutrition','Особисті дані та інформація, важлива для тренувань.':'Personal data and information important for training.','Редагувати анкету':'Edit profile',
 '← До клієнтів':'← Back to clients','+ Додати вправу':'+ Add exercise',
-'День, напр. День 1':'Day, e.g. Day 1','Вправа':'Exercise','Посилання на техніку':'Technique video link',
+'День, напр. День 1':'Day, e.g. Day 1','Назва дня, напр. Плечі + руки':'Day title, e.g. Shoulders + arms','Вправа':'Exercise','Посилання на техніку':'Technique video link',
 'RIR за замовчуванням':'Default RIR','RIR по підходах: 2,2,1':'RIR by set: 2,2,1',
 'Відпочинок, хв (напр. 2-3)':'Rest, min (e.g. 2-3)',
 'Назва вправи':'Exercise name','Посилання на відео':'Video link',
@@ -1295,7 +1295,7 @@ function programDayTitle(d,day){
 }
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
- let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"><input id="alternatives" list="exerciseLibraryNames" placeholder="Альтернативи через кому, напр. Гак-присідання, Сміт"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><div class="rir-help"><strong>RIR (Reps In Reserve)</strong> — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 повтори.</div><br><button onclick="addExercise()">+ Додати вправу</button></div>`;
+ let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="dntitle" placeholder="Назва дня, напр. Плечі + руки"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"><input id="alternatives" list="exerciseLibraryNames" placeholder="Альтернативи через кому, напр. Гак-присідання, Сміт"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><div class="rir-help"><strong>RIR (Reps In Reserve)</strong> — кількість повторів, які залишилися б у запасі до відмови. Наприклад, RIR 2 = після підходу ти міг би виконати ще приблизно 2 повтори.</div><br><button onclick="addExercise()">+ Додати вправу</button></div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
    let bodyId='programDay_'+di,title=programDayTitle(d,day),blocks=[];
@@ -1337,7 +1337,7 @@ async function saveProgramDayTitle(day){
  try{
    await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:cid,day_name:day,title})});
    dayTitleModal.remove();
-   await openClient(cid);
+   await openClient(cid,'program');
  }catch(e){alert(e.message||'Не вдалося зберегти назву дня')}
 }
 
@@ -1377,7 +1377,15 @@ async function saveExerciseEdit(pid,cid){
    editExerciseModal.remove();await openClient(cid);
  }catch(e){alert(e.message||'Не вдалося зберегти зміни')}
 }
-async function addExercise(){if(!dn.value||!ex.value)return alert('Вкажи день і вправу');await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dn.value,exercise:ex.value,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:tech.value,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,ex.value))})});openClient(selected)}
+async function addExercise(){
+ let day=dn.value.trim(),title=(document.getElementById('dntitle')?.value||'').trim(),exercise=ex.value.trim();
+ if(!day||!exercise)return alert('Вкажи день і вправу');
+ try{
+  if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
+  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:tech.value,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
+  await openClient(selected,'program');
+ }catch(e){alert(e.message||'Не вдалося додати вправу')}
+}
 
 function addSupersetExercise(sourceId,dayName){
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal"><div class="card"><div class="between"><div><h2>Додати суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark" onclick="supersetModal.remove()">✕</button></div><p class="muted">Нова вправа буде автоматично об'єднана з вибраною вправою в один суперсет.</p><div class="grid"><input id="ssex" placeholder="Друга вправа"><input id="sssets" type="number" value="3" placeholder="Підходи"><input id="ssreps" value="8-12" placeholder="Повтори"><input id="ssrir" type="number" value="2" placeholder="RIR"><input id="ssrirset" value="2,2,2" placeholder="RIR по підходах"><input id="ssrest" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button onclick="saveSupersetExercise(${sourceId},'${esc(dayName).replace(/'/g,"&#39;")}')">+ Додати в суперсет</button></div></div>`)
