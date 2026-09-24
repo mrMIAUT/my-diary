@@ -710,6 +710,9 @@ button.password-eye-btn{display:inline-flex;align-items:center;justify-content:c
 /* v50 — exact trainer review target */
 .trainer-calendar-review{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 button[data-action-loading="1"]{background:#29292e!important;color:#b8b8b8!important;box-shadow:none!important;opacity:1!important;cursor:wait!important}
+
+.empty-state{padding:18px;border:1px dashed var(--line);border-radius:16px;background:var(--card2);color:var(--muted);line-height:1.45}
+.empty-state strong{display:block;color:var(--text);margin-bottom:5px}
 </style><style>.today-date{margin:8px 0 4px;font-size:17px;font-weight:700;color:#ffd400}</style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -974,7 +977,7 @@ function showClientSection(section){
  if(feature&&!hasFeature(feature,c)){alert('Ця функція недоступна у вашому тарифі.');return}
  currentClientView=section;
  let html='';
- if(section==='mealplan')html=`<h1>План харчування</h1><div class="card"><h2>Моє харчування</h2><div class="daily-macros-line"><div class="daily-macro"><strong>${c.kcal||0}</strong><br>ккал</div><div class="daily-macro"><strong>${c.protein||0}</strong><br>Б</div><div class="daily-macro"><strong>${c.fat||0}</strong><br>Ж</div><div class="daily-macro"><strong>${c.carbs||0}</strong><br>В</div></div></div>${clientMealPlanHTML(d)||'<div class="card"><p class="muted">План харчування ще не додано.</p></div>'}`;
+ if(section==='mealplan')html=`<h1>План харчування</h1><div class="card"><h2>Моє харчування</h2><div class="daily-macros-line"><div class="daily-macro"><strong>${c.kcal||0}</strong><br>ккал</div><div class="daily-macro"><strong>${c.protein||0}</strong><br>Б</div><div class="daily-macro"><strong>${c.fat||0}</strong><br>Ж</div><div class="daily-macro"><strong>${c.carbs||0}</strong><br>В</div></div></div>${clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>'}`;
  else if(section==='measurements')html=`<h1>Заміри</h1>${clientMeasurementsHTML(d,c.id)}`;
  else if(section==='progress')html=`<h1>Прогрес</h1>${clientProgressHTML(d)}`;
  else if(section==='history')html=`<h1>Історія</h1><div id="clientCalendar">${calendarHTML(d,'client')}</div>`;
@@ -1023,8 +1026,10 @@ function clientProgressHTML(d){
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
  let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.clientProgressDay=(window.clientProgressDay==='${esc(day).replace(/'/g,"&#39;")}'?null:'${esc(day).replace(/'/g,"&#39;")}');refreshClientProgress()">${esc(day)}</button>`).join('');
+ let hasAnyProgress=sessions.length||(d.result_sets||[]).length||allMeasures.length;
 
  return `<div id="clientProgress" class="client-progress-new">
+  ${!hasAnyProgress?`<div class="card"><div class="empty-state"><strong>Тут з’являться твої результати після першого тренування.</strong>Після перших записів ти побачиш силові показники, вагу та зміни тіла.</div></div>`:''}
   <div class="progress-hero">
    <div><h2>Мій прогрес</h2><p class="muted">Головне про твої результати в одному місці.</p></div>
    <div class="progress-periods">${[['30','1 міс.'],['90','3 міс.'],['180','6 міс.'],['all','Увесь час']].map(([v,t])=>`<button class="${period===v?'':'dark'}" onclick="window.clientProgressPeriod='${v}';refreshClientProgress()">${t}</button>`).join('')}</div>
@@ -1038,8 +1043,8 @@ function clientProgressHTML(d){
 
   <div class="card progress-section">
    <div class="progress-section-head"><div><h2>Силові показники</h2><p class="muted">Обери тренувальний день і подивись прогрес вправ за вибраний період.</p></div></div>
-   ${programDays.length?`<div class="progress-day-grid">${dayButtons}</div>`:'<div class="progress-empty">Тренувальна програма ще не додана.</div>'}
-   ${selectedDay?`<div class="progress-selected-day"><div><strong>${esc(selectedDay)}</strong>${programDayTitle(d,selectedDay)?`<small class="progress-day-title">${esc(programDayTitle(d,selectedDay))}</small>`:''}</div><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,i)).join('')}</div>`:'<div class="progress-empty">За цей період ще немає результатів для вправ цього дня.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
+   ${programDays.length?`<div class="progress-day-grid">${dayButtons}</div>`:'<div class="progress-empty">Тренувальна програма ще не додана. Після призначення програми тут з’являться тренувальні дні.</div>'}
+   ${selectedDay?`<div class="progress-selected-day"><div><strong>${esc(selectedDay)}</strong>${programDayTitle(d,selectedDay)?`<small class="progress-day-title">${esc(programDayTitle(d,selectedDay))}</small>`:''}</div><span>${periodLabel}</span></div>${exerciseRows.length?`<div class="strength-list">${exerciseRows.map((x,i)=>strengthProgressCard(x,i)).join('')}</div>`:'<div class="progress-empty">Для вправ цього дня ще немає результатів. Вони з’являться після першого виконаного тренування.</div>'}`:(programDays.length?'<div class="progress-empty progress-day-hint">Обери день тренування вище.</div>':'')}
   </div>
 
   <div class="card progress-section">
@@ -1442,7 +1447,7 @@ function calendarHTML(d,mode='trainer'){
  let cells='';for(let i=0;i<start;i++)cells+='<button class="calendar-day empty"></button>';
  for(let n=1;n<=count;n++){let day=ym+'-'+String(n).padStart(2,'0'),has=unique.includes(day);cells+=`<button class="calendar-day ${has?'has-data':''}" data-day="${day}" onclick="showCalendarDay('${day}',this)">${n}</button>`}
  let monthNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
- return `<div class="card"><div class="calendar-head"><button class="dark" onclick="changeCalendarMonth(-1,'${mode}')">←</button><div style="text-align:center"><h2 style="margin-bottom:4px">${monthNames[mm-1]} ${yy}</h2><div class="muted">жовта крапка = є записи</div></div><button class="dark" onclick="changeCalendarMonth(1,'${mode}')">→</button></div><div class="calendar-grid">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>`<div class="calendar-weekday">${x}</div>`).join('')}${cells}</div><div id="calendarDetails" class="day-details muted">Натисни на день, щоб переглянути записи.</div></div>`;
+ return `<div class="card"><div class="calendar-head"><button class="dark" onclick="changeCalendarMonth(-1,'${mode}')">←</button><div style="text-align:center"><h2 style="margin-bottom:4px">${monthNames[mm-1]} ${yy}</h2><div class="muted">жовта крапка = є записи</div></div><button class="dark" onclick="changeCalendarMonth(1,'${mode}')">→</button></div><div class="calendar-grid">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>`<div class="calendar-weekday">${x}</div>`).join('')}${cells}</div><div id="calendarDetails" class="day-details muted">${unique.length?'Натисни на день, щоб переглянути записи.':'Тут з’явиться історія після першого тренування, запису харчування, активності або замірів.'}</div></div>`;
 }
 function toggleCalendar(id,btn){
  let el=$('#'+id);if(!el)return;
@@ -1914,7 +1919,7 @@ async function saveNutritionTargets(cid,button=null){
 }
 function clientMealPlanHTML(d){let items=planFromData(d).filter(x=>x.content.trim());if(!items.length)return '';let nums=[...new Set(items.map(x=>x.meal_number))].sort((a,b)=>a-b);return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('clientMealPlanBody',this)"><span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб переглянути прийоми їжі</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">${nums.map(n=>{let xs=items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);return `<div class="meal-view"><strong>Прийом їжі ${n}</strong>${xs.map(x=>`<div class="meal-option"><span class="variant-pill">Варіант ${x.variant_number}</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">${esc(x.content)}</div></div>`).join('')}</div>`}).join('')}</div></div>`}
 function measurementRowHTML(x){let vals=[];if(+x.weight)vals.push(`<strong>${x.weight} кг</strong>`);if(+x.waist)vals.push(`Талія ${x.waist} см`);if(+x.hips)vals.push(`Таз ${x.hips} см`);if(+x.thighs)vals.push(`Стегна ${x.thighs} см`);if(+x.arms)vals.push(`Руки ${x.arms} см`);if(+x.chest)vals.push(`Груди ${x.chest} см`);return `<div class="exercise">${x.day?`<div class="muted" style="margin-bottom:7px">${esc(x.day)}</div>`:''}${vals.join(' · ')||'<span class="muted">Немає значень</span>'}</div>`}
-function measureHTML(d){return `<div class="card"><h2>Заміри клієнта</h2><p class="muted">Ці дані заповнює клієнт у своєму кабінеті. Тут доступний лише перегляд історії.</p>${d.measurements.length?d.measurements.slice().reverse().map(x=>measurementRowHTML(x)).join(''):'<p class="muted">Заміри відсутні.</p>'}</div>`}
+function measureHTML(d){return `<div class="card"><h2>Заміри клієнта</h2><p class="muted">Ці дані заповнює клієнт у своєму кабінеті. Тут доступний лише перегляд історії.</p>${d.measurements.length?d.measurements.slice().reverse().map(x=>measurementRowHTML(x)).join(''):'<div class="empty-state"><strong>Заміри ще не додані.</strong>Коли клієнт внесе перші заміри, вони з’являться тут.</div>'}</div>`}
 function measurementDaysLeft(lastDay){
  if(!lastDay)return 0;
  let last=new Date(lastDay+'T12:00:00'),next=new Date(last);next.setDate(next.getDate()+30);
