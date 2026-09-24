@@ -310,28 +310,24 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V59: literal server-rendered page. No app HTML, JS, manifest, or service-worker logic.
-    # This isolates whether the installed iOS web app is actually launching /app.
-    return HTMLResponse("""<!doctype html>
-<html lang="uk">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050505">
-<title>Є ПЛАН V59</title>
+    # V60 diagnostic: serve the real production HTML/CSS, but remove every script.
+    # This isolates WebKit rendering from all application JavaScript.
+    import re
+    html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
+    html=re.sub(r"<script\b[^>]*>[\s\S]*?</script\s*>", "", html, flags=re.IGNORECASE)
+    probe=r"""
 <style>
-html,body{margin:0;min-height:100%;background:#050505;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
-body{min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
-main{width:min(520px,100%);border:1px solid #34343a;border-radius:22px;padding:24px;background:#101012;box-sizing:border-box}
-.logo{font-weight:900;font-size:28px;margin-bottom:24px}.logo b{color:#ffd000}.ok{color:#ffd000;font-size:18px;font-weight:900;margin-bottom:12px}
-p{color:#b6b6be;line-height:1.55;margin:8px 0}.path{margin-top:18px;padding:12px;border-radius:12px;background:#19191d;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#eplanSplash{display:none!important}
+#app{display:block!important;min-height:100vh;padding:calc(env(safe-area-inset-top) + 34px) 20px 40px;box-sizing:border-box}
+.v60-probe{max-width:560px;margin:18vh auto 0;background:#111214;border:1px solid #34363b;border-radius:22px;padding:24px;color:#f5f5f5;font-family:system-ui,-apple-system,sans-serif}
+.v60-logo{font-size:31px;font-weight:900;margin-bottom:28px}.v60-logo b,.v60-title{color:#ffd000}.v60-title{font-size:24px;font-weight:900;margin-bottom:14px}.v60-copy{color:#b7b7bd;line-height:1.55;font-size:17px}.v60-code{margin-top:20px;padding:14px 16px;border-radius:14px;background:#191a1d;font:15px ui-monospace,SFMono-Regular,Menlo,monospace}
 </style>
-</head>
-<body><main><div class="logo"><b>Є</b> | ПЛАН</div><div class="ok">V59 /APP SERVER TEST</div><p>Цю сторінку повернув сервер без JavaScript і без основного index.html.</p><p>Якщо ти бачиш її з установленої іконки — iPhone дійсно запускає маршрут <strong>/app</strong>.</p><div class="path">SERVER ROUTE: /app</div></main></body></html>""", headers={
-        "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
-        "Pragma":"no-cache",
-        "Expires":"0",
-        "Clear-Site-Data":"\"cache\""
+<div class="v60-probe"><div class="v60-logo"><b>Є</b> | ПЛАН</div><div class="v60-title">V60 · REAL HTML / NO JS</div><div class="v60-copy">Це справжній index.html та його CSS. Усі &lt;script&gt; видалені сервером до відправлення сторінки.</div><div class="v60-code">/app · scripts: 0</div></div>
+"""
+    html=html.replace('<div id="app"></div>', '<div id="app">'+probe+'</div>', 1)
+    return HTMLResponse(html, headers={
+        "Cache-Control":"no-store, no-cache, must-revalidate",
+        "Pragma":"no-cache", "Expires":"0"
     })
 
 @app.get("/pwa-reset")
