@@ -713,6 +713,11 @@ button[data-action-loading="1"]{background:#29292e!important;color:#b8b8b8!impor
 
 .empty-state{padding:18px;border:1px dashed var(--line);border-radius:16px;background:var(--card2);color:var(--muted);line-height:1.45}
 .empty-state strong{display:block;color:var(--text);margin-bottom:5px}
+
+.onboarding-overlay{position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;justify-content:center;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.onboarding-card{width:min(100%,520px);background:#19191c;border:1px solid #34343a;border-radius:26px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+.onboarding-step{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#ffd400;margin-bottom:14px}.onboarding-card h2{font-size:28px;margin:0 0 10px}.onboarding-card p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 24px}
+.onboarding-dots{display:flex;gap:7px;margin-bottom:20px}.onboarding-dots span{width:7px;height:7px;border-radius:99px;background:#444}.onboarding-dots span.active{width:24px;background:#ffd400}.onboarding-actions{display:flex;gap:10px}.onboarding-actions button{flex:1}.onboarding-skip{background:#29292e!important;color:#ddd!important}
 </style><style>.today-date{margin:8px 0 4px;font-size:17px;font-weight:700;color:#ffd400}</style></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-logo">
@@ -780,6 +785,10 @@ async function offlineStatus(msg,kind=''){
  el.textContent=msg;el.className='offline-pill show '+kind;
  if(msg==='✓ Синхронізовано')setTimeout(()=>el.classList.remove('show'),1800);
 }
+function hideOfflineStatus(){
+ let el=document.getElementById('offlinePill');
+ if(el){el.classList.remove('show','syncing');el.textContent=''}
+}
 function setActionLoading(btn,text='Зберігаємо…'){
  if(!btn)return ()=>{};
  const oldText=btn.textContent,oldDisabled=btn.disabled;
@@ -837,7 +846,7 @@ async function api(path,opt={}){
 let offSyncing=false;
 async function syncOfflineQueue(){
  if(offSyncing||!navigator.onLine)return;offSyncing=true;
- let q=await offAll('queue');if(!q.length){offSyncing=false;return}
+ let q=await offAll('queue');if(!q.length){hideOfflineStatus();offSyncing=false;return}
  offlineStatus('Синхронізація…','syncing');let sidMap={};
  try{
    for(let item of q){
@@ -854,7 +863,7 @@ async function syncOfflineQueue(){
  }catch{offlineStatus('● Є дані, що очікують синхронізації')}
  offSyncing=false;
 }
-window.addEventListener('online',()=>syncOfflineQueue());
+window.addEventListener('online',()=>{hideOfflineStatus();syncOfflineQueue()});
 window.addEventListener('offline',()=>offlineStatus('● Офлайн · дані зберігаються на телефоні'));
 setTimeout(()=>{if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні')},800);
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -2414,20 +2423,31 @@ async function saveClientProfile(cid){
  try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,contraindications:pfContra.value,injuries:pfInjuries.value,contact:'',instagram:pfInstagram.value,telegram:pfTelegram.value,tiktok:pfTikTok.value})});profileModal.remove();let d=await api('/client/'+cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
 }
 
+function onboardingKey(){return 'eplanClientOnboardingV1_'+(session?.client_id||'client')}
+function maybeShowClientOnboarding(){if(!session||session.role!=='client')return;try{if(localStorage.getItem(onboardingKey())==='done')return}catch(e){}if(!document.getElementById('clientOnboarding'))showClientOnboarding(0)}
+function showClientOnboarding(step=0){
+ const steps=[
+ {title:'Сьогодні — твій план на день',text:'Тут ти побачиш тренування, активність, БЖВ та все, що потрібно виконати сьогодні.'},
+ {title:'Записуй результати під час тренування',text:'Внось вагу, повтори та RIR після підходів. Дані збережуться в історії та допоможуть відстежувати прогрес.'},
+ {title:'Прогрес — тут побачиш зміни',text:'У розділі «Прогрес» зберігаються силові показники, вага та зміни тіла за вибраний період.'}];
+ step=Math.max(0,Math.min(step,steps.length-1));let s=steps[step];document.getElementById('clientOnboarding')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div id="clientOnboarding" class="onboarding-overlay"><div class="onboarding-card"><div class="onboarding-step">Крок ${step+1} з ${steps.length}</div><h2>${s.title}</h2><p>${s.text}</p><div class="onboarding-dots">${steps.map((_,i)=>`<span class="${i===step?'active':''}"></span>`).join('')}</div><div class="onboarding-actions">${step<steps.length-1?`<button class="onboarding-skip" onclick="finishClientOnboarding()">Пропустити</button><button onclick="showClientOnboarding(${step+1})">Далі</button>`:`<button onclick="finishClientOnboarding()">Почати користуватися</button>`}</div></div></div>`);syncOverlayLock()
+}
+function finishClientOnboarding(){try{localStorage.setItem(onboardingKey(),'done')}catch(e){}document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
 async function clientCabinet(id){
  let d=await api('/client/'+id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
 
  let access=clientAccess(c);
  if(access.expired||access.manually_frozen||access.effective_plan==='free'){
    app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h2>Режим перегляду</h2><p class="muted">Ти можеш переглядати попередні тренування, прогрес та історію. Нові записи недоступні.</p></div><div class="card"><button class="exercise-toggle" onclick="toggleCalendar('clientCalendarBody',this)"><span><strong>Моя історія</strong><span class="muted" style="display:block;margin-top:5px">Усі попередні записи залишаються збереженими</span></span><span class="arrow">⌄</span></button><div id="clientCalendarBody" class="hidden" style="margin-top:14px"><div id="clientCalendar">${calendarHTML(d,'client')}</div></div></div>`);
-   refreshNotificationBadge(id,'client','clientNotifyBtn');return;
+   refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(maybeShowClientOnboarding,180);return;
  }
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  let programPart='';
  if(active){
    programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id},this)">Завершити тренування</button></div></div>`;
  }
- currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0)
+ currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(toggleCardioFields,0);setTimeout(maybeShowClientOnboarding,180)
 }
 
 function focusNextUnfinishedExercise(pid){
