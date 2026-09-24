@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
@@ -305,18 +305,15 @@ def home(): return FileResponse(BASE/"static"/"index.html")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
 @app.get("/manifest.webmanifest")
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
+@app.get("/pwa-js-test")
+def pwa_js_test():
+    html = '<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080909"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Є ПЛАН TEST"><title>Є ПЛАН · JS TEST</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#080909;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;min-height:100vh;padding:max(28px,env(safe-area-inset-top)) 18px max(28px,env(safe-area-inset-bottom))}.box{max-width:720px;margin:0 auto;border:2px solid #ffd000;border-radius:24px;padding:22px}.brand{font-size:26px;font-weight:800;margin-bottom:8px}.brand b{color:#ffd000}.muted{color:#aaa}.tests{display:grid;gap:10px;margin-top:22px}.test{padding:14px;border:1px solid #3a3a3f;border-radius:14px;background:#151517}.ok{border-color:#2e7d4f;background:#10271a}.bad{border-color:#8a3b3b;background:#2b1414}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#777;margin-right:9px}.ok .dot{background:#4bd37b}.bad .dot{background:#ff6b6b}button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:14px;background:#ffd000;color:#080808;font-weight:800;font-size:16px}.foot{margin-top:18px;color:#888;font-size:13px;line-height:1.45}</style></head><body><div class="box"><div class="brand"><b>Є ПЛАН</b> · JS DIAG 2</div><div class="muted" id="summary">HTML + CSS завантажено. Перевіряю JavaScript…</div><div class="tests"><div class="test" id="classic"><span class="dot"></span>1. Inline classic script: очікування</div><div class="test" id="external"><span class="dot"></span>2. External same-origin script: очікування</div><div class="test" id="module"><span class="dot"></span>3. Module script: очікування</div><div class="test" id="storage"><span class="dot"></span>4. localStorage: очікування</div><div class="test" id="fetch"><span class="dot"></span>5. fetch() до сервера: очікування</div><div class="test" id="timer"><span class="dot"></span>6. setTimeout: очікування</div><div class="test" id="click"><span class="dot"></span>7. Натискання кнопки: очікування</div></div><button id="btn" onclick="document.getElementById(\'click\').className=\'test ok\';document.getElementById(\'click\').innerHTML=\'<span class=dot></span>7. Натискання кнопки: ПРАЦЮЄ\'">Натисни для тесту</button><div class="foot">Версія: JS-DIAG-2 · 2026-09-24<br>Ця сторінка не використовує основний код застосунку, service worker або manifest.</div></div><script>(function(){function ok(id,text){var e=document.getElementById(id);e.className=\'test ok\';e.innerHTML=\'<span class="dot"></span>\'+text}function bad(id,text){var e=document.getElementById(id);e.className=\'test bad\';e.innerHTML=\'<span class="dot"></span>\'+text}ok(\'classic\',\'1. Inline classic script: ПРАЦЮЄ\');document.getElementById(\'summary\').textContent=\'JavaScript запустився. Виконую окремі перевірки…\';try{localStorage.setItem(\'eplan_js_diag\',\'ok\');ok(\'storage\',\'4. localStorage: ПРАЦЮЄ\')}catch(e){bad(\'storage\',\'4. localStorage: ПОМИЛКА · \'+e.name)}fetch(\'/health?diag=2\',{cache:\'no-store\'}).then(function(r){if(!r.ok)throw new Error(\'HTTP \'+r.status);return r.json()}).then(function(){ok(\'fetch\',\'5. fetch() до сервера: ПРАЦЮЄ\')}).catch(function(e){bad(\'fetch\',\'5. fetch() до сервера: ПОМИЛКА · \'+e.message)});setTimeout(function(){ok(\'timer\',\'6. setTimeout: ПРАЦЮЄ\')},700);window.__diagOk=ok;})();</script><script src="/pwa-js-test.js?v=2"></script><script type="module">document.getElementById(\'module\').className=\'test ok\';document.getElementById(\'module\').innerHTML=\'<span class="dot"></span>3. Module script: ПРАЦЮЄ\';</script><noscript><style>#summary{color:#ff7777;font-weight:800}#summary:after{content:\' JavaScript реально вимкнено або заблоковано.\'}</style></noscript></body></html>'
+    return HTMLResponse(html, headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"})
 
-@app.get("/pwa-test")
-def pwa_test():
-    return FileResponse(
-        BASE/"static"/"pwa-test.html",
-        media_type="text/html",
-        headers={
-            "Cache-Control":"no-store, no-cache, must-revalidate",
-            "Pragma":"no-cache",
-            "Expires":"0"
-        }
-    )
+@app.get("/pwa-js-test.js")
+def pwa_js_test_script():
+    js = "window.__diagOk && window.__diagOk('external','2. External same-origin script: ПРАЦЮЄ');"
+    return Response(content=js, media_type="application/javascript", headers={"Cache-Control":"no-store"})
 
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
