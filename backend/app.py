@@ -310,59 +310,28 @@ def home(): return _app_index()
 
 @app.get("/app")
 def pwa_app():
-    # V58 standalone boot trace. The installed iOS icon already launches /app,
-    # so instrument the real current index.html at response time instead of
-    # maintaining a second diagnostic copy.
-    html=(BASE/"static"/"index.html").read_text(encoding="utf-8")
-    trace=r"""<script id="eplan-v58-prelude">
-(function(){
-  const T0=Date.now(), events=[];
-  function standalone(){
-    try{return !!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(_){return false}
-  }
-  function paint(){
-    let box=document.getElementById('eplanV58Trace');
-    if(!box && document.body){
-      box=document.createElement('div'); box.id='eplanV58Trace';
-      box.style.cssText='position:fixed;z-index:2147483647;left:10px;right:10px;bottom:10px;max-height:48vh;overflow:auto;background:#090909;color:#f4f4f5;border:2px solid #ffd000;border-radius:18px;padding:14px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;box-shadow:0 8px 30px #000';
-      document.body.appendChild(box);
-    }
-    if(box){
-      const app=document.getElementById('app'), splash=document.getElementById('eplanSplash');
-      box.textContent='Є ПЛАН · V58 BOOT TRACE\nstandalone: '+standalone()+'\nurl: '+location.href+'\nready: '+document.readyState+'\n#app children: '+(app?app.children.length:'missing')+'\nsplash: '+(splash?'present':'missing')+'\n\n'+events.join('\n');
-    }
-  }
-  window.__eplanV58=function(msg){events.push('['+(Date.now()-T0)+'ms] '+msg);paint()};
-  addEventListener('error',function(e){window.__eplanV58('ERROR: '+(e.message||'resource error')+' @ '+(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0))},true);
-  addEventListener('unhandledrejection',function(e){let r=e.reason;window.__eplanV58('REJECTION: '+(r&&r.stack?r.stack:String(r))) });
-  window.__eplanV58('prelude-start');
-  document.addEventListener('DOMContentLoaded',()=>window.__eplanV58('DOMContentLoaded'));
-  addEventListener('load',()=>window.__eplanV58('window-load'));
-  setTimeout(()=>window.__eplanV58('checkpoint-1s'),1000);
-  setTimeout(()=>window.__eplanV58('checkpoint-4s'),4000);
-})();
-</script>"""
-    # Put the tracer immediately before the first application script. It is
-    # intentionally independent of localStorage, service workers and app code.
-    pos=html.lower().find("<script")
-    if pos>=0:
-        html=html[:pos]+trace+html[pos:]
-    else:
-        html=html.replace("</body>",trace+"</body>")
-    # Add execution markers before subsequent inline/external scripts without
-    # modifying their contents.
-    import re
-    counter={"n":0}
-    def mark(m):
-        counter["n"]+=1
-        tag=m.group(0)
-        if 'id="eplan-v58-prelude"' in tag:
-            return tag
-        return '<script>window.__eplanV58&&window.__eplanV58("before-script-%d")</script>'%counter["n"]+tag
-    html=re.sub(r'<script(?:\\s[^>]*)?>',mark,html,flags=re.I)
-    return HTMLResponse(html,headers={
-        "Cache-Control":"no-store, no-cache, must-revalidate",
-        "Pragma":"no-cache","Expires":"0","X-EPlan-Diagnostic":"v58"
+    # V59: literal server-rendered page. No app HTML, JS, manifest, or service-worker logic.
+    # This isolates whether the installed iOS web app is actually launching /app.
+    return HTMLResponse("""<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>Є ПЛАН V59</title>
+<style>
+html,body{margin:0;min-height:100%;background:#050505;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+body{min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+main{width:min(520px,100%);border:1px solid #34343a;border-radius:22px;padding:24px;background:#101012;box-sizing:border-box}
+.logo{font-weight:900;font-size:28px;margin-bottom:24px}.logo b{color:#ffd000}.ok{color:#ffd000;font-size:18px;font-weight:900;margin-bottom:12px}
+p{color:#b6b6be;line-height:1.55;margin:8px 0}.path{margin-top:18px;padding:12px;border-radius:12px;background:#19191d;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+</style>
+</head>
+<body><main><div class="logo"><b>Є</b> | ПЛАН</div><div class="ok">V59 /APP SERVER TEST</div><p>Цю сторінку повернув сервер без JavaScript і без основного index.html.</p><p>Якщо ти бачиш її з установленої іконки — iPhone дійсно запускає маршрут <strong>/app</strong>.</p><div class="path">SERVER ROUTE: /app</div></main></body></html>""", headers={
+        "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma":"no-cache",
+        "Expires":"0",
+        "Clear-Site-Data":"\"cache\""
     })
 
 @app.get("/pwa-reset")
