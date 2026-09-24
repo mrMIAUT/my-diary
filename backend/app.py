@@ -321,7 +321,7 @@ def pwa_reset():
 (async()=>{const log=document.getElementById('log'),status=document.getElementById('status'),go=document.getElementById('go');const say=x=>log.textContent+=x+'\n';
 try{if('serviceWorker'in navigator){const regs=await navigator.serviceWorker.getRegistrations();say('Service workers: '+regs.length);for(const r of regs){say('unregister '+r.scope+' → '+await r.unregister())}}else say('Service Worker API: unavailable');}catch(e){say('SW error: '+e)}
 try{if('caches'in window){const keys=await caches.keys();say('Caches: '+keys.length);for(const k of keys){say('delete '+k+' → '+await caches.delete(k))}}}catch(e){say('Cache error: '+e)}
-status.textContent='Готово. Старі Service Worker та кеші очищено.';go.hidden=false;go.onclick=()=>location.replace('/app?clean=56');
+status.textContent='Готово. Старі Service Worker та кеші очищено.';go.hidden=false;go.onclick=()=>location.replace('/app?clean=57');
 })();</script></body></html>""",headers={"Cache-Control":"no-store, no-cache, must-revalidate","Clear-Site-Data":"\"cache\""})
 
 @app.get("/sw.js")
