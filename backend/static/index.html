@@ -1101,9 +1101,11 @@ function syncPasswordEye(btn,input){
  if(!btn||!input)return;
  btn.classList.add('password-eye-btn');
  let hidden=input.type==='password';
- btn.innerHTML=passwordEyeSVG(hidden);
- btn.setAttribute('aria-label',hidden?'Показати пароль':'Сховати пароль');
- btn.title=hidden?'Показати пароль':'Сховати пароль';
+ let icon=passwordEyeSVG(hidden);
+ if(btn.innerHTML!==icon)btn.innerHTML=icon;
+ let label=hidden?'Показати пароль':'Сховати пароль';
+ if(btn.getAttribute('aria-label')!==label)btn.setAttribute('aria-label',label);
+ if(btn.title!==label)btn.title=label;
 }
 function syncAllPasswordEyes(){
  document.querySelectorAll('input[type="password"],input[data-password-field="1"]').forEach(input=>{
@@ -2419,7 +2421,15 @@ if ('serviceWorker' in navigator) {
 })();
 
 document.addEventListener('DOMContentLoaded',()=>setTimeout(syncAllPasswordEyes,0));
-const passwordEyeObserver=new MutationObserver(()=>syncAllPasswordEyes());
+let passwordEyeSyncQueued=false;
+const passwordEyeObserver=new MutationObserver(()=>{
+  if(passwordEyeSyncQueued)return;
+  passwordEyeSyncQueued=true;
+  queueMicrotask(()=>{
+    passwordEyeSyncQueued=false;
+    syncAllPasswordEyes();
+  });
+});
 passwordEyeObserver.observe(document.documentElement,{childList:true,subtree:true});
 </script>
 
