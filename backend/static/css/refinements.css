@@ -236,3 +236,21 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 .exercise-meta-row .tech-link{margin-top:0}
 .exercise-meta-row .exercise-done-badge{margin-left:auto}
 @media(max-width:390px){.exercise-meta-row{gap:10px}.exercise-meta-row .exercise-done-badge{margin-left:0}}
+
+/* V92 — exercise library muscle taxonomy */
+.library-filter-card select,.library-edit-card select{width:100%}
+.library-muscle-lines{margin-top:6px;font-size:13px;line-height:1.45;color:var(--muted)}
+.library-muscle-lines span{color:var(--muted)}
+.library-muscle-lines b{color:var(--text);font-weight:700}
+.library-muscles-empty{margin-top:6px;font-size:13px;color:var(--muted)}
+.library-muscle-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.library-muscle-picker>div{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.library-check-grid{display:grid;grid-template-columns:1fr;gap:7px;margin-top:9px;max-height:190px;overflow:auto}
+.library-check-grid label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.library-check-grid input{width:auto!important;margin:0;accent-color:var(--yellow)}
+.library-muscles-admin{padding-top:14px}
+.library-muscle-admin-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.library-muscle-admin-list>div{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card2)}
+.library-muscle-admin-list button.library-icon-btn{width:30px!important;height:30px!important;min-width:30px!important;border-radius:9px!important}
+.library-add-exercise{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+@media(max-width:620px){.library-muscle-picker{grid-template-columns:1fr}.library-edit-card{max-height:90vh;overflow:auto}}
