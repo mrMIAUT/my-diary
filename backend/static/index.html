@@ -230,9 +230,14 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 /* Trainer exercise library */
 .library-group{margin-bottom:14px}
 .library-group-body{padding-top:12px}
-.library-exercise{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.library-exercise{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
 .library-exercise:first-child{border-top:0}
 .library-exercise a{color:var(--yellow);text-decoration:none}
+.library-exercise-main{min-width:0;flex:1}
+.library-exercise-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+button.library-icon-btn{width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;margin:0!important;border-radius:12px!important;display:flex!important;align-items:center;justify-content:center;font-size:17px!important}
+button.library-edit-btn{background:#292a2f!important;color:#f2f2f3!important;border:1px solid #3a3b41!important}
+button.library-delete-btn{background:#4a2020!important;color:#ffb4b4!important;border:0!important}
 .lang-switch{display:flex;gap:8px;margin-bottom:12px}
 .lang-switch button{flex:1;padding:10px!important}
 .rir-help{font-size:13px;line-height:1.45;margin-top:10px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#111214}
@@ -994,11 +999,22 @@ function sideMenuHTML(){
 async function showExerciseLibrary(){
  currentTrainerMainView='library';selected=null;window.currentClientData=null;await loadExerciseLibrary();
  let L=window.exerciseLibrary||{groups:[],exercises:[]};
- app.innerHTML=shell(`<h1>Бібліотека вправ</h1><div class="card"><h2>Групи м’язів</h2><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Спина"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>${L.groups.map(g=>`<div class="card library-group"><button class="exercise-toggle" onclick="toggleExercise('libGroup${g.id}',this)"><span><strong>${esc(g.name)}</strong><span class="muted" style="display:block;margin-top:5px">${L.exercises.filter(x=>x.group_id===g.id).length} вправ</span></span><span class="arrow">⌄</span></button><div id="libGroup${g.id}" class="library-group-body hidden">${L.exercises.filter(x=>x.group_id===g.id).map(x=>`<div class="library-exercise"><div><strong>${esc(x.name)}</strong>${x.technique_url?`<div><a href="${esc(x.technique_url)}" target="_blank" rel="noopener">▶ Відео</a></div>`:''}</div><button class="danger" onclick="deleteLibraryExercise(${x.id})">×</button></div>`).join('')||'<p class="muted">Вправ ще немає.</p>'}<div class="grid" style="margin-top:14px"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div><button style="margin-top:10px" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" style="margin-top:10px;margin-left:8px" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div></div>`).join('')}`);
+ app.innerHTML=shell(`<h1>Бібліотека вправ</h1><div class="card"><h2>Групи м’язів</h2><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Спина"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>${L.groups.map(g=>`<div class="card library-group"><button class="exercise-toggle" onclick="toggleExercise('libGroup${g.id}',this)"><span><strong>${esc(g.name)}</strong><span class="muted" style="display:block;margin-top:5px">${L.exercises.filter(x=>x.group_id===g.id).length} вправ</span></span><span class="arrow">⌄</span></button><div id="libGroup${g.id}" class="library-group-body hidden">${L.exercises.filter(x=>x.group_id===g.id).map(x=>`<div class="library-exercise"><div class="library-exercise-main"><strong>${esc(x.name)}</strong>${x.technique_url?`<div><a href="${esc(x.technique_url)}" target="_blank" rel="noopener">▶ Відео</a></div>`:''}</div><div class="library-exercise-actions"><button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit(${x.id})">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise(${x.id})">×</button></div></div>`).join('')||'<p class="muted">Вправ ще немає.</p>'}<div class="grid" style="margin-top:14px"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div><button style="margin-top:10px" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" style="margin-top:10px;margin-left:8px" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div></div>`).join('')}`);
 }
 async function addLibraryGroup(){let n=$('#newLibraryGroup').value.trim();if(!n)return;await api('/exercise-library/groups',{method:'POST',body:JSON.stringify({name:n})});showExerciseLibrary()}
 async function deleteLibraryGroup(id){if(!confirm('Видалити групу та всі вправи в ній?'))return;await api('/exercise-library/groups/'+id,{method:'DELETE'});showExerciseLibrary()}
 async function addLibraryExercise(gid){let n=$('#libName'+gid).value.trim(),u=$('#libUrl'+gid).value.trim();if(!n)return;await api('/exercise-library/exercises',{method:'POST',body:JSON.stringify({group_id:gid,name:n,technique_url:u})});showExerciseLibrary()}
+function openLibraryExerciseEdit(id){
+ let x=(window.exerciseLibrary?.exercises||[]).find(v=>+v.id===+id);if(!x)return;
+ document.getElementById('libraryExerciseEditModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="libraryExerciseEditModal" onclick="if(event.target===this)this.remove()"><div class="card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="libraryExerciseEditModal.remove()">✕</button></div><div class="grid"><input id="libraryEditName" value="${esc(x.name)}" placeholder="Назва вправи"><input id="libraryEditUrl" value="${esc(x.technique_url||'')}" placeholder="Посилання на відео"></div><br><button onclick="saveLibraryExerciseEdit(${x.id},${x.group_id},event.currentTarget)">Зберегти зміни</button></div></div>`);
+}
+async function saveLibraryExerciseEdit(id,gid,btn){
+ let n=$('#libraryEditName')?.value.trim()||'',u=$('#libraryEditUrl')?.value.trim()||'';if(!n)return alert('Вкажіть назву вправи');
+ if(btn){btn.disabled=true;btn.textContent='Зберігаємо…'}
+ try{await api('/exercise-library/exercises/'+id,{method:'PUT',body:JSON.stringify({group_id:gid,name:n,technique_url:u})});document.getElementById('libraryExerciseEditModal')?.remove();await showExerciseLibrary()}
+ catch(e){if(btn){btn.disabled=false;btn.textContent='Зберегти зміни'}throw e}
+}
 async function deleteLibraryExercise(id){await api('/exercise-library/exercises/'+id,{method:'DELETE'});showExerciseLibrary()}
 function openSideMenu(){
  document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove();
