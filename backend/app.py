@@ -165,6 +165,14 @@ def init():
             id SERIAL PRIMARY KEY, group_id INTEGER NOT NULL, name TEXT NOT NULL,
             technique_url TEXT DEFAULT '', UNIQUE(group_id,name)
         )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS muscles(
+            id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, sort INTEGER DEFAULT 0
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS exercise_muscles(
+            exercise_id INTEGER NOT NULL, muscle_id INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'primary',
+            PRIMARY KEY(exercise_id,muscle_id)
+        )""")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_exercise_muscles_muscle ON exercise_muscles(muscle_id)")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS alternatives_json TEXT DEFAULT '[]'")
         c.execute("""CREATE TABLE IF NOT EXISTS program_days(
@@ -264,7 +272,9 @@ class ClientIn(BaseModel):
 class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rest_text:str=""; rir_by_set:str=""; alternatives_json:str="[]"
 class ExerciseGroupIn(BaseModel): name:str
-class ExerciseLibraryIn(BaseModel): group_id:int; name:str; technique_url:str=""
+class MuscleIn(BaseModel): name:str
+class ExerciseLibraryIn(BaseModel):
+    group_id:int; name:str; technique_url:str=""; primary_muscle_ids:List[int]=[]; secondary_muscle_ids:List[int]=[]
 class CardioIn(BaseModel):
     client_id:int; day:str=""; cardio_type:str=""; minutes:int=0; speed:float=0; incline:float=0; steps:int=0
 class ProgramOrderIn(BaseModel):
@@ -554,10 +564,20 @@ def save_cardio(x:CardioIn):
 
 @app.get("/api/exercise-library")
 def get_exercise_library():
-    return {"groups":rows("SELECT * FROM exercise_groups ORDER BY sort,id"),
-            "exercises":rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
-                               JOIN exercise_groups g ON g.id=e.group_id
-                               ORDER BY g.sort,g.id,e.name""")}
+    groups=rows("SELECT * FROM exercise_groups ORDER BY sort,id")
+    muscles=rows("SELECT * FROM muscles ORDER BY sort,name,id")
+    exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                      JOIN exercise_groups g ON g.id=e.group_id
+                      ORDER BY g.sort,g.id,e.name""")
+    links=rows("SELECT exercise_id,muscle_id,role FROM exercise_muscles ORDER BY exercise_id,muscle_id")
+    by_exercise={}
+    for link in links:
+        by_exercise.setdefault(link["exercise_id"],[]).append(link)
+    for exercise in exercises:
+        rel=by_exercise.get(exercise["id"],[])
+        exercise["primary_muscle_ids"]=[x["muscle_id"] for x in rel if x["role"]=="primary"]
+        exercise["secondary_muscle_ids"]=[x["muscle_id"] for x in rel if x["role"]=="secondary"]
+    return {"groups":groups,"muscles":muscles,"exercises":exercises}
 
 @app.post("/api/exercise-library/groups")
 def add_exercise_group(x:ExerciseGroupIn):
@@ -569,35 +589,82 @@ def add_exercise_group(x:ExerciseGroupIn):
 
 @app.delete("/api/exercise-library/groups/{gid}")
 def delete_exercise_group(gid:int):
-    run("DELETE FROM exercise_library WHERE group_id=?",(gid,))
-    run("DELETE FROM exercise_groups WHERE id=?",(gid,))
+    ids=rows("SELECT id FROM exercise_library WHERE group_id=?",(gid,))
+    with con() as c:
+        for item in ids:
+            c.execute("DELETE FROM exercise_muscles WHERE exercise_id=%s",(item["id"],))
+        c.execute("DELETE FROM exercise_library WHERE group_id=%s",(gid,))
+        c.execute("DELETE FROM exercise_groups WHERE id=%s",(gid,))
+        c.commit()
     return {"ok":True}
+
+@app.post("/api/exercise-library/muscles")
+def add_muscle(x:MuscleIn):
+    name=x.name.strip()
+    if not name: raise HTTPException(400,"Вкажіть назву м’яза")
+    old=one("SELECT id FROM muscles WHERE lower(name)=lower(?)",(name,))
+    if old: return {"id":old["id"]}
+    return {"id":run("INSERT INTO muscles(name) VALUES(?)",(name,))}
+
+@app.delete("/api/exercise-library/muscles/{mid}")
+def delete_muscle(mid:int):
+    with con() as c:
+        c.execute("DELETE FROM exercise_muscles WHERE muscle_id=%s",(mid,))
+        c.execute("DELETE FROM muscles WHERE id=%s",(mid,))
+        c.commit()
+    return {"ok":True}
+
+def save_exercise_muscles(c,eid:int,x:ExerciseLibraryIn):
+    primary=[]
+    secondary=[]
+    for mid in x.primary_muscle_ids:
+        if mid not in primary: primary.append(mid)
+    for mid in x.secondary_muscle_ids:
+        if mid not in primary and mid not in secondary: secondary.append(mid)
+    all_ids=primary+secondary
+    if all_ids:
+        found={r["id"] for r in c.execute("SELECT id FROM muscles WHERE id = ANY(%s)",(all_ids,)).fetchall()}
+        if found!=set(all_ids): raise HTTPException(400,"Один із вибраних м’язів не знайдено")
+    c.execute("DELETE FROM exercise_muscles WHERE exercise_id=%s",(eid,))
+    for mid in primary: c.execute("INSERT INTO exercise_muscles(exercise_id,muscle_id,role) VALUES(%s,%s,'primary')",(eid,mid))
+    for mid in secondary: c.execute("INSERT INTO exercise_muscles(exercise_id,muscle_id,role) VALUES(%s,%s,'secondary')",(eid,mid))
 
 @app.post("/api/exercise-library/exercises")
 def add_library_exercise(x:ExerciseLibraryIn):
-    if not one("SELECT id FROM exercise_groups WHERE id=?",(x.group_id,)): raise HTTPException(404,"Групу не знайдено")
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву вправи")
-    old=one("SELECT id FROM exercise_library WHERE group_id=? AND lower(name)=lower(?)",(x.group_id,name))
-    if old:
-        run("UPDATE exercise_library SET technique_url=? WHERE id=?",(x.technique_url.strip(),old["id"]))
-        return {"id":old["id"]}
-    return {"id":run("INSERT INTO exercise_library(group_id,name,technique_url) VALUES(?,?,?)",(x.group_id,name,x.technique_url.strip()))}
+    with con() as c:
+        if not c.execute("SELECT id FROM exercise_groups WHERE id=%s",(x.group_id,)).fetchone(): raise HTTPException(404,"Групу не знайдено")
+        old=c.execute("SELECT id FROM exercise_library WHERE group_id=%s AND lower(name)=lower(%s)",(x.group_id,name)).fetchone()
+        if old:
+            eid=old["id"]
+            c.execute("UPDATE exercise_library SET technique_url=%s WHERE id=%s",(x.technique_url.strip(),eid))
+        else:
+            eid=c.execute("INSERT INTO exercise_library(group_id,name,technique_url) VALUES(%s,%s,%s) RETURNING id",(x.group_id,name,x.technique_url.strip())).fetchone()["id"]
+        save_exercise_muscles(c,eid,x)
+        c.commit()
+    return {"id":eid}
 
 @app.put("/api/exercise-library/exercises/{eid}")
 def edit_library_exercise(eid:int,x:ExerciseLibraryIn):
-    if not one("SELECT id FROM exercise_library WHERE id=?",(eid,)): raise HTTPException(404,"Вправу не знайдено")
-    if not one("SELECT id FROM exercise_groups WHERE id=?",(x.group_id,)): raise HTTPException(404,"Групу не знайдено")
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву вправи")
-    duplicate=one("SELECT id FROM exercise_library WHERE group_id=? AND lower(name)=lower(?) AND id<>?",(x.group_id,name,eid))
-    if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є в цій групі")
-    run("UPDATE exercise_library SET group_id=?,name=?,technique_url=? WHERE id=?",(x.group_id,name,x.technique_url.strip(),eid))
+    with con() as c:
+        if not c.execute("SELECT id FROM exercise_library WHERE id=%s",(eid,)).fetchone(): raise HTTPException(404,"Вправу не знайдено")
+        if not c.execute("SELECT id FROM exercise_groups WHERE id=%s",(x.group_id,)).fetchone(): raise HTTPException(404,"Групу не знайдено")
+        duplicate=c.execute("SELECT id FROM exercise_library WHERE group_id=%s AND lower(name)=lower(%s) AND id<>%s",(x.group_id,name,eid)).fetchone()
+        if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є в цій групі")
+        c.execute("UPDATE exercise_library SET group_id=%s,name=%s,technique_url=%s WHERE id=%s",(x.group_id,name,x.technique_url.strip(),eid))
+        save_exercise_muscles(c,eid,x)
+        c.commit()
     return {"ok":True}
 
 @app.delete("/api/exercise-library/exercises/{eid}")
 def delete_library_exercise(eid:int):
-    run("DELETE FROM exercise_library WHERE id=?",(eid,))
+    with con() as c:
+        c.execute("DELETE FROM exercise_muscles WHERE exercise_id=%s",(eid,))
+        c.execute("DELETE FROM exercise_library WHERE id=%s",(eid,))
+        c.commit()
     return {"ok":True}
 
 @app.post("/api/program")
