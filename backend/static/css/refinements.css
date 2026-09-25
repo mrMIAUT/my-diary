@@ -230,3 +230,9 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 .superset-block .trainer-superset-head{margin:0!important;border-radius:0!important}
 .superset-block .superset-inner{margin:0 14px!important;padding:14px 0!important}
 .superset-block .superset-inner:last-child{padding-bottom:16px!important}
+
+/* V91 UX — separate technique action from completion state */
+.exercise-meta-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:6px}
+.exercise-meta-row .tech-link{margin-top:0}
+.exercise-meta-row .exercise-done-badge{margin-left:auto}
+@media(max-width:390px){.exercise-meta-row{gap:10px}.exercise-meta-row .exercise-done-badge{margin-left:0}}
