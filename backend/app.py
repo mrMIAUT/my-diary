@@ -584,6 +584,17 @@ def add_library_exercise(x:ExerciseLibraryIn):
         return {"id":old["id"]}
     return {"id":run("INSERT INTO exercise_library(group_id,name,technique_url) VALUES(?,?,?)",(x.group_id,name,x.technique_url.strip()))}
 
+@app.put("/api/exercise-library/exercises/{eid}")
+def edit_library_exercise(eid:int,x:ExerciseLibraryIn):
+    if not one("SELECT id FROM exercise_library WHERE id=?",(eid,)): raise HTTPException(404,"Вправу не знайдено")
+    if not one("SELECT id FROM exercise_groups WHERE id=?",(x.group_id,)): raise HTTPException(404,"Групу не знайдено")
+    name=x.name.strip()
+    if not name: raise HTTPException(400,"Вкажіть назву вправи")
+    duplicate=one("SELECT id FROM exercise_library WHERE group_id=? AND lower(name)=lower(?) AND id<>?",(x.group_id,name,eid))
+    if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є в цій групі")
+    run("UPDATE exercise_library SET group_id=?,name=?,technique_url=? WHERE id=?",(x.group_id,name,x.technique_url.strip(),eid))
+    return {"ok":True}
+
 @app.delete("/api/exercise-library/exercises/{eid}")
 def delete_library_exercise(eid:int):
     run("DELETE FROM exercise_library WHERE id=?",(eid,))
