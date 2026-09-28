@@ -153,7 +153,7 @@ def api_session_boundary(request:Request):
     """
     path=request.url.path.rstrip("/")
     if not path.startswith("/api/"): return
-    if request.method not in ("GET","HEAD","OPTIONS") or path=="/api/debug/resend":
+    if request.method not in ("GET","HEAD","OPTIONS"):
         if request.headers.get("X-EPLAN-Request")!="1":
             raise HTTPException(403,"Запит має надходити із застосунку Є ПЛАН")
         if request.headers.get("Sec-Fetch-Site") in ("cross-site","same-site"):
@@ -723,29 +723,6 @@ def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="appl
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
 @app.get("/health")
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
-
-@app.get("/api/debug/resend")
-def debug_resend(to:str="",user:AuthUser=Depends(require_trainer)):
-    key=os.getenv("RESEND_API_KEY","").strip()
-    sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
-    result={
-        "resend_api_key_present": bool(key),
-        "resend_api_key_prefix_ok": key.startswith("re_"),
-        "from": sender,
-        "to": to or None,
-    }
-    if not to:
-        result["ok"]=False
-        result["message"]="Додай ?to=email@example.com для тестового листа"
-        return result
-    if "@" not in to:
-        raise HTTPException(400,"Некоректний email")
-    test_link=os.getenv("APP_BASE_URL","").rstrip("/") or "https://eplan.com.ua"
-    ok=send_reset_email(to,test_link+"/?debug=resend")
-    result["ok"]=ok
-    result["message"]="Тестовий лист передано в Resend" if ok else "Resend відхилив лист. Перевір Render Logs."
-    return result
-
 
 @app.post("/api/login")
 def login(x:Login,request:Request,response:Response):
