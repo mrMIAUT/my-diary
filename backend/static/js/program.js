@@ -1,5 +1,7 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
+// H02: user strings belong in quoted, HTML-escaped data-* attributes.
+// Fixed handlers read dataset values; never interpolate those strings into JS.
 
 function rirPlan(x){
  let a=String(x?.rir_by_set||'').split(',').map(v=>v.trim()).filter(Boolean);
@@ -46,7 +48,7 @@ function programHTML(d){
    let rows=blocks.map((b,bi)=>{
      let first=b.items[0],isSuper=!!b.group;
      let info=(isSuper?`<div class="trainer-superset-head">Суперсет</div>`:'')+b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
-     return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" onclick="event.stopPropagation();moveProgramBlock('${esc(day).replace(/'/g,"&#39;")}',${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" onclick="event.stopPropagation();addSupersetExercise(${first.id},'${esc(first.day_name).replace(/'/g,"&#39;")}')">＋</button>`:''}</div></div>`;
+     return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)">＋</button>`:''}</div></div>`;
    }).join('');
    return `<div class="card program-day-card">
      <div class="program-day-header-row">
@@ -54,7 +56,7 @@ function programHTML(d){
          <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
          <span class="program-day-arrow">⌄</span>
        </button>
-       <button class="dark program-day-title-edit" title="Назва дня" onclick="event.stopPropagation();editProgramDayTitle('${esc(day).replace(/'/g,"&#39;")}')">✎</button>
+       <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
      </div>
      <div id="${bodyId}" class="hidden" style="margin-top:18px">${rows}</div>
    </div>`;
@@ -69,7 +71,7 @@ function toggleProgramDay(id,btn){
 
 function editProgramDayTitle(day){
  let d=window.currentClientData||{},current=programDayTitle(d,day);
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="dayTitleModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><div><h2>Назва тренувального дня</h2><div class="muted">${esc(day)}</div></div><button class="dark edit-exercise-close" onclick="dayTitleModal.remove()">✕</button></div><input id="dayTitleInput" value="${esc(current)}" placeholder="Напр. Груди + Спина"><p class="muted" style="margin-top:10px">Клієнт побачить цю назву після вибору тренувального дня.</p><button style="width:100%;margin-top:14px" onclick="saveProgramDayTitle('${esc(day).replace(/'/g,"&#39;")}',event.currentTarget)">Зберегти назву</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="dayTitleModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><div><h2>Назва тренувального дня</h2><div class="muted">${esc(day)}</div></div><button class="dark edit-exercise-close" onclick="dayTitleModal.remove()">✕</button></div><input id="dayTitleInput" value="${esc(current)}" placeholder="Напр. Груди + Спина"><p class="muted" style="margin-top:10px">Клієнт побачить цю назву після вибору тренувального дня.</p><button style="width:100%;margin-top:14px" data-day="${esc(day)}" onclick="saveProgramDayTitle(this.dataset.day,event.currentTarget)">Зберегти назву</button></div></div>`);
  setTimeout(()=>document.getElementById('dayTitleInput')?.focus(),30);
 }
 
@@ -135,7 +137,7 @@ async function addExercise(button=null){
 
 
 function addSupersetExercise(sourceId,dayName){
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal"><div class="card"><div class="between"><div><h2>Додати суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark" onclick="supersetModal.remove()">✕</button></div><p class="muted">Нова вправа буде автоматично об'єднана з вибраною вправою в один суперсет.</p><div class="grid"><input id="ssex" placeholder="Друга вправа"><input id="sssets" type="number" value="3" placeholder="Підходи"><input id="ssreps" value="8-12" placeholder="Повтори"><input id="ssrir" type="number" value="2" placeholder="RIR"><input id="ssrirset" value="2,2,2" placeholder="RIR по підходах"><input id="ssrest" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button onclick="saveSupersetExercise(${sourceId},'${esc(dayName).replace(/'/g,"&#39;")}')">+ Додати в суперсет</button></div></div>`)
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal"><div class="card"><div class="between"><div><h2>Додати суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark" onclick="supersetModal.remove()">✕</button></div><p class="muted">Нова вправа буде автоматично об'єднана з вибраною вправою в один суперсет.</p><div class="grid"><input id="ssex" placeholder="Друга вправа"><input id="sssets" type="number" value="3" placeholder="Підходи"><input id="ssreps" value="8-12" placeholder="Повтори"><input id="ssrir" type="number" value="2" placeholder="RIR"><input id="ssrirset" value="2,2,2" placeholder="RIR по підходах"><input id="ssrest" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day)">+ Додати в суперсет</button></div></div>`)
 }
 
 async function saveSupersetExercise(sourceId,dayName){

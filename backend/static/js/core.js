@@ -51,7 +51,7 @@ function offResponse(path,opt,localSid){
 function offCanQueue(path,opt){
  let m=(opt.method||'GET').toUpperCase();
  if(m==='GET'||!session||session.role!=='client')return false;
- return !path.startsWith('/login')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications');
+ return !logoutPending&&!path.startsWith('/login')&&!path.startsWith('/logout')&&!path.startsWith('/session')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications')&&!path.startsWith('/push/');
 }
 
 async function offlineStatus(msg,kind=''){
@@ -73,6 +73,13 @@ function setActionLoading(btn,text='Зберігаємо…'){
 }
 
 async function eplanFetch(url,opt={},timeoutMs=15000){
+ const target=new URL(url,location.href);
+ if(target.origin===location.origin&&target.pathname.startsWith('/api/')){
+   if(logoutPending&&target.pathname!=='/api/logout')throw Object.assign(new Error('Спочатку потрібне підключення для завершення виходу.'),{server:true,status:401});
+   const headers=new Headers(opt.headers||{});headers.set('X-EPLAN-Request','1');
+   if(sessionOwner()&&!['/api/session','/api/login','/api/logout','/api/password-reset/request','/api/password-reset/confirm','/api/push/public-key'].includes(target.pathname))headers.set('X-EPLAN-Actor',sessionOwner());
+   opt={...opt,headers,credentials:'same-origin'};
+ }
  const controller=new AbortController();
  const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{return await fetch(url,{...opt,signal:controller.signal})}
@@ -89,6 +96,7 @@ function friendlyApiError(status,detail=''){
 }
 
 async function api(path,opt={}){
+ const epoch=authEpoch,owner=sessionOwner();
  let method=(opt.method||'GET').toUpperCase();
  let mutation=!['GET','HEAD','OPTIONS'].includes(method);
  let mutationKey=mutation?method+'|'+path+'|'+String(opt.body||''):'';
@@ -96,12 +104,16 @@ async function api(path,opt={}){
  let task=(async()=>{
  try{
    let r=await eplanFetch(A+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});
+   if(epoch!==authEpoch||logoutPending)throw Object.assign(new Error('Сеанс змінено. Увійдіть знову.'),{server:true,status:401});
+   if(r.status===401&&!path.startsWith('/login')&&!path.startsWith('/password-reset'))clearLocalSession({keepLocation:true});
    if(!r.ok){let x;try{x=await r.json()}catch{};throw Object.assign(new Error(friendlyApiError(r.status,x?.detail)),{server:true,status:r.status})}
    let data=r.status===204?null:await r.json();
+   if(epoch!==authEpoch)throw Object.assign(new Error('Сеанс змінено. Увійдіть знову.'),{server:true,status:401});
    if(method==='GET')await offPut('cache',data,path);
    return data;
  }catch(e){
    if(e.server)throw e;
+   if(epoch!==authEpoch||logoutPending)throw new Error('Сеанс змінено. Увійдіть знову.');
    if(method==='GET'){
      let cached=await offGet('cache',path);
      if(cached!==undefined){offlineStatus('● Офлайн · показано збережені дані');return cached}
@@ -109,7 +121,7 @@ async function api(path,opt={}){
    }
    if(offCanQueue(path,opt)){
      let localSid=path==='/workout/start'?-Date.now():null;
-     await offAdd('queue',{path,opt:{method,body:opt.body||null},created:Date.now(),localSid});
+     await offAdd('queue',{path,opt:{method,body:opt.body||null},created:Date.now(),localSid,owner});
      await offApply(path,opt,localSid);
      offlineStatus('● Офлайн · зміни збережено на телефоні');
      return offResponse(path,opt,localSid);
@@ -122,24 +134,54 @@ async function api(path,opt={}){
  try{return await task}finally{apiMutationsInFlight.delete(mutationKey)}
 }
 
+function queueOwner(item,queue,clientData){
+ if(item.owner)return item.owner;
+ // V92 queue entries have no owner field. Use only an explicit client_id or
+ // membership in a fresh server response; never infer ownership from the UI.
+ const body=offBody(item.opt);
+ if(body.client_id)return 'client:'+body.client_id;
+ const finish=item.path.match(/^\/workout\/(-?\d+)\/finish$/);
+ if(finish){
+   const sid=+finish[1],start=queue.find(x=>x.localSid===sid&&x.path==='/workout/start');
+   if(start)return queueOwner(start,[],clientData);
+   if((clientData?.workout_sessions||[]).some(x=>x.id===sid))return 'client:'+clientData.client.id;
+ }
+ const comment=item.path.match(/^\/comments\/(\d+)$/);
+ if(comment&&(clientData?.comments||[]).some(x=>x.id===+comment[1]&&x.author==='client'))return 'client:'+clientData.client.id;
+ return '';
+}
+
 async function syncOfflineQueue(){
- if(offSyncing||!navigator.onLine)return;offSyncing=true;
- let q=await offAll('queue');if(!q.length){hideOfflineStatus();offSyncing=false;return}
- offlineStatus('Синхронізація…','syncing');let sidMap={};
+ if(offSyncing||!navigator.onLine||logoutPending||!session)return;
+ offSyncing=true;
  try{
+   if(!await refreshServerSession()||session?.role!=='client')return;
+   const epoch=authEpoch,owner=sessionOwner(),cid=session.client_id;
+   let q=await offAll('queue');if(!q.length){hideOfflineStatus();return}
+   const check=()=>{if(epoch!==authEpoch||!sessionVerified||logoutPending||sessionOwner()!==owner)throw new Error('session changed')};
+   const requireOK=r=>{if(r.status===401)clearLocalSession({keepLocation:true});if(!r.ok)throw new Error('sync')};
+   check();
+   let current=await eplanFetch(A+'/client/'+cid,{cache:'no-store'});check();requireOK(current);
+   const clientData=await current.json();check();
+   offlineStatus('Синхронізація…','syncing');let sidMap={},pending=false;
    for(let item of q){
+     check();
+     if(queueOwner(item,q,clientData)!==owner){pending=true;continue}
      let path=item.path;
      let neg=path.match(/^\/workout\/(-\d+)\/finish$/);if(neg&&sidMap[neg[1]])path='/workout/'+sidMap[neg[1]]+'/finish';
      let r=await eplanFetch(A+path,{headers:{'Content-Type':'application/json'},method:item.opt.method,body:item.opt.body||undefined},15000);
-     if(!r.ok)throw new Error('sync');
+     check();requireOK(r);
      let data=null;try{data=await r.clone().json()}catch{}
+     check();
      if(item.localSid&&data?.id)sidMap[String(item.localSid)]=data.id;
      await offDel('queue',item.id);
    }
-   if(session?.client_id){try{let r=await eplanFetch(A+'/client/'+session.client_id,{},15000);if(r.ok){let d=await r.json();await offSaveClient(session.client_id,d);window.currentClientData=d}}catch{}}
-   offlineStatus('✓ Синхронізовано');
+   check();
+   let r=await eplanFetch(A+'/client/'+cid,{},15000);check();requireOK(r);
+   let d=await r.json();check();await offSaveClient(cid,d);window.currentClientData=d;
+   offlineStatus(pending?'● Є дані, що очікують синхронізації':'✓ Синхронізовано');
  }catch{offlineStatus('● Є дані, що очікують синхронізації')}
- offSyncing=false;
+ finally{offSyncing=false}
 }
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}

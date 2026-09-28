@@ -8,6 +8,10 @@ const A='/api';
  const $=s=>document.querySelector(s);
 
 let session=null;
+// fitSession is an offline/UI hint only. Credentials live in an HttpOnly cookie.
+let sessionVerified=false,authEpoch=0,logoutPending=false;
+let sessionRefreshTask=null,logoutTask=null;
+try{logoutPending=localStorage.getItem('eplanLogoutPending')==='1'}catch(e){}
 
 try{
   const rawSession=localStorage.getItem('fitSession');
@@ -29,11 +33,11 @@ const apiMutationsInFlight=new Map();
 
 let offSyncing=false;
 
-window.addEventListener('online',()=>{hideOfflineStatus();syncOfflineQueue()});
+window.addEventListener('online',async()=>{await authReady;hideOfflineStatus();if(logoutPending){await finishPendingLogout();return}if(await refreshServerSession())syncOfflineQueue()});
 
 window.addEventListener('offline',()=>offlineStatus('● Офлайн · дані зберігаються на телефоні'));
 
-setTimeout(()=>{if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні')},800);
+setTimeout(async()=>{await authReady;if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні')},800);
 
 const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'https://www.tiktok.com/@michael_hilyk',telegram:'https://t.me/mrMiaut'};
 
@@ -140,10 +144,6 @@ window.addEventListener('popstate',async e=>{
 
 let startupResetToken=new URLSearchParams(location.search).get('reset');
 
-if(startupResetToken){renderResetPassword(startupResetToken)}else{
- if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
- route()
-}
-
+const authReady=bootstrapAuthentication();
 
 

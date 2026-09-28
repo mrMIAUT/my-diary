@@ -52,15 +52,15 @@ function todaySets(d,pid){
 
 function completedExerciseHTML(x,d,cid){
  let done=todaySets(d,x.id);
- if(!done.length)return setRows(x,d)+`<br><button onclick="saveSets(${cid},${x.id},'${esc(workoutExerciseName(x)).replace(/'/g,"&#39;")}',${x.sets})">Закінчити вправу</button>`;
- let performed=done[0]?.exercise||x.exercise;return `<div class="exercise" style="margin-top:12px"><strong style="color:var(--yellow)">Виконано ✓</strong>${performed!==x.exercise?`<div class="muted" style="margin-top:5px">Виконано: <strong>${esc(performed)}</strong> · за планом ${esc(x.exercise)}</div>`:``}${done.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="editCompletedExercise(${cid},${x.id},'${esc(x.exercise).replace(/'/g,"&#39;")}',${x.sets},'${esc(x.reps)}',${x.target_rir})">Редагувати</button></div></div>`;
+ if(!done.length)return setRows(x,d)+`<br><button data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${x.sets})">Закінчити вправу</button>`;
+ let performed=done[0]?.exercise||x.exercise;return `<div class="exercise" style="margin-top:12px"><strong style="color:var(--yellow)">Виконано ✓</strong>${performed!==x.exercise?`<div class="muted" style="margin-top:5px">Виконано: <strong>${esc(performed)}</strong> · за планом ${esc(x.exercise)}</div>`:``}${done.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${x.sets},this.dataset.reps,${x.target_rir})">Редагувати</button></div></div>`;
 }
 
 function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
  let d=window.currentClientData||{},done=todaySets(d,pid),body=$('#exerciseBody'+pid);if(!body)return;
  let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;
  for(let n=1;n<=count;n++){let s=done.find(z=>z.set_number===n)||{};h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${pid}_${n}" type="number" step="0.5" value="${s.weight??''}" placeholder="кг"><input id="r${pid}_${n}" type="number" value="${s.reps??''}" placeholder="${esc(reps)}"><input id="i${pid}_${n}" type="number" value="${s.rir??targetRir}" min="0" max="10"></div>`}
- body.innerHTML=h+`<br><button onclick="saveSets(${cid},${pid},'${exercise.replace(/'/g,"&#39;")}',${count})">Зберегти зміни</button>`;
+ body.innerHTML=h+`<br><button data-exercise="${esc(exercise)}" onclick="saveSets(${cid},${pid},this.dataset.exercise,${count})">Зберегти зміни</button>`;
  body.classList.remove('hidden');
 }
 
@@ -155,7 +155,7 @@ function workoutDayButtons(d,cid,groups){
  return Object.keys(groups).map(day=>{
    let cls=previewWorkoutDay===day?'preview-selected':cycle.done.includes(day)?'workout-cycle-done':day===cycle.next?'dark workout-cycle-next':'dark';
    let mark=cycle.done.includes(day)?' ✓':'';
-   return `<button class="${cls}" onclick="previewWorkout('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}${mark}</button>`;
+   return `<button class="${cls}" data-day="${esc(day)}" onclick="previewWorkout(this.dataset.day,${cid})">${esc(day)}${mark}</button>`;
  }).join('');
 }
 
@@ -175,7 +175,7 @@ function todayGuidanceHTML(d,cid,groups){
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
  if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
  if(todaySession&&todaySession.status==='finished')return `<div class="card next-action-card today-done-card"><span class="next-action-kicker done">На сьогодні все ✓</span><h2>Тренування виконано</h2><p class="muted">${esc(todaySession.day_name||'Тренування')} завершено. Наступне тренування буде доступне завтра.</p><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
- if(cycle.next)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>🏋️ ${esc(cycle.next)}</h2><p class="muted">Це наступне тренування за твоїм планом.</p><button class="primary-wide" onclick="startWorkout(${cid},'${esc(cycle.next).replace(/'/g,"&#39;")}')">Почати тренування</button><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
+ if(cycle.next)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>🏋️ ${esc(cycle.next)}</h2><p class="muted">Це наступне тренування за твоїм планом.</p><button class="primary-wide" data-day="${esc(cycle.next)}" onclick="startWorkout(${cid},this.dataset.day)">Почати тренування</button><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
  return '';
 }
 
@@ -184,7 +184,7 @@ function clientTrainingProgramHTML(d,cid,groups){
  let days=Object.entries(groups||{});
  if(!days.length)return `<div class="card"><h2>Твоя програма тренувань</h2><p class="muted">Тренер ще не додав тренування до програми.</p></div>`;
  if(previewWorkoutDay && !groups[previewWorkoutDay]) previewWorkoutDay=null;
- let buttons=days.map(([day])=>`<button type="button" class="client-program-tab ${previewWorkoutDay===day?'active':''}" onclick="selectClientProgramDay('${esc(day).replace(/'/g,"&#39;")}',${cid})">${esc(day)}</button>`).join('');
+ let buttons=days.map(([day])=>`<button type="button" class="client-program-tab ${previewWorkoutDay===day?'active':''}" data-day="${esc(day)}" onclick="selectClientProgramDay(this.dataset.day,${cid})">${esc(day)}</button>`).join('');
  let selected='';
  if(previewWorkoutDay){
    let xs=groups[previewWorkoutDay]||[],used=new Set(),exercises='';
@@ -257,7 +257,7 @@ function activeExercisesHTML(items,d,cid){
 
 function commentsHTML(d,cid,day=isoToday()){
  let xs=(d.comments||[]).filter(x=>x.day===day);
- return `<div class="card"><h2>Коментарі</h2>${xs.length?xs.map(x=>`<div class="exercise comment-row"><strong>${x.author==='trainer'?'Тренер':'Клієнт'}</strong><div style="margin-top:6px">${esc(x.body)}</div>${session?.role==='trainer'||session?.role===x.author?`<button class="danger comment-delete" onclick="deleteComment(${x.id},${cid},'${day}')">Видалити</button>`:''}</div>`).join(''):'<p class="muted">Коментарів ще немає.</p>'}<textarea id="commentText" placeholder="Написати коментар..." style="width:100%;min-height:90px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;resize:vertical"></textarea><br><br><button onclick="saveComment(${cid},'${day}')">Надіслати</button></div>`;
+ return `<div class="card"><h2>Коментарі</h2>${xs.length?xs.map(x=>`<div class="exercise comment-row"><strong>${x.author==='trainer'?'Тренер':'Клієнт'}</strong><div style="margin-top:6px">${esc(x.body)}</div>${session?.role==='trainer'||session?.role===x.author?`<button class="danger comment-delete" data-day="${esc(day)}" onclick="deleteComment(${x.id},${cid},this.dataset.day)">Видалити</button>`:''}</div>`).join(''):'<p class="muted">Коментарів ще немає.</p>'}<textarea id="commentText" placeholder="Написати коментар..." style="width:100%;min-height:90px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;resize:vertical"></textarea><br><br><button data-day="${esc(day)}" onclick="saveComment(${cid},this.dataset.day)">Надіслати</button></div>`;
 }
 
 async function deleteComment(id,cid,day){

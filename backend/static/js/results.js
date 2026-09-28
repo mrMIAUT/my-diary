@@ -43,7 +43,7 @@ function clientProgressHTML(d){
  let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
- let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.clientProgressDay=(window.clientProgressDay==='${esc(day).replace(/'/g,"&#39;")}'?null:'${esc(day).replace(/'/g,"&#39;")}');refreshClientProgress()">${esc(day)}</button>`).join('');
+ let dayButtons=programDays.map(day=>`<button class="progress-day-btn ${selectedDay===day?'active':''}" data-day="${esc(day)}" onclick="window.clientProgressDay=(window.clientProgressDay===this.dataset.day?null:this.dataset.day);refreshClientProgress()">${esc(day)}</button>`).join('');
  let hasAnyProgress=sessions.length||(d.result_sets||[]).length||allMeasures.length;
 
  return `<div id="clientProgress" class="client-progress-new">
@@ -153,7 +153,7 @@ function resultDelta(v){
 }
 
 function toggleResultExercise(id,btn){
- let el=$('#'+id);if(!el)return;
+ let el=document.getElementById(id);if(!el)return;
  el.classList.toggle('hidden');
  let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
@@ -167,7 +167,7 @@ function resultDelta(v){
 }
 
 function toggleResultExercise(id,btn){
- let el=$('#'+id);if(!el)return;
+ let el=document.getElementById(id);if(!el)return;
  el.classList.toggle('hidden');
  let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
@@ -193,7 +193,7 @@ function periodStart(period){
 
 
 function toggleWorkoutResult(id,btn){
- let el=$('#'+id);if(!el)return;
+ let el=document.getElementById(id);if(!el)return;
  el.classList.toggle('hidden');
  let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
@@ -219,11 +219,11 @@ function trainerDayResultsHTML(d,dayName){
    let workoutBodyId=`workoutResult_${dayName.replace(/[^a-zA-Z0-9]/g,'_')}_${day.replaceAll('-','_')}`;
    let cardSession=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id)[0];
    return `<div class="card" data-workout-day="${esc(day)}" data-workout-session="${cardSession?.id||0}" style="padding:0;overflow:hidden">
-    <button class="exercise-toggle" onclick="toggleWorkoutResult('${workoutBodyId}',this)" style="padding:20px 24px">
+    <button class="exercise-toggle" data-target="${esc(workoutBodyId)}" onclick="toggleWorkoutResult(this.dataset.target,this)" style="padding:20px 24px">
       <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong>${previous?`<span class="muted" style="display:block;margin-top:5px">порівняно з ${esc(previous)}</span>`:''}</span>
       <span class="arrow">⌄</span>
     </button>
-    <div id="${workoutBodyId}" class="hidden" style="padding:0 24px 22px">
+    <div id="${esc(workoutBodyId)}" class="hidden" style="padding:0 24px 22px">
     ${(()=>{
       let ws=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id)[0];
       if(!ws)return '';
@@ -234,10 +234,10 @@ function trainerDayResultsHTML(d,dayName){
       let prev=previous?uniqueResultSets((d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previous)).sort((a,b)=>a.set_number-b.set_number):[];
       let bodyId=`trainerResult_${x.id}_${day.replaceAll('-','_')}`;
       return `<div class="exercise">
-       <button class="exercise-toggle" onclick="toggleResultExercise('${bodyId}',this)">
+       <button class="exercise-toggle" data-target="${esc(bodyId)}" onclick="toggleResultExercise(this.dataset.target,this)">
         <span><strong>${esc(x.exercise)}</strong>${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span><span class="arrow">⌄</span>
        </button>
-       <div id="${bodyId}" class="hidden" style="margin-top:10px">${cur.map(s=>{
+       <div id="${esc(bodyId)}" class="hidden" style="margin-top:10px">${cur.map(s=>{
         let p=prev.find(z=>z.set_number===s.set_number);
         return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${p.reps} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
        }).join('')}</div>
@@ -299,7 +299,7 @@ function resultsHTML(d){
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
  let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
- let dayButtons=programDays.map(day=>{let safe=esc(day).replace(/'/g,"&#39;");return `<button class="progress-day-btn ${selectedDay===day?'active':''}" onclick="window.trainerResultsDay=(window.trainerResultsDay==='${safe}'?null:'${safe}');refreshTrainerResults()">${esc(day)}</button>`}).join('');
+ let dayButtons=programDays.map(day=>{return `<button class="progress-day-btn ${selectedDay===day?'active':''}" data-day="${esc(day)}" onclick="window.trainerResultsDay=(window.trainerResultsDay===this.dataset.day?null:this.dataset.day);refreshTrainerResults()">${esc(day)}</button>`}).join('');
 
  return `<div id="trainerResultsProgress" class="client-progress-new">
   <div class="progress-hero">

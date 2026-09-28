@@ -4,6 +4,7 @@ if ('serviceWorker' in navigator) {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js?v=57', {scope:'/'});
       reg.update();
+      await authReady;
       setTimeout(autoRegisterPhoneNotifications,300);
       setTimeout(handleNotificationDeepLink,450);
       navigator.serviceWorker.addEventListener('controllerchange', () => {

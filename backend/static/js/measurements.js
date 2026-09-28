@@ -34,7 +34,7 @@ function measurementHistoryCard(x,prev,cid=null){
  return `<div class="measurement-history-card">
    <div class="measurement-history-date">${formatProgressDate(x.day)}</div>
    <div class="measurement-history-values">${metrics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;return `<span><b>${n}</b> ${fmtProgress(x[k])} ${u}${d===null?'':` <small>${d>0?'+':''}${fmtProgress(d)}</small>`}</span>`}).join('')}</div>
-   ${canDelete?`<button type="button" class="measurement-delete" aria-label="Видалити замір" title="Видалити замір" onclick="deleteMeasurement(${ownerId},${+x.id},'${x.day}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>`:''}
+   ${canDelete?`<button type="button" class="measurement-delete" aria-label="Видалити замір" title="Видалити замір" data-day="${esc(x.day)}" onclick="deleteMeasurement(${ownerId},${+x.id},this.dataset.day)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>`:''}
  </div>`;
 }
 

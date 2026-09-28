@@ -2,15 +2,78 @@
 // Keep this file declaration-only so all functions exist before startup runs.
 
 
-function logout(){
+function sessionOwner(s=session){
+ return s?.role==='trainer'?'trainer:1':s?.role==='client'&&s.client_id?'client:'+s.client_id:'';
+}
+
+function installSession(s){
+ if(sessionOwner(s)!==sessionOwner())authEpoch++;
+ session=s;sessionVerified=true;
+ try{localStorage.setItem('fitSession',JSON.stringify(s))}catch(e){}
+}
+
+function clearLocalSession({keepLocation=false}={}){
+ authEpoch++;sessionVerified=false;
  try{localStorage.removeItem('fitSession')}catch(e){}
  session=null;selected=null;window.currentClientData=null;
  document.querySelectorAll('.modal,#sideOverlay,#sideDrawer').forEach(x=>x.remove());
  document.body.classList.remove('overlay-open');
  if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  document.querySelector('#floatingRestTimer')?.remove();
- try{history.replaceState({},'',location.pathname)}catch(e){}
+ if(!keepLocation)try{history.replaceState({},'',location.pathname)}catch(e){}
  requestAnimationFrame(()=>renderLogin());
+}
+
+function setLogoutPending(value){
+ logoutPending=value;
+ try{if(value)localStorage.setItem('eplanLogoutPending','1');else localStorage.removeItem('eplanLogoutPending')}catch(e){}
+}
+
+async function finishPendingLogout(){
+ if(!logoutPending)return true;
+ if(logoutTask)return logoutTask;
+ logoutTask=(async()=>{
+   try{
+     const r=await eplanFetch(A+'/logout',{method:'POST',cache:'no-store'});
+     if(!r.ok)return false;
+     setLogoutPending(false);return true;
+   }catch(e){return false}
+ })();
+ try{return await logoutTask}finally{logoutTask=null}
+}
+
+async function logout(){
+ setLogoutPending(true);clearLocalSession();
+ if(!await finishPendingLogout())offlineStatus('● Вихід на сервері очікує підключення до інтернету');
+}
+
+async function refreshServerSession(){
+ if(logoutPending){if(!await finishPendingLogout())return false;return false}
+ if(sessionRefreshTask)return sessionRefreshTask;
+ const epoch=authEpoch;
+ sessionRefreshTask=(async()=>{
+   try{
+     const r=await eplanFetch(A+'/session',{cache:'no-store'});
+     if(epoch!==authEpoch||logoutPending)return false;
+     if(r.status===401){clearLocalSession({keepLocation:true});return false}
+     if(!r.ok){sessionVerified=false;return false}
+     const s=await r.json();
+     if(epoch!==authEpoch||logoutPending)return false;
+     installSession(s);return true;
+   }catch(e){if(epoch===authEpoch)sessionVerified=false;return false}
+ })();
+ try{return await sessionRefreshTask}finally{sessionRefreshTask=null}
+}
+
+async function bootstrapAuthentication(){
+ // Server identity is resolved asynchronously; keep the existing shell visible
+ // while it loads instead of leaving an empty PWA screen on a slow connection.
+ app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">${appLanguage==='en'?'Loading…':'Завантаження…'}</p></div></div>`;
+ if(logoutPending){clearLocalSession();await finishPendingLogout()}
+ else await refreshServerSession();
+ if(startupResetToken)return renderResetPassword(startupResetToken);
+ if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
+ try{await route()}catch(e){renderLogin();offlineStatus(e.message)}
 }
 
 function renderLogin(){
@@ -29,14 +92,16 @@ async function requestPasswordReset(){
 }
 
 function renderResetPassword(token){
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><div class="password-field-wrap"><input id="newPass" type="password" data-password-field="1" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPass')">${passwordEyeSVG(true)}</button></div><div class="password-field-wrap"><input id="newPassRepeat" type="password" data-password-field="1" autocomplete="new-password" placeholder="Повторіть новий пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPassRepeat')">${passwordEyeSVG(true)}</button></div><p id="resetMsg" class="muted"></p><button onclick="confirmPasswordReset('${esc(token)}')">Зберегти пароль</button></div></div>`
+ // H03: token is data in this closure, never HTML or JavaScript source.
+ app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><div class="password-field-wrap"><input id="newPass" type="password" data-password-field="1" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPass')">${passwordEyeSVG(true)}</button></div><div class="password-field-wrap"><input id="newPassRepeat" type="password" data-password-field="1" autocomplete="new-password" placeholder="Повторіть новий пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPassRepeat')">${passwordEyeSVG(true)}</button></div><p id="resetMsg" class="muted"></p><button id="confirmResetButton">Зберегти пароль</button></div></div>`;
+ document.getElementById('confirmResetButton').addEventListener('click',()=>confirmPasswordReset(token));
 }
 
 async function confirmPasswordReset(token){
  let p=newPass.value,r=newPassRepeat.value;
  if(p.length<8){resetMsg.textContent='Пароль має містити щонайменше 8 символів';return}
  if(p!==r){resetMsg.textContent='Паролі не співпадають';return}
- try{await api('/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password:p})});localStorage.removeItem('fitSession');session=null;history.replaceState({},'',location.pathname);alert('Пароль змінено. Тепер увійдіть з новим паролем.');renderLogin()}catch(e){resetMsg.textContent=e.message}
+ try{await api('/password-reset/confirm',{method:'POST',body:JSON.stringify({token,password:p})});clearLocalSession();history.replaceState({},'',location.pathname);alert('Пароль змінено. Тепер увійдіть з новим паролем.');renderLogin()}catch(e){resetMsg.textContent=e.message}
 }
 
 function passwordEyeSVG(hidden){
@@ -72,6 +137,6 @@ function togglePasswordField(btn,inputId){let p=document.getElementById(inputId)
 
 function togglePassword(){let p=$('#pass'),btn=p?.parentElement?.querySelector('.password-eye-btn');if(p){p.type=p.type==='password'?'text':'password';syncPasswordEye(btn,p)}}
 
-async function login(){try{let em=email.value.trim();let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});session=s;localStorage.setItem('fitSession',JSON.stringify(s));if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');route()}catch(e){err.textContent=e.message}}
+async function login(){try{let em=email.value.trim();if(!await finishPendingLogout())throw new Error('Для завершення виходу та нового входу потрібен інтернет.');let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});authEpoch++;installSession(s);if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');await route();syncOfflineQueue();autoRegisterPhoneNotifications()}catch(e){let el=document.querySelector('#err');if(el)el.textContent=e.message}}
 
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}

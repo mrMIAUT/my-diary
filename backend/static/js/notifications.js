@@ -41,7 +41,7 @@ async function refreshPhoneNotificationButton(btn){
 }
 
 async function enablePhoneNotifications(btn=null){
- if(await phoneNotificationEnabled()){await refreshPhoneNotificationButton(btn);return true}
+ if(!sessionVerified||logoutPending)return false;
  if(btn){btn.disabled=true;btn.textContent='Підключення…'}
  const done=async(ok)=>{if(btn){btn.disabled=false;await refreshPhoneNotificationButton(btn)}return ok};
  if(!window.isSecureContext){alert('Для push-сповіщень потрібен HTTPS.');return done(false)}
@@ -60,8 +60,16 @@ async function enablePhoneNotifications(btn=null){
    if(!key.public_key)throw new Error('Push key unavailable');
    let sub=await reg.pushManager.getSubscription();
    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});
-   let j=sub.toJSON(),recipient=session?.role==='trainer'?'trainer':'client',clientId=session?.role==='client'?session.client_id:0;
-   await api('/push/subscribe',{method:'POST',body:JSON.stringify({client_id:clientId,recipient,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})});
+   let recipient=session.role,clientId=session.role==='client'?session.client_id:0;
+   const register=()=>{let j=sub.toJSON();return api('/push/subscribe',{method:'POST',body:JSON.stringify({client_id:clientId,recipient,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})})};
+   try{await register()}catch(e){
+     if(e.status!==409)throw e;
+     // A browser subscription previously bound to another account cannot be
+     // reassigned by that account's identifier. Obtain a fresh subscription.
+     await sub.unsubscribe();
+     sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});
+     await register();
+   }
    localStorage.setItem(pushStorageKey(),'1');
    return done(true);
  }catch(e){
@@ -72,7 +80,7 @@ async function enablePhoneNotifications(btn=null){
 }
 
 async function autoRegisterPhoneNotifications(){
- if(Notification?.permission!=='granted'||!session)return;
+ if(!('Notification' in window)||Notification.permission!=='granted'||!sessionVerified||logoutPending)return;
  try{await enablePhoneNotifications()}catch(e){}
 }
 
