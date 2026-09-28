@@ -1,14 +1,20 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Response, Depends
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from starlette.formparsers import MultiPartException
+from PIL import Image, ImageOps, UnidentifiedImageError
+from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import List
 import os
-import json, shutil, hashlib, hmac, secrets, urllib.request, urllib.error
+import json, hashlib, hmac, secrets, urllib.request, urllib.error
+import io, logging, stat, warnings
 import psycopg
 from psycopg.rows import dict_row
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 import base64
 try:
@@ -23,9 +29,156 @@ DATABASE_URL=os.environ["DATABASE_URL"]
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
-app=FastAPI(title="Зроби себе зі мною V3")
+# H04 limits apply to this image flow only, including legacy image reads.
+SCREENSHOT_MAX_BYTES=10*1024*1024
+SCREENSHOT_BODY_MAX_BYTES=SCREENSHOT_MAX_BYTES+64*1024  # Multipart overhead.
+SCREENSHOT_MAX_PIXELS=16_000_000
+SCREENSHOT_MAX_EDGE=8192
+SCREENSHOT_FORMATS={"JPEG":"image/jpeg","PNG":"image/png","WEBP":"image/webp"}
+Image.MAX_IMAGE_PIXELS=SCREENSHOT_MAX_PIXELS
+warnings.filterwarnings("error",category=Image.DecompressionBombWarning)
+
+class ScreenshotBodyLimit:
+    """Bound raw upload bytes before FastAPI's multipart spool, even chunked.
+
+    MultiPartException also asks older Starlette parsers to close partial
+    temporary files. Normalize that parser's 400 to the intended 413.
+    Authentication/ownership still run in the existing C01 dependencies.
+    """
+    def __init__(self,app):self.app=app
+    async def __call__(self,scope,receive,send):
+        parts=scope.get("path","").rstrip("/").split("/")
+        if not (scope["type"]=="http" and scope["method"]=="POST" and
+                len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot"):
+            return await self.app(scope,receive,send)
+        error=JSONResponse({"detail":"Зображення завелике. Максимум 10 MiB."},status_code=413)
+        for key,value in scope.get("headers",[]):
+            if key.lower()==b"content-length":
+                try:too_large=int(value)>SCREENSHOT_BODY_MAX_BYTES
+                except ValueError:too_large=False
+                if too_large:return await error(scope,receive,send)
+        total=0;exceeded=False;replied=False
+        async def limited_receive():
+            nonlocal total,exceeded
+            message=await receive()
+            if message["type"]=="http.request":
+                total+=len(message.get("body",b""))
+                if total>SCREENSHOT_BODY_MAX_BYTES:
+                    exceeded=True
+                    raise MultiPartException("Screenshot body limit exceeded")
+            return message
+        async def limited_send(message):
+            nonlocal replied
+            if exceeded:
+                if not replied:
+                    replied=True
+                    await error(scope,receive,send)
+                return
+            await send(message)
+        await self.app(scope,limited_receive,limited_send)
+
+class ScreenshotBuffer(io.BytesIO):
+    """The re-encoded representation has the same hard byte ceiling."""
+    def write(self,data):
+        if self.tell()+len(data)>SCREENSHOT_MAX_BYTES:
+            raise HTTPException(413,"Зображення завелике після обробки. Максимум 10 MiB.")
+        return super().write(data)
+
+def read_screenshot_bytes(stream):
+    data=bytearray()
+    while True:
+        chunk=stream.read(min(64*1024,SCREENSHOT_MAX_BYTES+1-len(data)))
+        if not chunk:break
+        data.extend(chunk)
+        if len(data)>SCREENSHOT_MAX_BYTES:
+            raise HTTPException(413,"Зображення завелике. Максимум 10 MiB.")
+    if not data:raise HTTPException(400,"Файл зображення порожній")
+    return bytes(data)
+
+def normalize_screenshot(data,content_type=None):
+    """Only decoded pixels leave this function; never original file bytes.
+
+    Filename/extension are deliberately not inputs. MIME is an extra upload
+    consistency check, not proof of format. None is used for legacy disk reads.
+    """
+    if content_type is not None and content_type not in SCREENSHOT_FORMATS.values():
+        raise HTTPException(415,"Підтримуються лише JPEG, PNG та статичний WebP")
+    try:
+        with Image.open(io.BytesIO(data),formats=list(SCREENSHOT_FORMATS)) as probe:
+            fmt=probe.format
+            if content_type is not None and SCREENSHOT_FORMATS[fmt]!=content_type:
+                raise HTTPException(415,"Тип файлу не відповідає вмісту зображення")
+            w,h=probe.size
+            if w*h>SCREENSHOT_MAX_PIXELS or max(w,h)>SCREENSHOT_MAX_EDGE:
+                raise HTTPException(413,"Зображення перевищує 16 MP або 8192 пікселі по стороні")
+            if getattr(probe,"n_frames",1)!=1:
+                raise HTTPException(415,"Анімовані зображення не підтримуються")
+            probe.verify()
+        with Image.open(io.BytesIO(data),formats=[fmt]) as decoded:
+            decoded.load()  # verify() alone does not decode pixels.
+            ImageOps.exif_transpose(decoded,in_place=True)
+            alpha="A" in decoded.getbands() or "transparency" in decoded.info
+            mode="RGBA" if alpha else "RGB"
+            out_format="PNG" if fmt=="PNG" or alpha else "JPEG"
+            # A fresh pixel-only image prevents inherited EXIF/XMP/text/ICC,
+            # comments, appended content or original container data escaping.
+            with decoded.convert(mode) as pixels, Image.new(mode,decoded.size) as clean:
+                clean.paste(pixels)
+                with ScreenshotBuffer() as encoded:
+                    clean.save(encoded,format=out_format,**({"quality":90} if out_format=="JPEG" else {}))
+                    result=encoded.getvalue()
+        return result,SCREENSHOT_FORMATS[out_format],(".png" if out_format=="PNG" else ".jpg")
+    except (Image.DecompressionBombWarning,Image.DecompressionBombError):
+        raise HTTPException(413,"Зображення перевищує допустиму кількість пікселів") from None
+    except UnidentifiedImageError:
+        raise HTTPException(415,"Файл не є допустимим JPEG, PNG або WebP") from None
+    except (OSError,ValueError,SyntaxError):
+        raise HTTPException(400,"Зображення пошкоджене або не може бути прочитане") from None
+
+# V93 C01: one trainer per installation, as in V92 (trainer_auth.id=1).
+SESSION_COOKIE="__Host-eplan_session"
+SESSION_TTL_SECONDS=7*24*60*60
+PUBLIC_API_ROUTES={
+    ("POST","/api/login"), ("POST","/api/logout"),
+    ("POST","/api/password-reset/request"), ("POST","/api/password-reset/confirm"),
+    ("GET","/api/push/public-key"),
+}
+
+def api_session_boundary(request:Request):
+    """Private API is authenticated by default, including future API routes.
+
+    The non-simple header is a cookie-auth CSRF prerequisite. There is no
+    cross-origin CORS grant in this same-origin application. It is not a secret
+    or proof of identity: every private request still needs a valid session.
+    """
+    path=request.url.path.rstrip("/")
+    if not path.startswith("/api/"): return
+    if request.method not in ("GET","HEAD","OPTIONS") or path=="/api/debug/resend":
+        if request.headers.get("X-EPLAN-Request")!="1":
+            raise HTTPException(403,"Запит має надходити із застосунку Є ПЛАН")
+        if request.headers.get("Sec-Fetch-Site") in ("cross-site","same-site"):
+            raise HTTPException(403,"Міжсайтовий запит заборонено")
+    if (request.method,path) not in PUBLIC_API_ROUTES:
+        user=current_user(request)
+        expected=request.headers.get("X-EPLAN-Actor")
+        # An optional frontend/queue precondition may only narrow access. It
+        # cannot authenticate a caller or grant the identity named in it.
+        if expected and expected!=f"{user.role}:{user.user_id}":
+            raise HTTPException(401,"Акаунт змінився. Увійдіть знову")
+
+app=FastAPI(title="Зроби себе зі мною V3",dependencies=[Depends(api_session_boundary)])
+app.add_middleware(ScreenshotBodyLimit)
 app.mount("/static",StaticFiles(directory=BASE/"static"),name="static")
-app.mount("/uploads",StaticFiles(directory=UPLOADS),name="uploads")
+
+@app.exception_handler(RequestValidationError)
+async def api_validation_error(request:Request,exc:RequestValidationError):
+    if not request.url.path.startswith("/api/"):
+        return await request_validation_exception_handler(request,exc)
+    # H01: validation errors can otherwise echo the whole request, including
+    # a password/reset token/push credential. Keep diagnostics, never inputs.
+    details=[{key:error[key] for key in ("type","loc","msg") if key in error}
+             for error in exc.errors()]
+    return JSONResponse(status_code=422,content={"detail":details})
 
 KYIV_TZ=ZoneInfo("Europe/Kyiv")
 def kyiv_today():
@@ -55,15 +208,54 @@ def hash_password(password:str)->str:
     digest=hashlib.pbkdf2_hmac("sha256",password.encode(),bytes.fromhex(salt),200000).hex()
     return "pbkdf2$"+salt+"$"+digest
 
+def is_password_hash(stored)->bool:
+    # H05: the existing PBKDF2-SHA256 format (16-byte salt, 32-byte digest).
+    if not isinstance(stored,str):return False
+    parts=stored.split("$")
+    return (len(parts)==3 and parts[0]=="pbkdf2" and len(parts[1])==32 and len(parts[2])==64
+            and all(ch in "0123456789abcdefABCDEF" for ch in parts[1])
+            and all(ch in "0123456789abcdef" for ch in parts[2]))
+
 def check_password(password:str,stored:str)->bool:
-    if not stored:return False
-    if not stored.startswith("pbkdf2$"):
-        return hmac.compare_digest(password,stored)
+    # Runtime credentials must already be hashes; only init() migrates legacy rows.
+    if not is_password_hash(stored):return False
     try:
-        _,salt,digest=stored.split("$",2)
+        _,salt,digest=stored.split("$")
         test=hashlib.pbkdf2_hmac("sha256",password.encode(),bytes.fromhex(salt),200000).hex()
         return hmac.compare_digest(test,digest)
     except Exception:return False
+
+def configured_trainer_email()->str:
+    email=os.getenv("TRAINER_EMAIL","").strip()
+    if email.count("@")!=1 or not all(email.split("@")) or any(ch.isspace() for ch in email):
+        raise RuntimeError("H05 configuration error: set a valid TRAINER_EMAIL before startup")
+    return email
+
+def migrate_password_value(stored)->str:
+    if is_password_hash(stored):return stored
+    # Empty/malformed hashes cannot authenticate; password reset can recover them.
+    if not isinstance(stored,str) or not stored or stored.startswith("pbkdf2$"):return ""
+    return hash_password(stored)
+
+def migrate_credentials(c):
+    # Runs within init()'s transaction, after its table locks/DDL. Do not commit here.
+    trainers=c.execute("SELECT id,password FROM trainer_auth ORDER BY id FOR UPDATE").fetchall()
+    if not any(row["id"]==1 for row in trainers):
+        bootstrap=os.getenv("TRAINER_PASSWORD","")
+        if not bootstrap:
+            raise RuntimeError("H05 configuration error: TRAINER_PASSWORD is required to bootstrap missing trainer_auth")
+    try:
+        if not any(row["id"]==1 for row in trainers):
+            c.execute("INSERT INTO trainer_auth(id,password) VALUES(1,%s)",(hash_password(bootstrap),))
+        for table,records in (("trainer_auth",trainers),
+                              ("clients",c.execute("SELECT id,password FROM clients ORDER BY id FOR UPDATE").fetchall())):
+            for row in records:
+                migrated=migrate_password_value(row["password"])
+                if migrated!=row["password"]:
+                    c.execute("UPDATE "+table+" SET password=%s WHERE id=%s",(migrated,row["id"]))
+    except Exception:
+        # Never include credentials or database error details in startup diagnostics.
+        raise RuntimeError("H05 credential migration failed; startup aborted and transaction will be rolled back") from None
 
 PLAN_FEATURES={
  "coaching":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":True,"meal_plan":True},
@@ -150,8 +342,10 @@ def send_reset_email(email:str,link:str):
         return False
 
 def init():
+    configured_trainer_email()
     with con() as c:
-        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT DEFAULT 'client123',goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний')""")
+        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT,goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний')""")
+        c.execute("ALTER TABLE clients ALTER COLUMN password DROP DEFAULT")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_order INTEGER DEFAULT 0")
@@ -248,18 +442,32 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS trainer_auth(
             id INTEGER PRIMARY KEY, password TEXT NOT NULL
         )""")
+        # Additive C01 migration. No V92 account/data tables are rewritten.
+        c.execute("""CREATE TABLE IF NOT EXISTS auth_sessions(
+            id BIGSERIAL PRIMARY KEY,
+            token_hash TEXT NOT NULL UNIQUE,
+            role TEXT NOT NULL CHECK(role IN ('trainer','client')),
+            user_id INTEGER NOT NULL,
+            client_id INTEGER REFERENCES clients(id),
+            credential_hash TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMPTZ NOT NULL,
+            revoked_at TIMESTAMPTZ,
+            CHECK((role='trainer' AND user_id=1 AND client_id IS NULL)
+               OR (role='client' AND client_id IS NOT NULL AND user_id=client_id))
+        )""")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_auth_sessions_user ON auth_sessions(role,user_id)")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         c.execute("""CREATE TABLE IF NOT EXISTS cardio_log(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,cardio_type TEXT DEFAULT '',minutes INTEGER DEFAULT 0,speed DOUBLE PRECISION DEFAULT 0,incline DOUBLE PRECISION DEFAULT 0,steps INTEGER DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(client_id,day))""")
-        if c.execute("SELECT COUNT(*) AS n FROM clients").fetchone()["n"]==0:
-            anna_id=c.execute("INSERT INTO clients(name,email,goal,weight,kcal,protein,fat,carbs) VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",("Анна Коваленко","anna@demo.local","Набір м'язів",61,2340,145,68,265)).fetchone()["id"]
-            with c.cursor() as cur:
-                cur.executemany("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,sort) VALUES(%s,%s,%s,%s,%s,%s,%s)",[(anna_id,"День A","Присідання",3,"8",2,1),(anna_id,"День A","Жим лежачи",3,"10",2,2),(anna_id,"День B","Румунська тяга",3,"8-10",2,1),(anna_id,"День B","Тяга верхнього блока",3,"10-12",2,2)])
-            with c.cursor() as cur:
-                cur.executemany("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(%s,%s,%s,%s,%s,%s,%s)",[(anna_id,"Присідання","2026-09-08",70,8,3,2),(anna_id,"Присідання","2026-09-15",72.5,8,3,2)])
-            with c.cursor() as cur:
-                cur.executemany("INSERT INTO measurements(client_id,day,weight,waist) VALUES(%s,%s,%s,%s)",[(anna_id,"2026-08-20",62.4,72),(anna_id,"2026-09-15",61,71)])
+        migrate_credentials(c)
         c.commit()
 init()
+
+def password_input_schema(schema:dict):
+    # Compatibility-only input: add_client() uses its own random initial secret.
+    # Keep the H01 write-only schema and omit the unused default from OpenAPI.
+    schema.pop("default",None)
+    schema["writeOnly"]=True
 
 class Login(BaseModel): email:str; password:str
 class ClientStatusIn(BaseModel): status:str
@@ -268,7 +476,7 @@ class ClientAccessIn(BaseModel):
 class ResetRequestIn(BaseModel): email:str
 class ResetConfirmIn(BaseModel): token:str; password:str
 class ClientIn(BaseModel):
-    name:str; email:str; password:str="client123"; goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
+    name:str; email:str; password:str=Field(default="",json_schema_extra=password_input_schema); goal:str=""; weight:float=0; kcal:int=0; protein:int=0; fat:int=0; carbs:int=0
 class ProgramIn(BaseModel):
     client_id:int; day_name:str; exercise:str; sets:int=3; reps:str="8-12"; target_rir:int=2; superset_group:str=""; superset_order:int=0; technique_url:str=""; rest_seconds:int=0; rest_text:str=""; rir_by_set:str=""; alternatives_json:str="[]"
 class ExerciseGroupIn(BaseModel): name:str
@@ -324,6 +532,166 @@ class HistoricalSetIn(BaseModel):
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:str; day_name:str; sets:List[HistoricalSetIn]
 
+@dataclass(frozen=True)
+class AuthUser:
+    role:str
+    user_id:int
+    client_id:int|None
+    session_id:int
+    expires_at:datetime
+    name:str
+    status:str=""
+
+def trainer_credential():
+    row=one("SELECT password FROM trainer_auth WHERE id=1")
+    return row["password"] if row else ""
+
+def credential_fingerprint(role:str,credential:str):
+    # Invalidate sessions on password/config changes, even if a login overlaps
+    # a reset. This does not change V92 password hashing or reset-token logic.
+    account=configured_trainer_email().lower() if role=="trainer" else ""
+    return hashlib.sha256((role+"\0"+account+"\0"+str(credential)).encode()).hexdigest()
+
+def cookie_token_hash(request:Request):
+    token=request.cookies.get(SESSION_COOKIE,"")
+    if len(token)!=43 or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for c in token):
+        return None
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def current_user(request:Request):
+    cached=getattr(request.state,"auth_user",None)
+    if cached is not None:return cached
+    th=cookie_token_hash(request)
+    s=one("SELECT * FROM auth_sessions WHERE token_hash=? AND revoked_at IS NULL AND expires_at>CURRENT_TIMESTAMP",(th,)) if th else None
+    if not s:raise HTTPException(401,"Увійдіть у свій акаунт")
+    if s["role"]=="trainer" and s["user_id"]==1 and s["client_id"] is None:
+        credential=trainer_credential();name="Михайло";status=""
+    elif s["role"]=="client" and s["client_id"]==s["user_id"]:
+        c=one("SELECT id,name,password,status FROM clients WHERE id=?",(s["client_id"],))
+        if not c or c["status"]=="Видалений":raise HTTPException(401,"Увійдіть у свій акаунт")
+        credential=c["password"];name=c["name"];status=c["status"]
+    else:raise HTTPException(401,"Увійдіть у свій акаунт")
+    if not hmac.compare_digest(s["credential_hash"],credential_fingerprint(s["role"],credential)):
+        raise HTTPException(401,"Увійдіть у свій акаунт")
+    user=AuthUser(s["role"],s["user_id"],s["client_id"],s["id"],s["expires_at"],name,status)
+    request.state.auth_user=user
+    return user
+
+def require_trainer(user:AuthUser=Depends(current_user)):
+    if user.role!="trainer":raise HTTPException(403,"Ця дія доступна лише тренеру")
+    return user
+
+def require_client(user:AuthUser=Depends(current_user)):
+    if user.role!="client":raise HTTPException(403,"Ця дія доступна у кабінеті клієнта")
+    return user
+
+def authorize_client(user:AuthUser,cid:int):
+    if user.role=="client" and user.client_id!=cid:
+        raise HTTPException(403,"Немає доступу до даних цього клієнта")
+    # V92 has no other trainer accounts or trainer_id relationship: every row
+    # belongs to the single trainer of this installation. Do not infer tenants.
+    c=client_state(cid)
+    if not c:raise HTTPException(404,"Клієнта не знайдено")
+    return c
+
+def owned_record(user:AuthUser,table:str,object_id:int):
+    # Table names are a closed internal mapping, never values from a request.
+    queries={
+        "program":"SELECT * FROM program WHERE id=?",
+        "nutrition":"SELECT * FROM nutrition WHERE id=?",
+        "comments":"SELECT * FROM comments WHERE id=?",
+        "notifications":"SELECT * FROM notifications WHERE id=?",
+    }
+    rec=one(queries[table],(object_id,))
+    if not rec:raise HTTPException(404,"Запис не знайдено")
+    authorize_client(user,rec["client_id"])
+    return rec
+
+def authorize_program(user:AuthUser,pid:int,cid:int):
+    authorize_client(user,cid)
+    p=one("SELECT id,client_id FROM program WHERE id=?",(pid,))
+    if p:
+        if p["client_id"]!=cid:raise HTTPException(403,"Вправа належить іншому клієнту")
+        return
+    if one("SELECT id FROM result_sets WHERE client_id=? AND program_id=? LIMIT 1",(cid,pid)):return
+    # V92 active/history workouts retain a server-created program snapshot.
+    # A removed exercise may still be saved from its owner's snapshot.
+    for s in rows("SELECT program_snapshot FROM workout_sessions WHERE client_id=?",(cid,)):
+        try:snapshot=json.loads(s["program_snapshot"] or "[]")
+        except (TypeError,ValueError):continue
+        if isinstance(snapshot,list) and any(isinstance(p,dict) and p.get("id")==pid for p in snapshot):return
+    raise HTTPException(404,"Вправу не знайдено у програмі клієнта")
+
+def authorize_recipient(user:AuthUser,cid:int,recipient:str):
+    if recipient!=user.role:raise HTTPException(403,"Немає доступу до цих сповіщень")
+    authorize_client(user,cid)
+
+def session_payload(user:AuthUser):
+    result={"role":user.role,"name":user.name,"client_id":user.client_id,
+            "user_id":user.user_id,"session_expires_at":user.expires_at.isoformat(),"auth_version":93}
+    if user.role=="client":result["status"]=user.status
+    return result
+
+def revoke_cookie_session(request:Request):
+    th=cookie_token_hash(request)
+    if th:run("UPDATE auth_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE token_hash=? AND revoked_at IS NULL",(th,))
+
+def revoke_user_sessions(role:str,user_id:int):
+    run("UPDATE auth_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE role=? AND user_id=? AND revoked_at IS NULL",(role,user_id))
+
+def create_session(request:Request,response:Response,role:str,credential:str,client:dict|None=None):
+    # Always issue a fresh random credential; never upgrade a supplied token.
+    revoke_cookie_session(request)
+    token=secrets.token_urlsafe(32)
+    expires=datetime.now(timezone.utc)+timedelta(seconds=SESSION_TTL_SECONDS)
+    uid=client["id"] if client else 1
+    cid=client["id"] if client else None
+    sid=run("INSERT INTO auth_sessions(token_hash,role,user_id,client_id,credential_hash,expires_at) VALUES(?,?,?,?,?,?)",
+            (hashlib.sha256(token.encode()).hexdigest(),role,uid,cid,credential_fingerprint(role,credential),expires))
+    response.set_cookie(SESSION_COOKIE,token,max_age=SESSION_TTL_SECONDS,expires=expires,
+                        path="/",secure=True,httponly=True,samesite="strict")
+    response.headers["Cache-Control"]="no-store"
+    return session_payload(AuthUser(role,uid,cid,sid,expires,client["name"] if client else "Михайло",client["status"] if client else ""))
+
+@app.get("/api/session")
+def session_info(response:Response,user:AuthUser=Depends(current_user)):
+    response.headers["Cache-Control"]="no-store"
+    return session_payload(user)
+
+@app.post("/api/logout")
+def logout_session(request:Request,response:Response):
+    # Idempotent even for expired/unknown cookies, so a client can always exit.
+    revoke_cookie_session(request)
+    response.delete_cookie(SESSION_COOKIE,path="/",secure=True,httponly=True,samesite="strict")
+    response.headers["Cache-Control"]="no-store"
+    return {"ok":True}
+
+@app.api_route("/uploads/{filename:path}",methods=["GET","HEAD"])
+def private_upload(filename:str,request:Request,user:AuthUser=Depends(current_user)):
+    if not filename or Path(filename).name!=filename or "\\" in filename:
+        raise HTTPException(404,"Файл не знайдено")
+    rec=one("SELECT client_id FROM nutrition WHERE screenshot=?",(filename,))
+    if not rec:raise HTTPException(404,"Файл не знайдено")
+    authorize_client(user,rec["client_id"])
+    file=UPLOADS/filename
+    try:
+        if file.is_symlink():raise HTTPException(404,"Файл не знайдено")
+        fd=os.open(file,os.O_RDONLY|getattr(os,"O_NOFOLLOW",0)|getattr(os,"O_NONBLOCK",0))
+        with os.fdopen(fd,"rb") as source:
+            if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+                raise HTTPException(404,"Файл не знайдено")
+            data=read_screenshot_bytes(source)
+    except (OSError,ValueError):
+        raise HTTPException(404,"Файл не знайдено") from None
+    # Revalidate even a new-looking name: old rows/files are not proof of safety.
+    # Legacy originals remain untouched; only a clean raster is served.
+    content,media_type,extension=normalize_screenshot(data)
+    return Response(content=b"" if request.method=="HEAD" else content,media_type=media_type,headers={
+        "Content-Length":str(len(content)),"X-Content-Type-Options":"nosniff",
+        "Content-Disposition":'inline; filename="nutrition'+extension+'"',
+        "Cache-Control":"private, no-store"
+    })
+
 def _app_index():
     return FileResponse(BASE/"static"/"index.html", headers={
         "Cache-Control":"no-store, no-cache, must-revalidate",
@@ -357,7 +725,7 @@ def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",med
 def health(): return {"status":"online","version":"V3","database":"postgresql"}
 
 @app.get("/api/debug/resend")
-def debug_resend(to:str=""):
+def debug_resend(to:str="",user:AuthUser=Depends(require_trainer)):
     key=os.getenv("RESEND_API_KEY","").strip()
     sender=os.getenv("RESET_FROM_EMAIL","Є ПЛАН <noreply@eplan.com.ua>").strip()
     result={
@@ -380,27 +748,21 @@ def debug_resend(to:str=""):
 
 
 @app.post("/api/login")
-def login(x:Login):
-    trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local")
-    trainer_password=os.getenv("TRAINER_PASSWORD","trainer123")
-    if x.email.lower()==trainer_email.lower():
-        ta=one("SELECT password FROM trainer_auth WHERE id=1")
-        valid=check_password(x.password,ta["password"]) if ta else hmac.compare_digest(x.password,trainer_password)
-        if valid:
-            return {"role":"trainer","name":"Михайло","client_id":None}
+def login(x:Login,request:Request,response:Response):
+    if x.email.lower()==configured_trainer_email().lower():
+        credential=trainer_credential()
+        if check_password(x.password,credential):
+            return create_session(request,response,"trainer",credential)
     u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(x.email,))
     if u and check_password(x.password,u["password"]):
         if u["status"]=="Видалений": raise HTTPException(403,"Цей акаунт видалено. Зверніться до тренера.")
-        # migrate legacy plaintext password on successful login
-        if not str(u["password"] or "").startswith("pbkdf2$"):
-            run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),u["id"]))
-        return {"role":"client","name":u["name"],"client_id":u["id"],"status":u["status"]}
+        return create_session(request,response,"client",u["password"],u)
     raise HTTPException(401,"Невірний email або пароль")
 
 @app.post("/api/password-reset/request")
 def password_reset_request(x:ResetRequestIn):
     email=x.email.strip()
-    trainer_email=os.getenv("TRAINER_EMAIL","trainer@demo.local").strip()
+    trainer_email=configured_trainer_email()
     u=one("SELECT * FROM clients WHERE LOWER(email)=LOWER(?)",(email,))
     target_id=None
     target_email=None
@@ -426,7 +788,7 @@ def password_reset_request(x:ResetRequestIn):
     return {"ok":True,"message":"Якщо така пошта зареєстрована, на неї надіслано посилання для відновлення пароля."}
 
 @app.post("/api/password-reset/confirm")
-def password_reset_confirm(x:ResetConfirmIn):
+def password_reset_confirm(x:ResetConfirmIn,request:Request,response:Response):
     if len(x.password)<8: raise HTTPException(400,"Пароль має містити щонайменше 8 символів")
     th=hashlib.sha256(x.token.encode()).hexdigest()
     r=one("SELECT * FROM password_resets WHERE token_hash=? AND used=FALSE",(th,))
@@ -438,10 +800,30 @@ def password_reset_confirm(x:ResetConfirmIn):
         if not c or c["status"]=="Видалений": raise HTTPException(403,"Доступ до акаунта закрито")
         run("UPDATE clients SET password=? WHERE id=?",(hash_password(x.password),r["client_id"]))
     run("UPDATE password_resets SET used=TRUE WHERE id=?",(r["id"],))
+    revoke_user_sessions("trainer" if r["client_id"]==0 else "client",1 if r["client_id"]==0 else r["client_id"])
+    revoke_cookie_session(request)
+    response.delete_cookie(SESSION_COOKIE,path="/",secure=True,httponly=True,samesite="strict")
+    response.headers["Cache-Control"]="no-store"
     return {"ok":True}
 
+# H01: explicit response allowlist. Do not sanitize rows()/one() globally:
+# authentication/reset still need credential columns internally. New DB columns
+# are private until deliberately added here; existing business values/types stay
+# unchanged, including optional NULLs and endpoint-specific derived fields.
+CLIENT_RESPONSE_FIELDS=(
+    "id","name","email","goal","weight","kcal","protein","fat","carbs",
+    "meal_plan","status","first_name","last_name","age","sex",
+    "contraindications","injuries","contact","instagram","telegram","tiktok",
+    "plan_code","access_until","access","live_status","needs_review_count",
+    "finished_workout_count","last_finished_at","review_state",
+)
+
+def client_response(record:dict|None):
+    if record is None:return None
+    return {key:record[key] for key in CLIENT_RESPONSE_FIELDS if key in record}
+
 @app.get("/api/clients")
-def clients():
+def clients(user:AuthUser=Depends(require_trainer)):
     xs=rows("""SELECT c.*, CASE WHEN EXISTS(
         SELECT 1 FROM workout_sessions w WHERE w.client_id=c.id AND w.status='training'
     ) THEN 'Тренується' ELSE c.status END AS live_status
@@ -457,9 +839,9 @@ def clients():
         c["finished_workout_count"]=int(review.get("finished_count") or 0)
         c["last_finished_at"]=review.get("last_finished_at")
         c["review_state"]="needs_review" if c["needs_review_count"]>0 else ("reviewed" if c["finished_workout_count"]>0 else "none")
-    return xs
+    return [client_response(c) for c in xs]
 @app.post("/api/clients")
-def add_client(x:ClientIn):
+def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
     email=x.email.strip().lower()
     if "@" not in email or "." not in email.split("@")[-1]: raise HTTPException(400,"Вкажи коректний email")
     # Trainer creates the client by real email. The client sets their own password from the invitation.
@@ -475,20 +857,23 @@ def add_client(x:ClientIn):
         if base:
             sent=send_reset_email(email,base+"/?reset="+token)
         c=one("SELECT * FROM clients WHERE id=?",(i,))
-        return {"client":c,"invite_sent":sent}
+        return {"client":client_response(c),"invite_sent":sent}
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
 
 @app.patch("/api/clients/{cid}/status")
-def set_client_status(cid:int,x:ClientStatusIn):
+def set_client_status(cid:int,x:ClientStatusIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
     if x.status not in ("Активний","Заморожений","Видалений"): raise HTTPException(400,"Невірний статус")
     if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
     run("UPDATE clients SET status=? WHERE id=?",(x.status,cid))
+    if x.status=="Видалений":revoke_user_sessions("client",cid)
     if x.status!="Активний":
         run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE client_id=? AND status='training'",(cid,))
     return {"ok":True,"status":x.status}
 
 @app.patch("/api/clients/{cid}/access")
-def set_client_access(cid:int,x:ClientAccessIn):
+def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
     if x.plan_code not in PLAN_FEATURES: raise HTTPException(400,"Невідомий тариф")
     if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
     until=None
@@ -499,17 +884,20 @@ def set_client_access(cid:int,x:ClientAccessIn):
     return {"ok":True,"access":access_info(one("SELECT * FROM clients WHERE id=?",(cid,)))}
 
 @app.delete("/api/clients/{cid}")
-def del_client(cid:int):
+def del_client(cid:int,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
     # Soft delete preserves training/nutrition history but closes account access.
     run("UPDATE clients SET status='Видалений' WHERE id=?",(cid,))
+    revoke_user_sessions("client",cid)
     run("UPDATE workout_sessions SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP) WHERE client_id=? AND status='training'",(cid,))
     return {"ok":True}
 @app.get("/api/client/{cid}")
-def client(cid:int):
+def client(cid:int,user:AuthUser=Depends(current_user)):
+    authorize_client(user,cid)
     c=one("SELECT * FROM clients WHERE id=?",(cid,))
     if not c: raise HTTPException(404)
     c["access"]=access_info(c)
-    return {"client":c,
+    return {"client":client_response(c),
             "program":rows("SELECT * FROM program WHERE client_id=? ORDER BY day_name,sort,id",(cid,)),
             "program_days":rows("SELECT * FROM program_days WHERE client_id=? ORDER BY day_name",(cid,)),
             "results":rows("SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",(cid,)),
@@ -521,14 +909,16 @@ def client(cid:int):
             "comments":rows("SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",(cid,)),
             "cardio":rows("SELECT * FROM cardio_log WHERE client_id=? ORDER BY day DESC,id DESC",(cid,))}
 @app.patch("/api/client/{cid}/profile")
-def update_client_profile(cid:int,x:ClientProfileIn):
+def update_client_profile(cid:int,x:ClientProfileIn,user:AuthUser=Depends(current_user)):
+    authorize_client(user,cid)
     if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
     display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
     run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,contraindications=?,injuries=?,contact=?,instagram=?,telegram=?,tiktok=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),display,display,cid))
-    return one("SELECT * FROM clients WHERE id=?",(cid,))
+    return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
 
 @app.patch("/api/client/{cid}/nutrition")
-def update_client_nutrition(cid:int,x:NutritionTargetIn):
+def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
     legacy=x.meal_plan.strip()
@@ -546,10 +936,11 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn):
                 if item.content.strip():
                     c.execute("INSERT INTO nutrition_plan_items(client_id,meal_number,variant_number,content,sort) VALUES(%s,%s,%s,%s,%s)",(cid,max(1,item.meal_number),max(1,item.variant_number),item.content.strip(),item.sort))
         c.commit()
-    return one("SELECT * FROM clients WHERE id=?",(cid,))
+    return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
 
 @app.post("/api/cardio")
-def save_cardio(x:CardioIn):
+def save_cardio(x:CardioIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     require_active_client(x.client_id,'cardio')
     d=x.day.strip() or str(kyiv_today())
     if d>str(kyiv_today()): raise HTTPException(400,"Майбутню дату заповнювати не можна")
@@ -563,7 +954,7 @@ def save_cardio(x:CardioIn):
 
 
 @app.get("/api/exercise-library")
-def get_exercise_library():
+def get_exercise_library(user:AuthUser=Depends(current_user)):
     groups=rows("SELECT * FROM exercise_groups ORDER BY sort,id")
     muscles=rows("SELECT * FROM muscles ORDER BY sort,name,id")
     exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
@@ -580,7 +971,7 @@ def get_exercise_library():
     return {"groups":groups,"muscles":muscles,"exercises":exercises}
 
 @app.post("/api/exercise-library/groups")
-def add_exercise_group(x:ExerciseGroupIn):
+def add_exercise_group(x:ExerciseGroupIn,user:AuthUser=Depends(require_trainer)):
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву групи")
     old=one("SELECT id FROM exercise_groups WHERE lower(name)=lower(?)",(name,))
@@ -588,7 +979,7 @@ def add_exercise_group(x:ExerciseGroupIn):
     return {"id":run("INSERT INTO exercise_groups(name) VALUES(?)",(name,))}
 
 @app.delete("/api/exercise-library/groups/{gid}")
-def delete_exercise_group(gid:int):
+def delete_exercise_group(gid:int,user:AuthUser=Depends(require_trainer)):
     ids=rows("SELECT id FROM exercise_library WHERE group_id=?",(gid,))
     with con() as c:
         for item in ids:
@@ -599,7 +990,7 @@ def delete_exercise_group(gid:int):
     return {"ok":True}
 
 @app.post("/api/exercise-library/muscles")
-def add_muscle(x:MuscleIn):
+def add_muscle(x:MuscleIn,user:AuthUser=Depends(require_trainer)):
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву м’яза")
     old=one("SELECT id FROM muscles WHERE lower(name)=lower(?)",(name,))
@@ -607,7 +998,7 @@ def add_muscle(x:MuscleIn):
     return {"id":run("INSERT INTO muscles(name) VALUES(?)",(name,))}
 
 @app.delete("/api/exercise-library/muscles/{mid}")
-def delete_muscle(mid:int):
+def delete_muscle(mid:int,user:AuthUser=Depends(require_trainer)):
     with con() as c:
         c.execute("DELETE FROM exercise_muscles WHERE muscle_id=%s",(mid,))
         c.execute("DELETE FROM muscles WHERE id=%s",(mid,))
@@ -630,7 +1021,7 @@ def save_exercise_muscles(c,eid:int,x:ExerciseLibraryIn):
     for mid in secondary: c.execute("INSERT INTO exercise_muscles(exercise_id,muscle_id,role) VALUES(%s,%s,'secondary')",(eid,mid))
 
 @app.post("/api/exercise-library/exercises")
-def add_library_exercise(x:ExerciseLibraryIn):
+def add_library_exercise(x:ExerciseLibraryIn,user:AuthUser=Depends(require_trainer)):
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву вправи")
     with con() as c:
@@ -646,7 +1037,7 @@ def add_library_exercise(x:ExerciseLibraryIn):
     return {"id":eid}
 
 @app.put("/api/exercise-library/exercises/{eid}")
-def edit_library_exercise(eid:int,x:ExerciseLibraryIn):
+def edit_library_exercise(eid:int,x:ExerciseLibraryIn,user:AuthUser=Depends(require_trainer)):
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву вправи")
     with con() as c:
@@ -660,7 +1051,7 @@ def edit_library_exercise(eid:int,x:ExerciseLibraryIn):
     return {"ok":True}
 
 @app.delete("/api/exercise-library/exercises/{eid}")
-def delete_library_exercise(eid:int):
+def delete_library_exercise(eid:int,user:AuthUser=Depends(require_trainer)):
     with con() as c:
         c.execute("DELETE FROM exercise_muscles WHERE exercise_id=%s",(eid,))
         c.execute("DELETE FROM exercise_library WHERE id=%s",(eid,))
@@ -668,10 +1059,13 @@ def delete_library_exercise(eid:int):
     return {"ok":True}
 
 @app.post("/api/program")
-def add_program(x:ProgramIn):
+def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
     i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,x.technique_url.strip(),x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]")); return {"id":i}
 @app.put("/api/program/{pid}")
-def edit_program(pid:int,x:ProgramIn):
+def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
+    p=owned_record(user,"program",pid)
+    if x.client_id!=p["client_id"]:raise HTTPException(403,"Вправа належить іншому клієнту")
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
     run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
@@ -679,7 +1073,8 @@ def edit_program(pid:int,x:ProgramIn):
     return {"ok":True}
 
 @app.put("/api/program-day-title")
-def save_program_day_title(x:ProgramDayTitleIn):
+def save_program_day_title(x:ProgramDayTitleIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
     day=x.day_name.strip()
     if not day: raise HTTPException(400,"Вкажіть день")
     title=x.title.strip()
@@ -691,7 +1086,8 @@ def save_program_day_title(x:ProgramDayTitleIn):
     return {"ok":True}
 
 @app.post("/api/program/reorder")
-def reorder_program(x:ProgramOrderIn):
+def reorder_program(x:ProgramOrderIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
     current=rows("SELECT id FROM program WHERE client_id=? AND day_name=? ORDER BY id",(x.client_id,x.day_name))
     current_ids={r["id"] for r in current}
     ordered=[int(i) for i in x.ordered_ids]
@@ -704,18 +1100,23 @@ def reorder_program(x:ProgramOrderIn):
     return {"ok":True}
 
 @app.patch("/api/program/{pid}/superset")
-def set_superset(pid:int,x:SupersetIn):
+def set_superset(pid:int,x:SupersetIn,user:AuthUser=Depends(require_trainer)):
+    owned_record(user,"program",pid)
     run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
     return {"ok":True}
 
 @app.delete("/api/program/{pid}")
-def del_program(pid:int): run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
+def del_program(pid:int,user:AuthUser=Depends(require_trainer)):
+    owned_record(user,"program",pid)
+    run("DELETE FROM program WHERE id=?",(pid,)); return {"ok":True}
 @app.post("/api/results")
-def add_result(x:ResultIn):
+def add_result(x:ResultIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     i=run("INSERT INTO results(client_id,exercise,day,weight,reps,sets,rir) VALUES(?,?,?,?,?,?,?)",(x.client_id,x.exercise,str(kyiv_today()),x.weight,x.reps,x.sets,x.rir)); return {"id":i}
 
 @app.post("/api/result-sets")
-def add_result_sets(x:SetResultIn):
+def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
+    authorize_program(user,x.program_id,x.client_id)
     require_active_client(x.client_id,'workouts')
     if not x.sets:
         raise HTTPException(400,"Додай хоча б один підхід")
@@ -729,7 +1130,8 @@ def add_result_sets(x:SetResultIn):
     return {"ok":True,"ids":ids}
 
 @app.get("/api/result-sets/{cid}")
-def result_set_history(cid:int):
+def result_set_history(cid:int,user:AuthUser=Depends(current_user)):
+    authorize_client(user,cid)
     return rows("SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number",(cid,))
 
 
@@ -787,16 +1189,24 @@ def push_public_key():
     return {"public_key":public or ""}
 
 @app.post("/api/push/subscribe")
-def push_subscribe(x:PushSubscriptionIn):
+def push_subscribe(x:PushSubscriptionIn,user:AuthUser=Depends(current_user)):
+    if x.recipient!=user.role:raise HTTPException(403,"Невірний отримувач підписки")
+    if user.role=="client" or x.client_id!=0:authorize_client(user,x.client_id)
     if x.recipient not in ("client","trainer"): raise HTTPException(400,"Невірний отримувач")
     if not x.endpoint or not x.p256dh or not x.auth: raise HTTPException(400,"Неповна push-підписка")
-    run("""INSERT INTO push_subscriptions(client_id,recipient,endpoint,p256dh,auth)
-           VALUES(?,?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET client_id=EXCLUDED.client_id,recipient=EXCLUDED.recipient,p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth""",
-        (x.client_id,x.recipient,x.endpoint,x.p256dh,x.auth))
+    with con() as c:
+        saved=c.execute("""INSERT INTO push_subscriptions(client_id,recipient,endpoint,p256dh,auth)
+           VALUES(%s,%s,%s,%s,%s) ON CONFLICT(endpoint) DO UPDATE SET client_id=EXCLUDED.client_id,recipient=EXCLUDED.recipient,p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth
+           WHERE push_subscriptions.recipient=EXCLUDED.recipient
+             AND (EXCLUDED.recipient='trainer' OR push_subscriptions.client_id=EXCLUDED.client_id)
+           RETURNING id""",(x.client_id,x.recipient,x.endpoint,x.p256dh,x.auth)).fetchone()
+        if not saved:raise HTTPException(409,"Потрібна нова push-підписка для цього акаунта")
+        c.commit()
     return {"ok":True}
 
 @app.post("/api/workout/start")
-def start_workout(x:WorkoutStartIn):
+def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     require_active_client(x.client_id,'workouts')
     today=str(kyiv_today())
     active=one("SELECT * FROM workout_sessions WHERE client_id=? AND status='training' ORDER BY id DESC LIMIT 1",(x.client_id,))
@@ -815,13 +1225,14 @@ def start_workout(x:WorkoutStartIn):
     return session
 
 @app.post("/api/workout/{sid}/finish")
-def finish_workout(sid:int):
+def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
     # Lock this workout row in one DB transaction. This makes finish idempotent:
     # simultaneous taps/retries cannot finish it twice or create duplicate notifications.
     with con() as c:
         row=c.execute("SELECT * FROM workout_sessions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
         if not row:
             raise HTTPException(404,"Тренування не знайдено")
+        authorize_client(user,row["client_id"])
         session=dict(row)
         was_finished=session.get("status")=="finished"
         if not was_finished:
@@ -846,7 +1257,8 @@ def finish_workout(sid:int):
     return finished
 
 @app.post("/api/history/nutrition")
-def historical_nutrition(x:HistoricalNutritionIn):
+def historical_nutrition(x:HistoricalNutritionIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     require_active_client(x.client_id,'nutrition')
     if x.day > str(kyiv_today()):
         raise HTTPException(400,"Не можна додавати дані на майбутню дату")
@@ -858,7 +1270,9 @@ def historical_nutrition(x:HistoricalNutritionIn):
     return one("SELECT * FROM nutrition WHERE id=?",(i,))
 
 @app.post("/api/history/workout")
-def historical_workout(x:HistoricalWorkoutIn):
+def historical_workout(x:HistoricalWorkoutIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
+    for s in x.sets:authorize_program(user,s.program_id,x.client_id)
     require_active_client(x.client_id,'workouts')
     if x.day > str(kyiv_today()):
         raise HTTPException(400,"Не можна додавати тренування на майбутню дату")
@@ -875,7 +1289,10 @@ def historical_workout(x:HistoricalWorkoutIn):
     return {"ok":True}
 
 @app.post("/api/comments")
-def add_comment(x:CommentIn):
+def add_comment(x:CommentIn,user:AuthUser=Depends(current_user)):
+    authorize_client(user,x.client_id)
+    if x.program_id:authorize_program(user,x.program_id,x.client_id)
+    x.author=user.role
     if not x.body.strip(): raise HTTPException(400,"Коментар порожній")
     i=run("INSERT INTO comments(client_id,day,program_id,exercise,author,body) VALUES(?,?,?,?,?,?)",
           (x.client_id,x.day,x.program_id,x.exercise,x.author,x.body.strip()))
@@ -888,9 +1305,10 @@ def add_comment(x:CommentIn):
     return one("SELECT * FROM comments WHERE id=?",(i,))
 
 @app.patch("/api/workout/{sid}/review")
-def review_workout(sid:int,x:WorkoutReviewIn):
+def review_workout(sid:int,x:WorkoutReviewIn,user:AuthUser=Depends(require_trainer)):
     s=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
     if not s: raise HTTPException(404,"Тренування не знайдено")
+    authorize_client(user,s["client_id"])
     comment=x.comment.strip()
     run("UPDATE workout_sessions SET trainer_reviewed=TRUE,trainer_comment=? WHERE id=?",(comment,sid))
     workout_day=str(s.get("day_name") or "Тренування")
@@ -902,7 +1320,7 @@ def review_workout(sid:int,x:WorkoutReviewIn):
     return {"ok":True}
 
 @app.get("/api/notifications/trainer/all")
-def get_all_trainer_notifications():
+def get_all_trainer_notifications(user:AuthUser=Depends(require_trainer)):
     run("""DELETE FROM notifications n
            WHERE n.recipient='trainer'
              AND (COALESCE(n.client_id,0)=0 OR NOT EXISTS (
@@ -933,34 +1351,41 @@ def get_all_trainer_notifications():
     return xs[:200]
 
 @app.get("/api/notifications/{cid}")
-def get_notifications(cid:int,recipient:str):
+def get_notifications(cid:int,recipient:str,user:AuthUser=Depends(current_user)):
+    authorize_recipient(user,cid,recipient)
     return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? AND kind IN ('workout_review','comment') ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
 
 @app.delete("/api/notifications/item/{nid}")
-def delete_notification_item(nid:int):
+def delete_notification_item(nid:int,user:AuthUser=Depends(require_trainer)):
     n=one("SELECT * FROM notifications WHERE id=?",(nid,))
     if not n: raise HTTPException(404,"Сповіщення не знайдено")
+    authorize_recipient(user,n["client_id"],n["recipient"])
     run("DELETE FROM notifications WHERE id=?",(nid,))
     return {"ok":True}
 
 @app.patch("/api/notifications/item/{nid}/read")
-def read_notification_item(nid:int):
+def read_notification_item(nid:int,user:AuthUser=Depends(current_user)):
     n=one("SELECT * FROM notifications WHERE id=?",(nid,))
     if not n: raise HTTPException(404,"Сповіщення не знайдено")
+    authorize_recipient(user,n["client_id"],n["recipient"])
     run("UPDATE notifications SET is_read=TRUE WHERE id=?",(nid,))
     return {"ok":True}
 
 @app.patch("/api/notifications/{cid}/read")
-def read_notifications(cid:int,x:NotificationReadIn):
+def read_notifications(cid:int,x:NotificationReadIn,user:AuthUser=Depends(current_user)):
+    authorize_recipient(user,cid,x.recipient)
     run("UPDATE notifications SET is_read=TRUE WHERE client_id=? AND recipient=?",(cid,x.recipient))
     return {"ok":True}
 
 @app.post("/api/nutrition")
-def add_nutrition(x:NutIn):
+def add_nutrition(x:NutIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     require_active_client(x.client_id,'nutrition')
     i=run("INSERT INTO nutrition(client_id,day,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.kcal,x.protein,x.fat,x.carbs)); return {"id":i}
 @app.patch("/api/nutrition/{nid}")
-def edit_nutrition(nid:int,x:NutIn):
+def edit_nutrition(nid:int,x:NutIn,user:AuthUser=Depends(require_client)):
+    rec=owned_record(user,"nutrition",nid)
+    if x.client_id!=rec["client_id"]:raise HTTPException(403,"Запис належить іншому клієнту")
     rec=one("SELECT id,client_id FROM nutrition WHERE id=?",(nid,))
     if not rec: raise HTTPException(404,"Запис не знайдено")
     require_active_client(rec["client_id"],'nutrition')
@@ -968,29 +1393,78 @@ def edit_nutrition(nid:int,x:NutIn):
     return one("SELECT * FROM nutrition WHERE id=?",(nid,))
 
 @app.patch("/api/nutrition/{nid}/check")
-def check_nutrition(nid:int): run("UPDATE nutrition SET checked=1 WHERE id=?",(nid,)); return {"ok":True}
+def check_nutrition(nid:int,user:AuthUser=Depends(require_trainer)):
+    owned_record(user,"nutrition",nid)
+    run("UPDATE nutrition SET checked=1 WHERE id=?",(nid,)); return {"ok":True}
 @app.post("/api/nutrition/{nid}/screenshot")
-async def screenshot(nid:int,file:UploadFile=File(...)):
-    ext=Path(file.filename or "image.jpg").suffix or ".jpg"; name=f"nutrition_{nid}_{int(__import__('time').time())}{ext}"
-    with open(UPLOADS/name,"wb") as f: shutil.copyfileobj(file.file,f)
-    run("UPDATE nutrition SET screenshot=? WHERE id=?",(name,nid)); return {"url":"/uploads/"+name}
+def screenshot(nid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_client)):
+    owned_record(user,"nutrition",nid)
+    content_type=(file.content_type or "").split(";",1)[0].strip().lower()
+    content,media_type,extension=normalize_screenshot(read_screenshot_bytes(file.file),content_type)
+    name=None;committed=False;commit_started=False;commit_unknown=False
+    try:
+        with con() as c:
+            # Recheck the object under a row lock before writing/linking a file.
+            rec=c.execute("SELECT id,client_id FROM nutrition WHERE id=%s FOR UPDATE",(nid,)).fetchone()
+            if not rec:raise HTTPException(404,"Запис не знайдено")
+            authorize_client(user,rec["client_id"])
+            for attempt in range(8):
+                candidate="nutrition_"+secrets.token_hex(24)+extension
+                try:fd=os.open(UPLOADS/candidate,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+                except FileExistsError:continue
+                name=candidate
+                break
+            else:raise OSError("Unable to reserve screenshot name")
+            # Only validated, fully encoded bytes are written. Until commit no
+            # nutrition row references this name, so /uploads cannot serve it.
+            with os.fdopen(fd,"wb") as target:
+                if target.write(content)!=len(content):raise OSError("Incomplete screenshot write")
+                target.flush();os.fsync(target.fileno())
+            c.execute("UPDATE nutrition SET screenshot=%s WHERE id=%s",(name,nid))
+            commit_started=True
+        committed=True
+        return {"url":"/uploads/"+name}
+    except HTTPException:raise
+    except Exception:
+        if commit_started:
+            # A lost COMMIT acknowledgement is not proof of rollback. Never
+            # delete a file that PostgreSQL may already have linked to the row.
+            try:state=one("SELECT screenshot FROM nutrition WHERE id=?",(nid,))
+            except Exception:
+                commit_unknown=True
+                logging.getLogger(__name__).error("H04 screenshot commit outcome unknown; retained validated file")
+            else:
+                if state and state["screenshot"]==name:
+                    committed=True
+                    return {"url":"/uploads/"+name}
+        raise HTTPException(500,"Не вдалося зберегти зображення. Спробуйте ще раз.") from None
+    finally:
+        if name and not committed and not commit_unknown:
+            try:(UPLOADS/name).unlink(missing_ok=True)
+            except OSError:logging.getLogger(__name__).exception("H04 screenshot cleanup failed")
 @app.post("/api/measurements")
-def measurement(x:MeasureIn):
+def measurement(x:MeasureIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
     require_active_client(x.client_id,'measurements')
     i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
 
 @app.put("/api/comments/{comment_id}")
-def edit_comment(comment_id:int,x:CommentIn):
+def edit_comment(comment_id:int,x:CommentIn,user:AuthUser=Depends(current_user)):
     c=one("SELECT * FROM comments WHERE id=?",(comment_id,))
     if not c: raise HTTPException(404,"Коментар не знайдено")
+    authorize_client(user,c["client_id"])
+    if x.client_id!=c["client_id"] or c["author"]!=user.role:
+        raise HTTPException(403,"Можна редагувати лише власний коментар")
     run("UPDATE comments SET body=? WHERE id=?",(x.body.strip(),comment_id))
     return {"ok":True}
 
 @app.delete("/api/comments/{comment_id}")
-def delete_comment(comment_id:int):
+def delete_comment(comment_id:int,user:AuthUser=Depends(current_user)):
     comment=one("SELECT * FROM comments WHERE id=?",(comment_id,))
     if not comment: raise HTTPException(404,"Коментар не знайдено")
+    authorize_client(user,comment["client_id"])
+    if user.role=="client" and comment["author"]!="client":raise HTTPException(403,"Можна видалити лише власний коментар")
     run("DELETE FROM comments WHERE id=?",(comment_id,))
     return {"ok":True}
