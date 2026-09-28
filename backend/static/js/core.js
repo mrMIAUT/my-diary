@@ -1,17 +1,173 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
 
-function offDb(){return new Promise((ok,no)=>{let q=indexedDB.open(OFFDB,OFFVER);q.onupgradeneeded=()=>{let d=q.result;if(!d.objectStoreNames.contains('cache'))d.createObjectStore('cache');if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{keyPath:'id',autoIncrement:true})};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+function offlineSessionExpiresAt(s=session){
+ const t=Date.parse(s?.session_expires_at||'');
+ return Number.isFinite(t)?t:0;
+}
 
-async function offGet(store,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+function offlineScopeIdentity(s=session){
+ const owner=sessionOwner(s),expires=offlineSessionExpiresAt(s);
+ if(!owner||!expires)return '';
+ return `${owner}|${s?.auth_version||0}|${s.session_expires_at}`;
+}
 
-async function offPut(store,val,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).put(val,key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+function offlineScope(s=session){
+ const scope=offlineScopeIdentity(s),expires=offlineSessionExpiresAt(s);
+ return scope&&expires>Date.now()?scope:'';
+}
 
-async function offAdd(store,val){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).add(val);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+function offlineLocalScopeKey(s=session){const scope=offlineScope(s);return scope?encodeURIComponent(scope):''}
+function offlinePrivateLocalKeyScope(key=''){
+ for(const prefix of ['eplanWorkoutDraftV2_','eplanDailyDraftV2_','eplanActiveWorkoutV2_']){
+   if(key.startsWith(prefix)){let part=key.slice(prefix.length).split('_',1)[0];try{return decodeURIComponent(part)}catch{return ''}}
+ }
+ return '';
+}
 
-async function offAll(store){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).getAll();q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>no(q.error)})}
+function offDb(){return new Promise((ok,no)=>{let q=indexedDB.open(OFFDB,OFFVER);q.onupgradeneeded=e=>{
+ let d=q.result,tx=q.transaction;
+ if(!d.objectStoreNames.contains('cache'))d.createObjectStore('cache');
+ if(!d.objectStoreNames.contains('queue'))d.createObjectStore('queue',{keyPath:'id',autoIncrement:true});
+ // M01 migration: old cache keys were global paths and old queue rows had no
+ // server-session version. Neither can be safely attributed to a verified M01
+ // session, so derived cache is cleared and legacy queued mutations are dropped
+ // with a visible one-time notice instead of being silently replayed as someone else.
+ if(e.oldVersion<2&&tx){
+   try{tx.objectStore('cache').clear()}catch(_){}
+   try{
+     const qs=tx.objectStore('queue'),cur=qs.openCursor();
+     cur.onsuccess=()=>{const c=cur.result;if(!c)return;let v=c.value||{};
+       if(!v.scope){c.delete();window.eplanOfflineMigrationDropped=(window.eplanOfflineMigrationDropped||0)+1}
+       c.continue();
+     };
+   }catch(_){}
+ }
+};q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
 
-async function offDel(store,key){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).delete(key);q.onsuccess=()=>ok();q.onerror=()=>no(q.error)})}
+function offCacheStorageKey(key,scope=offlineScope()){return scope?`v2|${scope}|${key}`:''}
+function offCacheRecordValid(rec,scope=offlineScope()){
+ if(!scope||!rec||rec.scope!==scope)return false;
+ const now=Date.now(),sessionEnd=offlineSessionExpiresAt();
+ return !!rec.storedAt&&rec.storedAt>=now-OFF_CACHE_TTL_MS&&sessionEnd>now;
+}
+
+async function offRawSnapshot(store){let d=await offDb();return new Promise((ok,no)=>{let tx=d.transaction(store,'readonly'),st=tx.objectStore(store),kr=st.getAllKeys(),vr=st.getAll(),keys,values;kr.onsuccess=()=>{keys=kr.result||[];if(values)ok({keys,values})};vr.onsuccess=()=>{values=vr.result||[];if(keys)ok({keys,values})};kr.onerror=vr.onerror=()=>no(kr.error||vr.error)})}
+
+async function offRawDeleteMany(store,keys){if(!keys?.length)return;let d=await offDb();return new Promise((ok,no)=>{let tx=d.transaction(store,'readwrite'),st=tx.objectStore(store);keys.forEach(k=>st.delete(k));tx.oncomplete=()=>ok();tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error)})}
+
+let offPruneTask=null,offLastPrune=0,offPurgeTask=null;
+async function offPrune(force=false){
+ if(offPruneTask)return offPruneTask;
+ if(!force&&Date.now()-offLastPrune<60000)return;
+ offPruneTask=(async()=>{
+   const now=Date.now(),scope=offlineScope();
+   const cache=await offRawSnapshot('cache'),dropCache=[];
+   let current=[];
+   cache.values.forEach((rec,i)=>{
+     // Cache is derived server data: keep only the active session scope. A new
+     // account/session never leaves another user's cache resident and readable.
+     if(!scope||!rec||!rec.scope||rec.scope!==scope||!offCacheRecordValid(rec,scope)){dropCache.push(cache.keys[i]);return}
+     current.push({key:cache.keys[i],storedAt:rec.storedAt,size:+rec.size||0});
+   });
+   current.sort((a,b)=>b.storedAt-a.storedAt);let bytes=0,count=0;
+   for(const rec of current){count++;bytes+=rec.size;if(count>OFF_CACHE_MAX_RECORDS||bytes>OFF_CACHE_MAX_BYTES)dropCache.push(rec.key)}
+   await offRawDeleteMany('cache',[...new Set(dropCache)]);
+   const queue=await offRawSnapshot('queue'),dropQueue=[];
+   queue.values.forEach((rec,i)=>{
+     if(!rec||!rec.scope||!rec.created||rec.created<now-OFF_QUEUE_TTL_MS){dropQueue.push(queue.keys[i]);return}
+     // With a live session, quarantine is no longer useful: a foreign-session
+     // mutation must never remain available or be replayed. Drop it visibly.
+     if(scope&&rec.scope!==scope){dropQueue.push(queue.keys[i]);window.eplanOfflineMigrationDropped=(window.eplanOfflineMigrationDropped||0)+1}
+   });
+   await offRawDeleteMany('queue',[...new Set(dropQueue)]);
+   // Pre-M01 unscoped local data cannot be assigned safely. Session-scoped V2
+   // drafts belonging to another live session are also removed on account switch.
+   try{for(let i=localStorage.length-1;i>=0;i--){
+     let k=localStorage.key(i)||'',legacy=k.startsWith('eplanWorkoutDraft_')||k.startsWith('eplanDailyDraftV1_')||k.startsWith('activeWorkout_'),ks=offlinePrivateLocalKeyScope(k);
+     if(legacy||(scope&&ks&&ks!==scope)){localStorage.removeItem(k);window.eplanOfflineMigrationDropped=(window.eplanOfflineMigrationDropped||0)+1}
+   }}catch(_){}
+   offLastPrune=Date.now();
+ })();
+ try{return await offPruneTask}finally{offPruneTask=null}
+}
+
+async function offGet(store,key){
+ if(store!=='cache'){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+ const scope=offlineScope();if(!scope)return undefined;let d=await offDb(),storageKey=offCacheStorageKey(key,scope);
+ const rec=await new Promise((ok,no)=>{let q=d.transaction('cache','readonly').objectStore('cache').get(storageKey);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
+ if(!offCacheRecordValid(rec,scope)){if(rec)await offRawDeleteMany('cache',[storageKey]);return undefined}
+ return rec.data;
+}
+
+async function offPut(store,val,key){
+ if(store!=='cache'){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).put(val,key);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+ const scope=offlineScope();if(!scope)return;
+ let serialized='';try{serialized=JSON.stringify(val)}catch{return}
+ const size=serialized.length*2;if(size>OFF_CACHE_MAX_RECORD_BYTES)return;
+ let d=await offDb(),storageKey=offCacheStorageKey(key,scope),rec={scope,owner:sessionOwner(),storedAt:Date.now(),size,data:val};
+ await new Promise((ok,no)=>{let q=d.transaction('cache','readwrite').objectStore('cache').put(rec,storageKey);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
+ offPrune();
+}
+
+async function offAdd(store,val){
+ if(store!=='queue'){let d=await offDb();return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).add(val);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+ const scope=offlineScope();if(!scope)throw new Error('Офлайн-сесія завершилась. Підключіться до інтернету та увійдіть знову.');
+ const current=await offAll('queue');if(current.length>=OFF_QUEUE_MAX_RECORDS)throw new Error('Забагато офлайн-змін. Підключіться до інтернету для синхронізації.');
+ let d=await offDb(),rec={...val,scope,owner:sessionOwner()};
+ const id=await new Promise((ok,no)=>{let q=d.transaction('queue','readwrite').objectStore('queue').add(rec);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
+ offPrune();return id;
+}
+
+async function offAll(store){
+ let d=await offDb();const values=await new Promise((ok,no)=>{let q=d.transaction(store,'readonly').objectStore(store).getAll();q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>no(q.error)});
+ if(store!=='queue')return values;
+ const scope=offlineScope();if(!scope)return [];
+ const now=Date.now();return values.filter(x=>x?.scope===scope&&x.created&&x.created>=now-OFF_QUEUE_TTL_MS);
+}
+
+async function offDel(store,key){
+ let d=await offDb();
+ if(store!=='queue')return new Promise((ok,no)=>{let q=d.transaction(store,'readwrite').objectStore(store).delete(key);q.onsuccess=()=>ok();q.onerror=()=>no(q.error)});
+ const scope=offlineScope();if(!scope)return;
+ return new Promise((ok,no)=>{let tx=d.transaction('queue','readwrite'),st=tx.objectStore('queue'),g=st.get(key);g.onsuccess=()=>{if(g.result?.scope===scope)st.delete(key)};tx.oncomplete=()=>ok();tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error)})
+}
+
+async function offlinePendingSummary(){
+ let queued=0;try{queued=(await offRawSnapshot('queue')).values.filter(x=>x&&x.created&&x.created>=Date.now()-OFF_QUEUE_TTL_MS).length}catch(e){}
+ let drafts=0;try{for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i)||'';if(OFF_PENDING_LOCAL_PREFIXES.some(p=>k.startsWith(p)))drafts++}}catch(e){}
+ return {queued,drafts,total:queued+drafts};
+}
+
+async function purgeOfflinePrivateData({notice=false,scope='',all=false}={}){
+ if(offPurgeTask)return offPurgeTask;
+ offPurgeTask=(async()=>{
+   let pending={queued:0,drafts:0,total:0};try{pending=await offlinePendingSummary()}catch(e){}
+   const target=scope||offlineScopeIdentity();
+   try{
+     let cache=await offRawSnapshot('cache'),queue=await offRawSnapshot('queue');
+     const ck=[],qk=[];
+     cache.values.forEach((rec,i)=>{if(all||(target&&rec?.scope===target)||!rec?.scope)ck.push(cache.keys[i])});
+     queue.values.forEach((rec,i)=>{if(all||(target&&rec?.scope===target)||!rec?.scope)qk.push(queue.keys[i])});
+     await offRawDeleteMany('cache',ck);await offRawDeleteMany('queue',qk);
+   }catch(e){}
+   try{
+     const targetKey=target?encodeURIComponent(target):'';
+     for(let i=localStorage.length-1;i>=0;i--){
+       let k=localStorage.key(i)||'',remove=false;
+       const legacyUnscoped=k.startsWith('eplanWorkoutDraft_')||k.startsWith('eplanDailyDraftV1_')||k.startsWith('activeWorkout_');
+       if(all)remove=OFF_PRIVATE_LOCAL_PREFIXES.some(p=>k.startsWith(p))||k===REST_TIMER_KEY;
+       else if(legacyUnscoped)remove=true;
+       else if(targetKey)remove=(k.startsWith('eplanWorkoutDraftV2_')||k.startsWith('eplanDailyDraftV2_')||k.startsWith('eplanActiveWorkoutV2_'))&&k.includes(`_${targetKey}_`);
+       if(remove)localStorage.removeItem(k);
+     }
+     if(!all)try{localStorage.removeItem(REST_TIMER_KEY)}catch(_){ }
+   }catch(e){}
+   if(notice&&pending.total)offlineStatus('● Локальні дані попереднього сеансу очищено');
+   return pending;
+ })();
+ try{return await offPurgeTask}finally{offPurgeTask=null}
+}
 
 function offBody(opt){try{return opt?.body?JSON.parse(opt.body):{}}catch{return {}}}
 
@@ -50,7 +206,7 @@ function offResponse(path,opt,localSid){
 
 function offCanQueue(path,opt){
  let m=(opt.method||'GET').toUpperCase();
- if(m==='GET'||!session||session.role!=='client')return false;
+ if(m==='GET'||!session||session.role!=='client'||!offlineScope())return false;
  return !logoutPending&&!path.startsWith('/login')&&!path.startsWith('/logout')&&!path.startsWith('/session')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications')&&!path.startsWith('/push/');
 }
 
@@ -75,7 +231,9 @@ function setActionLoading(btn,text='Зберігаємо…'){
 async function eplanFetch(url,opt={},timeoutMs=15000){
  const target=new URL(url,location.href);
  if(target.origin===location.origin&&target.pathname.startsWith('/api/')){
-   if(logoutPending&&target.pathname!=='/api/logout')throw Object.assign(new Error('Спочатку потрібне підключення для завершення виходу.'),{server:true,status:401});
+   const method=(opt.method||'GET').toUpperCase();
+   const logoutMaintenance=target.pathname==='/api/logout'||(target.pathname==='/api/push/subscribe'&&method==='DELETE');
+   if(logoutPending&&!logoutMaintenance)throw Object.assign(new Error('Спочатку потрібне підключення для завершення виходу.'),{server:true,status:401});
    const headers=new Headers(opt.headers||{});headers.set('X-EPLAN-Request','1');
    if(sessionOwner()&&!['/api/session','/api/login','/api/logout','/api/password-reset/request','/api/password-reset/confirm','/api/push/public-key'].includes(target.pathname))headers.set('X-EPLAN-Actor',sessionOwner());
    opt={...opt,headers,credentials:'same-origin'};
@@ -134,6 +292,72 @@ async function api(path,opt={}){
  try{return await task}finally{apiMutationsInFlight.delete(mutationKey)}
 }
 
+const EPLAN_PAGE_SIZE=50;
+const EPLAN_CLIENT_COLLECTIONS=['program','program_days','results','result_sets','nutrition','nutrition_plan','measurements','workout_sessions','comments','cardio'];
+
+function mergeClientPage(merged,page){
+ if(!merged){
+   merged={...page};
+   EPLAN_CLIENT_COLLECTIONS.forEach(k=>merged[k]=[...(page[k]||[])]);
+   return merged;
+ }
+ EPLAN_CLIENT_COLLECTIONS.forEach(k=>merged[k].push(...(page[k]||[])));
+ if(page.client)merged.client=page.client;
+ return merged;
+}
+
+async function collectClientPages(cid,getter){
+ let offset=0,merged=null,pages=0;
+ while(true){
+   const page=await getter(`/client/${cid}?limit=${EPLAN_PAGE_SIZE}&offset=${offset}`);
+   merged=mergeClientPage(merged,page);
+   const meta=page?.pagination;
+   if(!meta?.has_more)break; // Backward-compatible with a pre-M03B2 server.
+   offset+=EPLAN_PAGE_SIZE;
+   if(++pages>2000)throw new Error('Історія завелика для одного завантаження.');
+ }
+ if(merged)delete merged.pagination;
+ return merged;
+}
+
+async function loadClientData(cid){
+ try{
+   const d=await collectClientPages(cid,path=>api(path));
+   if(d)await offSaveClient(cid,d); // Keep the existing offline full-card contract.
+   return d;
+ }catch(e){
+   if(e?.server)throw e; // Never replace an authenticated server denial with stale local data.
+   const cached=await offClient(cid);
+   if(cached!==undefined){offlineStatus('● Офлайн · показано збережені дані');return cached}
+   throw e;
+ }
+}
+
+async function loadClientDataOnline(cid,guard=()=>{}){
+ return collectClientPages(cid,async path=>{
+   const r=await eplanFetch(A+path,{cache:'no-store'});guard();
+   if(r.status===401)clearLocalSession({keepLocation:true});
+   if(!r.ok)throw new Error('client page');
+   const data=await r.json();guard();return data;
+ });
+}
+
+async function loadClients(){
+ let offset=0,out=[],seen=new Set(),pages=0;
+ while(true){
+   const xs=await api(`/clients?limit=${EPLAN_PAGE_SIZE}&offset=${offset}`);
+   if(!Array.isArray(xs))return out;
+   let added=0;
+   for(const x of xs){if(!seen.has(x.id)){seen.add(x.id);out.push(x);added++}}
+   // added===0 also makes this safe during a short mixed-version deploy where
+   // an older backend ignores pagination query parameters.
+   if(xs.length<EPLAN_PAGE_SIZE||added===0)break;
+   offset+=EPLAN_PAGE_SIZE;
+   if(++pages>2000)throw new Error('Список клієнтів завеликий для одного завантаження.');
+ }
+ return out;
+}
+
 function queueOwner(item,queue,clientData){
  if(item.owner)return item.owner;
  // V92 queue entries have no owner field. Use only an explicit client_id or
@@ -161,8 +385,7 @@ async function syncOfflineQueue(){
    const check=()=>{if(epoch!==authEpoch||!sessionVerified||logoutPending||sessionOwner()!==owner)throw new Error('session changed')};
    const requireOK=r=>{if(r.status===401)clearLocalSession({keepLocation:true});if(!r.ok)throw new Error('sync')};
    check();
-   let current=await eplanFetch(A+'/client/'+cid,{cache:'no-store'});check();requireOK(current);
-   const clientData=await current.json();check();
+   const clientData=await loadClientDataOnline(cid,check);check();
    offlineStatus('Синхронізація…','syncing');let sidMap={},pending=false;
    for(let item of q){
      check();
@@ -177,14 +400,28 @@ async function syncOfflineQueue(){
      await offDel('queue',item.id);
    }
    check();
-   let r=await eplanFetch(A+'/client/'+cid,{},15000);check();requireOK(r);
-   let d=await r.json();check();await offSaveClient(cid,d);window.currentClientData=d;
+   let d=await loadClientDataOnline(cid,check);check();await offSaveClient(cid,d);window.currentClientData=d;
    offlineStatus(pending?'● Є дані, що очікують синхронізації':'✓ Синхронізовано');
  }catch{offlineStatus('● Є дані, що очікують синхронізації')}
  finally{offSyncing=false}
 }
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+function safeTechniqueUrl(value=''){
+ let s=String(value||'').trim();
+ if(!s||/[\\\u0000-\u001F\u007F]/.test(s))return '';
+ try{
+  let u=new URL(s);
+  if(u.protocol!=='https:'||!u.hostname||u.username||u.password)return '';
+  return u.href;
+ }catch(_){return ''}
+}
+
+function techniqueLinkHTML(value,label='Техніка',stop=false,className='tech-link'){
+ let href=safeTechniqueUrl(value);if(!href)return '';
+ return `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer"${stop?' onclick="event.stopPropagation()"':''}${className?` class="${esc(className)}"`:''}>${esc(label)}</a>`;
+}
 
 function enText(s){
  let lead=s.match(/^\s*/)?.[0]||'', trail=s.match(/\s*$/)?.[0]||'', t=s.trim();

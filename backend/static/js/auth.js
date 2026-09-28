@@ -12,7 +12,8 @@ function installSession(s){
  try{localStorage.setItem('fitSession',JSON.stringify(s))}catch(e){}
 }
 
-function clearLocalSession({keepLocation=false}={}){
+function clearLocalSession({keepLocation=false,skipOfflinePurge=false}={}){
+ const oldScope=offlineScopeIdentity();
  authEpoch++;sessionVerified=false;
  try{localStorage.removeItem('fitSession')}catch(e){}
  session=null;selected=null;window.currentClientData=null;
@@ -20,6 +21,7 @@ function clearLocalSession({keepLocation=false}={}){
  document.body.classList.remove('overlay-open');
  if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  document.querySelector('#floatingRestTimer')?.remove();
+ if(!skipOfflinePurge){purgeOfflinePrivateData({notice:true,scope:oldScope});detachLocalPush({silent:true})}
  if(!keepLocation)try{history.replaceState({},'',location.pathname)}catch(e){}
  requestAnimationFrame(()=>renderLogin());
 }
@@ -34,6 +36,7 @@ async function finishPendingLogout(){
  if(logoutTask)return logoutTask;
  logoutTask=(async()=>{
    try{
+     if(!await detachLocalPush({silent:true}))return false;
      const r=await eplanFetch(A+'/logout',{method:'POST',cache:'no-store'});
      if(!r.ok)return false;
      setLogoutPending(false);return true;
@@ -43,8 +46,17 @@ async function finishPendingLogout(){
 }
 
 async function logout(){
- setLogoutPending(true);clearLocalSession();
+ const pending=await offlinePendingSummary();
+ if(pending.total){
+   const ok=confirm(`На цьому пристрої є незасинхронізовані або чернеткові дані (${pending.total}). Якщо вийти зараз, локальні копії буде видалено і вони не синхронізуються. Вийти та видалити локальні копії?`);
+   if(!ok)return false;
+ }
+ setLogoutPending(true);
+ await detachLocalPush({silent:true});
+ await purgeOfflinePrivateData({all:true});
+ clearLocalSession({skipOfflinePurge:true});
  if(!await finishPendingLogout())offlineStatus('● Вихід на сервері очікує підключення до інтернету');
+ return true;
 }
 
 async function refreshServerSession(){
@@ -137,6 +149,6 @@ function togglePasswordField(btn,inputId){let p=document.getElementById(inputId)
 
 function togglePassword(){let p=$('#pass'),btn=p?.parentElement?.querySelector('.password-eye-btn');if(p){p.type=p.type==='password'?'text':'password';syncPasswordEye(btn,p)}}
 
-async function login(){try{let em=email.value.trim();if(!await finishPendingLogout())throw new Error('Для завершення виходу та нового входу потрібен інтернет.');let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});authEpoch++;installSession(s);if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');await route();syncOfflineQueue();autoRegisterPhoneNotifications()}catch(e){let el=document.querySelector('#err');if(el)el.textContent=e.message}}
+async function login(){try{let em=email.value.trim();if(offPurgeTask)await offPurgeTask;if(pushDetachTask)await pushDetachTask;if(!await finishPendingLogout())throw new Error('Для завершення виходу та нового входу потрібен інтернет.');let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});authEpoch++;installSession(s);if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');await route();syncOfflineQueue();autoRegisterPhoneNotifications()}catch(e){let el=document.querySelector('#err');if(el)el.textContent=e.message}}
 
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}

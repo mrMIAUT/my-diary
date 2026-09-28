@@ -123,14 +123,14 @@ async function reviewWorkout(sid,cid,useComment=true,button=null){
  try{
  let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
  await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
- let clients=await api('/clients'),remaining=clients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
+ let clients=await loadClients(),remaining=clients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
  await openClient(cid,'results');
  if(remaining>0)setTimeout(()=>{document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="nextReviewModal"><div class="card"><h2>Тренування перевірено ✓</h2><p class="muted">Ще очікують перевірки: ${remaining}</p><button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступне →</button><button class="dark" style="width:100%;margin-top:8px" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div>`)},120);
  }catch(e){restore();alert(e.message||'Не вдалося позначити тренування перевіреним. Спробуй ще раз.')}
 }
 
 async function openNextPendingClient(currentCid){
- let cs=await api('/clients'),next=cs.find(c=>c.id!==currentCid&&(+c.needs_review_count||0)>0)||cs.find(c=>(+c.needs_review_count||0)>0);
+ let cs=await loadClients(),next=cs.find(c=>c.id!==currentCid&&(+c.needs_review_count||0)>0)||cs.find(c=>(+c.needs_review_count||0)>0);
  if(!next)return trainerHome();
  await openClient(next.id,'results');setTimeout(openFirstPendingWorkout,180);
 }
@@ -235,7 +235,7 @@ function trainerDayResultsHTML(d,dayName){
       let bodyId=`trainerResult_${x.id}_${day.replaceAll('-','_')}`;
       return `<div class="exercise">
        <button class="exercise-toggle" data-target="${esc(bodyId)}" onclick="toggleResultExercise(this.dataset.target,this)">
-        <span><strong>${esc(x.exercise)}</strong>${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span><span class="arrow">⌄</span>
+        <span><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span><span class="arrow">⌄</span>
        </button>
        <div id="${esc(bodyId)}" class="hidden" style="margin-top:10px">${cur.map(s=>{
         let p=prev.find(z=>z.set_number===s.set_number);

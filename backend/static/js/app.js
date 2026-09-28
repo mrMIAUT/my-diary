@@ -27,17 +27,25 @@ let calendarMonth=null;
 let currentTrainerTab='profile';
 let currentTrainerMainView='clients';
 
-const OFFDB='eplan-offline-v1', OFFVER=1;
+const OFFDB='eplan-offline-v1', OFFVER=2;
+const OFF_CACHE_TTL_MS=72*60*60*1000;
+const OFF_QUEUE_TTL_MS=7*24*60*60*1000;
+const OFF_CACHE_MAX_RECORDS=200;
+const OFF_CACHE_MAX_RECORD_BYTES=4*1024*1024;
+const OFF_CACHE_MAX_BYTES=12*1024*1024;
+const OFF_QUEUE_MAX_RECORDS=100;
+const OFF_PRIVATE_LOCAL_PREFIXES=['eplanWorkoutDraft_','eplanWorkoutDraftV2_','eplanDailyDraftV1_','eplanDailyDraftV2_','activeWorkout_','eplanActiveWorkoutV2_','eplanPushEnabled_'];
+const OFF_PENDING_LOCAL_PREFIXES=['eplanWorkoutDraft_','eplanWorkoutDraftV2_','eplanDailyDraftV1_','eplanDailyDraftV2_'];
 
 const apiMutationsInFlight=new Map();
 
-let offSyncing=false;
+let offSyncing=false,pushDetachTask=null;
 
 window.addEventListener('online',async()=>{await authReady;hideOfflineStatus();if(logoutPending){await finishPendingLogout();return}if(await refreshServerSession())syncOfflineQueue()});
 
 window.addEventListener('offline',()=>offlineStatus('● Офлайн · дані зберігаються на телефоні'));
 
-setTimeout(async()=>{await authReady;if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні')},800);
+setTimeout(async()=>{await authReady;if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні');await offPrune();if(window.eplanOfflineMigrationDropped)offlineStatus('● Старі несинхронізовані офлайн-дані очищено після оновлення безпеки')},800);
 
 const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'https://www.tiktok.com/@michael_hilyk',telegram:'https://t.me/mrMiaut'};
 
@@ -131,8 +139,8 @@ window.addEventListener('popstate',async e=>{
  document.querySelectorAll('.modal').forEach(x=>x.remove());closeSideMenu();
  let st=e.state||{};
  if(st.eplanPage==='calendarDay'&&st.eplanDay){
-   if(session.role==='trainer'&&st.eplanClient){selected=st.eplanClient;window.currentClientData=await api('/client/'+st.eplanClient)}
-   else if(session.role==='client'&&session.client_id){window.currentClientData=await api('/client/'+session.client_id)}
+   if(session.role==='trainer'&&st.eplanClient){selected=st.eplanClient;window.currentClientData=await loadClientData(st.eplanClient)}
+   else if(session.role==='client'&&session.client_id){window.currentClientData=await loadClientData(session.client_id)}
    showCalendarDay(st.eplanDay,null,false);return;
  }
  if(session.role==='trainer'){
@@ -143,6 +151,14 @@ window.addEventListener('popstate',async e=>{
 
 
 let startupResetToken=new URLSearchParams(location.search).get('reset');
+if(startupResetToken){
+ try{
+  const cleanUrl=new URL(location.href);
+  cleanUrl.searchParams.delete('reset');
+  const qs=cleanUrl.searchParams.toString();
+  history.replaceState(history.state||{},'',cleanUrl.pathname+(qs?'?'+qs:'')+cleanUrl.hash);
+ }catch(e){}
+}
 
 const authReady=bootstrapAuthentication();
 

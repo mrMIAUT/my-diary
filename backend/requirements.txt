@@ -1,6 +1,12 @@
-fastapi
-uvicorn[standard]
-python-multipart
-psycopg[binary]
+# P2H2: exact direct/runtime dependency baseline.
+# Transitive packages are still resolved by pip; the report records that a full
+# hash-locked transitive lock/advisory refresh requires a connected staging run.
+fastapi==0.141.1
+starlette==1.7.0
+pydantic==2.13.5
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+psycopg[binary]==3.3.6
 pywebpush==2.0.3
+cryptography==46.0.4
 Pillow==12.3.0

@@ -58,7 +58,7 @@ function historyNutritionForm(day,cid){
 async function saveHistoryNutrition(day,cid){
  let body={client_id:cid,day,kcal:+hkcal.value||0,protein:+hprotein.value||0,fat:+hfat.value||0,carbs:+hcarbs.value||0};
  await api('/history/nutrition',{method:'POST',body:JSON.stringify(body)});
- let d=await api('/client/'+cid);window.currentClientData=d;showCalendarDay(day,null,false)
+ let d=await loadClientData(cid);window.currentClientData=d;showCalendarDay(day,null,false)
 }
 
 function historyWorkoutForm(day,cid,d){
@@ -68,7 +68,7 @@ function historyWorkoutForm(day,cid,d){
 
 function renderHistoryWorkoutExercises(day,cid){
  let d=window.currentClientData||{},name=$('#historyDaySelect').value,items=(d.program||[]).filter(x=>x.day_name===name),box=$('#historyWorkoutExercises');if(!box)return;
- box.innerHTML=items.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}${Array.from({length:x.sets},(_,i)=>`<div class="setrow"><div class="setnum">${i+1}</div><input id="hw${x.id}_${i+1}" type="number" step="0.5" placeholder="кг"><input id="hr${x.id}_${i+1}" type="number" placeholder="${esc(x.reps)}"><input id="hi${x.id}_${i+1}" type="number" value="${x.target_rir}" min="0" max="10"></div>`).join('')}</div>`).join('')+`<button data-day="${esc(day)}" data-day-name="${esc(name)}" onclick="saveHistoryWorkout(this.dataset.day,${cid},this.dataset.dayName)">Зберегти тренування</button>`;
+ box.innerHTML=items.map(x=>`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}${Array.from({length:x.sets},(_,i)=>`<div class="setrow"><div class="setnum">${i+1}</div><input id="hw${x.id}_${i+1}" type="number" step="0.5" placeholder="кг"><input id="hr${x.id}_${i+1}" type="number" placeholder="${esc(x.reps)}"><input id="hi${x.id}_${i+1}" type="number" value="${x.target_rir}" min="0" max="10"></div>`).join('')}</div>`).join('')+`<button data-day="${esc(day)}" data-day-name="${esc(name)}" onclick="saveHistoryWorkout(this.dataset.day,${cid},this.dataset.dayName)">Зберегти тренування</button>`;
 }
 
 async function saveHistoryWorkout(day,cid,name){
@@ -76,7 +76,7 @@ async function saveHistoryWorkout(day,cid,name){
  for(let x of items){for(let n=1;n<=x.sets;n++){let w=$('#hw'+x.id+'_'+n),r=$('#hr'+x.id+'_'+n),i=$('#hi'+x.id+'_'+n);if(!w||(!w.value&&!r.value))continue;if(!w.value||!r.value)return alert('Заповни вагу та повтори');sets.push({program_id:x.id,exercise:x.exercise,set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})}}
  if(!sets.length)return alert('Додай хоча б один підхід');
  await api('/history/workout',{method:'POST',body:JSON.stringify({client_id:cid,day,day_name:name,sets})});
- let nd=await api('/client/'+cid);window.currentClientData=nd;showCalendarDay(day,null,false)
+ let nd=await loadClientData(cid);window.currentClientData=nd;showCalendarDay(day,null,false)
 }
 
 
@@ -113,7 +113,7 @@ function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
    });
    workoutHTML=chunks.join('');
  }else if(old.length){
-   workoutHTML=old.map((x,gi)=>{let bid=`calOldWorkout_${day.replaceAll('-','_')}_${gi}`;return `<div class="exercise"><button class="exercise-toggle" data-target="${esc(bid)}" onclick="toggleExercise(this.dataset.target,this)"><span><strong>${esc(x.exercise)}</strong></span><span class="arrow">⌄</span></button><div id="${esc(bid)}" class="hidden">${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">Техніка</a>`:''}<div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div></div>`}).join('');
+   workoutHTML=old.map((x,gi)=>{let bid=`calOldWorkout_${day.replaceAll('-','_')}_${gi}`;return `<div class="exercise"><button class="exercise-toggle" data-target="${esc(bid)}" onclick="toggleExercise(this.dataset.target,this)"><span><strong>${esc(x.exercise)}</strong></span><span class="arrow">⌄</span></button><div id="${esc(bid)}" class="hidden">${x.technique_url?techniqueLinkHTML(x.technique_url):''}<div class="muted">${x.weight} кг × ${x.reps} · ${x.sets} підходи · RIR ${x.rir}</div></div></div>`}).join('');
  }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>'+((session?.role==='trainer')?'':(d.client.status==='Заморожений'?'<div class="exercise muted">Акаунт на паузі: доступний лише перегляд історії.</div>':day<=isoToday()?historyWorkoutForm(day,d.client.id,d):'<div class="exercise muted">На майбутню дату дані додавати не можна.</div>'));
 
  let sessionHTML=workoutSession?`<div class="exercise" id="calendarWorkoutSession_${workoutSession.id}"><div class="muted">Тренування</div><strong>${esc(workoutSession.day_name)}</strong><div class="muted" style="margin-top:5px">${workoutSession.status==='finished'?'Завершено':'Тренування триває'}</div>${workoutSession.trainer_reviewed?`<div style="margin-top:10px"><strong style="color:#6ee787">Перевірено тренером ✓</strong>${workoutSession.trainer_comment?`<div style="margin-top:6px">${esc(workoutSession.trainer_comment)}</div>`:''}</div>`:(session?.role==='trainer'&&workoutSession.status==='finished'?`<div class="trainer-calendar-review"><strong style="color:var(--yellow)">Потрібно перевірити</strong><textarea id="reviewComment${workoutSession.id}" placeholder="Коментар клієнту (необов’язково)..." style="width:100%;min-height:75px;margin-top:10px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit"></textarea><div class="review-actions"><button data-day="${esc(day)}" onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},this.dataset.day,true,event.currentTarget)">Надіслати та позначити перевіреним</button><button class="dark" data-day="${esc(day)}" onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},this.dataset.day,false,event.currentTarget)">Перевірено без коментаря</button></div></div>`:'')}</div>`:'';
@@ -131,7 +131,7 @@ async function reviewWorkoutFromCalendar(sid,cid,day,useComment=true,button=null
  let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
  try{
   await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
-  let nd=await api('/client/'+cid);window.currentClientData=nd;
+  let nd=await loadClientData(cid);window.currentClientData=nd;
   showCalendarDay(day,null,false,sid);refreshTrainerGlobalBadge();
  }catch(e){restore();alert(e.message||'Не вдалося позначити тренування перевіреним. Спробуй ще раз.')}
 }
