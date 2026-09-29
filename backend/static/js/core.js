@@ -56,6 +56,13 @@ async function offRawSnapshot(store){let d=await offDb();return new Promise((ok,
 
 async function offRawDeleteMany(store,keys){if(!keys?.length)return;let d=await offDb();return new Promise((ok,no)=>{let tx=d.transaction(store,'readwrite'),st=tx.objectStore(store);keys.forEach(k=>st.delete(k));tx.oncomplete=()=>ok();tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error)})}
 
+async function offInvalidateClientPageCache(cid){
+ const scope=offlineScope();if(!scope||!cid)return;
+ const prefix=offCacheStorageKey(`/client/${cid}?`,scope),snap=await offRawSnapshot('cache'),keys=[];
+ snap.keys.forEach(k=>{if(typeof k==='string'&&k.startsWith(prefix))keys.push(k)});
+ await offRawDeleteMany('cache',keys);
+}
+
 let offPruneTask=null,offLastPrune=0,offPurgeTask=null;
 async function offPrune(force=false){
  if(offPruneTask)return offPruneTask;
@@ -193,7 +200,13 @@ async function offApply(path,opt,localSid){
  else if(path==='/history/workout'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:-Date.now(),client_id:cid,day_name:b.day_name,status:'finished',started_at:b.day+' 12:00:00',finished_at:b.day+' 13:00:00'});d.result_sets=d.result_sets||[];(b.sets||[]).forEach((x,i)=>d.result_sets.push({...x,id:-Date.now()-i,client_id:cid,day:b.day}))}
  else if(path==='/comments'&&m==='POST'){d.comments=d.comments||[];d.comments.unshift({id:-Date.now(),created_at:new Date().toISOString(),...b})}
  else if(/^\/comments\/-?\d+$/.test(path)&&m==='PUT'){let id=+path.split('/').pop(),x=(d.comments||[]).find(x=>x.id==id);if(x)x.body=b.body}
- await offSaveClient(cid,d);window.currentClientData=d;
+ await offSaveClient(cid,d);
+ // Paginated /client/{id}?limit=... cache entries are snapshots from the last
+ // online load. After an offline mutation they must not win over the updated
+ // canonical client cache on the next render, otherwise the UI can present a
+ // stale form and enqueue a second mutation that overwrites the first one.
+ await offInvalidateClientPageCache(cid);
+ window.currentClientData=d;
 }
 
 function offResponse(path,opt,localSid){
