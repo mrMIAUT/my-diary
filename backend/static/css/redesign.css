@@ -309,3 +309,240 @@ body.eplan-redesign.client-ui .finish-workout-btn{
     box-shadow:0 14px 40px rgba(30,61,102,.16);
   }
 }
+
+
+/* Redesign V1 — client home */
+body.eplan-redesign.client-ui .client-home{display:block}
+body.eplan-redesign.client-ui .client-program-hero{
+  width:100%;
+  display:block;
+  position:relative;
+  overflow:hidden;
+  text-align:left;
+  padding:22px;
+  margin:0 0 24px;
+  border-radius:24px;
+  border:1px solid #0f5db3!important;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(57,163,255,.42),transparent 32%),
+    linear-gradient(145deg,#07386f 0%,#0a5eb2 62%,#117fe0 100%)!important;
+  color:#fff!important;
+  box-shadow:0 18px 38px rgba(18,78,139,.20)!important;
+}
+body.eplan-redesign.client-ui .client-program-hero:before{
+  content:"";
+  position:absolute;
+  width:160px;height:160px;border-radius:50%;
+  right:-70px;bottom:-85px;
+  background:rgba(255,255,255,.08);
+}
+body.eplan-redesign.client-ui .client-program-hero-kicker{
+  display:block;
+  font-size:13px;
+  font-weight:800;
+  color:#cfe8ff;
+  margin-bottom:7px;
+}
+body.eplan-redesign.client-ui .client-program-hero>strong{
+  display:block;
+  max-width:82%;
+  font-size:27px;
+  line-height:1.08;
+  letter-spacing:-.025em;
+  margin-bottom:5px;
+}
+body.eplan-redesign.client-ui .client-program-hero-meta{
+  display:block;
+  color:#d9ebff;
+  font-size:14px;
+}
+body.eplan-redesign.client-ui .client-program-hero-progress{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:12px;
+  margin-top:20px;
+}
+body.eplan-redesign.client-ui .client-program-hero-progress>span{
+  display:block;
+  height:8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.24);
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .client-program-hero-progress i{
+  display:block;height:100%;border-radius:inherit;background:#56afff;
+}
+body.eplan-redesign.client-ui .client-program-hero-progress b{
+  font-size:14px;color:#fff;
+}
+body.eplan-redesign.client-ui .client-program-hero-cta{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  margin-top:16px;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#1686ff;
+  color:#fff;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .client-program-hero-cta b{
+  font-size:22px;line-height:1;
+}
+
+body.eplan-redesign.client-ui .client-home-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 2px 12px;
+}
+body.eplan-redesign.client-ui .client-home-section-head h2{
+  margin:0;
+  font-size:21px;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.client-ui .client-home-section-head button{
+  padding:0!important;
+  background:transparent!important;
+  color:#1677ff!important;
+  border:0!important;
+  box-shadow:none!important;
+  font-size:13px;
+  font-weight:800;
+}
+
+body.eplan-redesign.client-ui .client-home-today-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:25px;
+}
+body.eplan-redesign.client-ui .client-home-today-card{
+  min-width:0;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  text-align:left;
+  gap:5px;
+  padding:17px 16px 16px;
+  border-radius:20px;
+  background:#fff!important;
+  color:var(--text)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:0 9px 26px rgba(35,70,108,.07)!important;
+}
+body.eplan-redesign.client-ui .client-home-today-icon{
+  width:39px;height:39px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  margin-bottom:5px;
+  background:#eaf4ff;
+  color:#1677ff;
+}
+body.eplan-redesign.client-ui .client-home-today-icon .ui-icon{width:21px;height:21px}
+body.eplan-redesign.client-ui .client-home-today-card small{
+  font-size:12px;
+  color:#5d6f89;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .client-home-today-card strong{
+  display:block;
+  width:calc(100% - 18px);
+  font-size:18px;
+  line-height:1.18;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .client-home-today-card em{
+  min-height:31px;
+  color:#75839a;
+  font-size:12px;
+  line-height:1.25;
+  font-style:normal;
+  font-weight:650;
+}
+body.eplan-redesign.client-ui .client-home-today-card .home-chevron{
+  position:absolute;
+  right:12px;
+  top:50%;
+  color:#1677ff;
+  font-size:24px;
+}
+body.eplan-redesign.client-ui .home-mini-progress{
+  width:calc(100% - 20px);
+  height:6px;
+  margin:3px 0 1px;
+  border-radius:999px;
+  background:#e7edf6;
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .home-mini-progress i{
+  display:block;height:100%;border-radius:inherit;background:#1677ff;
+}
+
+body.eplan-redesign.client-ui .client-home-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+body.eplan-redesign.client-ui .client-home-metric{
+  min-width:0;
+  min-height:126px;
+  padding:13px 11px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  text-align:left;
+  gap:4px;
+  border-radius:18px;
+  background:#fff!important;
+  color:var(--text)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:0 8px 24px rgba(35,70,108,.055)!important;
+}
+body.eplan-redesign.client-ui .client-home-metric-icon{
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:11px;
+  background:#edf5ff;
+  color:#1677ff;
+  margin-bottom:2px;
+}
+body.eplan-redesign.client-ui .client-home-metric-icon .ui-icon{width:18px;height:18px}
+body.eplan-redesign.client-ui .client-home-metric>span:nth-child(2){
+  color:#64758d;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .client-home-metric strong{
+  font-size:20px;
+  line-height:1.1;
+  color:#0a1738;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .client-home-metric strong small{
+  font-size:11px;color:#64758d;font-weight:750;
+}
+body.eplan-redesign.client-ui .client-home-metric em{
+  margin-top:auto;
+  color:#1b9a5b;
+  font-size:11px;
+  line-height:1.2;
+  font-style:normal;
+  font-weight:800;
+}
+
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .client-program-hero{padding:19px}
+  body.eplan-redesign.client-ui .client-program-hero>strong{font-size:24px}
+  body.eplan-redesign.client-ui .client-home-today-grid{gap:9px}
+  body.eplan-redesign.client-ui .client-home-today-card{padding:15px 13px}
+  body.eplan-redesign.client-ui .client-home-today-card strong{font-size:16px}
+  body.eplan-redesign.client-ui .client-home-metrics{gap:7px}
+  body.eplan-redesign.client-ui .client-home-metric{padding:11px 8px;min-height:120px}
+  body.eplan-redesign.client-ui .client-home-metric strong{font-size:18px}
+}
