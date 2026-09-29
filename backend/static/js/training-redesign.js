@@ -22,7 +22,7 @@ function redesignTrainingDayCard(d,cid,groups,day,index,cycle){
   let desc=muscleNames.slice(0,3).join(' · ')||title;
   let status=isDone?'Виконано':isNext?'Наступне':'За планом';
   return '<article class="redesign-training-day '+(isNext?'is-next ':'')+(isDone?'is-done':'')+'">'
-    +'<button class="redesign-training-day-main" onclick="toggleRedesignTrainingDay(\''+esc(day).replace(/'/g,"\\'")+'\',this)">'
+    +'<button class="redesign-training-day-main" data-day="'+esc(day)+'" onclick="toggleRedesignTrainingDay(this.dataset.day,this)">'
       +'<span class="redesign-training-day-index">'+(index+1)+'</span>'
       +'<span class="redesign-training-day-copy"><strong>'+esc(day)+'</strong><small>'+esc(title)+'</small><em>'+xs.length+' '+(xs.length===1?'вправа':xs.length<5?'вправи':'вправ')+' · '+esc(desc)+'</em></span>'
       +'<span class="redesign-training-day-status">'+esc(status)+'</span>'
