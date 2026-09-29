@@ -12,7 +12,7 @@ function installSession(s){
  try{localStorage.setItem('fitSession',JSON.stringify(s))}catch(e){}
 }
 
-function clearLocalSession({keepLocation=false,skipOfflinePurge=false}={}){
+function clearLocalSession({keepLocation=false,skipOfflinePurge=false,suppressLoginRender=false}={}){
  const oldScope=offlineScopeIdentity();
  authEpoch++;sessionVerified=false;
  try{localStorage.removeItem('fitSession')}catch(e){}
@@ -23,7 +23,7 @@ function clearLocalSession({keepLocation=false,skipOfflinePurge=false}={}){
  document.querySelector('#floatingRestTimer')?.remove();
  if(!skipOfflinePurge){purgeOfflinePrivateData({notice:true,scope:oldScope});detachLocalPush({silent:true})}
  if(!keepLocation)try{history.replaceState({},'',location.pathname)}catch(e){}
- requestAnimationFrame(()=>renderLogin());
+ if(!suppressLoginRender)requestAnimationFrame(()=>renderLogin());
 }
 
 function setLogoutPending(value){
@@ -59,7 +59,7 @@ async function logout(){
  return true;
 }
 
-async function refreshServerSession(){
+async function refreshServerSession({suppressLoginRender=false}={}){
  if(logoutPending){if(!await finishPendingLogout())return false;return false}
  if(sessionRefreshTask)return sessionRefreshTask;
  const epoch=authEpoch;
@@ -67,7 +67,7 @@ async function refreshServerSession(){
    try{
      const r=await eplanFetch(A+'/session',{cache:'no-store'});
      if(epoch!==authEpoch||logoutPending)return false;
-     if(r.status===401){clearLocalSession({keepLocation:true});return false}
+     if(r.status===401){clearLocalSession({keepLocation:true,suppressLoginRender});return false}
      if(!r.ok){sessionVerified=false;return false}
      const s=await r.json();
      if(epoch!==authEpoch||logoutPending)return false;
@@ -81,8 +81,8 @@ async function bootstrapAuthentication(){
  // Server identity is resolved asynchronously; keep the existing shell visible
  // while it loads instead of leaving an empty PWA screen on a slow connection.
  app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">${appLanguage==='en'?'Loading…':'Завантаження…'}</p></div></div>`;
- if(logoutPending){clearLocalSession();await finishPendingLogout()}
- else await refreshServerSession();
+ if(logoutPending){clearLocalSession({suppressLoginRender:!!startupResetToken});await finishPendingLogout()}
+ else await refreshServerSession({suppressLoginRender:!!startupResetToken});
  if(startupResetToken)return renderResetPassword(startupResetToken);
  if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
  try{await route()}catch(e){renderLogin();offlineStatus(e.message)}
