@@ -93,7 +93,7 @@ function setRows(x,d){
 
 function previewWorkout(day,cid){
  previewWorkoutDay=previewWorkoutDay===day?null:day;
- clientCabinet(cid)
+ showClientTraining(cid)
 }
 
 async function startWorkout(cid,day,btn=null){
@@ -105,7 +105,7 @@ async function startWorkout(cid,day,btn=null){
    if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
    {let k=offlineLocalScopeKey();if(k)localStorage.setItem(`eplanActiveWorkoutV2_${k}_${cid}`,JSON.stringify(s));}
    previewWorkoutDay=null;
-   await clientCabinet(cid);
+   await showClientTraining(cid);
    requestAnimationFrame(()=>{
      let live=document.querySelector('.training-live');
      if(live)live.scrollIntoView({behavior:'smooth',block:'start'});
@@ -210,7 +210,7 @@ function trainingTermsHelpHTML(){
 
 function selectClientProgramDay(day,cid){
  previewWorkoutDay=previewWorkoutDay===day?null:day;
- clientCabinet(cid);
+ showClientTraining(cid);
 }
 
 function workoutExerciseName(x){return window.workoutExerciseChoices[x.id]||x.exercise}
@@ -314,11 +314,11 @@ async function saveSets(cid,pid,exercise,count){
  clearWorkoutDraft(workoutDraftSessionId(window.currentClientData||{}),pid);
  let body=$('#exerciseBody'+pid);
  if(body){
-   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="clientCabinet(${cid})">Редагувати</button></div></div>`;
+   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
  }
  let d=await loadClientData(cid);window.currentClientData=d;
  let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
- setTimeout(async()=>{await clientCabinet(cid);focusNextUnfinishedExercise(pid)},250);
+ setTimeout(async()=>{await showClientTraining(cid);focusNextUnfinishedExercise(pid)},250);
 }
