@@ -39,10 +39,13 @@ function socialIcon(kind){
 
 function legacySocial(c){
  let v=String(c.contact||'').trim();if(!v)return {};
- let low=v.toLowerCase();
- if(low.includes('instagram.com'))return {instagram:v};
- if(low.includes('t.me')||low.includes('telegram.me'))return {telegram:v};
- if(low.includes('tiktok.com'))return {tiktok:v};
+ let raw=/^https?:\/\//i.test(v)?v:'https://'+v;
+ try{
+  let u=new URL(raw),host=u.hostname.toLowerCase().replace(/\.$/,'');
+  if(host==='instagram.com'||host==='www.instagram.com')return {instagram:v};
+  if(host==='t.me'||host==='telegram.me'||host==='www.telegram.me')return {telegram:v};
+  if(host==='tiktok.com'||host==='www.tiktok.com')return {tiktok:v};
+ }catch(e){}
  return {};
 }
 
