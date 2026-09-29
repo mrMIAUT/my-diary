@@ -38,7 +38,7 @@ function editNutritionTargets(){['nkcal','nprotein','nfat','ncarbs'].forEach(id=
 
 async function saveNutritionTargets(cid,button=null){
  let restore=setActionLoading(button,'Зберігаємо…');
- try{let meals=(nutritionPlanDraft||[]).filter(x=>x.content.trim()).map((x,i)=>({...x,sort:i}));let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0,meal_plan:'',meals};await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify(body)});let d=await api('/client/'+cid);window.currentClientData=d;nutritionPlanDraft=null;let box=$('#nutrition');if(box)box.innerHTML=nutritionHTML(d)
+ try{let meals=(nutritionPlanDraft||[]).filter(x=>x.content.trim()).map((x,i)=>({...x,sort:i}));let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0,meal_plan:'',meals};await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify(body)});let d=await loadClientData(cid);window.currentClientData=d;nutritionPlanDraft=null;let box=$('#nutrition');if(box)box.innerHTML=nutritionHTML(d)
  }catch(e){restore();alert(e.message||'Не вдалося зберегти харчування. Спробуй ще раз.')}
 }
 

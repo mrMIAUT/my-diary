@@ -47,7 +47,7 @@ function programHTML(d){
    });
    let rows=blocks.map((b,bi)=>{
      let first=b.items[0],isSuper=!!b.group;
-     let info=(isSuper?`<div class="trainer-superset-head">Суперсет</div>`:'')+b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
+     let info=(isSuper?`<div class="trainer-superset-head">Суперсет</div>`:'')+b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?techniqueLinkHTML(x.technique_url,'Техніка',true):''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
      return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)">＋</button>`:''}</div></div>`;
    }).join('');
    return `<div class="card program-day-card">
@@ -118,6 +118,8 @@ function editExercise(pid){
 async function saveExerciseEdit(pid,cid){
  let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+((editRirSet.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(editAlternatives.value,editName.value))};
  if(!body.day_name||!body.exercise)return alert('Вкажи день та назву вправи');
+ if(body.technique_url&&!safeTechniqueUrl(body.technique_url))return alert('Посилання на техніку має починатися з https://');
+ body.technique_url=safeTechniqueUrl(body.technique_url);
  try{
    await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
    editExerciseModal.remove();await openClient(cid);
@@ -125,12 +127,14 @@ async function saveExerciseEdit(pid,cid){
 }
 
 async function addExercise(button=null){
- let day=dn.value.trim(),title=(document.getElementById('dntitle')?.value||'').trim(),exercise=ex.value.trim();
+ let day=dn.value.trim(),title=(document.getElementById('dntitle')?.value||'').trim(),exercise=ex.value.trim(),technique=(tech.value||'').trim();
  if(!day||!exercise)return alert('Вкажи день і вправу');
+ if(technique&&!safeTechniqueUrl(technique))return alert('Посилання на техніку має починатися з https://');
+ technique=safeTechniqueUrl(technique);
  let restore=setActionLoading(button,'Додаємо…');
  try{
   if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
-  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:tech.value,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
+  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
   await openClient(selected,'program');
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
 }

@@ -12,7 +12,8 @@ function installSession(s){
  try{localStorage.setItem('fitSession',JSON.stringify(s))}catch(e){}
 }
 
-function clearLocalSession({keepLocation=false}={}){
+function clearLocalSession({keepLocation=false,skipOfflinePurge=false,suppressLoginRender=false}={}){
+ const oldScope=offlineScopeIdentity();
  authEpoch++;sessionVerified=false;
  try{localStorage.removeItem('fitSession')}catch(e){}
  session=null;selected=null;window.currentClientData=null;
@@ -20,8 +21,9 @@ function clearLocalSession({keepLocation=false}={}){
  document.body.classList.remove('overlay-open');
  if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  document.querySelector('#floatingRestTimer')?.remove();
+ if(!skipOfflinePurge){purgeOfflinePrivateData({notice:true,scope:oldScope});detachLocalPush({silent:true})}
  if(!keepLocation)try{history.replaceState({},'',location.pathname)}catch(e){}
- requestAnimationFrame(()=>renderLogin());
+ if(!suppressLoginRender)requestAnimationFrame(()=>renderLogin());
 }
 
 function setLogoutPending(value){
@@ -34,6 +36,7 @@ async function finishPendingLogout(){
  if(logoutTask)return logoutTask;
  logoutTask=(async()=>{
    try{
+     if(!await detachLocalPush({silent:true}))return false;
      const r=await eplanFetch(A+'/logout',{method:'POST',cache:'no-store'});
      if(!r.ok)return false;
      setLogoutPending(false);return true;
@@ -43,11 +46,20 @@ async function finishPendingLogout(){
 }
 
 async function logout(){
- setLogoutPending(true);clearLocalSession();
+ const pending=await offlinePendingSummary();
+ if(pending.total){
+   const ok=confirm(`На цьому пристрої є незасинхронізовані або чернеткові дані (${pending.total}). Якщо вийти зараз, локальні копії буде видалено і вони не синхронізуються. Вийти та видалити локальні копії?`);
+   if(!ok)return false;
+ }
+ setLogoutPending(true);
+ await detachLocalPush({silent:true});
+ await purgeOfflinePrivateData({all:true});
+ clearLocalSession({skipOfflinePurge:true});
  if(!await finishPendingLogout())offlineStatus('● Вихід на сервері очікує підключення до інтернету');
+ return true;
 }
 
-async function refreshServerSession(){
+async function refreshServerSession({suppressLoginRender=false}={}){
  if(logoutPending){if(!await finishPendingLogout())return false;return false}
  if(sessionRefreshTask)return sessionRefreshTask;
  const epoch=authEpoch;
@@ -55,7 +67,7 @@ async function refreshServerSession(){
    try{
      const r=await eplanFetch(A+'/session',{cache:'no-store'});
      if(epoch!==authEpoch||logoutPending)return false;
-     if(r.status===401){clearLocalSession({keepLocation:true});return false}
+     if(r.status===401){clearLocalSession({keepLocation:true,suppressLoginRender});return false}
      if(!r.ok){sessionVerified=false;return false}
      const s=await r.json();
      if(epoch!==authEpoch||logoutPending)return false;
@@ -69,8 +81,8 @@ async function bootstrapAuthentication(){
  // Server identity is resolved asynchronously; keep the existing shell visible
  // while it loads instead of leaving an empty PWA screen on a slow connection.
  app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">${appLanguage==='en'?'Loading…':'Завантаження…'}</p></div></div>`;
- if(logoutPending){clearLocalSession();await finishPendingLogout()}
- else await refreshServerSession();
+ if(logoutPending){clearLocalSession({suppressLoginRender:!!startupResetToken});await finishPendingLogout()}
+ else await refreshServerSession({suppressLoginRender:!!startupResetToken});
  if(startupResetToken)return renderResetPassword(startupResetToken);
  if(!history.state?.eplanPage)history.replaceState(session?.role==='client'?{eplanPage:'clientHome',eplanClient:session.client_id}:{eplanPage:'clients'},'',location.pathname+location.search);
  try{await route()}catch(e){renderLogin();offlineStatus(e.message)}
@@ -137,6 +149,6 @@ function togglePasswordField(btn,inputId){let p=document.getElementById(inputId)
 
 function togglePassword(){let p=$('#pass'),btn=p?.parentElement?.querySelector('.password-eye-btn');if(p){p.type=p.type==='password'?'text':'password';syncPasswordEye(btn,p)}}
 
-async function login(){try{let em=email.value.trim();if(!await finishPendingLogout())throw new Error('Для завершення виходу та нового входу потрібен інтернет.');let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});authEpoch++;installSession(s);if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');await route();syncOfflineQueue();autoRegisterPhoneNotifications()}catch(e){let el=document.querySelector('#err');if(el)el.textContent=e.message}}
+async function login(){try{let em=email.value.trim();if(offPurgeTask)await offPurgeTask;if(pushDetachTask)await pushDetachTask;if(!await finishPendingLogout())throw new Error('Для завершення виходу та нового входу потрібен інтернет.');let s=await api('/login',{method:'POST',body:JSON.stringify({email:em,password:pass.value})});authEpoch++;installSession(s);if(document.querySelector('#rememberLogin')?.checked)localStorage.setItem('rememberedEmail',em);else localStorage.removeItem('rememberedEmail');await route();syncOfflineQueue();autoRegisterPhoneNotifications()}catch(e){let el=document.querySelector('#err');if(el)el.textContent=e.message}}
 
 async function route(){if(!session)return renderLogin();if(session.role==='trainer')return trainerHome();return clientCabinet(session.client_id)}

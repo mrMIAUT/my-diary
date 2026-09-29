@@ -39,10 +39,13 @@ function socialIcon(kind){
 
 function legacySocial(c){
  let v=String(c.contact||'').trim();if(!v)return {};
- let low=v.toLowerCase();
- if(low.includes('instagram.com'))return {instagram:v};
- if(low.includes('t.me')||low.includes('telegram.me'))return {telegram:v};
- if(low.includes('tiktok.com'))return {tiktok:v};
+ let raw=/^https?:\/\//i.test(v)?v:'https://'+v;
+ try{
+  let u=new URL(raw),host=u.hostname.toLowerCase().replace(/\.$/,'');
+  if(host==='instagram.com'||host==='www.instagram.com')return {instagram:v};
+  if(host==='t.me'||host==='telegram.me'||host==='www.telegram.me')return {telegram:v};
+  if(host==='tiktok.com'||host==='www.tiktok.com')return {tiktok:v};
+ }catch(e){}
  return {};
 }
 
@@ -74,7 +77,7 @@ function editClientProfile(cid){
 }
 
 async function saveClientProfile(cid){
- try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,contraindications:pfContra.value,injuries:pfInjuries.value,contact:'',instagram:pfInstagram.value,telegram:pfTelegram.value,tiktok:pfTikTok.value})});profileModal.remove();let d=await api('/client/'+cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
+ try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,contraindications:pfContra.value,injuries:pfInjuries.value,contact:'',instagram:pfInstagram.value,telegram:pfTelegram.value,tiktok:pfTikTok.value})});profileModal.remove();let d=await loadClientData(cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
 }
 
 
@@ -94,7 +97,7 @@ function showClientOnboarding(step=0){
 function finishClientOnboarding(){try{localStorage.setItem(onboardingKey(),'done')}catch(e){}document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
 
 async function clientCabinet(id){
- let d=await api('/client/'+id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
+ let d=await loadClientData(id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
 
  let access=clientAccess(c);
  if(access.expired||access.manually_frozen||access.effective_plan==='free'){

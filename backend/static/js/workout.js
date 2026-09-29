@@ -75,15 +75,15 @@ function previousSets(d,pid){
 
 function workoutDraftSessionId(d){return (d?.workout_sessions||[]).find(x=>x.status==='training')?.id||0}
 
-function workoutDraftKey(sid,pid){return `eplanWorkoutDraft_${sid}_${pid}`}
+function workoutDraftKey(sid,pid){let scope=offlineLocalScopeKey();return scope?`eplanWorkoutDraftV2_${scope}_${sid}_${pid}`:''}
 
-function readWorkoutDraft(sid,pid){try{return JSON.parse(localStorage.getItem(workoutDraftKey(sid,pid))||'{}')||{}}catch(e){return {}}}
+function readWorkoutDraft(sid,pid){try{let k=workoutDraftKey(sid,pid);return k?(JSON.parse(localStorage.getItem(k)||'{}')||{}):{}}catch(e){return {}}}
 
-function saveWorkoutDraft(sid,pid,n,field,value){if(!sid)return;let d=readWorkoutDraft(sid,pid);d[n]=d[n]||{};d[n][field]=value;try{localStorage.setItem(workoutDraftKey(sid,pid),JSON.stringify(d))}catch(e){}}
+function saveWorkoutDraft(sid,pid,n,field,value){if(!sid)return;let k=workoutDraftKey(sid,pid);if(!k)return;let d=readWorkoutDraft(sid,pid);d[n]=d[n]||{};d[n][field]=value;try{localStorage.setItem(k,JSON.stringify(d))}catch(e){}}
 
-function clearWorkoutDraft(sid,pid){if(!sid)return;try{localStorage.removeItem(workoutDraftKey(sid,pid))}catch(e){}}
+function clearWorkoutDraft(sid,pid){if(!sid)return;try{let k=workoutDraftKey(sid,pid);if(k)localStorage.removeItem(k)}catch(e){}}
 
-function clearWorkoutDraftsForSession(sid){if(!sid)return;try{for(let i=localStorage.length-1;i>=0;i--){let k=localStorage.key(i);if(k&&k.startsWith(`eplanWorkoutDraft_${sid}_`))localStorage.removeItem(k)}}catch(e){}}
+function clearWorkoutDraftsForSession(sid){if(!sid)return;try{let scope=offlineLocalScopeKey(),prefix=scope?`eplanWorkoutDraftV2_${scope}_${sid}_`:'';for(let i=localStorage.length-1;i>=0;i--){let k=localStorage.key(i);if(k&&prefix&&k.startsWith(prefix))localStorage.removeItem(k)}}catch(e){}}
 
 function setRows(x,d){
  let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`,rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
@@ -103,7 +103,7 @@ async function startWorkout(cid,day,btn=null){
  try{
    let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day})});
    if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
-   localStorage.setItem('activeWorkout_'+cid,JSON.stringify(s));
+   {let k=offlineLocalScopeKey();if(k)localStorage.setItem(`eplanActiveWorkoutV2_${k}_${cid}`,JSON.stringify(s));}
    previewWorkoutDay=null;
    await clientCabinet(cid);
    requestAnimationFrame(()=>{
@@ -123,8 +123,8 @@ async function finishWorkout(cid,sid,button=null){
  try{
  await api('/workout/'+sid+'/finish',{method:'POST'});
  clearWorkoutDraftsForSession(sid);
- localStorage.removeItem('activeWorkout_'+cid);previewWorkoutDay=null;window.workoutExerciseChoices={};
- let d=await api('/client/'+cid);window.currentClientData=d;
+ {let k=offlineLocalScopeKey();if(k)localStorage.removeItem(`eplanActiveWorkoutV2_${k}_${cid}`)}previewWorkoutDay=null;window.workoutExerciseChoices={};
+ let d=await loadClientData(cid);window.currentClientData=d;
  let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===sessionDay(s)));
  let exercises=new Set(sets.map(x=>x.program_id)).size,cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{}));
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Робочих підходів</span><div class="summary-number">${sets.length}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
@@ -192,10 +192,10 @@ function clientTrainingProgramHTML(d,cid,groups){
      let x=xs[i];if(used.has(x.id))continue;
      if(x.superset_group){
        let pair=xs.filter(y=>y.superset_group===x.superset_group);pair.forEach(y=>used.add(y.id));
-       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(y.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${y.technique_url?`<a href="${esc(y.technique_url)}" target="_blank" rel="noopener" class="tech-link">Техніка</a>`:''}</div>`}).join('')}</div></div>`;
+       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(y.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${y.technique_url?techniqueLinkHTML(y.technique_url):''}</div>`}).join('')}</div></div>`;
      }else{
        used.add(x.id);let rest=restLabel(x),rp=rirPlan(x);
-       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" class="tech-link">Техніка</a>`:''}</div>`;
+       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${x.technique_url?techniqueLinkHTML(x.technique_url):''}</div>`;
      }
    }
    let dayTitle=programDayTitle(d,previewWorkoutDay);
@@ -240,7 +240,7 @@ async function selectWorkoutExercise(pid,cid,index){
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),html='';
  function card(x,inner=false){
-  return `<div class="${inner?'':'exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(workoutExerciseName(x))}</strong>${workoutExerciseName(x)!==x.exercise?`<span class="muted" style="display:block;margin-top:3px">Замість: ${esc(x.exercise)}</span>`:``}${(x.technique_url||(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday()))?`<span class="exercise-meta-row">${x.technique_url?`<a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:''}${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span class="exercise-done-badge">Виконано&nbsp;✓</span>':''}</span>`:''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="dark swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
+  return `<div class="${inner?'':'exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(workoutExerciseName(x))}</strong>${workoutExerciseName(x)!==x.exercise?`<span class="muted" style="display:block;margin-top:3px">Замість: ${esc(x.exercise)}</span>`:``}${(x.technique_url||(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday()))?`<span class="exercise-meta-row">${x.technique_url?techniqueLinkHTML(x.technique_url,'Техніка',true):''}${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span class="exercise-done-badge">Виконано&nbsp;✓</span>':''}</span>`:''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="dark swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
@@ -263,7 +263,7 @@ function commentsHTML(d,cid,day=isoToday()){
 async function deleteComment(id,cid,day){
  if(!confirm('Видалити цей коментар?'))return;
  await api('/comments/'+id,{method:'DELETE'});
- let d=await api('/client/'+cid);window.currentClientData=d;
+ let d=await loadClientData(cid);window.currentClientData=d;
  if(history.state?.eplanPage==='calendarDay'){showCalendarDay(day,null,false);return}
  if(session.role==='trainer'){await openClient(cid,'comments');return}
  showClientSection('comments');
@@ -272,7 +272,7 @@ async function deleteComment(id,cid,day){
 async function saveComment(cid,day){
  let t=$('#commentText');if(!t||!t.value.trim())return alert('Напиши коментар');
  await api('/comments',{method:'POST',body:JSON.stringify({client_id:cid,day,program_id:0,exercise:'',author:session.role,body:t.value.trim()})});
- let d=await api('/client/'+cid);window.currentClientData=d;
+ let d=await loadClientData(cid);window.currentClientData=d;
  if(session.role==='trainer')openClient(cid);else clientCabinet(cid)
 }
 
@@ -286,7 +286,7 @@ function previewExercisesHTML(items){
    html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(y.reps)}${restLabel(y)?` · Відпочинок ${esc(restLabel(y))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(y).join(' / ')}</span></div></div>`).join('')}</div></div>`;
   }else{
    used.add(x.id);
-   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` <a href="${esc(x.technique_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="tech-link">Техніка</a>`:'' }<div class="muted">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></div></div>`;
+   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }<div class="muted">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></div></div>`;
   }
  }
  return html;
@@ -318,7 +318,7 @@ async function saveSets(cid,pid,exercise,count){
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
  }
- let d=await api('/client/'+cid);window.currentClientData=d;
+ let d=await loadClientData(cid);window.currentClientData=d;
  let cal=$('#clientCalendar');if(cal)cal.innerHTML=calendarHTML(d,'client');
  setTimeout(async()=>{await clientCabinet(cid);focusNextUnfinishedExercise(pid)},250);
 }

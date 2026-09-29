@@ -1,13 +1,13 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
 
-function dailyDraftKey(kind,cid){return 'eplanDailyDraftV1_'+kind+'_'+cid+'_'+isoToday()}
+function dailyDraftKey(kind,cid){let scope=offlineLocalScopeKey();return scope?`eplanDailyDraftV2_${scope}_${kind}_${cid}_${isoToday()}`:''}
 
-function getDailyDraft(kind,cid){try{return JSON.parse(localStorage.getItem(dailyDraftKey(kind,cid))||'null')}catch(e){return null}}
+function getDailyDraft(kind,cid){try{let k=dailyDraftKey(kind,cid);return k?JSON.parse(localStorage.getItem(k)||'null'):null}catch(e){return null}}
 
-function clearDailyDraft(kind,cid){try{localStorage.removeItem(dailyDraftKey(kind,cid))}catch(e){}}
+function clearDailyDraft(kind,cid){try{let k=dailyDraftKey(kind,cid);if(k)localStorage.removeItem(k)}catch(e){}}
 
-function storeDailyDraft(kind,cid){if(!cid)return;let data={};for(let id of dailyDraftFields[kind]){let el=document.getElementById(id);if(el)data[id]=el.value}if(!Object.keys(data).length)return;try{localStorage.setItem(dailyDraftKey(kind,cid),JSON.stringify(data))}catch(e){}}
+function storeDailyDraft(kind,cid){if(!cid)return;let k=dailyDraftKey(kind,cid);if(!k)return;let data={};for(let id of dailyDraftFields[kind]){let el=document.getElementById(id);if(el)data[id]=el.value}if(!Object.keys(data).length)return;try{localStorage.setItem(k,JSON.stringify(data))}catch(e){}}
 
 function restoreDailyDraft(kind,cid){let data=getDailyDraft(kind,cid);if(!data)return false;let any=false;for(let id of dailyDraftFields[kind]){let el=document.getElementById(id);if(el&&Object.prototype.hasOwnProperty.call(data,id)){el.value=data[id];any=true}}if(kind==='cardio')toggleCardioFields();return any}
 

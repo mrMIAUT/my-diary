@@ -1,0 +1,5 @@
+body{margin:0;background:#080909;color:#f4f4f5;font:16px system-ui,-apple-system;padding:32px}
+main{max-width:620px;margin:10vh auto;border:2px solid #ffd000;border-radius:24px;padding:24px}
+.y{color:#ffd000}
+pre{white-space:pre-wrap;color:#aaa}
+button{width:100%;padding:16px;border:0;border-radius:14px;background:#ffd000;color:#080909;font-weight:800;font-size:17px}

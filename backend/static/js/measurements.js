@@ -70,7 +70,7 @@ async function saveMeasurement(cid,ev=null){
  try{
    await api('/measurements',{method:'POST',body:JSON.stringify(body)});
    if(btn){btn.textContent='✓ Замір збережено';btn.classList.add('measurement-saved')}
-   let d=await api('/client/'+cid);window.currentClientData=d;
+   let d=await loadClientData(cid);window.currentClientData=d;
    setTimeout(()=>showClientSection('measurements'),250);
  }catch(e){
    if(btn){btn.disabled=false;btn.textContent='Зберегти заміри';btn.classList.remove('measurement-saving')}
@@ -82,7 +82,7 @@ async function deleteMeasurement(cid,mid,day){
  if(!confirm(`Видалити замір за ${formatProgressDate(day)}? Цю дію не можна скасувати.`))return;
  try{
    await api('/measurements/'+mid+'?client_id='+cid,{method:'DELETE'});
-   let d=await api('/client/'+cid);window.currentClientData=d;
+   let d=await loadClientData(cid);window.currentClientData=d;
    showClientSection('measurements');
  }catch(e){alert(e?.message||'Не вдалося видалити замір')}
 }

@@ -12,7 +12,7 @@ async function goToTrainerHome(){
 
 async function trainerHome(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
- let cs=(await api('/clients')).filter(c=>c.status!=='Видалений');
+ let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
  let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
  let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0),filter=window.trainerHomeFilter||'all';
  let shown=filter==='review'?needsReviewClients:filter==='ending'?ending:filter==='active'?active:cs;
@@ -37,7 +37,7 @@ async function openPendingWorkoutForClient(cid){
 }
 
 async function quickExtendFromCard(cid,months){
- let clients=await api('/clients'),c=clients.find(x=>x.id===cid);if(!c)return;
+ let clients=await loadClients(),c=clients.find(x=>x.id===cid);if(!c)return;
  let base=c.access?.access_until&&c.access.access_until>=isoToday()?new Date(c.access.access_until+'T12:00:00'):new Date();
  base.setMonth(base.getMonth()+months);
  let until=`${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
@@ -91,7 +91,7 @@ async function saveClientAccess(cid,btn){
 
 
 async function openClient(id,activeTab=null){
- selected=id;let [d]=await Promise.all([api('/client/'+id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
+ selected=id;let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
  app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="freeze-btn" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div id="profile" class="tab">${trainerAccessHTML(c)}${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="comments" class="tab hidden"></div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle open" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Обери дату тренування</span></span><span class="arrow">⌃</span></button><div id="trainerCalendarBody" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
  refreshTrainerGlobalBadge();
  currentTrainerTab=activeTab||currentTrainerTab||'profile';

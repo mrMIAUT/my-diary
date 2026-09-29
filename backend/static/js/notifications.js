@@ -21,15 +21,52 @@ function pushStorageKey(){
  return 'eplanPushEnabled_'+(session?.role==='trainer'?'trainer':('client_'+(session?.client_id||0)));
 }
 
+function clearLocalPushFlags(){
+ try{for(let i=localStorage.length-1;i>=0;i--){let k=localStorage.key(i)||'';if(k.startsWith('eplanPushEnabled_')||k==='eplanPushBoundOwner')localStorage.removeItem(k)}}catch(e){}
+}
+
+async function detachLocalPush({silent=false}={}){
+ if(pushDetachTask)return pushDetachTask;
+ pushDetachTask=(async()=>{
+   let sub=null;
+   try{
+     if('serviceWorker' in navigator&&'PushManager' in window){
+       let reg=await navigator.serviceWorker.getRegistration('/');
+       if(reg)sub=await reg.pushManager.getSubscription();
+     }
+     if(!sub){clearLocalPushFlags();return true}
+     let serverDetached=false,localDetached=false;
+     // During a pending logout the HttpOnly cookie may still be valid even though
+     // local UI state has already been cleared. eplanFetch explicitly allows this
+     // one authenticated DELETE before /logout so the server binding can be removed.
+     if(navigator.onLine){
+       try{
+         const r=await eplanFetch(A+'/push/subscribe',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})},5000);
+         serverDetached=r.ok;
+       }catch(_){ }
+     }
+     try{localDetached=(await sub.unsubscribe())!==false}catch(_){ }
+     if(serverDetached||localDetached){clearLocalPushFlags();return true}
+     if(!silent)console.warn('Push unsubscribe failed');
+     return false;
+   }catch(e){
+     if(!silent)console.warn('Push unsubscribe failed',e);
+     return false;
+   }
+ })();
+ try{return await pushDetachTask}finally{pushDetachTask=null}
+}
+
 async function phoneNotificationEnabled(){
  try{
+   if(!sessionVerified||logoutPending||!sessionOwner())return false;
    if(!('Notification' in window)||Notification.permission!=='granted')return false;
-   if(localStorage.getItem(pushStorageKey())==='1')return true;
    if(!('serviceWorker' in navigator)||!('PushManager' in window))return false;
    let reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
-   if(sub){localStorage.setItem(pushStorageKey(),'1');return true}
-   return false;
- }catch(e){return localStorage.getItem(pushStorageKey())==='1'&&('Notification' in window)&&Notification.permission==='granted'}
+   if(!sub){clearLocalPushFlags();return false}
+   let bound=localStorage.getItem('eplanPushBoundOwner')||'';
+   return bound===sessionOwner()&&localStorage.getItem(pushStorageKey())==='1';
+ }catch(e){return false}
 }
 
 async function refreshPhoneNotificationButton(btn){
@@ -71,6 +108,7 @@ async function enablePhoneNotifications(btn=null){
      await register();
    }
    localStorage.setItem(pushStorageKey(),'1');
+   localStorage.setItem('eplanPushBoundOwner',sessionOwner());
    return done(true);
  }catch(e){
    console.warn('Push subscribe failed',e);
