@@ -1,0 +1,124 @@
+// Redesign V1 — client home dashboard override.
+// Loaded after client.js so production logic stays intact while the redesign evolves.
+
+window.__legacyClientCabinet = window.__legacyClientCabinet || window.clientCabinet;
+
+function redesignClientDelta(last,prev,key){
+  if(!last||!prev||!(+last[key]>0)||!(+prev[key]>0))return null;
+  return (+last[key])-(+prev[key]);
+}
+
+function redesignWeekStartISO(){
+  let d=new Date(),day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  d.setHours(0,0,0,0);
+  return d.toISOString().slice(0,10);
+}
+
+function redesignClientMetric(title,value,unit,delta,icon,action,subtitle){
+  let deltaHtml='<em>—</em>';
+  if(delta!==null){
+    let sign=delta>0?'+':'';
+    let arrow=delta<0?'↓':delta>0?'↑':'';
+    deltaHtml='<em>'+arrow+' '+sign+fmtProgress(delta)+' '+unit+'</em>';
+  }
+  return '<button class="client-home-metric" onclick="'+action+'">'
+    +'<span class="client-home-metric-icon">'+uiIcon(icon)+'</span>'
+    +'<span>'+esc(title)+'</span>'
+    +'<strong>'+(value?esc(String(value)):'—')+(value?' <small>'+esc(unit)+'</small>':'')+'</strong>'
+    +(subtitle?'<em>'+esc(subtitle)+'</em>':deltaHtml)
+    +'</button>';
+}
+
+function redesignClientHomeHTML(d,c,cid,groups){
+  let days=Object.keys(groups||{});
+  let cycle=workoutCycleState(d,groups||{});
+  let sessions=d.workout_sessions||[];
+  let active=sessions.find(function(x){return x.status==='training'});
+  let today=isoToday();
+  let todayFinished=sessions.find(function(x){return x.status==='finished'&&sessionDay(x)===today});
+  let todayNutrition=(d.nutrition||[]).filter(function(x){return x.day===today}).sort(function(a,b){return (+b.id||0)-(+a.id||0)})[0]||null;
+
+  let measures=(d.measurements||[]).filter(function(x){return x.day}).slice().sort(function(a,b){return a.day.localeCompare(b.day)});
+  let last=measures[measures.length-1]||null;
+  let prev=measures[measures.length-2]||null;
+
+  let weekStart=redesignWeekStartISO();
+  let weekDone=sessions.filter(function(x){
+    return x.status==='finished' && sessionDay(x) && sessionDay(x)>=weekStart;
+  }).length;
+
+  let completedInCycle=Math.min(days.length,cycle.done.length);
+  let cyclePercent=days.length?Math.round((completedInCycle/days.length)*100):0;
+  let nextDay=active&&active.day_name?active.day_name:(cycle.next||days[0]||'Тренування');
+  let nextTitle=programDayTitle(d,nextDay)||'Силове тренування';
+  let nextIndex=Math.max(1,days.indexOf(nextDay)+1);
+
+  let kcalNow=+todayNutrition?.kcal||0;
+  let kcalTarget=+c.kcal||0;
+  let kcalPct=kcalTarget?Math.min(100,Math.round(kcalNow/kcalTarget*100)):0;
+
+  let programMeta=days.length ? days.length+' тренувальних '+(days.length===1?'день':days.length<5?'дні':'днів') : 'Програма формується';
+  let trainMain=active?'Триває зараз':todayFinished?'Виконано ✓':days.length?'День '+nextIndex+' з '+days.length:'Ще немає плану';
+  let trainSub=active?'Продовжити '+nextDay:todayFinished?nextDay:nextTitle;
+  let foodMain=(kcalNow||kcalTarget)?kcalNow.toLocaleString('uk-UA')+(kcalTarget?' / '+kcalTarget.toLocaleString('uk-UA'):'')+' ккал':'БЖВ за сьогодні';
+  let foodSub=todayNutrition?'Дані збережено':'Заповнити сьогодні';
+
+  return '<section class="client-home">'
+    +'<button class="client-program-hero" onclick="showClientTraining('+cid+')">'
+      +'<span class="client-program-hero-kicker">Моя програма</span>'
+      +'<strong>'+esc(c.goal||'Твоя програма')+'</strong>'
+      +'<span class="client-program-hero-meta">'+esc(programMeta)+'</span>'
+      +'<div class="client-program-hero-progress">'
+        +'<span><i style="width:'+cyclePercent+'%"></i></span><b>'+cyclePercent+'%</b>'
+      +'</div>'
+      +'<span class="client-program-hero-cta">Перейти до тренувань <b>›</b></span>'
+    +'</button>'
+
+    +'<div class="client-home-section-head"><h2>Сьогодні</h2></div>'
+    +'<div class="client-home-today-grid">'
+      +'<button class="client-home-today-card" onclick="showClientTraining('+cid+')">'
+        +'<span class="client-home-today-icon">'+uiIcon('dumbbell')+'</span>'
+        +'<small>Тренування</small>'
+        +'<strong>'+esc(trainMain)+'</strong>'
+        +'<em>'+esc(trainSub)+'</em>'
+        +'<span class="home-chevron">›</span>'
+      +'</button>'
+      +'<button class="client-home-today-card" onclick="showClientNutrition('+cid+')">'
+        +'<span class="client-home-today-icon">'+uiIcon('food')+'</span>'
+        +'<small>Харчування</small>'
+        +'<strong>'+esc(foodMain)+'</strong>'
+        +'<div class="home-mini-progress"><i style="width:'+kcalPct+'%"></i></div>'
+        +'<em>'+esc(foodSub)+'</em>'
+        +'<span class="home-chevron">›</span>'
+      +'</button>'
+    +'</div>'
+
+    +'<div class="client-home-section-head">'
+      +'<h2>Мій прогрес</h2>'
+      +'<button onclick="showClientSection(\'progress\')">Детальніше ›</button>'
+    +'</div>'
+    +'<div class="client-home-metrics">'
+      +redesignClientMetric('Вага',last&&+last.weight>0?fmtProgress(last.weight):'', 'кг', redesignClientDelta(last,prev,'weight'), 'measure', 'showClientSection(\'progress\')','')
+      +redesignClientMetric('Талія',last&&+last.waist>0?fmtProgress(last.waist):'', 'см', redesignClientDelta(last,prev,'waist'), 'chart', 'showClientSection(\'progress\')','')
+      +redesignClientMetric('Тренування',String(weekDone), '', null, 'calendar', 'showClientSection(\'history\')', weekDone+(days.length?' / '+days.length:'')+' цього тижня')
+    +'</div>'
+  +'</section>';
+}
+
+window.clientCabinet = async function(id){
+  let d=await loadClientData(id),c=d.client;
+  window.currentClientData=d;
+  let groups={};
+  (d.program||[]).forEach(function(x){(groups[x.day_name]||(groups[x.day_name]=[])).push(x)});
+
+  let access=clientAccess(c);
+  if(access.expired||access.manually_frozen||access.effective_plan==='free'){
+    return window.__legacyClientCabinet(id);
+  }
+
+  currentClientView='home';
+  app.innerHTML=shell(accessBannerHTML(c)+redesignClientHomeHTML(d,c,id,groups));
+  refreshNotificationBadge(id,'client','clientNotifyBtn');
+  setTimeout(maybeShowClientOnboarding,180);
+};
