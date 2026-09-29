@@ -495,7 +495,11 @@ function clientBottomNavHTML(){
 function shell(content){
  if(session&&session.role==='client'&&session.client_id){
    document.body.classList.add('eplan-redesign','client-ui');
-   return `<div class="wrap client-shell"><div class="client-top"><div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>${content}${clientBottomNavHTML()}</div>`;
+   let isHome=clientNavGroup()==='home';
+   let top=isHome
+    ?`<div class="client-top"><div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
+    :`<div class="client-top client-top-compact"><div></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
+   return `<div class="wrap client-shell">${top}${content}${clientBottomNavHTML()}</div>`;
  }
  document.body.classList.remove('eplan-redesign','client-ui');
  let right='';
