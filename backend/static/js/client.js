@@ -96,6 +96,58 @@ function showClientOnboarding(step=0){
 
 function finishClientOnboarding(){try{localStorage.setItem(onboardingKey(),'done')}catch(e){}document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
 
+async function showClientTraining(cid){
+ let d=window.currentClientData;
+ if(!d||+d.client?.id!==+cid)d=await loadClientData(cid);
+ let c=d.client;window.currentClientData=d;currentClientView='training';
+ let groups={};(d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
+ let access=clientAccess(c),body='';
+ if(!access.features?.workouts){
+   body=`<div class="card plan-lock-card"><strong>Тренування недоступні</strong><p class="muted">Ця функція не входить до поточного тарифу.</p></div>`;
+ }else{
+   let active=(d.workout_sessions||[]).find(x=>x.status==='training');
+   if(active){
+     body=`${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,cid)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${cid},${active.id},this)">Завершити тренування</button></div></div>`;
+   }else{
+     body=`${todayGuidanceHTML(d,cid,groups)}${clientTrainingProgramHTML(d,cid,groups)}${trainingTermsHelpHTML()}`;
+   }
+ }
+ app.innerHTML=shell(`<div class="client-section-page"><h1>Тренування</h1>${body}</div>`);
+ refreshNotificationBadge(cid,'client','clientNotifyBtn');
+}
+
+async function showClientNutrition(cid){
+ let d=window.currentClientData;
+ if(!d||+d.client?.id!==+cid)d=await loadClientData(cid);
+ let c=d.client;window.currentClientData=d;currentClientView='nutrition';
+ let access=clientAccess(c),body='';
+ if(!access.features?.nutrition){
+   body=`<div class="card plan-lock-card"><strong>Харчування недоступне</strong><p class="muted">Ця функція не входить до поточного тарифу.</p></div>`;
+ }else{
+   let plan=clientMealPlanHTML(d);
+   body=`${dailyNutritionHTML(d,cid)}${plan||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з\'явиться тут.</div></div>'}`;
+ }
+ app.innerHTML=shell(`<div class="client-section-page"><h1>Харчування</h1>${body}</div>`);
+ refreshNotificationBadge(cid,'client','clientNotifyBtn');
+ setTimeout(()=>restoreTodayDrafts(cid,false,access.features?.nutrition&&!(d.nutrition||[]).some(x=>x.day===isoToday())),0);
+}
+
+function showClientMore(cid){
+ let d=window.currentClientData||{},c=d.client||{},a=clientAccess(c);currentClientView='more';
+ let item=(icon,title,subtitle,action)=>`<button class="client-more-item" onclick="${action}"><span class="side-nav-icon">${uiIcon(icon)}</span><span><strong>${title}</strong><small>${subtitle}</small></span><span class="more-chevron">›</span></button>`;
+ app.innerHTML=shell(`<div class="client-section-page"><h1>Більше</h1><div class="client-more-list">
+   ${item('user','Мій профіль','Особисті дані та анкета',`showClientProfile(${cid})`)}
+   ${item('calendar','Історія тренувань','Усі виконані тренування',`showClientSection('history')`)}
+   ${a.features?.measurements?item('measure','Мої заміри','Вага, талія та об\'єми тіла',`showClientSection('measurements')`):''}
+   ${a.features?.meal_plan?item('food','План харчування','Рекомендації тренера',`showClientSection('mealplan')`):''}
+   ${item('bell','Сповіщення','Останні оновлення',`showNotifications(${cid},'client')`)}
+ </div>
+ <div class="card" style="margin-top:14px"><div class="between"><div><strong>Мова</strong><div class="muted" style="margin-top:4px">Мова інтерфейсу</div></div><div class="lang-switch"><button class="${appLanguage==='uk'?'':'dark'}" onclick="setLanguage('uk')">UA</button><button class="${appLanguage==='en'?'':'dark'}" onclick="setLanguage('en')">EN</button></div></div></div>
+ <button class="client-more-logout" onclick="logout()">Вийти з акаунта</button>
+ </div>`);
+ refreshNotificationBadge(cid,'client','clientNotifyBtn');
+}
+
 async function clientCabinet(id){
  let d=await loadClientData(id),c=d.client;window.currentClientData=d;let groups={};d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
 
