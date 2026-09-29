@@ -47,6 +47,11 @@ function redesignClientHomeHTML(d,c,cid,groups){
   let weekDone=sessions.filter(function(x){
     return x.status==='finished' && sessionDay(x) && sessionDay(x)>=weekStart;
   }).length;
+  let weekDates=[];
+  let ws=new Date(weekStart+'T12:00:00');
+  for(let i=0;i<7;i++){let q=new Date(ws);q.setDate(ws.getDate()+i);weekDates.push(q.toISOString().slice(0,10))}
+  let finishedDates=new Set(sessions.filter(function(x){return x.status==='finished'&&sessionDay(x)}).map(sessionDay));
+  let weekBars=weekDates.map(function(day,i){return '<i class="'+(finishedDates.has(day)?'done':'')+'" style="height:'+(i===3?'24':'16')+'px"></i>'}).join('');
 
   let completedInCycle=Math.min(days.length,cycle.done.length);
   let cyclePercent=days.length?Math.round((completedInCycle/days.length)*100):0;
@@ -69,6 +74,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
       +'<span class="client-program-hero-kicker">Моя програма</span>'
       +'<strong>'+esc(c.goal||'Твоя програма')+'</strong>'
       +'<span class="client-program-hero-meta">'+esc(programMeta)+'</span>'
+      +'<div class="client-program-progress-label"><span>Прогрес циклу</span><b>'+(days.length?completedInCycle+' з '+days.length:'—')+'</b></div>'
       +'<div class="client-program-hero-progress">'
         +'<span><i style="width:'+cyclePercent+'%"></i></span><b>'+cyclePercent+'%</b>'
       +'</div>'
@@ -101,7 +107,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
     +'<div class="client-home-metrics">'
       +redesignClientMetric('Вага',last&&+last.weight>0?fmtProgress(last.weight):'', 'кг', redesignClientDelta(last,prev,'weight'), 'measure', 'showClientSection(\'progress\')','')
       +redesignClientMetric('Талія',last&&+last.waist>0?fmtProgress(last.waist):'', 'см', redesignClientDelta(last,prev,'waist'), 'chart', 'showClientSection(\'progress\')','')
-      +redesignClientMetric('Тренування',String(weekDone), '', null, 'calendar', 'showClientSection(\'history\')', weekDone+(days.length?' / '+days.length:'')+' цього тижня')
+      +'<button class="client-home-metric client-home-training-metric" onclick="showClientSection(\'history\')"><span class="client-home-metric-icon">'+uiIcon('dumbbell')+'</span><span>Тренування</span><strong>'+weekDone+'<small>'+(days.length?' / '+days.length:'')+'</small></strong><div class="home-week-bars">'+weekBars+'</div><em>цього тижня</em></button>'
     +'</div>'
   +'</section>';
 }
