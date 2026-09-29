@@ -89,6 +89,7 @@ async function bootstrapAuthentication(){
 }
 
 function renderLogin(){
+ document.body.classList.remove('eplan-redesign','client-ui');
  let token=new URLSearchParams(location.search).get('reset');
  if(token)return renderResetPassword(token);
  let rememberedEmail=localStorage.getItem('rememberedEmail')||'';
