@@ -1006,3 +1006,72 @@ body.eplan-redesign.client-ui .redesign-active-workout h2{
   body.eplan-redesign.client-ui .redesign-training-day-status{display:none}
   body.eplan-redesign.client-ui .redesign-training-day-index{width:34px;height:34px}
 }
+
+
+/* Training polish — compact secondary header + clean rules accordion */
+body.eplan-redesign.client-ui .client-top.client-top-compact{
+  min-height:54px;
+  margin-bottom:6px;
+  padding-top:6px;
+  padding-bottom:6px;
+  border-bottom:0;
+  background:rgba(248,251,255,.92);
+}
+body.eplan-redesign.client-ui .client-top.client-top-compact .client-top-actions{
+  margin-left:auto;
+}
+
+body.eplan-redesign.client-ui .redesign-training-help{
+  margin-top:12px;
+  border:1px solid #e1e8f2;
+  border-radius:18px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);
+}
+body.eplan-redesign.client-ui .redesign-training-help>button{
+  border-radius:0!important;
+}
+body.eplan-redesign.client-ui .redesign-training-rule-chevron{
+  color:#8b99ad;
+  font-size:18px;
+  transition:transform .15s ease;
+}
+body.eplan-redesign.client-ui .redesign-training-help>button.open .redesign-training-rule-chevron{
+  transform:rotate(180deg);
+}
+body.eplan-redesign.client-ui .redesign-training-help-body{
+  padding:4px 14px 12px;
+  background:#fbfdff;
+}
+body.eplan-redesign.client-ui .redesign-rule-item{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .redesign-rule-item:last-child{border-bottom:0}
+body.eplan-redesign.client-ui .redesign-rule-item>b{
+  width:26px;height:26px;
+  display:grid;place-items:center;
+  border-radius:9px;
+  background:#edf4ff;
+  color:#1677ff;
+  font-size:11px;
+}
+body.eplan-redesign.client-ui .redesign-rule-item>div{
+  min-width:0;
+}
+body.eplan-redesign.client-ui .redesign-rule-item strong{
+  display:block;
+  font-size:13px;
+  color:#10213f;
+  margin-bottom:3px;
+}
+body.eplan-redesign.client-ui .redesign-rule-item p{
+  margin:0;
+  color:#738199;
+  font-size:11px;
+  line-height:1.45;
+}
