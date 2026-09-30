@@ -2998,3 +2998,41 @@ body.eplan-redesign.client-ui .measurement-edit-modal>.between{
   -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
 }
+
+
+/* Final measurement polish: date sizing + horizontal history actions */
+body.eplan-redesign.client-ui .measurement-date-row{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+body.eplan-redesign.client-ui .measurement-date-row input[type="date"]{
+  display:block!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:11px 12px!important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+body.eplan-redesign.client-ui .measurement-history-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+}
+body.eplan-redesign.client-ui .measurement-history-actions{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+}
+body.eplan-redesign.client-ui .measurement-history-actions .measurement-edit,
+body.eplan-redesign.client-ui .measurement-history-actions .measurement-delete{
+  flex:0 0 36px!important;
+}
+body.eplan-redesign.client-ui .measurement-place-card .measurement-side-values + em:empty{
+  display:none!important;
+}
