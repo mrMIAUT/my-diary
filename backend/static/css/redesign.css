@@ -2294,3 +2294,82 @@ body.eplan-redesign.client-ui .client-bottom-nav::before{
     rgba(255,255,255,.005) 100%
   )!important;
 }
+
+
+/* Lyfta-inspired workout logging */
+body.eplan-redesign.client-ui .lyfta-workout-tools{
+  display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px;
+}
+body.eplan-redesign.client-ui .lyfta-workout-tools button{
+  flex:1 1 140px;padding:10px 12px;font-size:11px;border-radius:12px;
+}
+body.eplan-redesign.client-ui .lyfta-set-head{
+  display:grid;grid-template-columns:42px 1fr 1fr .8fr 38px;gap:7px;
+  padding:0 2px 6px;color:#78879b;font-size:9.5px;font-weight:800;text-align:center;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap{
+  padding:8px 0;border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .lyfta-prev-line{
+  display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
+  margin:0 2px 7px;color:#7b899d;font-size:9.5px;
+}
+body.eplan-redesign.client-ui .lyfta-prev-line strong{
+  color:#40516b;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body.eplan-redesign.client-ui .lyfta-prev-line button{
+  padding:5px 8px;border-radius:8px;background:#edf4ff!important;color:#1677ff!important;
+  font-size:9px;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-row{
+  display:grid;grid-template-columns:42px 1fr 1fr .8fr 38px;gap:7px;align-items:center;
+}
+body.eplan-redesign.client-ui .lyfta-set-row.is-complete{
+  opacity:.72;
+}
+body.eplan-redesign.client-ui .lyfta-set-row input{
+  min-width:0;width:100%;padding:10px 7px!important;text-align:center;border-radius:11px!important;
+  background:#f8faff!important;border:1px solid #dfe7f2!important;color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .lyfta-input-wrap{position:relative;min-width:0}
+body.eplan-redesign.client-ui .lyfta-input-wrap input{padding-right:28px!important}
+body.eplan-redesign.client-ui .lyfta-pr-badge{
+  display:none;position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  padding:3px 4px;border-radius:6px;background:#fff1c9;color:#b57900;font-size:8px;font-weight:900;
+}
+body.eplan-redesign.client-ui .lyfta-pr-badge.show{display:inline-block}
+body.eplan-redesign.client-ui .lyfta-set-done{
+  width:36px;height:36px;padding:0!important;border-radius:11px!important;
+  background:#edf4ff!important;color:#1677ff!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-done.done{
+  background:#eaf8ef!important;color:#169657!important;
+}
+body.eplan-redesign.client-ui .lyfta-history-modal{
+  width:min(440px,100%);
+  max-height:82dvh;
+  overflow:auto;
+}
+body.eplan-redesign.client-ui .lyfta-history-kicker{
+  display:block;color:#7a889d;font-size:10px;font-weight:850;margin-bottom:3px;
+}
+body.eplan-redesign.client-ui .lyfta-history-modal h2{margin:0}
+body.eplan-redesign.client-ui .lyfta-history-chart{margin-top:14px}
+body.eplan-redesign.client-ui .lyfta-history-chart svg{width:100%;height:145px}
+body.eplan-redesign.client-ui .lyfta-history-line{fill:none;stroke:#1677ff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+body.eplan-redesign.client-ui .lyfta-history-dot{fill:#fff;stroke:#1677ff;stroke-width:1.4}
+body.eplan-redesign.client-ui .lyfta-history-chart>div{
+  display:flex;justify-content:space-between;color:#8190a4;font-size:9.5px;margin-top:-4px;
+}
+body.eplan-redesign.client-ui .lyfta-history-list{display:grid;gap:7px;margin-top:14px}
+body.eplan-redesign.client-ui .lyfta-history-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;border-radius:12px;background:#f7f9fc;border:1px solid #e3e9f2;
+}
+body.eplan-redesign.client-ui .lyfta-history-item span{font-size:10px;color:#75839a}
+body.eplan-redesign.client-ui .lyfta-history-item strong{font-size:11px}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .lyfta-set-head,
+  body.eplan-redesign.client-ui .lyfta-set-row{grid-template-columns:36px 1fr 1fr .75fr 34px;gap:5px}
+  body.eplan-redesign.client-ui .lyfta-set-row input{padding:9px 5px!important}
+}
