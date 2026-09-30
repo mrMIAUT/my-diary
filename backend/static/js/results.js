@@ -40,6 +40,7 @@ function clientProgressHTML(d){
    return order-orderB;
  });
 
+ let durationSessions=sessions.filter(x=>+x.duration_seconds>0),avgDuration=durationSessions.length?Math.round(durationSessions.reduce((n,x)=>n+(+x.duration_seconds||0),0)/durationSessions.length):0;
  let statWeight=weightNow!==null?`${fmtProgress(weightNow)} кг`:'—';
  let statDelta=weightDelta!==null?`${weightDelta>0?'+':''}${fmtProgress(weightDelta)} кг`:'—';
  let periodLabel=period==='30'?'30 днів':period==='90'?'3 місяці':period==='180'?'6 місяців':'Весь час';
@@ -56,7 +57,7 @@ function clientProgressHTML(d){
   <div class="progress-stats">
    <div class="progress-stat"><span>Тренувань</span><strong>${sessions.length}</strong><small>${periodLabel}</small></div>
    <div class="progress-stat"><span>Вага</span><strong>${statWeight}</strong><small>${lastM?.day?formatProgressDate(lastM.day):'Немає даних'}</small></div>
-   <div class="progress-stat"><span>Зміна ваги</span><strong class="${weightDelta!==null&&weightDelta<0?'good':''}">${statDelta}</strong><small>за період</small></div>
+   <div class="progress-stat"><span>Середня тривалість</span><strong>${avgDuration?formatWorkoutDuration(avgDuration):'—'}</strong><small>${durationSessions.length?'за період':'Немає даних'}</small></div>
   </div>
 
   <div class="card progress-section">
@@ -220,7 +221,7 @@ function trainerDayResultsHTML(d,dayName){
    let cardSession=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id)[0];
    return `<div class="card" data-workout-day="${esc(day)}" data-workout-session="${cardSession?.id||0}" style="padding:0;overflow:hidden">
     <button class="exercise-toggle" data-target="${esc(workoutBodyId)}" onclick="toggleWorkoutResult(this.dataset.target,this)" style="padding:20px 24px">
-      <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong>${previous?`<span class="muted" style="display:block;margin-top:5px">порівняно з ${esc(previous)}</span>`:''}</span>
+      <span><strong style="font-size:18px">${esc(dayName)} · ${esc(day)}</strong><span class="trainer-workout-meta">${cardSession?.duration_seconds!==undefined?workoutDurationBadgeHTML(cardSession,'trainer-history-duration'):''}${previous?`<span class="muted">порівняно з ${esc(previous)}</span>`:''}</span></span>
       <span class="arrow">⌄</span>
     </button>
     <div id="${esc(workoutBodyId)}" class="hidden" style="padding:0 24px 22px">
