@@ -788,6 +788,14 @@ def init():
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS neck DOUBLE PRECISION DEFAULT 0")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS calves DOUBLE PRECISION DEFAULT 0")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS forearms DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs_left DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs_right DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS calves_left DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS calves_right DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms_left DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms_right DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS forearms_left DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS forearms_right DOUBLE PRECISION DEFAULT 0")
 
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
@@ -929,6 +937,14 @@ class MeasureIn(BaseModel):
     neck:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
     calves:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
     forearms:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    thighs_left:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    thighs_right:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    calves_left:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    calves_right:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    arms_left:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    arms_right:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    forearms_left:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    forearms_right:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
 class ClientProfileIn(BaseModel):
     first_name:str=Field(default="",max_length=120); last_name:str=Field(default="",max_length=120); age:int=Field(default=0,ge=0,le=150); sex:str=Field(default="",max_length=32); contraindications:str=Field(default="",max_length=10000); injuries:str=Field(default="",max_length=10000); contact:str=Field(default="",max_length=512); instagram:str=Field(default="",max_length=512); telegram:str=Field(default="",max_length=512); tiktok:str=Field(default="",max_length=512)
 class NutritionPlanItemIn(BaseModel):
@@ -2171,7 +2187,7 @@ def screenshot(nid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_c
 def measurement(x:MeasureIn,user:AuthUser=Depends(require_client)):
     authorize_client(user,x.client_id)
     require_active_client(x.client_id,'measurements')
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms,shoulders,neck,calves,forearms) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms,x.shoulders,x.neck,x.calves,x.forearms))
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms,shoulders,neck,calves,forearms,thighs_left,thighs_right,calves_left,calves_right,arms_left,arms_right,forearms_left,forearms_right) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms,x.shoulders,x.neck,x.calves,x.forearms,x.thighs_left,x.thighs_right,x.calves_left,x.calves_right,x.arms_left,x.arms_right,x.forearms_left,x.forearms_right))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
 
