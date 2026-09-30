@@ -3774,3 +3774,139 @@ body.eplan-redesign.trainer-ui .trainer-activity-row:last-child,.trainer-client-
 body.eplan-redesign.trainer-ui .trainer-page-title{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px}.trainer-page-title h1{margin:0;font-size:30px}.trainer-page-title button{width:42px;height:42px;padding:0;border-radius:13px;background:#eaf2ff;color:#1677ff}
 body.eplan-redesign.trainer-ui .trainer-back-home{margin-top:14px;background:#eef4fb;color:#15304f}
 body.eplan-redesign.trainer-ui .trainer-empty{padding:18px;color:#7b8799}
+
+
+/* Trainer reference layout v2 */
+body.eplan-redesign.trainer-ui .trainer-shell{
+  position:relative;
+  padding:18px 18px calc(112px + env(safe-area-inset-bottom));
+  background:#f7fbff;
+}
+body.eplan-redesign.trainer-ui .trainer-top{
+  margin-top:calc(env(safe-area-inset-top) + 8px);
+  margin-bottom:16px;
+}
+body.eplan-redesign.trainer-ui .trainer-top strong{font-size:20px}
+body.eplan-redesign.trainer-ui .trainer-top .notify-btn{
+  position:relative;
+  width:44px;height:44px;border-radius:15px;background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-hero-card{
+  min-height:190px;
+  padding:18px 20px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#0d4f91 0%,#0c65bb 58%,#1677d8 100%);
+}
+body.eplan-redesign.trainer-ui .trainer-hero-head strong{font-size:21px}
+body.eplan-redesign.trainer-ui .trainer-hero-count{font-size:34px}
+body.eplan-redesign.trainer-ui .trainer-avatar-stack{margin-top:16px}
+body.eplan-redesign.trainer-ui .reference-grid>button{position:relative;min-height:150px}
+body.eplan-redesign.trainer-ui .reference-grid>button em{
+  display:block;margin-top:10px;color:#1677ff;font-style:normal;font-size:12px;font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-home-section-head h2{font-size:22px}
+body.eplan-redesign.trainer-ui .trainer-activity-row{
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  min-height:68px;
+}
+body.eplan-redesign.trainer-ui .trainer-row-time{font-size:11px;color:#8a95a8}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:calc(8px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:50;
+  width:min(calc(100% - 28px),732px);
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:2px;
+  padding:8px 6px;
+  border:1px solid rgba(185,199,220,.9);
+  border-radius:24px;
+  background:rgba(248,251,255,.82);
+  backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 12px 32px rgba(31,65,106,.12);
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button{
+  min-width:0;
+  min-height:58px;
+  padding:6px 2px;
+  border:0;
+  background:transparent;
+  color:#74829a;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button .ui-icon{width:22px;height:22px}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button.active{
+  color:#1677ff;
+  background:#eef4ff;
+  border-radius:17px;
+}
+body.eplan-redesign.trainer-ui .trainer-search{
+  height:46px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:0 13px;
+  border-radius:13px;
+  background:#edf3fb;
+  color:#7d8ba0;
+  margin-bottom:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-search .ui-icon{width:18px;height:18px}
+body.eplan-redesign.trainer-ui .trainer-search input{
+  flex:1;border:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;color:#081633!important;
+}
+body.eplan-redesign.trainer-ui .trainer-filter-chips{
+  display:flex;gap:8px;overflow:auto;padding-bottom:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-filter-chips button{
+  width:auto;white-space:nowrap;padding:9px 12px;border-radius:12px;background:#edf3fb;color:#63728a;font-size:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-filter-chips button.active{background:#1677ff;color:#fff}
+body.eplan-redesign.trainer-ui .trainer-filter-chips span{font-weight:900}
+body.eplan-redesign.trainer-ui .trainer-client-row{
+  grid-template-columns:auto minmax(0,1fr) auto;
+}
+body.eplan-redesign.trainer-ui .trainer-client-copy{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-status-pill{
+  display:inline-flex;margin-top:6px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850;
+  background:#e9f7ef;color:#23965b;
+}
+body.eplan-redesign.trainer-ui .trainer-status-pill.attention{background:#fff1e6;color:#d97828}
+body.eplan-redesign.trainer-ui .trainer-round-add{
+  width:42px!important;height:42px!important;border-radius:14px!important;background:#eaf2ff!important;color:#1677ff!important;padding:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-segmented{
+  display:grid;grid-template-columns:1fr 1fr;background:#edf2f8;border-radius:14px;padding:4px;margin-bottom:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-segmented button{
+  background:transparent;color:#6f7f98;border:0;border-radius:11px;padding:10px;font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-segmented button.active{background:#1677ff;color:#fff}
+body.eplan-redesign.trainer-ui .trainer-program-empty{
+  text-align:center;padding:34px 20px;border:1px solid #dce5f1;border-radius:20px;background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-program-empty-icon{
+  width:56px;height:56px;margin:0 auto 12px;display:grid;place-items:center;border-radius:16px;background:#eaf2ff;color:#1677ff;
+}
+body.eplan-redesign.trainer-ui .trainer-program-empty h2{margin:0 0 8px}
+body.eplan-redesign.trainer-ui .trainer-program-empty p{color:#76849a}
+body.eplan-redesign.trainer-ui .trainer-more-list{
+  overflow:hidden;border:1px solid #dce5f1;border-radius:18px;background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-more-list button{
+  width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;text-align:left;
+  padding:15px 16px;border:0;border-bottom:1px solid #edf1f6;background:#fff;color:#081633;
+}
+body.eplan-redesign.trainer-ui .trainer-more-list button:last-child{border-bottom:0}
+body.eplan-redesign.trainer-ui .trainer-more-list span strong,
+body.eplan-redesign.trainer-ui .trainer-more-list span small{display:block}
+body.eplan-redesign.trainer-ui .trainer-more-list span small{margin-top:3px;color:#7b8799}
