@@ -2425,3 +2425,154 @@ body.eplan-redesign.client-ui .swap-back-btn{
   background:#eef3f9!important;
   color:#526580!important;
 }
+
+
+/* Floating nav: keep it inside the app content edges */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  width:min(398px,calc(100% - 34px))!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .client-bottom-nav{
+    width:calc(100% - 30px)!important;
+  }
+}
+
+/* Measurements — body-area cards inspired by Lyfta */
+body.eplan-redesign.client-ui .measurement-visual-overview{
+  display:grid;
+  gap:12px;
+}
+body.eplan-redesign.client-ui .measurement-visual-overview .measurement-section-title{
+  margin:0 2px;
+}
+body.eplan-redesign.client-ui .measurement-visual-overview .measurement-section-title h2{
+  margin:0;
+  font-size:22px;
+}
+body.eplan-redesign.client-ui .measurement-visual-overview .measurement-section-title p{
+  margin:4px 0 0;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px;
+  border-radius:18px;
+  background:#fff;
+  border:1px solid #e1e8f2;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);
+}
+body.eplan-redesign.client-ui .measurement-weight-visual>div:last-child{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:3px;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual strong{
+  font-size:23px;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual strong small{
+  font-size:12px;
+  color:#718097;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual em,
+body.eplan-redesign.client-ui .measurement-place-card em{
+  font-style:normal;
+  color:#7b899d;
+  font-size:10.5px;
+  font-weight:750;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual em.down,
+body.eplan-redesign.client-ui .measurement-place-card em.down{
+  color:#19985a;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual em.up,
+body.eplan-redesign.client-ui .measurement-place-card em.up{
+  color:#d5821e;
+}
+body.eplan-redesign.client-ui .measurement-visual-subhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:4px 2px 0;
+}
+body.eplan-redesign.client-ui .measurement-visual-subhead h3{
+  margin:0;
+  font-size:18px;
+}
+body.eplan-redesign.client-ui .measurement-visual-subhead span{
+  color:#7a889d;
+  font-size:10.5px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-places-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+body.eplan-redesign.client-ui .measurement-place-card{
+  min-width:0;
+  min-height:152px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  border-radius:18px;
+  background:#fff;
+  border:1px solid #e1e8f2;
+  box-shadow:0 8px 24px rgba(35,70,108,.045);
+}
+body.eplan-redesign.client-ui .measurement-place-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+body.eplan-redesign.client-ui .measurement-place-top>span{
+  color:#0a1738;
+  font-size:14px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-body-icon{
+  width:42px;
+  height:42px;
+  padding:6px;
+  border-radius:12px;
+  background:#f1f6fc;
+  stroke:#93a3b9;
+  stroke-width:1.5;
+  fill:none;
+}
+body.eplan-redesign.client-ui .measurement-body-icon .hot{
+  stroke:#1677ff;
+  stroke-width:2.8;
+  stroke-linecap:round;
+}
+body.eplan-redesign.client-ui .measurement-place-card strong{
+  margin-top:auto;
+  font-size:22px;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .measurement-place-card strong small{
+  font-size:12px;
+  color:#718097;
+}
+body.eplan-redesign.client-ui .metric-waist .measurement-body-icon,
+body.eplan-redesign.client-ui .metric-chest .measurement-body-icon{
+  background:#eef5ff;
+}
+body.eplan-redesign.client-ui .metric-hips .measurement-body-icon,
+body.eplan-redesign.client-ui .metric-thighs .measurement-body-icon{
+  background:#f3f0ff;
+}
+body.eplan-redesign.client-ui .metric-arms .measurement-body-icon{
+  background:#eef9f2;
+}
+
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .measurement-places-grid{gap:8px}
+  body.eplan-redesign.client-ui .measurement-place-card{padding:12px;min-height:144px}
+  body.eplan-redesign.client-ui .measurement-body-icon{width:38px;height:38px}
+}
