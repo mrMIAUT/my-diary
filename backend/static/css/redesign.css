@@ -3036,3 +3036,121 @@ body.eplan-redesign.client-ui .measurement-history-actions .measurement-delete{
 body.eplan-redesign.client-ui .measurement-place-card .measurement-side-values + em:empty{
   display:none!important;
 }
+
+
+/* Compact selectable measurement comparison */
+body.eplan-redesign.client-ui .measurement-compare-card{
+  display:grid;
+  gap:14px;
+}
+body.eplan-redesign.client-ui .measurement-compare-head h2{
+  margin:0;
+  font-size:20px;
+}
+body.eplan-redesign.client-ui .measurement-compare-head p{
+  margin:4px 0 0;
+}
+body.eplan-redesign.client-ui .measurement-compare-selects{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
+  gap:8px;
+  align-items:end;
+}
+body.eplan-redesign.client-ui .measurement-compare-selects label{
+  display:grid;
+  gap:5px;
+  min-width:0;
+}
+body.eplan-redesign.client-ui .measurement-compare-selects label>span{
+  color:#7a889d;
+  font-size:9.5px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-compare-selects select{
+  width:100%;
+  min-width:0;
+  height:42px;
+  padding:0 10px;
+  border-radius:11px;
+  border:1px solid #dce5ef;
+  background:#f7f9fc;
+  color:#0a1738;
+  font:inherit;
+  font-size:12px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-compare-arrow{
+  display:grid;
+  place-items:center;
+  height:42px;
+  color:#8a98ab;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .measurement-compare-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+body.eplan-redesign.client-ui .measurement-compare-item{
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid #e5ebf3;
+  border-radius:12px;
+  background:#f9fbfd;
+}
+body.eplan-redesign.client-ui .measurement-compare-item>span{
+  display:block;
+  margin-bottom:3px;
+  color:#78869a;
+  font-size:9px;
+  font-weight:850;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.eplan-redesign.client-ui .measurement-compare-item>strong{
+  display:block;
+  color:#0a1738;
+  font-size:11px;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .measurement-compare-item>small{
+  display:block;
+  margin-top:4px;
+  font-size:10px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-compare-item>small.down,
+body.eplan-redesign.client-ui .measurement-side-delta.down{color:#15965a}
+body.eplan-redesign.client-ui .measurement-compare-item>small.up,
+body.eplan-redesign.client-ui .measurement-side-delta.up{color:#d98a24}
+
+body.eplan-redesign.client-ui .measurement-side-delta{
+  display:block!important;
+  margin-top:3px;
+  font-size:8.5px!important;
+  font-weight:850!important;
+  line-height:1.2;
+}
+
+/* Back from workout history opened inside Progress */
+body.eplan-redesign.client-ui .progress-history-back{
+  display:inline-flex;
+  align-items:center;
+  width:auto!important;
+  margin:0 0 14px;
+  padding:9px 13px!important;
+  border-radius:12px!important;
+  background:#edf4ff!important;
+  color:#1677ff!important;
+  border:1px solid #d4e4fb!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .measurement-compare-grid{
+    grid-template-columns:1fr;
+  }
+}
