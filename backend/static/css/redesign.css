@@ -1347,3 +1347,12 @@ body.eplan-redesign.client-ui .client-bottom-nav{
     bottom:0!important;
   }
 }
+
+
+/* Bottom navigation polish */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  border-radius:0!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav .ui-icon{
+  transform:translateY(-2px);
+}
