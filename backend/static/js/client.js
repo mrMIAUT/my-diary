@@ -67,11 +67,11 @@ function clientProfileHTML(c){
 }
 
 function clientProfileAvatarHTML(c,cid){
- let photo=String(c.avatar||'').trim();
+ let photo=String(c.avatar||'').trim(),state=photo?'has-photo':'is-placeholder';
  let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span>'+esc(clientInitials(c))+'</span>';
  return '<div class="client-profile-avatar-card">'
-   +'<button type="button" class="client-profile-avatar" onclick="document.getElementById(\'clientAvatarInput\')?.click()" aria-label="Змінити фото профілю">'+inner+'<span class="client-profile-avatar-edit">'+uiIcon('edit')+'</span></button>'
-   +'<div><strong>Фото профілю</strong><small>JPEG, PNG або WebP · до 10 МБ</small><button type="button" class="client-profile-avatar-change" onclick="document.getElementById(\'clientAvatarInput\')?.click()">Змінити фото</button></div>'
+   +'<button type="button" class="client-profile-avatar '+state+'" onclick="document.getElementById(\'clientAvatarInput\')?.click()" aria-label="Змінити фото профілю">'+inner+'</button>'
+   +'<div><strong>Фото профілю</strong><small>Натисни на аватар, щоб завантажити або змінити фото</small></div>'
    +'<input id="clientAvatarInput" class="client-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadClientAvatar('+cid+',this)">'
  +'</div>';
 }
