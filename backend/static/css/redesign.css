@@ -1867,3 +1867,76 @@ body.eplan-redesign.client-ui .redesign-help-item>div{
   body.eplan-redesign.client-ui .redesign-achievements-grid{gap:6px}
   body.eplan-redesign.client-ui .redesign-achievements-grid>div{padding:12px 7px}
 }
+
+
+/* Light-theme fixes for History calendar + Measurements */
+body.eplan-redesign.client-ui .calendar-day{
+  background:#f7f9fd!important;
+  color:#183153!important;
+  border:1px solid #dfe7f2!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .calendar-day.has-data{
+  background:#fff!important;
+  color:#0a1738!important;
+  border-color:#b8cbe4!important;
+}
+body.eplan-redesign.client-ui .calendar-day.has-data:after{
+  background:#1677ff!important;
+}
+body.eplan-redesign.client-ui .calendar-day.active{
+  background:#1677ff!important;
+  color:#fff!important;
+  border-color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .calendar-day.active:after{
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .calendar-head button{
+  background:#edf4ff!important;
+  color:#183153!important;
+  border:1px solid #dbe6f3!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .calendar-weekday{
+  color:#718097!important;
+}
+body.eplan-redesign.client-ui .measurements-page .measurement-next{
+  background:#fff!important;
+  border-color:#dfe7f2!important;
+}
+body.eplan-redesign.client-ui .measurements-page .measurement-next.due{
+  background:#f7fbff!important;
+  border-color:#b8d7ff!important;
+}
+body.eplan-redesign.client-ui .measurements-page .measurement-kicker{
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .measurement-metric{
+  background:#f8faff!important;
+  border-color:#e1e8f2!important;
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .measurement-metric span,
+body.eplan-redesign.client-ui .measurement-metric em,
+body.eplan-redesign.client-ui .measurement-metric strong small{
+  color:#718097!important;
+}
+body.eplan-redesign.client-ui .measurement-metric strong{
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .measurement-metric em.down{
+  color:#1a9a59!important;
+}
+body.eplan-redesign.client-ui .measurement-metric em.up{
+  color:#d7821e!important;
+}
+body.eplan-redesign.client-ui .measurement-tip{
+  background:#f8faff!important;
+  border-color:#e1e8f2!important;
+}
+body.eplan-redesign.client-ui .measurement-history-values span{
+  background:#f4f7fb!important;
+  border-color:#e1e8f2!important;
+  color:#183153!important;
+}
