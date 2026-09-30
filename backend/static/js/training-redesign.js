@@ -100,12 +100,6 @@ function redesignTrainingStatsHTML(d,cid,groups){
   +'</div>';
 }
 
-function toggleRedesignActiveTimer(){
-  let panel=document.getElementById('redesignActiveTimer');
-  if(!panel)return;
-  panel.classList.toggle('hidden');
-}
-
 window.showClientTraining = async function(cid){
   let d=window.currentClientData;
   if(!d||+d.client?.id!==+cid)d=await loadClientData(cid);
@@ -120,7 +114,7 @@ window.showClientTraining = async function(cid){
   }
 
   if(active){
-    let activeBody='<div class="card redesign-active-workout"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div><button class="dark redesign-active-timer-btn" onclick="toggleRedesignActiveTimer()">⏱ Таймер</button></div><div id="redesignActiveTimer" class="hidden redesign-active-timer-panel">'+restTimerPanelHTML()+'</div><h2>'+esc(active.day_name)+'</h2>'+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
+    let activeBody='<div class="card redesign-active-workout"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><h2>'+esc(active.day_name)+'</h2>'+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
     app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+activeBody+'</div>');
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
   }
