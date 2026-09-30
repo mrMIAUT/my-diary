@@ -1375,25 +1375,37 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         SELECT client_id,
           COUNT(*) FILTER (WHERE status='finished' AND COALESCE(trainer_reviewed,FALSE)=FALSE) AS needs_review_count,
           COUNT(*) FILTER (WHERE status='finished') AS finished_count,
-          COUNT(*) FILTER (WHERE status='finished' AND COALESCE(finished_at,started_at)>=CURRENT_TIMESTAMP-INTERVAL '28 days') AS workouts_28d,
+          COUNT(*) FILTER (
+            WHERE status='finished'
+              AND COALESCE(finished_at,started_at)>=CURRENT_TIMESTAMP-INTERVAL '28 days'
+          ) AS workouts_28d,
           MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
-        FROM workout_sessions GROUP BY client_id
+        FROM workout_sessions
+        GROUP BY client_id
     ) w ON w.client_id=c.id
     LEFT JOIN (
         SELECT client_id,COUNT(DISTINCT day_name) AS program_days_count
-        FROM program GROUP BY client_id
+        FROM program
+        GROUP BY client_id
     ) pd ON pd.client_id=c.id
     LEFT JOIN (
-        SELECT client_id,COUNT(DISTINCT day) FILTER (
-            WHERE day ~ '^\\d{4}-\\d{2}-\\d{2}
+        SELECT client_id,
+          COUNT(DISTINCT day) FILTER (
+            WHERE day ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+              AND day >= TO_CHAR(CURRENT_DATE-6,'YYYY-MM-DD')
+          ) AS nutrition_days_7d
+        FROM nutrition
+        GROUP BY client_id
     ) n ON n.client_id=c.id
     LEFT JOIN (
         SELECT client_id,
           COUNT(*) FILTER (WHERE reviewed=FALSE) AS checkin_pending_count,
           MAX(created_at) AS last_checkin_at
-        FROM weekly_checkins GROUP BY client_id
+        FROM weekly_checkins
+        GROUP BY client_id
     ) ch ON ch.client_id=c.id
-    WHERE c.status<>'Видалений' ORDER BY c.id DESC
+    WHERE c.status<>'Видалений'
+    ORDER BY c.id DESC
     LIMIT ? OFFSET ?""",(limit,offset))
     for c in xs:
         c["access"]=access_info(c)
@@ -1406,6 +1418,7 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         c["last_finished_at"]=c.get("last_finished_at")
         c["review_state"]="needs_review" if c["needs_review_count"]>0 else ("reviewed" if c["finished_workout_count"]>0 else "none")
     return [client_response(c) for c in xs]
+
 @app.post("/api/clients")
 def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
     consume_rate_limit("invite.actor",f"{user.role}:{user.user_id}")
@@ -2370,29 +2383,6 @@ def delete_comment(comment_id:int,user:AuthUser=Depends(current_user)):
     run("DELETE FROM comments WHERE id=?",(comment_id,))
     return {"ok":True}
 
-              AND day::date >= CURRENT_DATE-6
-        ) AS nutrition_days_7d
-        FROM nutrition GROUP BY client_id
-    ) n ON n.client_id=c.id
-    LEFT JOIN (
-        SELECT client_id,
-          COUNT(*) FILTER (WHERE reviewed=FALSE) AS checkin_pending_count,
-          MAX(created_at) AS last_checkin_at
-        FROM weekly_checkins GROUP BY client_id
-    ) ch ON ch.client_id=c.id
-    WHERE c.status<>'Видалений' ORDER BY c.id DESC
-    LIMIT ? OFFSET ?""",(limit,offset))
-    for c in xs:
-        c["access"]=access_info(c)
-        c["needs_review_count"]=int(c.get("needs_review_count") or 0)
-        c["finished_workout_count"]=int(c.get("finished_count") or 0)
-        c["workouts_28d"]=int(c.get("workouts_28d") or 0)
-        c["program_days_count"]=int(c.get("program_days_count") or 0)
-        c["nutrition_days_7d"]=int(c.get("nutrition_days_7d") or 0)
-        c["checkin_pending_count"]=int(c.get("checkin_pending_count") or 0)
-        c["last_finished_at"]=c.get("last_finished_at")
-        c["review_state"]="needs_review" if c["needs_review_count"]>0 else ("reviewed" if c["finished_workout_count"]>0 else "none")
-    return [client_response(c) for c in xs]
 @app.post("/api/clients")
 def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
     consume_rate_limit("invite.actor",f"{user.role}:{user.user_id}")
