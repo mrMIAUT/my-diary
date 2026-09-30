@@ -3727,3 +3727,21 @@ body.eplan-redesign.client-ui .client-profile-avatar.is-placeholder{
   background:#e6e8ed!important;
   border-color:#d7dce5!important;
 }
+
+
+/* Avatar placeholders use initials consistently across all client screens */
+body.eplan-redesign.client-ui .avatar-person{display:none!important}
+body.eplan-redesign.client-ui .avatar-initials{
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  color:#737b88!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+body.eplan-redesign.client-ui .avatar-initials-large{
+  font-size:30px!important;
+}
