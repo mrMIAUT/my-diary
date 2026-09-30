@@ -927,6 +927,7 @@ class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
     client_id:int
+    day:date|None=None
     weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
     waist:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
     chest:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
@@ -2183,13 +2184,52 @@ def screenshot(nid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_c
         if name and not committed and not commit_unknown:
             try:(UPLOADS/name).unlink(missing_ok=True)
             except OSError as e:safe_log("h04_cleanup_failed",logging.ERROR,error_type=type(e).__name__)
+def refresh_client_weight_from_measurements(cid:int):
+    latest=one("SELECT weight FROM measurements WHERE client_id=? AND weight>0 ORDER BY day DESC,id DESC LIMIT 1",(cid,))
+    if latest: run("UPDATE clients SET weight=? WHERE id=?",(latest["weight"],cid))
+
+def measurement_values(x:MeasureIn):
+    return (x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms,x.shoulders,x.neck,x.calves,x.forearms,
+            x.thighs_left,x.thighs_right,x.calves_left,x.calves_right,x.arms_left,x.arms_right,x.forearms_left,x.forearms_right)
+
 @app.post("/api/measurements")
 def measurement(x:MeasureIn,user:AuthUser=Depends(require_client)):
     authorize_client(user,x.client_id)
     require_active_client(x.client_id,'measurements')
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms,shoulders,neck,calves,forearms,thighs_left,thighs_right,calves_left,calves_right,arms_left,arms_right,forearms_left,forearms_right) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms,x.shoulders,x.neck,x.calves,x.forearms,x.thighs_left,x.thighs_right,x.calves_left,x.calves_right,x.arms_left,x.arms_right,x.forearms_left,x.forearms_right))
-    if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
-    return {"id":i}
+    measurement_day=x.day or kyiv_today()
+    if measurement_day>kyiv_today(): raise HTTPException(400,"Майбутню дату для замірів вказувати не можна")
+    vals=measurement_values(x)
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms,shoulders,neck,calves,forearms,thighs_left,thighs_right,calves_left,calves_right,arms_left,arms_right,forearms_left,forearms_right) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+          (x.client_id,str(measurement_day))+vals)
+    refresh_client_weight_from_measurements(x.client_id)
+    return {"id":i,"day":str(measurement_day)}
+
+@app.patch("/api/measurements/{mid}")
+def edit_measurement(mid:int,x:MeasureIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,x.client_id)
+    require_active_client(x.client_id,'measurements')
+    old=one("SELECT id,client_id FROM measurements WHERE id=?",(mid,))
+    if not old: raise HTTPException(404,"Замір не знайдено")
+    if old["client_id"]!=x.client_id: raise HTTPException(403,"Немає доступу до цього заміру")
+    measurement_day=x.day or kyiv_today()
+    if measurement_day>kyiv_today(): raise HTTPException(400,"Майбутню дату для замірів вказувати не можна")
+    vals=measurement_values(x)
+    run("""UPDATE measurements SET day=?,weight=?,waist=?,chest=?,hips=?,thighs=?,arms=?,shoulders=?,neck=?,calves=?,forearms=?,
+           thighs_left=?,thighs_right=?,calves_left=?,calves_right=?,arms_left=?,arms_right=?,forearms_left=?,forearms_right=?
+           WHERE id=?""",(str(measurement_day),)+vals+(mid,))
+    refresh_client_weight_from_measurements(x.client_id)
+    return {"ok":True,"id":mid,"day":str(measurement_day)}
+
+@app.delete("/api/measurements/{mid}")
+def delete_measurement(mid:int,client_id:int,user:AuthUser=Depends(require_client)):
+    authorize_client(user,client_id)
+    require_active_client(client_id,'measurements')
+    old=one("SELECT id,client_id FROM measurements WHERE id=?",(mid,))
+    if not old: raise HTTPException(404,"Замір не знайдено")
+    if old["client_id"]!=client_id: raise HTTPException(403,"Немає доступу до цього заміру")
+    run("DELETE FROM measurements WHERE id=?",(mid,))
+    refresh_client_weight_from_measurements(client_id)
+    return {"ok":True}
 
 @app.put("/api/comments/{comment_id}")
 def edit_comment(comment_id:int,x:CommentIn,user:AuthUser=Depends(current_user)):
