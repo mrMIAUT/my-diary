@@ -480,7 +480,7 @@ function clientInitials(c=(window.currentClientData||{}).client||{}){
 function clientAvatarHTML(cid,compact=false){
  let c=(window.currentClientData||{}).client||{},photo=String(c.avatar||'').trim();
  let state=photo?'has-photo':'is-placeholder';
- let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="">':'<span>'+esc(clientInitials(c))+'</span>';
+ let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="">':'<span class="avatar-person" aria-hidden="true"></span>';
  return '<button class="client-avatar '+state+' '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль">'+inner+'</button>';
 }
 
