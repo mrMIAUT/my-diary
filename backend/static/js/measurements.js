@@ -98,24 +98,25 @@ function measurementMetricCards(last,prev){
  return '<div class="measurement-metric-grid">'+html+'</div>';
 }
 
-function measurementFormHTML(cid,early=false){
+function measurementFormHTML(cid,early=false,existing=null){
+ const isEdit=!!existing,mid=existing?.id||0,day=existing?.day||isoToday();
  const single=[
-  ['mWeight','Вага, кг','89'],['mShoulders','Плечі, см','118'],['mNeck','Шия, см','39'],
-  ['mChest','Груди, см','108'],['mWaist','Талія, см','82'],['mHips','Таз, см','98']
+  ['mWeight','Вага, кг','89','weight'],['mShoulders','Плечі, см','118','shoulders'],['mNeck','Шия, см','39','neck'],
+  ['mChest','Груди, см','108','chest'],['mWaist','Талія, см','82','waist'],['mHips','Таз, см','98','hips']
  ];
  const pairs=[
-  ['Стегна','mThighsRight','mThighsLeft','60'],
-  ['Гомілки','mCalvesRight','mCalvesLeft','39'],
-  ['Руки','mArmsRight','mArmsLeft','39'],
-  ['Передпліччя','mForearmsRight','mForearmsLeft','31']
+  ['Стегна','mThighsRight','mThighsLeft','60','thighs_right','thighs_left'],
+  ['Гомілки','mCalvesRight','mCalvesLeft','39','calves_right','calves_left'],
+  ['Руки','mArmsRight','mArmsLeft','39','arms_right','arms_left'],
+  ['Передпліччя','mForearmsRight','mForearmsLeft','31','forearms_right','forearms_left']
  ];
- let singleHtml=single.map(([id,label,ph])=>'<div><label>'+label+'</label><input id="'+id+'" type="number" step="0.1" placeholder="Напр. '+ph+'"></div>').join('');
- let pairHtml=pairs.map(([label,rid,lid,ph])=>'<div class="measurement-pair-group"><div class="measurement-pair-title">'+label+'</div><div class="measurement-pair-inputs"><label><span>Права</span><input id="'+rid+'" type="number" step="0.1" placeholder="'+ph+'"></label><label><span>Ліва</span><input id="'+lid+'" type="number" step="0.1" placeholder="'+ph+'"></label></div></div>').join('');
- return '<div class="measurement-form '+(early?'early':'')+'"><div class="measurement-tip"><strong>Як робити заміри</strong><span>Вранці, натщесерце та в однакових умовах. Бажано — раз на 30 днів.</span></div><div class="measurement-form-section"><h3>Основні заміри</h3><div class="measure-grid measurement-input-grid">'+singleHtml+'</div></div><div class="measurement-form-section"><h3>Парні заміри</h3><p class="muted">Записуй праву та ліву сторону окремо — так легше бачити асиметрію.</p><div class="measurement-pair-list">'+pairHtml+'</div></div><div class="measurement-form-actions"><button onclick="saveMeasurement('+cid+',event)">Зберегти заміри</button>'+(early?'<button class="dark" onclick="document.getElementById(\'earlyMeasurementForm\').classList.add(\'hidden\')">Скасувати</button>':'')+'</div></div>';
+ let singleHtml=single.map(([id,label,ph,key])=>'<div><label>'+label+'</label><input id="'+id+'" type="number" step="0.1" placeholder="Напр. '+ph+'" value="'+esc(existing?.[key]||'')+'"></div>').join('');
+ let pairHtml=pairs.map(([label,rid,lid,ph,rkey,lkey])=>'<div class="measurement-pair-group"><div class="measurement-pair-title">'+label+'</div><div class="measurement-pair-inputs"><label><span>Права</span><input id="'+rid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[rkey]||'')+'"></label><label><span>Ліва</span><input id="'+lid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[lkey]||'')+'"></label></div></div>').join('');
+ return '<div class="measurement-form '+(early?'early':'')+'"><div class="measurement-tip"><strong>'+(isEdit?'Редагування замірів':'Як робити заміри')+'</strong><span>'+(isEdit?'Зміни значення або дату та збережи.':'Вранці, натщесерце та в однакових умовах. Бажано — раз на 30 днів.')+'</span></div><div class="measurement-date-row"><label>Дата замірів</label><input id="mDay" type="date" max="'+isoToday()+'" value="'+esc(day)+'"></div><div class="measurement-form-section"><h3>Основні заміри</h3><div class="measure-grid measurement-input-grid">'+singleHtml+'</div></div><div class="measurement-form-section"><h3>Парні заміри</h3><p class="muted">Записуй праву та ліву сторону окремо — так легше бачити асиметрію.</p><div class="measurement-pair-list">'+pairHtml+'</div></div><div class="measurement-form-actions"><button onclick="saveMeasurement('+cid+',event,'+mid+')">'+(isEdit?'Зберегти зміни':'Зберегти заміри')+'</button>'+(isEdit?'<button class="dark" onclick="measurementEditModal.remove()">Скасувати</button>':early?'<button class="dark" onclick="document.getElementById(\'earlyMeasurementForm\').classList.add(\'hidden\')">Скасувати</button>':'')+'</div></div>';
 }
 
 function measurementHistoryCard(x,prev,cid=null){
- let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canDelete=ownerId>0&&session&&session.role==='client'&&x.id;
+ let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canEdit=ownerId>0&&session&&session.role==='client'&&x.id;
  let basics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
  let basicHtml=basics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{
   let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;
@@ -128,7 +129,7 @@ function measurementHistoryCard(x,prev,cid=null){
   }
   return '<div class="measurement-history-pair"><div class="measurement-history-pair-title">'+p.label+'</div><div class="measurement-history-legacy">'+fmtProgress(cur.legacy)+' см <small>старий формат</small></div></div>';
  }).join('');
- return '<div class="measurement-history-card redesigned-history"><div class="measurement-history-head"><div><span class="measurement-history-caption">Контрольна точка</span><strong>'+formatProgressDate(x.day)+'</strong></div>'+(canDelete?'<button type="button" class="measurement-delete" aria-label="Видалити замір" title="Видалити замір" data-day="'+esc(x.day)+'" onclick="deleteMeasurement('+ownerId+','+(+x.id)+',this.dataset.day)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>':'')+'</div>'+(basicHtml?'<div class="measurement-history-section"><h4>Основні</h4><div class="measurement-history-grid">'+basicHtml+'</div></div>':'')+(pairedHtml?'<div class="measurement-history-section"><h4>Права / ліва</h4><div class="measurement-history-pair-grid">'+pairedHtml+'</div></div>':'')+'</div>';
+ return '<div class="measurement-history-card redesigned-history"><div class="measurement-history-head"><div><span class="measurement-history-caption">Контрольна точка</span><strong>'+formatProgressDate(x.day)+'</strong></div>'+(canEdit?'<div class="measurement-history-actions"><button type="button" class="measurement-edit" aria-label="Редагувати замір" title="Редагувати замір" onclick="openMeasurementEditor('+ownerId+','+(+x.id)+')">✎</button><button type="button" class="measurement-delete" aria-label="Видалити замір" title="Видалити замір" data-day="'+esc(x.day)+'" onclick="deleteMeasurement('+ownerId+','+(+x.id)+',this.dataset.day)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></div>':'')+'</div>'+(basicHtml?'<div class="measurement-history-section"><h4>Основні</h4><div class="measurement-history-grid">'+basicHtml+'</div></div>':'')+(pairedHtml?'<div class="measurement-history-section"><h4>Права / ліва</h4><div class="measurement-history-pair-grid">'+pairedHtml+'</div></div>':'')+'</div>';
 }
 
 function clientMeasurementsHTML(d,cid){
@@ -142,7 +143,7 @@ function clientMeasurementsHTML(d,cid){
   ${due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
   ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev,d)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev,d)}</div>`:''}
   ${last&&prev?`<div class="card"><h2>Зміни з минулого разу</h2><p class="muted">Порівняно з ${formatProgressDate(prev.day)}</p>${measurementChangesHTML(last,prev)}</div>`:''}
-  ${last&&!due?`<div class="card measurement-early"><p class="muted">Не обов’язково чекати 30 днів, якщо тренер попросив зробити контрольні заміри раніше.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати замір раніше</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>`:''}
+  <div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>
   ${xs.length?`<div class="card"><button class="exercise-toggle" onclick="toggleCalendar('measurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="measurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div>`:''}
  </div>`;
 }
@@ -161,10 +162,16 @@ function measurementChangesHTML(a,b){
  return '<div class="measurement-changes">'+html+'</div>';
 }
 
-async function saveMeasurement(cid,ev=null){
+function openMeasurementEditor(cid,mid){
+ let d=window.currentClientData||{},x=(d.measurements||[]).find(v=>+v.id===+mid);if(!x)return;
+ document.getElementById('measurementEditModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="measurementEditModal" onclick="if(event.target===this)this.remove()"><div class="card measurement-edit-modal"><div class="between"><div><span class="measurement-history-caption">Редагування</span><h2 style="margin:3px 0 0">'+esc(formatProgressDate(x.day))+'</h2></div><button class="dark" onclick="measurementEditModal.remove()">✕</button></div>'+measurementFormHTML(cid,false,x)+'</div></div>');
+}
+
+async function saveMeasurement(cid,ev=null,mid=0){
  let btn=ev?.currentTarget||null;
  let body={
-  client_id:cid,weight:+mWeight.value||0,shoulders:+mShoulders.value||0,neck:+mNeck.value||0,
+  client_id:cid,day:mDay.value||isoToday(),weight:+mWeight.value||0,shoulders:+mShoulders.value||0,neck:+mNeck.value||0,
   chest:+mChest.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,
   thighs:0,calves:0,arms:0,forearms:0,
   thighs_right:+mThighsRight.value||0,thighs_left:+mThighsLeft.value||0,
@@ -172,16 +179,18 @@ async function saveMeasurement(cid,ev=null){
   arms_right:+mArmsRight.value||0,arms_left:+mArmsLeft.value||0,
   forearms_right:+mForearmsRight.value||0,forearms_left:+mForearmsLeft.value||0
  };
- if(!Object.entries(body).some(([k,v])=>k!=='client_id'&&v>0))return alert('Заповни хоча б один замір');
+ if(body.day>isoToday())return alert('Не можна додати заміри на майбутню дату');
+ if(!Object.entries(body).some(([k,v])=>!['client_id','day'].includes(k)&&v>0))return alert('Заповни хоча б один замір');
  if(btn?.disabled)return;
- if(btn){btn.disabled=true;btn.textContent='Зберігаємо…';btn.classList.add('measurement-saving')}
+ if(btn){btn.disabled=true;btn.textContent=mid?'Зберігаємо зміни…':'Зберігаємо…';btn.classList.add('measurement-saving')}
  try{
-  await api('/measurements',{method:'POST',body:JSON.stringify(body)});
-  if(btn){btn.textContent='✓ Замір збережено';btn.classList.add('measurement-saved')}
+  await api(mid?'/measurements/'+mid:'/measurements',{method:mid?'PATCH':'POST',body:JSON.stringify(body)});
+  if(btn){btn.textContent=mid?'✓ Зміни збережено':'✓ Замір збережено';btn.classList.add('measurement-saved')}
   let d=await loadClientData(cid);window.currentClientData=d;
-  setTimeout(()=>showClientSection('measurements'),250);
+  if(mid) document.getElementById('measurementEditModal')?.remove();
+  setTimeout(()=>showClientSection('measurements'),180);
  }catch(e){
-  if(btn){btn.disabled=false;btn.textContent='Зберегти заміри';btn.classList.remove('measurement-saving')}
+  if(btn){btn.disabled=false;btn.textContent=mid?'Зберегти зміни':'Зберегти заміри';btn.classList.remove('measurement-saving')}
   alert(e?.message||'Не вдалося зберегти заміри');
  }
 }
