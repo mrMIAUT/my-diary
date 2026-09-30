@@ -11,8 +11,9 @@ function redesignClientDelta(last,prev,key){
 function redesignWeekStartISO(){
   let d=new Date(),day=(d.getDay()+6)%7;
   d.setDate(d.getDate()-day);
-  d.setHours(0,0,0,0);
-  return d.toISOString().slice(0,10);
+  d.setHours(12,0,0,0);
+  let local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,10);
 }
 
 function redesignCurrentWeekCheckin(d){
