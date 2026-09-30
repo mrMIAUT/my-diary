@@ -478,8 +478,9 @@ function clientInitials(c=(window.currentClientData||{}).client||{}){
  return initials||'ЄП';
 }
 function clientAvatarHTML(cid,compact=false){
- let c=(window.currentClientData||{}).client||{};
- return '<button class="client-avatar '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль"><span>'+esc(clientInitials(c))+'</span></button>';
+ let c=(window.currentClientData||{}).client||{},photo=String(c.avatar||'').trim();
+ let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="">':'<span>'+esc(clientInitials(c))+'</span>';
+ return '<button class="client-avatar '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль">'+inner+'</button>';
 }
 
 function clientNavGroup(view=currentClientView){
@@ -508,8 +509,8 @@ function shell(content){
    document.body.classList.add('eplan-redesign','client-ui');
    let isHome=clientNavGroup()==='home';
    let top=isHome
-    ?`<div class="client-top"><div class="client-top-left">${clientAvatarHTML(session.client_id)}<div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
-    :`<div class="client-top client-top-compact"><div class="client-top-left">${clientAvatarHTML(session.client_id,true)}</div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
+    ?`<div class="client-top"><div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div><div class="client-top-actions">${clientAvatarHTML(session.client_id)}<button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
+    :`<div class="client-top client-top-compact"><div></div><div class="client-top-actions">${clientAvatarHTML(session.client_id,true)}<button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
    return `<div class="wrap client-shell">${top}${content}${clientBottomNavHTML()}</div>`;
  }
  document.body.classList.remove('eplan-redesign','client-ui');
