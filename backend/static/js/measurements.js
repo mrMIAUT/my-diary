@@ -11,6 +11,33 @@ function measurementDaysLeft(lastDay){
  return Math.ceil((next-new Date())/86400000);
 }
 
+function measurementVisualIcon(key){
+ let highlight={
+  waist:'<path class="hot" d="M13 12h6"/>',
+  chest:'<path class="hot" d="M12 8.5h8"/>',
+  hips:'<path class="hot" d="M12.5 15.5h7"/>',
+  thighs:'<path class="hot" d="M13.5 18.5h2M17.5 18.5h2"/>',
+  arms:'<path class="hot" d="M8.5 10.5l2 3M21.5 10.5l-2 3"/>',
+  weight:'<path class="hot" d="M11 20h10"/>'
+ }[key]||'';
+ return '<svg class="measurement-body-icon" viewBox="0 0 30 30" aria-hidden="true"><circle cx="16" cy="5" r="2.3"/><path d="M12.5 8.5c1.6-1 5.4-1 7 0l1.7 6-1.7 8M12.5 8.5l-1.7 6 1.7 8M12.5 11h7M14 22.5l-1 4M18 22.5l1 4M10.8 14.5l-2.4 5M21.2 14.5l2.4 5"/>'+highlight+'</svg>';
+}
+
+function measurementVisualCards(last,prev){
+ let metrics=[['waist','Талія','см'],['chest','Груди','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см']];
+ let cards=metrics.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
+   let v=+last[k],pv=+prev?.[k],delta=pv>0?v-pv:null;
+   return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k)+'<span>'+n+'</span></div><strong>'+fmtProgress(v)+' <small>'+u+'</small></strong>'+(delta===null?'<em>Без порівняння</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
+ }).join('');
+ return '<div class="measurement-places-grid">'+cards+'</div>';
+}
+
+function measurementWeightVisual(last,prev){
+ if(!(last&&+last.weight>0))return '';
+ let delta=+prev?.weight>0?(+last.weight-+prev.weight):null;
+ return '<div class="measurement-weight-visual"><div class="measurement-place-top">'+measurementVisualIcon('weight')+'<span>Вага</span></div><div><strong>'+fmtProgress(last.weight)+' <small>кг</small></strong>'+(delta===null?'<em>Без порівняння</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' кг</em>')+'</div></div>';
+}
+
 function measurementMetricCards(last,prev){
  let metrics=[['weight','Вага','кг'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['arms','Руки','см'],['chest','Груди','см']];
  return `<div class="measurement-metric-grid">${metrics.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
@@ -47,7 +74,7 @@ function clientMeasurementsHTML(d,cid){
    ${due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
   </div>
   ${due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
-  ${last?`<div class="card"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementMetricCards(last,prev)}</div>`:''}
+  ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev)}</div>`:''}
   ${last&&prev?`<div class="card"><h2>Зміни з минулого разу</h2><p class="muted">Порівняно з ${formatProgressDate(prev.day)}</p>${measurementChangesHTML(last,prev)}</div>`:''}
   ${last&&!due?`<div class="card measurement-early"><p class="muted">Не обов’язково чекати 30 днів, якщо тренер попросив зробити контрольні заміри раніше.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати замір раніше</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>`:''}
   ${xs.length?`<div class="card"><button class="exercise-toggle" onclick="toggleCalendar('measurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="measurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div>`:''}
