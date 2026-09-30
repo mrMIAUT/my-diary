@@ -8,16 +8,101 @@ function redesignMoreItem(icon,title,subtitle,action,tone='blue'){
   +'</button>';
 }
 
+function achievementWeekKey(day){
+  let d=new Date(day+'T12:00:00');if(Number.isNaN(d.getTime()))return '';
+  let wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);
+  return d.toISOString().slice(0,10);
+}
+
+function achievementWeekStreak(sessions){
+  let weeks=[...new Set(sessions.map(x=>sessionDay(x)).filter(Boolean).map(achievementWeekKey))].sort();
+  if(!weeks.length)return 0;
+  let cur=new Date(),wd=(cur.getDay()+6)%7;cur.setDate(cur.getDate()-wd);cur.setHours(12,0,0,0);
+  let currentKey=cur.toISOString().slice(0,10);
+  let last=weeks[weeks.length-1];
+  if(last!==currentKey){
+    cur.setDate(cur.getDate()-7);
+    if(last!==cur.toISOString().slice(0,10))return 0;
+  }
+  let streak=0,cursor=new Date(last+'T12:00:00');
+  let set=new Set(weeks);
+  while(set.has(cursor.toISOString().slice(0,10))){
+    streak++;cursor.setDate(cursor.getDate()-7);
+  }
+  return streak;
+}
+
+function achievementHeatmapHTML(sessions){
+  let active=new Set(sessions.map(x=>sessionDay(x)).filter(Boolean));
+  let today=new Date(),cells=[];
+  today.setHours(12,0,0,0);
+  for(let i=55;i>=0;i--){
+    let d=new Date(today);d.setDate(today.getDate()-i);
+    let day=d.toISOString().slice(0,10);
+    cells.push('<i class="'+(active.has(day)?'active':'')+'" title="'+esc(formatProgressDate(day))+'"></i>');
+  }
+  return '<div class="achievement-heatmap">'+cells.join('')+'</div>';
+}
+
+function achievementRecords(d){
+  let sets=(d.result_sets||[]).filter(x=>x.day&&(+x.weight||0)>0);
+  let by={};
+  sets.forEach(x=>{
+    let name=String(x.exercise||'Вправа').trim()||'Вправа';
+    if(!by[name]||(+x.weight||0)>(+by[name].weight||0))by[name]=x;
+  });
+  return Object.values(by).sort((a,b)=>(+b.weight||0)-(+a.weight||0)).slice(0,5);
+}
+
+function achievementMonthlyPRs(d){
+  let sets=(d.result_sets||[]).filter(x=>x.day&&(+x.weight||0)>0).slice().sort((a,b)=>a.day.localeCompare(b.day));
+  let best={},months={};
+  sets.forEach(x=>{
+    let key=String(x.exercise||'Вправа'),w=+x.weight||0;
+    if(w>(best[key]||0)){
+      best[key]=w;
+      let m=x.day.slice(0,7);
+      months[m]=(months[m]||0)+1;
+    }
+  });
+  return months;
+}
+
 function redesignAchievementsHTML(d){
   let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished');
-  let measures=(d.measurements||[]).filter(x=>x.day);
-  let nutrition=(d.nutrition||[]).filter(x=>x.day);
-  let cards=[
-    ['★',sessions.length+' тренувань','Завершено всього'],
-    ['◎',measures.length+' замірів','Додано до прогресу'],
-    ['✓',nutrition.length+' днів','Харчування заповнено']
+  let streak=achievementWeekStreak(sessions);
+  let records=achievementRecords(d);
+  let monthly=achievementMonthlyPRs(d);
+  let monthKeys=Object.keys(monthly).sort().slice(-6);
+  let maxPR=Math.max(1,...monthKeys.map(m=>monthly[m]||0));
+  let milestones=[
+    {n:1,label:'Перше тренування',done:sessions.length>=1},
+    {n:10,label:'10 тренувань',done:sessions.length>=10},
+    {n:25,label:'25 тренувань',done:sessions.length>=25},
+    {n:50,label:'50 тренувань',done:sessions.length>=50},
+    {n:4,label:'4 тижні поспіль',done:streak>=4}
   ];
-  return '<div class="redesign-achievements-grid">'+cards.map(x=>'<div><span>'+x[0]+'</span><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></div>').join('')+'</div>';
+  let reached=milestones.filter(x=>x.done).length;
+
+  return '<div class="redesign-achievements-page">'
+    +'<div class="achievement-streak-card">'
+      +'<div><span>Твоя серія</span><strong>'+streak+' '+ukDays(streak).replace('день','тиждень').replace('дні','тижні').replace('днів','тижнів')+'</strong><small>Тижнів поспіль з тренуваннями</small></div>'
+      +'<span class="achievement-streak-icon">🔥</span>'
+    +'</div>'
+    +'<div class="card achievement-activity-card"><div class="between"><div><span class="achievement-kicker">Активність</span><strong>Останні 8 тижнів</strong></div><span class="achievement-count">'+sessions.length+' всього</span></div>'+achievementHeatmapHTML(sessions)+'</div>'
+    +'<div class="achievement-section-head"><h2>Особисті рекорди</h2><span>'+records.length+'</span></div>'
+    +(records.length?'<div class="achievement-record-list">'+records.map((x,i)=>'<div class="achievement-record-row"><span class="record-rank">'+(i+1)+'</span><div><strong>'+esc(x.exercise||'Вправа')+'</strong><small>'+esc(formatProgressDate(x.day))+'</small></div><b>'+fmtProgress(+x.weight||0)+' кг</b></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Рекордів ще немає</strong><span>Після тренувань з вагами вони з’являться тут автоматично.</span></div>')
+    +'<div class="card achievement-pr-card"><div class="achievement-section-head inside"><h2>Нові рекорди</h2><span>за місяцями</span></div>'
+      +(monthKeys.length?'<div class="achievement-pr-chart">'+monthKeys.map(m=>'<div><i style="height:'+Math.max(12,Math.round((monthly[m]/maxPR)*72))+'px"></i><b>'+monthly[m]+'</b><small>'+esc(new Date(m+'-01T12:00:00').toLocaleDateString('uk-UA',{month:'short'}))+'</small></div>').join('')+'</div>':'<div class="redesign-progress-empty-chart">Нові PR з’являться після прогресії робочих ваг.</div>')
+    +'</div>'
+    +'<div class="achievement-section-head"><h2>Етапи</h2><span>'+reached+' / '+milestones.length+'</span></div>'
+    +'<div class="achievement-milestones">'+milestones.map(x=>'<div class="'+(x.done?'done':'')+'"><span>'+ (x.done?'✓':'○') +'</span><strong>'+esc(x.label)+'</strong></div>').join('')+'</div>'
+    +'<div class="achievement-total-grid">'
+      +'<div><strong>'+sessions.length+'</strong><small>тренувань</small></div>'
+      +'<div><strong>'+streak+'</strong><small>тижнів серії</small></div>'
+      +'<div><strong>'+records.length+'</strong><small>особистих рекордів</small></div>'
+    +'</div>'
+  +'</div>';
 }
 
 window.showClientMore = function(cid){
