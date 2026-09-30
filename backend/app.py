@@ -93,8 +93,7 @@ class ApiBodyLimit:
         path=scope.get("path","")
         method=scope.get("method","")
         parts=path.rstrip("/").split("/")
-        image_upload=((len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot") or
-                      (len(parts)==5 and parts[1:3]==["api","client"] and parts[4]=="avatar"))
+        image_upload=(len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot")
         if not (scope.get("type")=="http" and path.startswith("/api/") and
                 method not in ("GET","HEAD","OPTIONS") and not image_upload):
             return await self.app(scope,receive,send)
@@ -131,8 +130,7 @@ class ScreenshotBodyLimit:
     def __init__(self,app):self.app=app
     async def __call__(self,scope,receive,send):
         parts=scope.get("path","").rstrip("/").split("/")
-        image_upload=((len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot") or
-                      (len(parts)==5 and parts[1:3]==["api","client"] and parts[4]=="avatar"))
+        image_upload=(len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot")
         if not (scope["type"]=="http" and scope["method"]=="POST" and image_upload):
             return await self.app(scope,receive,send)
         error=JSONResponse({"detail":"Зображення завелике. Максимум 10 MiB."},status_code=413)
@@ -1134,11 +1132,7 @@ def private_upload(filename:str,request:Request,user:AuthUser=Depends(current_us
     if len(filename)>255 or not filename or Path(filename).name!=filename or "\\" in filename:
         raise HTTPException(404,"Файл не знайдено")
     rec=one("SELECT client_id FROM nutrition WHERE screenshot=?",(filename,))
-    upload_kind="nutrition"
-    if not rec:
-        avatar_owner=one("SELECT id AS client_id FROM clients WHERE avatar=?",(filename,))
-        if not avatar_owner:raise HTTPException(404,"Файл не знайдено")
-        rec=avatar_owner;upload_kind="avatar"
+    if not rec:raise HTTPException(404,"Файл не знайдено")
     authorize_client(user,rec["client_id"])
     file=UPLOADS/filename
     try:
@@ -1155,7 +1149,7 @@ def private_upload(filename:str,request:Request,user:AuthUser=Depends(current_us
     content,media_type,extension=normalize_screenshot(data)
     return Response(content=b"" if request.method=="HEAD" else content,media_type=media_type,headers={
         "Content-Length":str(len(content)),"X-Content-Type-Options":"nosniff",
-        "Content-Disposition":'inline; filename="'+upload_kind+extension+'"',
+        "Content-Disposition":'inline; filename="nutrition'+extension+'"',
         "Cache-Control":"private, no-store"
     })
 
@@ -1446,44 +1440,6 @@ def update_client_profile(cid:int,x:ClientProfileIn,user:AuthUser=Depends(curren
     display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
     run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,goal=?,contraindications=?,injuries=?,contact=?,instagram=?,telegram=?,tiktok=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.goal.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),display,display,cid))
     return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
-
-@app.post("/api/client/{cid}/avatar")
-def upload_client_avatar(cid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_client)):
-    authorize_client(user,cid)
-    require_active_client(cid)
-    consume_rate_limit("upload.actor",f"{user.role}:{user.user_id}")
-    content_type=(file.content_type or "").split(";",1)[0].strip().lower()
-    content,media_type,extension=normalize_avatar(read_screenshot_bytes(file.file),content_type)
-    name=None;old_name="";committed=False
-    try:
-        with con() as c:
-            rec=c.execute("SELECT id,avatar FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone()
-            if not rec:raise HTTPException(404,"Клієнта не знайдено")
-            authorize_client(user,rec["id"])
-            old_name=str(rec.get("avatar") or "")
-            for attempt in range(8):
-                candidate="avatar_"+secrets.token_hex(24)+extension
-                try:fd=os.open(UPLOADS/candidate,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-                except FileExistsError:continue
-                name=candidate
-                break
-            else:raise OSError("Unable to reserve avatar name")
-            with os.fdopen(fd,"wb") as target:
-                if target.write(content)!=len(content):raise OSError("Incomplete avatar write")
-                target.flush();os.fsync(target.fileno())
-            c.execute("UPDATE clients SET avatar=%s WHERE id=%s",(name,cid))
-        committed=True
-        if old_name.startswith("avatar_") and old_name!=name:
-            try:(UPLOADS/old_name).unlink(missing_ok=True)
-            except OSError as e:safe_log("h04_cleanup_failed",logging.ERROR,error_type=type(e).__name__)
-        return {"avatar":name,"url":"/uploads/"+name}
-    except HTTPException:raise
-    except Exception:
-        raise HTTPException(500,"Не вдалося зберегти фото профілю. Спробуйте ще раз.") from None
-    finally:
-        if name and not committed:
-            try:(UPLOADS/name).unlink(missing_ok=True)
-            except OSError as e:safe_log("h04_cleanup_failed",logging.ERROR,error_type=type(e).__name__)
 
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
