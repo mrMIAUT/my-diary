@@ -478,10 +478,9 @@ function clientInitials(c=(window.currentClientData||{}).client||{}){
  return initials||'ЄП';
 }
 function clientAvatarHTML(cid,compact=false){
- let c=(window.currentClientData||{}).client||{},photo=String(c.avatar||'').trim();
- let state=photo?'has-photo':'is-placeholder';
- let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="">':'<span class="avatar-initials">'+esc(clientInitials(c))+'</span>';
- return '<button class="client-avatar '+state+' '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль">'+inner+'</button>';
+ let c=(window.currentClientData||{}).client||{};
+ let inner='<span class="avatar-initials">'+esc(clientInitials(c))+'</span>';
+ return '<button class="client-avatar is-placeholder '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль">'+inner+'</button>';
 }
 
 function clientNavGroup(view=currentClientView){
@@ -514,10 +513,13 @@ function shell(content){
     :`<div class="client-top client-top-compact"><div></div><div class="client-top-actions">${clientAvatarHTML(session.client_id,true)}<button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
    return `<div class="wrap client-shell">${top}${content}${clientBottomNavHTML()}</div>`;
  }
- document.body.classList.remove('eplan-redesign','client-ui');
- let right='';
- if(session&&session.role==='trainer'){right=`<button id="trainerGlobalNotifyBtn" class="dark notify-btn" onclick="showTrainerNotifications()">${uiIcon('bell')} <span class="notify-label">Сповіщення</span></button>`}
- return `<div class="wrap"><div class="top"><div class="top-left"><button class="side-menu-btn" onclick="openSideMenu()" aria-label="Меню">${uiIcon('menu')}</button><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div></div><div class="top-right">${right}</div></div>${content}</div>`
+ if(session&&session.role==='trainer'){
+   document.body.classList.add('eplan-redesign','trainer-ui');
+   document.body.classList.remove('client-ui');
+   return `<div class="wrap trainer-shell"><div class="trainer-top"><div><strong>Вітаємо, Тренере! 👋</strong><span>${esc(kyivTodayLong())}</span></div><button id="trainerGlobalNotifyBtn" class="notify-btn" onclick="showTrainerNotifications()" aria-label="Сповіщення">${uiIcon('bell')}</button></div>${content}</div>`;
+ }
+ document.body.classList.remove('eplan-redesign','client-ui','trainer-ui');
+ return `<div class="wrap">${content}</div>`
 }
 
 function clientAccess(c=(window.currentClientData||{}).client||{}){return c.access||{plan_code:'coaching',plan_name:'Онлайн-ведення',effective_plan:'coaching',features:{workouts:true,nutrition:true,measurements:true,cardio:true,trainer_review:true,meal_plan:true},expired:false,manually_frozen:false,days_left:null,access_until:''}}
