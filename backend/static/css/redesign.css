@@ -2641,3 +2641,56 @@ body.eplan-redesign.client-ui .measurement-weight-visual .measurement-zone-icon{
   stroke:#71829a;
   background:#f1f5fa;
 }
+
+
+/* Generated male/female measurement artwork sprites */
+body.eplan-redesign.client-ui .measurement-generated-art{
+  display:block;
+  flex:0 0 auto;
+  width:74px;
+  height:78px;
+  border-radius:14px;
+  background-repeat:no-repeat;
+  background-size:500% 200%;
+  background-position:var(--mx) var(--my);
+  background-color:#fff;
+  box-shadow:0 4px 14px rgba(44,67,99,.05);
+}
+body.eplan-redesign.client-ui .measurement-generated-art.sex-male{
+  background-image:url('/static/img/measurements/male-sprite.webp');
+}
+body.eplan-redesign.client-ui .measurement-generated-art.sex-female{
+  background-image:url('/static/img/measurements/female-sprite.webp');
+}
+body.eplan-redesign.client-ui .measurement-place-card{
+  min-height:176px;
+}
+body.eplan-redesign.client-ui .measurement-place-top{
+  align-items:center;
+}
+body.eplan-redesign.client-ui .measurement-place-top>span{
+  font-size:13px;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual .measurement-generated-art{
+  width:82px;
+  height:82px;
+}
+body.eplan-redesign.client-ui .measurement-input-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+body.eplan-redesign.client-ui .measurement-input-grid>div{
+  min-width:0;
+}
+body.eplan-redesign.client-ui .measurement-input-grid input{
+  width:100%;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .measurement-generated-art{
+    width:66px;
+    height:70px;
+  }
+  body.eplan-redesign.client-ui .measurement-place-card{
+    min-height:164px;
+  }
+}
