@@ -3399,3 +3399,20 @@ body.eplan-redesign.client-ui .client-bottom-nav{
 body.eplan-redesign.client-ui .client-bottom-nav::before{
   background:rgba(255,255,255,.015)!important;
 }
+
+
+/* Keep Weight KPI typography aligned with the selectable measurement KPI */
+body.eplan-redesign.client-ui .redesign-progress-kpi-weight .redesign-progress-kpi-labelrow-static{
+  justify-content:flex-start!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-weight>strong,
+body.eplan-redesign.client-ui .redesign-progress-kpi-select>strong{
+  font-size:21px!important;
+  line-height:1.1!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-weight>.neutral-change,
+body.eplan-redesign.client-ui .redesign-progress-kpi-select>.neutral-change{
+  font-size:11px!important;
+  line-height:1.2!important;
+  margin-top:0!important;
+}
