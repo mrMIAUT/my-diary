@@ -5,15 +5,15 @@
 function measurementMetricConfig(){
  return [
   ['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],
-  ['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['calves','Гомілки','см'],
+  ['waist','Талія','см'],['hips','Стегна','см'],['thighs','Стегна','см'],['calves','Гомілки','см'],
   ['arms','Руки','см'],['forearms','Передпліччя','см']
  ];
 }
 function measurementPairConfig(){
  return {
-  thighs:{label:'Стегна',left:'thighs_left',right:'thighs_right',legacy:'thighs'},
-  calves:{label:'Гомілки',left:'calves_left',right:'calves_right',legacy:'calves'},
-  arms:{label:'Руки',left:'arms_left',right:'arms_right',legacy:'arms'},
+  thighs:{label:'Стегно',left:'thighs_left',right:'thighs_right',legacy:'thighs'},
+  calves:{label:'Гомілка',left:'calves_left',right:'calves_right',legacy:'calves'},
+  arms:{label:'Рука',left:'arms_left',right:'arms_right',legacy:'arms'},
   forearms:{label:'Передпліччя',left:'forearms_left',right:'forearms_right',legacy:'forearms'}
  };
 }
@@ -67,10 +67,11 @@ function measurementVisualCards(last,prev,d=window.currentClientData||{}){
   if(pair){
    let cur=measurementPairValues(last,k),old=measurementPairValues(prev,k);
    let hasPair=cur.left>0||cur.right>0;
+   let sideNames=k==='thighs'?['Праве','Ліве']:k==='forearms'?['Праве','Ліве']:['Права','Ліва'];
    let pairHtml=hasPair
-    ?'<div class="measurement-side-values">'+(cur.right?'<span><small>Права</small><b>'+fmtProgress(cur.right)+' '+u+'</b></span>':'')+(cur.left?'<span><small>Ліва</small><b>'+fmtProgress(cur.left)+' '+u+'</b></span>':'')+'</div>'
+    ?'<div class="measurement-side-values">'+(cur.right?'<span><small>'+sideNames[0]+'</small><b>'+fmtProgress(cur.right)+' '+u+'</b></span>':'')+(cur.left?'<span><small>'+sideNames[1]+'</small><b>'+fmtProgress(cur.left)+' '+u+'</b></span>':'')+'</div>'
     :(cur.legacy?'<strong>'+fmtProgress(cur.legacy)+' <small>'+u+'</small></strong>':'<strong>—</strong>');
-   let note=hasPair?'<em>Права / ліва окремо</em>':cur.legacy?'<em>Старий замір</em>':'<em>Ще не додано</em>';
+   let note=!hasPair?(cur.legacy?'<em>Старий замір</em>':'<em>Ще не додано</em>'):'';
    return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div>'+pairHtml+note+'</div>';
   }
   let v=+last?.[k]||0,pv=+prev?.[k]||0,delta=(v>0&&pv>0)?v-pv:null;
@@ -86,7 +87,7 @@ function measurementWeightVisual(last,prev,d=window.currentClientData||{}){
 
 
 function measurementMetricCards(last,prev){
- let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
+ let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let html=single.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
   let v=+last[k],pv=+prev?.[k],delta=pv>0?v-pv:null;
   return '<div class="measurement-metric"><span>'+n+'</span><strong>'+fmtProgress(v)+' <small>'+u+'</small></strong>'+(delta===null?'<em>—</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
@@ -102,22 +103,23 @@ function measurementFormHTML(cid,early=false,existing=null){
  const isEdit=!!existing,mid=existing?.id||0,day=existing?.day||isoToday();
  const single=[
   ['mWeight','Вага, кг','89','weight'],['mShoulders','Плечі, см','118','shoulders'],['mNeck','Шия, см','39','neck'],
-  ['mChest','Груди, см','108','chest'],['mWaist','Талія, см','82','waist'],['mHips','Таз, см','98','hips']
+  ['mChest','Груди, см','108','chest'],['mWaist','Талія, см','82','waist'],['mHips','Стегна, см','98','hips']
  ];
  const pairs=[
-  ['Стегна','mThighsRight','mThighsLeft','60','thighs_right','thighs_left'],
-  ['Гомілки','mCalvesRight','mCalvesLeft','39','calves_right','calves_left'],
-  ['Руки','mArmsRight','mArmsLeft','39','arms_right','arms_left'],
+  ['Стегно','mThighsRight','mThighsLeft','60','thighs_right','thighs_left'],
+  ['Гомілка','mCalvesRight','mCalvesLeft','39','calves_right','calves_left'],
+  ['Рука','mArmsRight','mArmsLeft','39','arms_right','arms_left'],
   ['Передпліччя','mForearmsRight','mForearmsLeft','31','forearms_right','forearms_left']
  ];
  let singleHtml=single.map(([id,label,ph,key])=>'<div><label>'+label+'</label><input id="'+id+'" type="number" step="0.1" placeholder="Напр. '+ph+'" value="'+esc(existing?.[key]||'')+'"></div>').join('');
- let pairHtml=pairs.map(([label,rid,lid,ph,rkey,lkey])=>'<div class="measurement-pair-group"><div class="measurement-pair-title">'+label+'</div><div class="measurement-pair-inputs"><label><span>Права</span><input id="'+rid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[rkey]||'')+'"></label><label><span>Ліва</span><input id="'+lid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[lkey]||'')+'"></label></div></div>').join('');
+ let pairSideLabels=label=>label==='Стегно'?['Стегно праве','Стегно ліве']:label==='Рука'?['Рука права','Рука ліва']:label==='Гомілка'?['Гомілка права','Гомілка ліва']:['Передпліччя праве','Передпліччя ліве'];
+ let pairHtml=pairs.map(([label,rid,lid,ph,rkey,lkey])=>{let sides=pairSideLabels(label);return '<div class="measurement-pair-group"><div class="measurement-pair-title">'+label+'</div><div class="measurement-pair-inputs"><label><span>'+sides[0]+'</span><input id="'+rid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[rkey]||'')+'"></label><label><span>'+sides[1]+'</span><input id="'+lid+'" type="number" step="0.1" placeholder="'+ph+'" value="'+esc(existing?.[lkey]||'')+'"></label></div></div>'}).join('');
  return '<div class="measurement-form '+(early?'early':'')+'"><div class="measurement-tip"><strong>'+(isEdit?'Редагування замірів':'Як робити заміри')+'</strong><span>'+(isEdit?'Зміни значення або дату та збережи.':'Вранці, натщесерце та в однакових умовах. Бажано — раз на 30 днів.')+'</span></div><div class="measurement-date-row"><label>Дата замірів</label><input id="mDay" type="date" max="'+isoToday()+'" value="'+esc(day)+'"></div><div class="measurement-form-section"><h3>Основні заміри</h3><div class="measure-grid measurement-input-grid">'+singleHtml+'</div></div><div class="measurement-form-section"><h3>Парні заміри</h3><p class="muted">Записуй праву та ліву сторону окремо — так легше бачити асиметрію.</p><div class="measurement-pair-list">'+pairHtml+'</div></div><div class="measurement-form-actions"><button onclick="saveMeasurement('+cid+',event,'+mid+')">'+(isEdit?'Зберегти зміни':'Зберегти заміри')+'</button>'+(isEdit?'<button class="dark" onclick="measurementEditModal.remove()">Скасувати</button>':early?'<button class="dark" onclick="document.getElementById(\'earlyMeasurementForm\').classList.add(\'hidden\')">Скасувати</button>':'')+'</div></div>';
 }
 
 function measurementHistoryCard(x,prev,cid=null){
  let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canEdit=ownerId>0&&session&&session.role==='client'&&x.id;
- let basics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
+ let basics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let basicHtml=basics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{
   let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;
   return '<div class="measurement-history-metric"><span>'+n+'</span><strong>'+fmtProgress(x[k])+' '+u+'</strong>'+(d===null?'':'<small class="'+(d<0?'down':d>0?'up':'')+'">'+(d>0?'+':'')+fmtProgress(d)+' '+u+'</small>')+'</div>';
@@ -125,7 +127,8 @@ function measurementHistoryCard(x,prev,cid=null){
  let pairedHtml=Object.entries(measurementPairConfig()).map(([key,p])=>{
   let cur=measurementPairValues(x,key);if(!(cur.left||cur.right||cur.legacy))return '';
   if(cur.left||cur.right){
-   return '<div class="measurement-history-pair"><div class="measurement-history-pair-title">'+p.label+'</div><div class="measurement-history-pair-sides">'+(cur.right?'<span><small>Права</small><b>'+fmtProgress(cur.right)+' см</b></span>':'')+(cur.left?'<span><small>Ліва</small><b>'+fmtProgress(cur.left)+' см</b></span>':'')+'</div></div>';
+   let sideNames=key==='thighs'?['Стегно праве','Стегно ліве']:key==='arms'?['Рука права','Рука ліва']:key==='calves'?['Гомілка права','Гомілка ліва']:['Передпліччя праве','Передпліччя ліве'];
+   return '<div class="measurement-history-pair"><div class="measurement-history-pair-title">'+p.label+'</div><div class="measurement-history-pair-sides">'+(cur.right?'<span><small>'+sideNames[0]+'</small><b>'+fmtProgress(cur.right)+' см</b></span>':'')+(cur.left?'<span><small>'+sideNames[1]+'</small><b>'+fmtProgress(cur.left)+' см</b></span>':'')+'</div></div>';
   }
   return '<div class="measurement-history-pair"><div class="measurement-history-pair-title">'+p.label+'</div><div class="measurement-history-legacy">'+fmtProgress(cur.legacy)+' см <small>старий формат</small></div></div>';
  }).join('');
@@ -152,7 +155,7 @@ function ukDays(n){let x=Math.abs(n)%100,y=x%10;return x>10&&x<20?'днів':y==
 
 
 function measurementChangesHTML(a,b){
- let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
+ let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let html=single.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return '<div><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+u)+'</em></div>'}).join('');
  Object.entries(measurementPairConfig()).forEach(([key,p])=>{
   let cur=measurementPairValues(a,key),old=measurementPairValues(b,key);
