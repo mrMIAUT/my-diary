@@ -12,17 +12,17 @@ function measurementDaysLeft(lastDay){
 }
 
 function measurementVisualIcon(key){
- let icon='';
  if(key==='weight'){
-   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="4"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M12 10l2-2"/></svg>';
- }else if(key==='arms'){
-   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16c2-1 3-3 3-5V8l2 1 2-3 2 2-1 4c2 0 4 1 5 3 1 2 0 4-2 5H9c-2 0-3-1-3-4Z"/><path d="M10 13c2 0 3 1 4 3"/></svg>';
- }else if(key==='height'){
-   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 10h8M10 14l-1 6M14 14l1 6M4 4v16M2.5 6H5.5M2.5 18H5.5"/></svg>';
- }else{
-   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="M7 6v4M10 6v2M13 6v4M16 6v2M19 6v4"/><circle cx="8" cy="14" r="1.5"/></svg>';
+   return '<svg class="measurement-body-icon measurement-zone-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="9" width="32" height="30" rx="8"/><path d="M16 20a8 8 0 0 1 16 0"/><path d="M24 20l5-5"/><circle cx="24" cy="20" r="1.8"/></svg>';
  }
- return icon;
+ let zone={
+   waist:'<rect class="zone-hot" x="17" y="22" width="14" height="4" rx="2"/>',
+   chest:'<path class="zone-hot" d="M16 15c3-2 13-2 16 0l-2 6c-4-1-8-1-12 0Z"/>',
+   hips:'<path class="zone-hot" d="M17 27c2 2 12 2 14 0l-1.8 6H18.8Z"/>',
+   thighs:'<path class="zone-hot" d="M18.5 33h5l-1 9h-5ZM24.5 33h5l1 9h-5Z"/>',
+   arms:'<path class="zone-hot" d="M13 17l-5 11 4 2 5-10M35 17l5 11-4 2-5-10"/>'
+ }[key]||'';
+ return '<svg class="measurement-body-icon measurement-zone-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="7" r="4"/><path class="body-base" d="M18 13c3-2 9-2 12 0l4 9-4 11-1 11h-5l-1-11-1 11h-5l1-11-4-11Z"/><path class="body-base" d="M18 15l-6 14M30 15l6 14"/>'+zone+'</svg>';
 }
 
 function measurementVisualCards(last,prev){
