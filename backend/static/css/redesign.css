@@ -3311,3 +3311,20 @@ body.eplan-redesign.client-ui .client-bottom-nav::before{
     bottom:5px!important;
   }
 }
+
+
+/* Mobile vertical rhythm: secondary client sections sit closer to the top */
+@media(max-width:760px){
+  body.eplan-redesign.client-ui .redesign-training-page,
+  body.eplan-redesign.client-ui .redesign-progress-page,
+  body.eplan-redesign.client-ui .redesign-nutrition-page,
+  body.eplan-redesign.client-ui .redesign-more-page,
+  body.eplan-redesign.client-ui .redesign-more-subpage,
+  body.eplan-redesign.client-ui .redesign-bju-page{
+    margin-top:-10px;
+  }
+
+  body.eplan-redesign.client-ui .client-bottom-nav{
+    bottom:9px!important;
+  }
+}
