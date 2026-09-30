@@ -66,9 +66,37 @@ function clientProfileHTML(c){
  return `<div class="card"><div class="between"><div><h2>Мій кабінет</h2><p class="muted">Особисті дані та інформація, важлива для тренувань.</p></div><button class="dark" onclick="editClientProfile(${c.id})">Редагувати</button></div><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
 }
 
+function clientProfileAvatarHTML(c,cid){
+ let photo=String(c.avatar||'').trim();
+ let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span>'+esc(clientInitials(c))+'</span>';
+ return '<div class="client-profile-avatar-card">'
+   +'<button type="button" class="client-profile-avatar" onclick="document.getElementById(\'clientAvatarInput\')?.click()" aria-label="Змінити фото профілю">'+inner+'<span class="client-profile-avatar-edit">'+uiIcon('edit')+'</span></button>'
+   +'<div><strong>Фото профілю</strong><small>JPEG, PNG або WebP · до 10 МБ</small><button type="button" class="client-profile-avatar-change" onclick="document.getElementById(\'clientAvatarInput\')?.click()">Змінити фото</button></div>'
+   +'<input id="clientAvatarInput" class="client-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadClientAvatar('+cid+',this)">'
+ +'</div>';
+}
+
+async function uploadClientAvatar(cid,input){
+ let file=input?.files?.[0];if(!file)return;
+ if(file.size>10*1024*1024){alert('Фото завелике. Максимум 10 МБ.');input.value='';return}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('Підтримуються JPEG, PNG та WebP.');input.value='';return}
+ let fd=new FormData();fd.append('file',file,file.name||'avatar');
+ try{
+  let r=await eplanFetch(A+'/client/'+cid+'/avatar',{method:'POST',body:fd},30000);
+  let data;try{data=await r.json()}catch{}
+  if(!r.ok)throw new Error(friendlyApiError(r.status,data?.detail));
+  if(window.currentClientData?.client)window.currentClientData.client.avatar=data.avatar||'';
+  showClientProfile(cid);
+ }catch(e){
+  alert(e?.message||'Не вдалося завантажити фото профілю.');
+ }finally{
+  input.value='';
+ }
+}
+
 function showClientProfile(cid){
  let c=(window.currentClientData||{}).client||{};currentClientView='profile';
- app.innerHTML=shell(`<div class="client-section-page"><h1>Мій профіль</h1><div class="card"><p class="muted">Особисті дані та інформація, важлива для тренувань.</p><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div><button style="margin-top:20px" onclick="editClientProfile(${cid})">Редагувати анкету</button></div></div>`);
+ app.innerHTML=shell(`<div class="client-section-page"><h1>Мій профіль</h1>${clientProfileAvatarHTML(c,cid)}<div class="card"><p class="muted">Особисті дані та інформація, важлива для тренувань.</p><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div><button style="margin-top:20px" onclick="editClientProfile(${cid})">Редагувати анкету</button></div></div>`);
  history.pushState({eplanPage:'clientProfile',cid},'',location.href);
 }
 
