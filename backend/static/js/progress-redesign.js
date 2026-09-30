@@ -76,8 +76,19 @@ function redesignProgressTrainingHTML(d){
   if(!sessions.length)return '<div class="redesign-empty-panel"><strong>Ще немає завершених тренувань</strong><span>Після першого тренування тут з’явиться історія.</span></div>';
   return '<div class="redesign-progress-training-list">'+sessions.slice(0,12).map(function(s){
     let day=sessionDay(s),title=s.day_name||'Тренування';
-    return '<button onclick="showClientSection(\'history\')" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
+    return '<button onclick="openProgressTrainingHistory()" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
   }).join('')+'</div>';
+}
+
+function openProgressTrainingHistory(){
+ window.progressHistoryReturn=true;
+ showClientSection('history');
+}
+
+function returnFromProgressHistory(){
+ window.progressHistoryReturn=false;
+ window.clientProgressView='training';
+ showClientSection('progress');
 }
 
 window.clientProgressHTML = function(d){
