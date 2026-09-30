@@ -86,13 +86,17 @@ function measurementWeightVisual(last,prev,d=window.currentClientData||{}){
 
 
 function measurementMetricCards(last,prev){
- let metrics=measurementMetricConfig();
- return '<div class="measurement-metric-grid">'+metrics.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
+ let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
+ let html=single.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
   let v=+last[k],pv=+prev?.[k],delta=pv>0?v-pv:null;
   return '<div class="measurement-metric"><span>'+n+'</span><strong>'+fmtProgress(v)+' <small>'+u+'</small></strong>'+(delta===null?'<em>—</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
- }).join('')+'</div>';
+ }).join('');
+ Object.entries(measurementPairConfig()).forEach(([key,p])=>{
+  let cur=measurementPairValues(last,key);if(!(cur.left||cur.right||cur.legacy))return;
+  html+='<div class="measurement-metric paired"><span>'+p.label+'</span>'+(cur.right||cur.left?'<div class="measurement-metric-sides">'+(cur.right?'<b><small>Права</small>'+fmtProgress(cur.right)+' см</b>':'')+(cur.left?'<b><small>Ліва</small>'+fmtProgress(cur.left)+' см</b>':'')+'</div>':'<strong>'+fmtProgress(cur.legacy)+' <small>см</small></strong>')+'</div>';
+ });
+ return '<div class="measurement-metric-grid">'+html+'</div>';
 }
-
 
 function measurementFormHTML(cid,early=false){
  const single=[
@@ -147,10 +151,15 @@ function ukDays(n){let x=Math.abs(n)%100,y=x%10;return x>10&&x<20?'днів':y==
 
 
 function measurementChangesHTML(a,b){
- let metrics=measurementMetricConfig();
- return '<div class="measurement-changes">'+metrics.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return '<div><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+u)+'</em></div>'}).join('')+'</div>';
+ let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см']];
+ let html=single.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return '<div><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+u)+'</em></div>'}).join('');
+ Object.entries(measurementPairConfig()).forEach(([key,p])=>{
+  let cur=measurementPairValues(a,key),old=measurementPairValues(b,key);
+  if(cur.right&&old.right){let d=cur.right-old.right;html+='<div><span>'+p.label+' · права</span><strong>'+fmtProgress(old.right)+' → '+fmtProgress(cur.right)+' см</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
+  if(cur.left&&old.left){let d=cur.left-old.left;html+='<div><span>'+p.label+' · ліва</span><strong>'+fmtProgress(old.left)+' → '+fmtProgress(cur.left)+' см</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
+ });
+ return '<div class="measurement-changes">'+html+'</div>';
 }
-
 
 async function saveMeasurement(cid,ev=null){
  let btn=ev?.currentTarget||null;
