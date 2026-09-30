@@ -4717,3 +4717,28 @@ body.eplan-redesign.client-ui .workout-completed-label{
 body.eplan-redesign.client-ui .workout-live-body .setrow button{
   display:none!important;
 }
+
+
+/* Compact rest timer inside active workout */
+body.eplan-redesign.client-ui .workout-active-card{padding-top:16px!important}
+body.eplan-redesign.client-ui .training-live-toolbar{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px
+}
+body.eplan-redesign.client-ui .training-live-toolbar .training-live{margin:0!important}
+body.eplan-redesign.client-ui .inline-rest-timer{
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;width:auto!important;min-width:0!important;
+ height:38px!important;padding:0 11px!important;border:1px solid #d7e2ef!important;border-radius:12px!important;
+ background:#f3f7fc!important;color:#183153!important;box-shadow:none!important;font-size:11px!important;font-weight:850!important;white-space:nowrap
+}
+body.eplan-redesign.client-ui .inline-rest-timer-icon{font-size:14px}
+body.eplan-redesign.client-ui .inline-rest-timer-choices{
+ margin:0 0 12px!important;padding:10px!important;border-radius:13px;background:#f7f9fc;border:1px solid #e0e8f2
+}
+body.eplan-redesign.client-ui .inline-rest-timer-actions{margin:0 0 12px!important}
+body.eplan-redesign.client-ui .workout-exercise-title-line{display:flex;align-items:center;gap:8px;min-width:0}
+body.eplan-redesign.client-ui .workout-exercise-title-line strong{min-width:0}
+body.eplan-redesign.client-ui .workout-exercise-title-line .exercise-done-badge.compact{margin-left:0!important}
+body.eplan-redesign.client-ui .workout-replacement-note{display:block;margin-top:3px}
+body.eplan-redesign.client-ui .workout-technique-row{margin-top:5px!important}
+body.eplan-redesign.client-ui .workout-plan-line{display:block;margin-top:6px!important;line-height:1.32!important}
+body.eplan-redesign.client-ui .workout-plan-line>span{display:block;margin-top:2px!important}
