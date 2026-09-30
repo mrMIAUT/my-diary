@@ -3416,3 +3416,34 @@ body.eplan-redesign.client-ui .redesign-progress-kpi-select>.neutral-change{
   line-height:1.2!important;
   margin-top:0!important;
 }
+
+
+/* Align Weight and selectable measurement KPI rows on identical baselines */
+body.eplan-redesign.client-ui .redesign-progress-topgrid{
+  align-items:stretch!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi{
+  display:grid!important;
+  grid-template-rows:34px 24px 30px 18px!important;
+  row-gap:4px!important;
+  align-content:start!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi .kpi-icon{
+  margin:0!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi .redesign-progress-kpi-labelrow,
+body.eplan-redesign.client-ui .redesign-progress-kpi>small{
+  align-self:end!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi .redesign-progress-kpi-labelrow{
+  margin:0!important;
+  min-height:24px!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi>strong{
+  align-self:center!important;
+  margin:0!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi>.neutral-change{
+  align-self:start!important;
+  margin:0!important;
+}
