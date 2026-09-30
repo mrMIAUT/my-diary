@@ -1346,7 +1346,7 @@ CLIENT_RESPONSE_FIELDS=(
     "contraindications","injuries","contact","instagram","telegram","tiktok","avatar",
     "plan_code","access_until","access","live_status","needs_review_count",
     "finished_workout_count","last_finished_at","review_state",
-    "workouts_28d","nutrition_days_7d","checkin_pending_count","last_checkin_at",
+    "workouts_28d","program_days_count","nutrition_days_7d","checkin_pending_count","last_checkin_at",
 )
 
 def client_response(record:dict|None):
@@ -1365,6 +1365,7 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         COALESCE(w.needs_review_count,0) AS needs_review_count,
         COALESCE(w.finished_count,0) AS finished_count,
         COALESCE(w.workouts_28d,0) AS workouts_28d,
+        COALESCE(pd.program_days_count,0) AS program_days_count,
         w.last_finished_at AS last_finished_at,
         COALESCE(n.nutrition_days_7d,0) AS nutrition_days_7d,
         COALESCE(ch.checkin_pending_count,0) AS checkin_pending_count,
@@ -1378,6 +1379,10 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
           MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
         FROM workout_sessions GROUP BY client_id
     ) w ON w.client_id=c.id
+    LEFT JOIN (
+        SELECT client_id,COUNT(DISTINCT day_name) AS program_days_count
+        FROM program GROUP BY client_id
+    ) pd ON pd.client_id=c.id
     LEFT JOIN (
         SELECT client_id,COUNT(DISTINCT day) FILTER (WHERE day>=CURRENT_DATE-INTERVAL '6 days') AS nutrition_days_7d
         FROM nutrition GROUP BY client_id
@@ -1395,6 +1400,7 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         c["needs_review_count"]=int(c.get("needs_review_count") or 0)
         c["finished_workout_count"]=int(c.get("finished_count") or 0)
         c["workouts_28d"]=int(c.get("workouts_28d") or 0)
+        c["program_days_count"]=int(c.get("program_days_count") or 0)
         c["nutrition_days_7d"]=int(c.get("nutrition_days_7d") or 0)
         c["checkin_pending_count"]=int(c.get("checkin_pending_count") or 0)
         c["last_finished_at"]=c.get("last_finished_at")
