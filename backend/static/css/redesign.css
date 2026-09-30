@@ -2170,3 +2170,82 @@ body.eplan-redesign.client-ui .client-bottom-nav{
   width:min(408px,calc(100% - 22px))!important;
   border-radius:26px!important;
 }
+
+
+/* Final Lyfta-like frosted bottom navigation */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:min(414px,calc(100% - 24px))!important;
+  max-width:none!important;
+  z-index:950!important;
+
+  padding:8px 10px!important;
+  border-radius:28px!important;
+
+  background:rgba(255,255,255,.52)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.3)!important;
+  backdrop-filter:blur(24px) saturate(1.3)!important;
+
+  border:1px solid rgba(255,255,255,.72)!important;
+  box-shadow:
+    0 10px 30px rgba(27,44,74,.10),
+    inset 0 1px 0 rgba(255,255,255,.55)!important;
+
+  overflow:hidden!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.18) 0%,
+    rgba(255,255,255,.04) 100%
+  );
+  pointer-events:none;
+  z-index:0;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav button{
+  position:relative!important;
+  z-index:1!important;
+  min-height:54px!important;
+  padding:6px 4px!important;
+  border-radius:20px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#6f7c95!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav button.active{
+  background:rgba(255,255,255,.34)!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav .ui-icon{
+  width:21px!important;
+  height:21px!important;
+  opacity:.95!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav button span{
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+
+body.eplan-redesign.client-ui .wrap.client-shell{
+  padding-bottom:calc(132px + env(safe-area-inset-bottom))!important;
+}
+
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .client-bottom-nav{
+    width:calc(100% - 20px)!important;
+    bottom:calc(10px + env(safe-area-inset-bottom))!important;
+  }
+}
