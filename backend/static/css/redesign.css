@@ -4585,3 +4585,25 @@ body.eplan-redesign.client-ui .client-section-page:has(.training-live) .finish-w
     font-size:9px!important;
   }
 }
+
+
+/* Live workout action hierarchy — keep blue for navigation, not every completion action */
+body.eplan-redesign.client-ui .workout-finish-exercise{
+  background:#eef3f8!important;
+  color:#16304f!important;
+  border:1px solid #d8e2ee!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-finish-exercise:active{
+  background:#e5ecf4!important;
+}
+
+body.eplan-redesign.client-ui .finish-workout-btn{
+  background:#0f2342!important;
+  color:#fff!important;
+  border:1px solid #0f2342!important;
+  box-shadow:0 8px 20px rgba(15,35,66,.12)!important;
+}
+body.eplan-redesign.client-ui .finish-workout-btn:active{
+  background:#0b1b34!important;
+}
