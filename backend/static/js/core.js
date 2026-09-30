@@ -512,7 +512,7 @@ function trainerBottomNavHTML(){
    ${item('home','Головна','home','trainerHome()')}
    ${item('clients','Клієнти','users','showTrainerClientsView()')}
    ${item('programs','Програми','chart','showTrainerPrograms()')}
-   ${item('library','Вправи','dumbbell','showExerciseLibrary()')}
+   ${item('nutrition','Харчування','food','showTrainerNutrition()')}
    ${item('more','Більше','menu','showTrainerMore()')}
  </nav>`;
 }
