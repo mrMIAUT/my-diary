@@ -4104,3 +4104,260 @@ body.eplan-redesign.client-ui .client-weekly-checkin.done{
 .weekly-checkin-scale input:checked+span{background:#1677ff;color:#fff;border-color:#1677ff}
 .weekly-checkin-comment{display:block;margin-top:15px;color:#4e5c73;font-size:12px;font-weight:800}
 .weekly-checkin-comment textarea{min-height:90px;margin-top:7px}
+
+
+/* ===== Trainer Library — unified with trainer environment ===== */
+body.eplan-redesign.trainer-ui .trainer-library-page .trainer-page-title{
+  margin-bottom:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-page .trainer-page-title h1,
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .trainer-page-title h1{
+  margin:0;
+  font-size:30px;
+  line-height:1.05;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.trainer-ui .trainer-library-page .trainer-page-sub,
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .trainer-page-sub{
+  margin:5px 0 0!important;
+  color:#78869a;
+  font-size:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:0 0 12px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-summary>div{
+  padding:13px 10px;
+  border:1px solid #dce5f1;
+  border-radius:15px;
+  background:#fff;
+  text-align:center;
+}
+body.eplan-redesign.trainer-ui .trainer-library-summary strong{
+  display:block;
+  color:#081633;
+  font-size:20px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-summary small{
+  display:block;
+  margin-top:3px;
+  color:#7b8799;
+  font-size:10px;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-library-tools{
+  margin-bottom:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-search{
+  margin-bottom:8px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-filters{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-filters select{
+  width:100%;
+  min-width:0;
+  height:42px;
+  padding:0 11px;
+  border:1px solid #dce5f1!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#23324b!important;
+  font-size:12px;
+  font-weight:750;
+}
+body.eplan-redesign.trainer-ui .trainer-library-result-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:8px 2px 10px;
+  color:#7c899d;
+  font-size:11px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-result-line strong{
+  color:#081633;
+}
+body.eplan-redesign.trainer-ui .trainer-library-group,
+body.eplan-redesign.trainer-ui .trainer-library-admin{
+  padding:0!important;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-group-toggle,
+body.eplan-redesign.trainer-ui .trainer-library-admin-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:15px 16px;
+  background:#fff!important;
+  color:#081633!important;
+  border:0!important;
+  text-align:left;
+}
+body.eplan-redesign.trainer-ui .trainer-library-group-toggle span:first-child,
+body.eplan-redesign.trainer-ui .trainer-library-admin-toggle span:first-child{
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-library-group-toggle strong,
+body.eplan-redesign.trainer-ui .trainer-library-admin-toggle strong{
+  display:block;
+  font-size:15px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-group-toggle small,
+body.eplan-redesign.trainer-ui .trainer-library-admin-toggle small{
+  display:block;
+  margin-top:4px;
+  color:#7e8a9d;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-exercise-list{
+  border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.trainer-ui .trainer-library-exercise{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  padding:13px 15px;
+  border-bottom:1px solid #edf1f6;
+  background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-library-exercise-main strong{
+  font-size:13px;
+}
+body.eplan-redesign.trainer-ui .library-muscle-lines{
+  margin-top:5px;
+  color:#7b8799;
+  font-size:9.5px;
+  line-height:1.35;
+}
+body.eplan-redesign.trainer-ui .library-muscle-lines b{
+  color:#56657c!important;
+  font-weight:750;
+}
+body.eplan-redesign.trainer-ui .trainer-library-video{
+  margin-top:6px;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-add{
+  padding:15px;
+  background:#f8fbff;
+}
+body.eplan-redesign.trainer-ui .trainer-library-add h3,
+body.eplan-redesign.trainer-ui .trainer-library-admin-section h3{
+  margin:0 0 10px;
+  font-size:13px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-add-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-library-add-actions button{
+  flex:1;
+}
+body.eplan-redesign.trainer-ui .trainer-library-admin-body{
+  padding:15px;
+  border-top:1px solid #edf1f6;
+  background:#f8fbff;
+}
+body.eplan-redesign.trainer-ui .trainer-library-admin-section+ .trainer-library-admin-section{
+  margin-top:18px;
+}
+body.eplan-redesign.trainer-ui .library-muscle-admin-list{
+  margin-top:10px;
+}
+body.eplan-redesign.trainer-ui .library-muscle-admin-list>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 0;
+  border-bottom:1px solid #e8eef6;
+}
+
+/* ===== Trainer Nutrition — unified dashboard ===== */
+body.eplan-redesign.trainer-ui .trainer-nutrition-summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:0 0 12px;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-summary>div{
+  min-width:0;
+  padding:12px 9px;
+  border:1px solid #dce5f1;
+  border-radius:16px;
+  background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-summary .trainer-stat-icon{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-summary strong{
+  display:block;
+  margin-top:8px;
+  color:#081633;
+  font-size:20px;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-summary small{
+  display:block;
+  margin-top:3px;
+  color:#7a879b;
+  font-size:9px;
+  line-height:1.2;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-list.modern{
+  border:1px solid #dce5f1;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-row.modern{
+  grid-template-columns:auto minmax(0,1fr) auto;
+  padding:14px 15px;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-copy{
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-copy strong,
+body.eplan-redesign.trainer-ui .trainer-nutrition-copy small{
+  display:block;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-copy small{
+  margin-top:3px;
+  color:#7b8799;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-status{
+  display:inline-flex;
+  margin-top:7px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:9.5px;
+  font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-status.ok{
+  background:#e9f7ef;
+  color:#238b57;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-status.warn{
+  background:#fff4df;
+  color:#b97a1d;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-status.attention{
+  background:#fff0e8;
+  color:#cf6d27;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-status.neutral{
+  background:#eef1f5;
+  color:#77859a;
+}
