@@ -170,17 +170,21 @@ function openMeasurementEditor(cid,mid){
 
 async function saveMeasurement(cid,ev=null,mid=0){
  let btn=ev?.currentTarget||null;
+ let form=btn?.closest('.measurement-form')||document;
+ let val=id=>+(form.querySelector('#'+id)?.value||0);
+ let day=form.querySelector('#mDay')?.value||isoToday();
  let body={
-  client_id:cid,day:mDay.value||isoToday(),weight:+mWeight.value||0,shoulders:+mShoulders.value||0,neck:+mNeck.value||0,
-  chest:+mChest.value||0,waist:+mWaist.value||0,hips:+mHips.value||0,
+  client_id:cid,day,
+  weight:val('mWeight'),shoulders:val('mShoulders'),neck:val('mNeck'),
+  chest:val('mChest'),waist:val('mWaist'),hips:val('mHips'),
   thighs:0,calves:0,arms:0,forearms:0,
-  thighs_right:+mThighsRight.value||0,thighs_left:+mThighsLeft.value||0,
-  calves_right:+mCalvesRight.value||0,calves_left:+mCalvesLeft.value||0,
-  arms_right:+mArmsRight.value||0,arms_left:+mArmsLeft.value||0,
-  forearms_right:+mForearmsRight.value||0,forearms_left:+mForearmsLeft.value||0
+  thighs_right:val('mThighsRight'),thighs_left:val('mThighsLeft'),
+  calves_right:val('mCalvesRight'),calves_left:val('mCalvesLeft'),
+  arms_right:val('mArmsRight'),arms_left:val('mArmsLeft'),
+  forearms_right:val('mForearmsRight'),forearms_left:val('mForearmsLeft')
  };
  if(body.day>isoToday())return alert('Не можна додати заміри на майбутню дату');
- if(!Object.entries(body).some(([k,v])=>!['client_id','day'].includes(k)&&v>0))return alert('Заповни хоча б один замір');
+ if(!Object.entries(body).some(([k,v])=>!['client_id','day'].includes(k)&&Number(v)>0))return alert('Заповни хоча б один замір');
  if(btn?.disabled)return;
  if(btn){btn.disabled=true;btn.textContent=mid?'Зберігаємо зміни…':'Зберігаємо…';btn.classList.add('measurement-saving')}
  try{
