@@ -65,6 +65,16 @@ function setClientProgressOverviewMetric(value){
  window.clientProgressOverviewMetric=value;
  showClientSection('progress');
 }
+function cycleClientProgressOverviewMetric(step){
+ let d=window.currentClientData||{},measures=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let last=measures[measures.length-1]||null,opts=redesignOverviewMetricOptions(last);
+ if(!opts.length)return;
+ let current=String(window.clientProgressOverviewMetric||opts[0][0]);
+ let index=opts.findIndex(x=>x[0]===current);if(index<0)index=0;
+ index=(index+step+opts.length)%opts.length;
+ window.clientProgressOverviewMetric=opts[index][0];
+ showClientSection('progress');
+}
 
 function redesignProgressOverviewHTML(d){
   let measures=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
@@ -76,11 +86,10 @@ function redesignProgressOverviewHTML(d){
   let weightDelta=redesignMeasureDelta(last,prev,'weight');
   let metric=redesignOverviewMetricMeta(last),metricKey=metric[0],metricLabel=metric[1],metricUnit=metric[2];
   let metricDelta=redesignMeasureDelta(last,prev,metricKey);
-  let metricOptions=redesignOverviewMetricOptions(last).map(([k,n])=>'<option value="'+k+'" '+(k===metricKey?'selected':'')+'>'+esc(n)+'</option>').join('');
   return '<div class="redesign-progress-overview">'
     +'<div class="redesign-progress-topgrid">'
       +'<button class="redesign-progress-kpi" onclick="switchClientProgressView(\'measurements\')"><span class="kpi-icon blue">'+uiIcon('measure')+'</span><small>Вага</small><strong>'+redesignMeasureValue(last,'weight','кг')+'</strong>'+redesignDeltaHTML(weightDelta,'кг')+'</button>'
-      +'<div class="redesign-progress-kpi redesign-progress-kpi-select" role="button" tabindex="0" onclick="switchClientProgressView(\'measurements\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();switchClientProgressView(\'measurements\')}"><span class="kpi-icon green">'+uiIcon('chart')+'</span><select aria-label="Показник прогресу" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" onchange="event.stopPropagation();setClientProgressOverviewMetric(this.value)">'+metricOptions+'</select><strong>'+redesignMeasureValue(last,metricKey,metricUnit)+'</strong>'+redesignDeltaHTML(metricDelta,metricUnit)+'</div>'
+      +'<div class="redesign-progress-kpi redesign-progress-kpi-select" role="button" tabindex="0" onclick="switchClientProgressView(\'measurements\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();switchClientProgressView(\'measurements\')}"><span class="kpi-icon green">'+uiIcon('chart')+'</span><div class="redesign-progress-kpi-labelrow"><small>'+esc(metricLabel)+'</small><div class="redesign-progress-kpi-arrows"><button type="button" aria-label="Попередній показник" onclick="event.stopPropagation();cycleClientProgressOverviewMetric(-1)">‹</button><button type="button" aria-label="Наступний показник" onclick="event.stopPropagation();cycleClientProgressOverviewMetric(1)">›</button></div></div><strong>'+redesignMeasureValue(last,metricKey,metricUnit)+'</strong>'+redesignDeltaHTML(metricDelta,metricUnit)+'</div>'
     +'</div>'
     +'<div class="card redesign-progress-week"><div class="between"><div><span class="progress-kicker">Тренування цього тижня</span><strong>'+weekDone+' з '+(days.length||0)+'</strong></div><span class="progress-week-icon">'+uiIcon('dumbbell')+'</span></div><div class="progress-week-bars">'+Array.from({length:7},(_,i)=>'<i class="'+(i<Math.min(weekDone,7)?'done':'')+'"></i>').join('')+'</div></div>'
     +'<div class="card redesign-progress-chart-card"><div class="between"><div><span class="progress-kicker">Динаміка ваги</span><strong>'+(last&&+last.weight>0?fmtProgress(last.weight)+' кг':'Немає даних')+'</strong></div><button onclick="switchClientProgressView(\'measurements\')">Детальніше ›</button></div>'+redesignWeightChartHTML(measures)+'</div>'
