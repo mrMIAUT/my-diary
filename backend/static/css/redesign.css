@@ -2373,3 +2373,55 @@ body.eplan-redesign.client-ui .lyfta-history-item strong{font-size:11px}
   body.eplan-redesign.client-ui .lyfta-set-row{grid-template-columns:36px 1fr 1fr .75fr 34px;gap:5px}
   body.eplan-redesign.client-ui .lyfta-set-row input{padding:9px 5px!important}
 }
+
+
+/* Exercise replacement scope modal */
+body.eplan-redesign.client-ui .swap-choice-card{
+  width:min(440px,100%);
+}
+body.eplan-redesign.client-ui .swap-step-label{
+  display:block;
+  margin-bottom:4px;
+  color:#7a889d;
+  font-size:10px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+body.eplan-redesign.client-ui .swap-scope-actions{
+  display:grid;
+  gap:10px;
+  margin-top:16px;
+}
+body.eplan-redesign.client-ui .swap-scope-actions>button{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:3px;
+  padding:14px 15px;
+  text-align:left;
+  border-radius:15px;
+  background:#f8fbff!important;
+  color:#0a1738!important;
+  border:1px solid #dfe7f2!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .swap-scope-actions>button:first-child{
+  border-color:#b8d7ff!important;
+  background:#f3f8ff!important;
+}
+body.eplan-redesign.client-ui .swap-scope-actions strong{
+  font-size:14px;
+}
+body.eplan-redesign.client-ui .swap-scope-actions span{
+  color:#76849a;
+  font-size:10.5px;
+  font-weight:650;
+}
+body.eplan-redesign.client-ui .swap-back-btn{
+  width:100%;
+  margin-top:10px;
+  background:#eef3f9!important;
+  color:#526580!important;
+}
