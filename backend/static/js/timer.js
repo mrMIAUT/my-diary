@@ -12,6 +12,28 @@ function restTimerPanelHTML(){
  <div class="rest-timer-note">Можна згорнути застосунок — час не загубиться. Для сигналу у фоні дозволь сповіщення.</div></div>`;
 }
 
+function restTimerInlineHTML(){
+ let remaining=restTimerRemaining();
+ return `<div class="training-live-toolbar">
+   <div class="training-live">Тренування триває</div>
+   <button class="inline-rest-timer" onclick="toggleRestTimerChoices()" aria-label="Таймер відпочинку">
+     <span class="inline-rest-timer-icon">⏱</span>
+     <span id="restTimerDisplay">${remaining?formatRestTimer(remaining):'Таймер'}</span>
+   </button>
+ </div>
+ <div id="restTimerChoices" class="rest-timer-choices inline-rest-timer-choices hidden">
+   <button class="dark" data-rest-seconds="60" onclick="startRestTimer(60,this)">1:00</button>
+   <button class="dark" data-rest-seconds="90" onclick="startRestTimer(90,this)">1:30</button>
+   <button class="dark" data-rest-seconds="120" onclick="startRestTimer(120,this)">2:00</button>
+   <button class="dark" data-rest-seconds="180" onclick="startRestTimer(180,this)">3:00</button>
+   <button class="dark" onclick="customRestTimer()">Свій час</button>
+ </div>
+ <div id="restTimerActions" class="rest-timer-actions inline-rest-timer-actions ${remaining?'':'hidden'}">
+   <button class="dark" onclick="addRestTimer(30)">+30 сек</button>
+   <button class="dark" onclick="cancelRestTimer()">Скасувати</button>
+ </div>`;
+}
+
 function toggleRestTimerChoices(){let x=$('#restTimerChoices');if(x)x.classList.toggle('hidden')}
 
 function formatRestTimer(s){let m=Math.floor(s/60),q=s%60;return `${String(m).padStart(2,'0')}:${String(q).padStart(2,'0')}`}
@@ -56,7 +78,7 @@ function startRestTimerTicker(){
 }
 
 function updateRestTimerUI(s){
- let d=$('#restTimerDisplay');if(d)d.textContent=s?formatRestTimer(s):'Готовий до старту';
+ let d=$('#restTimerDisplay');if(d)d.textContent=s?formatRestTimer(s):'Таймер';
  let a=$('#restTimerActions');if(a)a.classList.toggle('hidden',!s);
  let f=$('#floatingRestTimerValue');if(f)f.textContent=formatRestTimer(s);
 }
