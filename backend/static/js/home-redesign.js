@@ -20,7 +20,7 @@ function redesignClientMetric(title,value,unit,delta,icon,action,subtitle){
   if(delta!==null){
     let sign=delta>0?'+':'';
     let arrow=delta<0?'↓':delta>0?'↑':'';
-    deltaHtml='<em>'+arrow+' '+sign+fmtProgress(delta)+' '+unit+'</em>';
+    deltaHtml='<em class="neutral-change">'+arrow+' '+sign+fmtProgress(delta)+' '+unit+'</em>';
   }
   return '<button class="client-home-metric" onclick="'+action+'">'
     +'<span class="client-home-metric-icon">'+uiIcon(icon)+'</span>'
