@@ -479,3 +479,10 @@ button.library-delete-btn{background:#4a2020!important;color:#ffb4b4!important;b
 .measure-collapse-arrow{font-size:22px;font-weight:700;flex:0 0 auto}
 .trainer-measure-collapse{margin-top:18px}
 
+
+/* Redesign active workout: keep the rest timer attached to the live workout card. */
+.redesign-active-workout-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.redesign-active-timer-btn{flex:0 0 auto;padding:9px 12px!important;border-radius:12px!important}
+.redesign-active-timer-panel{margin-top:12px}
+.redesign-active-timer-panel .rest-timer-card{margin:0!important;background:var(--card2);box-shadow:none}
+@media(max-width:650px){.redesign-active-workout-head{gap:8px}.redesign-active-timer-btn{padding:8px 10px!important;font-size:13px!important}}
