@@ -71,30 +71,10 @@ function clientProfileAvatarHTML(c,cid){
  let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span class="avatar-initials avatar-initials-large">'+esc(clientInitials(c))+'</span>';
  let name=[c.first_name||'',c.last_name||''].filter(Boolean).join(' ').trim()||c.name||'Мій профіль';
  return '<div class="client-profile-hero">'
-   +'<button type="button" class="client-profile-avatar '+state+'" onclick="document.getElementById(\'clientAvatarInput\')?.click()" aria-label="Змінити фото профілю">'+inner+'</button>'
+   +'<div class="client-profile-avatar is-placeholder" aria-label="Аватар профілю">'+inner+'</div>'
    +'<h1>'+esc(name)+'</h1>'
    +'<button type="button" class="client-profile-edit-btn" onclick="editClientProfile('+cid+')">Редагувати профіль</button>'
-   +'<small>Натисни на аватар, щоб завантажити або змінити фото</small>'
-   +'<input id="clientAvatarInput" class="client-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadClientAvatar('+cid+',this)">'
  +'</div>';
-}
-
-async function uploadClientAvatar(cid,input){
- let file=input?.files?.[0];if(!file)return;
- if(file.size>10*1024*1024){alert('Фото завелике. Максимум 10 МБ.');input.value='';return}
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('Підтримуються JPEG, PNG та WebP.');input.value='';return}
- let fd=new FormData();fd.append('file',file,file.name||'avatar');
- try{
-  let r=await eplanFetch(A+'/client/'+cid+'/avatar',{method:'POST',body:fd},30000);
-  let data;try{data=await r.json()}catch{}
-  if(!r.ok)throw new Error(friendlyApiError(r.status,data?.detail));
-  if(window.currentClientData?.client)window.currentClientData.client.avatar=data.avatar||'';
-  showClientProfile(cid);
- }catch(e){
-  alert(e?.message||'Не вдалося завантажити фото профілю.');
- }finally{
-  input.value='';
- }
 }
 
 function showClientProfile(cid){
