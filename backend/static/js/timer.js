@@ -110,3 +110,26 @@ function renderFloatingRestTimer(){
  let el=$('#floatingRestTimer');if(!el){document.body.insertAdjacentHTML('beforeend',`<button id="floatingRestTimer" class="floating-rest-timer" onclick="window.scrollTo({top:0,behavior:'smooth'})">⏱ <span id="floatingRestTimerValue">${formatRestTimer(s)}</span></button>`)}
  else $('#floatingRestTimerValue').textContent=formatRestTimer(s);
 }
+
+
+// Redesign V1 — Lyfta-like rest timer: one compact control, automatic start after a set.
+function preferredRestTimerSeconds(){return Math.max(1,+(localStorage.getItem('eplanPreferredRestSeconds')||120))}
+function setPreferredRestTimerSeconds(seconds){let s=Math.max(1,Math.min(3600,+seconds||120));localStorage.setItem('eplanPreferredRestSeconds',String(s));closeRestTimerPicker();return s}
+function openRestTimerPicker(){
+ document.getElementById('restTimerPicker')?.remove();
+ let current=preferredRestTimerSeconds();
+ document.body.insertAdjacentHTML('beforeend',
+  '<div class="modal rest-timer-picker" id="restTimerPicker" onclick="if(event.target===this)closeRestTimerPicker()"><div class="card rest-timer-picker-card">'
+  +'<div class="rest-timer-picker-handle"></div><div class="rest-timer-picker-head"><div><strong>Таймер відпочинку</strong><span>Запускається автоматично після завершення підходу</span></div><button class="rest-timer-picker-close" onclick="closeRestTimerPicker()">✕</button></div>'
+  +'<div class="rest-timer-preset-list">'+[60,90,120,150,180].map(s=>'<button class="'+(s===current?'selected':'')+'" onclick="setPreferredRestTimerSeconds('+s+')">'+formatRestTimer(s)+'</button>').join('')+'</div>'
+  +'<button class="rest-timer-custom" onclick="customPreferredRestTimer()">Свій час</button></div></div>');
+}
+function closeRestTimerPicker(){document.getElementById('restTimerPicker')?.remove()}
+function customPreferredRestTimer(){let raw=prompt('Введи час відпочинку у секундах, наприклад 150');let sec=parseInt(raw||'',10);if(sec>0&&sec<=3600)setPreferredRestTimerSeconds(sec)}
+async function completeWorkoutSetAndStartTimer(pid,n,btn){
+ let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n);
+ if(!w?.value||!r?.value)return alert('Спочатку заповни вагу та повтори у підході '+n);
+ btn?.classList.toggle('done');
+ if(btn?.classList.contains('done'))await startRestTimer(preferredRestTimerSeconds());
+}
+function compactRestTimerHTML(){let s=restTimerRemaining();return '<button class="redesign-rest-timer-icon '+(s?'running':'')+'" onclick="openRestTimerPicker()" aria-label="Налаштувати таймер відпочинку" title="Таймер відпочинку">⏱<span id="restTimerDisplay">'+(s?formatRestTimer(s):'')+'</span></button>'}
