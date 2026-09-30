@@ -4361,3 +4361,227 @@ body.eplan-redesign.trainer-ui .trainer-nutrition-status.neutral{
   background:#eef1f5;
   color:#77859a;
 }
+
+
+/* ===== Client live workout — light premium treatment ===== */
+body.eplan-redesign.client-ui .rest-timer-card{
+  background:#fff!important;
+  border:1px solid #dce5f1!important;
+  box-shadow:0 10px 28px rgba(31,64,104,.06)!important;
+}
+body.eplan-redesign.client-ui .rest-timer-label{
+  color:#74829a!important;
+}
+body.eplan-redesign.client-ui .rest-timer-top strong{
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .rest-timer-main{
+  background:#eef4fb!important;
+  color:#183153!important;
+  border:1px solid #d9e4f1!important;
+}
+body.eplan-redesign.client-ui .rest-timer-choices button,
+body.eplan-redesign.client-ui .rest-timer-choices button.dark{
+  background:#f7f9fc!important;
+  color:#183153!important;
+  border:1px solid #dce5f1!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .rest-timer-choices button.selected{
+  background:#e9f7ef!important;
+  color:#248c57!important;
+  border-color:#bfe2cf!important;
+}
+body.eplan-redesign.client-ui .rest-timer-actions button.dark{
+  background:#eef4fb!important;
+  color:#183153!important;
+  border-color:#d9e4f1!important;
+}
+body.eplan-redesign.client-ui .rest-timer-note{
+  color:#738198!important;
+}
+
+/* Live exercise cards */
+body.eplan-redesign.client-ui .workout-live-exercise{
+  overflow:hidden;
+  padding:0!important;
+  margin-top:10px!important;
+  background:#fff!important;
+  border:1px solid #dce5f1!important;
+  border-radius:18px!important;
+  box-shadow:0 7px 20px rgba(31,64,104,.045)!important;
+}
+body.eplan-redesign.client-ui .workout-live-exercise-inner{
+  margin-top:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .workout-live-toggle{
+  width:100%!important;
+  min-height:0!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:15px 16px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  text-align:left!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-live-toggle>span:first-child{
+  min-width:0;
+  flex:1;
+}
+body.eplan-redesign.client-ui .workout-live-toggle strong{
+  display:block;
+  color:#0a1738!important;
+  font-size:16px!important;
+  line-height:1.25!important;
+}
+body.eplan-redesign.client-ui .workout-live-toggle .muted{
+  color:#718097!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+body.eplan-redesign.client-ui .workout-live-toggle .arrow{
+  flex:0 0 auto;
+  color:#7d8ba0!important;
+  font-size:18px!important;
+  margin-top:1px;
+}
+body.eplan-redesign.client-ui .workout-live-toggle.open{
+  background:#f8fbff!important;
+  border-bottom:1px solid #e8eef6!important;
+}
+body.eplan-redesign.client-ui .workout-live-body{
+  padding:14px 14px 16px!important;
+  background:#fbfcfe!important;
+}
+body.eplan-redesign.client-ui .workout-live-body.hidden{
+  display:none!important;
+}
+
+/* Previous result / history inside exercise */
+body.eplan-redesign.client-ui .workout-live-body .workout-previous{
+  margin:0 0 12px!important;
+  padding:11px 12px!important;
+  background:#f3f7fc!important;
+  border:1px solid #e0e8f2!important;
+  border-radius:13px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .workout-previous .muted{
+  color:#75839a!important;
+}
+
+/* Set entry grid */
+body.eplan-redesign.client-ui .workout-live-body .setrow{
+  display:grid!important;
+  grid-template-columns:36px minmax(0,1fr) minmax(0,1fr) minmax(70px,.8fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:9px 0!important;
+  border-bottom:1px solid #edf1f6!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .setrow:first-of-type{
+  padding-top:0!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .setrow:last-of-type{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .sethead{
+  color:#7a879b!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  text-align:center!important;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .workout-live-body .setnum{
+  color:#0a1738!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  text-align:center!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .setrow input{
+  min-width:0!important;
+  width:100%!important;
+  height:48px!important;
+  padding:0 8px!important;
+  border:1px solid #dbe5f1!important;
+  border-radius:13px!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  font-size:15px!important;
+  font-weight:750!important;
+  text-align:center!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .setrow input:focus{
+  outline:2px solid rgba(22,119,255,.14)!important;
+  border-color:#8fbcff!important;
+}
+body.eplan-redesign.client-ui .workout-live-body .setrow input::placeholder{
+  color:#a3adba!important;
+  opacity:1!important;
+}
+
+/* Exercise actions */
+body.eplan-redesign.client-ui .workout-live-body>button.dark,
+body.eplan-redesign.client-ui .workout-live-body .swap-exercise-btn{
+  width:100%!important;
+  margin:0 0 12px!important;
+  background:#eef4fb!important;
+  color:#183153!important;
+  border:1px solid #d9e4f1!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-finish-exercise{
+  width:100%!important;
+  margin-top:2px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  border:1px solid #1677ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .exercise-done-badge{
+  color:#24945c!important;
+}
+body.eplan-redesign.client-ui .workout-live-body>.exercise{
+  background:#f3f8f5!important;
+  border-color:#d7eadf!important;
+  box-shadow:none!important;
+}
+
+/* Keep bottom nav from covering the final controls during a live workout */
+body.eplan-redesign.client-ui .client-section-page:has(.training-live){
+  padding-bottom:96px!important;
+}
+body.eplan-redesign.client-ui .client-section-page:has(.training-live) .finish-workout-wrap{
+  margin-top:18px!important;
+  padding-top:16px!important;
+  border-top:1px solid #e3eaf3!important;
+}
+
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .workout-live-body{
+    padding:12px 10px 14px!important;
+  }
+  body.eplan-redesign.client-ui .workout-live-body .setrow{
+    grid-template-columns:30px minmax(0,1fr) minmax(0,1fr) 64px!important;
+    gap:6px!important;
+  }
+  body.eplan-redesign.client-ui .workout-live-body .setrow input{
+    height:46px!important;
+    padding:0 5px!important;
+    font-size:14px!important;
+  }
+  body.eplan-redesign.client-ui .workout-live-body .sethead{
+    font-size:9px!important;
+  }
+}
