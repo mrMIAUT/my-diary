@@ -10,15 +10,50 @@ async function goToTrainerHome(){
  if(_btn&&_input)syncPasswordEye(_btn,_input);
 }
 
+function trainerCompliance(c){
+ let days=+c.program_days_count||0,done=+c.workouts_28d||0;
+ if(!days)return null;
+ return Math.max(0,Math.min(100,Math.round(done/(days*4)*100)));
+}
+function trainerDaysSince(value){
+ if(!value)return null;
+ let d=new Date(value);if(Number.isNaN(d.getTime()))return null;
+ return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));
+}
+function trainerAttention(c){
+ if(c.status!=='Активний'||c.access?.expired)return {level:'paused',label:'На паузі',reason:'Доступ неактивний'};
+ let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0,comp=trainerCompliance(c),days=trainerDaysSince(c.last_finished_at);
+ let reasons=[];
+ if(review)reasons.push('Тренування до перевірки: '+review);
+ if(check)reasons.push('Check-in до перегляду: '+check);
+ if(days!==null&&days>=7)reasons.push('Без тренувань '+days+' дн.');
+ if(days===null&&(+c.finished_workout_count||0)===0)reasons.push('Ще немає завершених тренувань');
+ if(comp!==null&&comp<60)reasons.push('Дотримання плану '+comp+'%');
+ if((+c.kcal||0)>0&&(+c.nutrition_days_7d||0)<3)reasons.push('Харчування заповнюється рідко');
+ if((days!==null&&days>=14)||(comp!==null&&comp<40))return {level:'risk',label:'Ризик',reason:reasons[0]||'Потрібна увага'};
+ if(reasons.length)return {level:'attention',label:'Потребує уваги',reason:reasons[0]};
+ return {level:'ok',label:'Все добре',reason:'План виконується стабільно'};
+}
+function trainerClientInitials(c){
+ let p=String(c.name||'').trim().split(/\s+/).filter(Boolean);
+ return (p.slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase();
+}
+
 async function trainerHome(){
  currentTrainerMainView='home';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
  let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired);
- let ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
- let attention=cs.filter(c=>(+c.needs_review_count||0)>0);
- let initials=c=>{let p=String(c.name||'').trim().split(/\s+/).filter(Boolean);return (p.slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase()};
- let avatars=cs.slice(0,4).map(c=>'<span class="trainer-client-avatar">'+esc(initials(c))+'</span>').join('');
- let recent=cs.slice(0,5).map(c=>{let r=+c.needs_review_count||0;let status=r?'Потрібно перевірити тренування':c.live_status==='Тренується'?'Тренується зараз':'Остання активність без нових подій';return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(initials(c))+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(status)+'</small></span><span class="trainer-row-time">'+(r?'Зараз':'')+'</span><span class="more-chevron">›</span></button>'}).join('');
+ let states=cs.map(c=>({c,state:trainerAttention(c)}));
+ let attention=states.filter(x=>x.state.level==='attention'||x.state.level==='risk');
+ let checkins=cs.reduce((n,c)=>n+(+c.checkin_pending_count||0),0);
+ let comps=active.map(trainerCompliance).filter(x=>x!==null);
+ let avgComp=comps.length?Math.round(comps.reduce((a,b)=>a+b,0)/comps.length):0;
+ let avatars=cs.slice(0,4).map(c=>'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>').join('');
+ let recent=states.slice().sort((a,b)=>{
+   let rank={risk:0,attention:1,ok:2,paused:3};return rank[a.state.level]-rank[b.state.level];
+ }).slice(0,5).map(({c,state})=>{
+   return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(state.reason)+'</small></span><span class="trainer-smart-status '+state.level+'">'+esc(state.label)+'</span><span class="more-chevron">›</span></button>'
+ }).join('');
  app.innerHTML=shell(`<div class="trainer-home-page">
    <button class="trainer-hero-card" onclick="showTrainerClientsView()">
      <div class="trainer-hero-head"><span class="hero-users">${uiIcon('users')}</span><strong>Ваші клієнти</strong><span class="more-chevron">›</span></div>
@@ -29,12 +64,12 @@ async function trainerHome(){
 
    <div class="trainer-home-stats reference-grid">
      <button onclick="window.trainerHomeFilter='review';showTrainerClientsView()"><span class="trainer-stat-icon orange">${uiIcon('users')}</span><strong>${attention.length}</strong><small>Потребують уваги</small><em>Переглянути ›</em></button>
-     <button onclick="window.trainerHomeFilter='active';showTrainerClientsView()"><span class="trainer-stat-icon green">✓</span><strong>${active.length}</strong><small>Активні клієнти</small><em>Переглянути ›</em></button>
-     <button onclick="window.trainerHomeFilter='ending';showTrainerClientsView()"><span class="trainer-stat-icon blue">${uiIcon('calendar')}</span><strong>${ending.length}</strong><small>Доступ завершується</small><em>Переглянути ›</em></button>
+     <button onclick="window.trainerHomeFilter='all';showTrainerClientsView()"><span class="trainer-stat-icon green">✓</span><strong>${avgComp}%</strong><small>Дотримання плану</small><em>За 28 днів ›</em></button>
+     <button onclick="showTrainerCheckins()"><span class="trainer-stat-icon blue">${uiIcon('calendar')}</span><strong>${checkins}</strong><small>Check-in до перегляду</small><em>Переглянути ›</em></button>
      <button onclick="newClient()"><span class="trainer-stat-icon blue">${uiIcon('plus')}</span><strong>＋</strong><small>Новий клієнт</small><em>Додати ›</em></button>
    </div>
 
-   <div class="trainer-home-section-head"><h2>Остання активність</h2><button onclick="showTrainerClientsView()">Усі ›</button></div>
+   <div class="trainer-home-section-head"><h2>Потребує уваги</h2><button onclick="window.trainerHomeFilter='review';showTrainerClientsView()">Усі ›</button></div>
    <div class="trainer-activity-card">${recent||'<div class="trainer-empty">Клієнтів ще немає.</div>'}</div>
  </div>`);
  refreshTrainerGlobalBadge()
@@ -44,9 +79,8 @@ async function showTrainerClientsView(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
  let filter=window.trainerHomeFilter||'all',q=String(window.trainerClientSearch||'').trim().toLowerCase();
- let base=filter==='review'?cs.filter(c=>(+c.needs_review_count||0)>0):filter==='ending'?cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired):filter==='active'?cs.filter(c=>c.status==='Активний'&&!c.access?.expired):cs;
+ let base=filter==='review'?cs.filter(c=>['attention','risk'].includes(trainerAttention(c).level)):filter==='active'?cs.filter(c=>c.status==='Активний'&&!c.access?.expired):cs;
  let shown=q?base.filter(c=>String(c.name||'').toLowerCase().includes(q)||String(c.goal||'').toLowerCase().includes(q)):base;
- let initials=c=>{let p=String(c.name||'').trim().split(/\s+/).filter(Boolean);return (p.slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase()};
  let chip=(key,label,n)=>'<button class="'+(filter===key?'active':'')+'" onclick="window.trainerHomeFilter=\''+key+'\';showTrainerClientsView()">'+label+' <span>'+n+'</span></button>';
  app.innerHTML=shell(`<div class="trainer-clients-page">
    <div class="trainer-page-title"><h1>Клієнти</h1><button class="trainer-round-add" onclick="newClient()">＋</button></div>
@@ -54,12 +88,24 @@ async function showTrainerClientsView(){
    <div class="trainer-filter-chips">
      ${chip('all','Усі',cs.length)}
      ${chip('active','Активні',cs.filter(c=>c.status==='Активний'&&!c.access?.expired).length)}
-     ${chip('review','Потребують уваги',cs.filter(c=>(+c.needs_review_count||0)>0).length)}
+     ${chip('review','Потребують уваги',cs.filter(c=>['attention','risk'].includes(trainerAttention(c).level)).length)}
    </div>
-   <div class="trainer-client-list">${shown.map(c=>{let r=+c.needs_review_count||0;let goal=c.goal||'Без цілі';let status=r?'Потребує уваги':(c.status==='Активний'&&!c.access?.expired?'Активна':'На паузі');return '<button class="trainer-client-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(initials(c))+'</span><span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+'</small><span class="trainer-status-pill '+(r?'attention':'ok')+'">'+esc(status)+'</span></span><span class="more-chevron">›</span></button>'}).join('')||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div>
+   <div class="trainer-client-list">${shown.map(c=>{
+     let st=trainerAttention(c),comp=trainerCompliance(c),goal=c.goal||'Без цілі';
+     return '<button class="trainer-client-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(comp!==null?' · '+comp+'% дотримання':'')+'</small><span class="trainer-smart-status '+st.level+'">'+esc(st.label)+'</span><em>'+esc(st.reason)+'</em></span><span class="more-chevron">›</span></button>'
+   }).join('')||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div>
  </div>`);
  refreshTrainerGlobalBadge()
 }
+
+async function showTrainerCheckins(){
+ currentTrainerMainView='home';
+ let cs=(await loadClients()).filter(c=>(+c.checkin_pending_count||0)>0);
+ if(!cs.length){alert('Нових check-in поки немає.');return trainerHome()}
+ await navigateToClient(cs[0].id);
+ setTimeout(()=>document.querySelector('.trainer-client-tabs [data-tab="notes"]')?.click(),0);
+}
+
 
 async function showTrainerPrograms(tab='templates'){
  currentTrainerMainView='programs';selected=null;window.currentClientData=null;
@@ -179,22 +225,28 @@ async function saveClientAccess(cid,btn){
 async function openClient(id,activeTab=null){
  selected=id;currentTrainerMainView='clients';
  let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
- let initials=(String(c.name||'К').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase();
+ let initials=trainerClientInitials(c);
  let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
  let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
  let age=c.age?c.age+' років':'Вік не вказано';
- let status=(c.status==='Активний'&&!c.access?.expired)?'Активний':(c.status||'На паузі');
+ let smart=trainerAttention(c),comp=trainerCompliance({...c,workouts_28d:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerDaysSince(x.finished_at||x.started_at)<=28).length,program_days_count:new Set((d.program||[]).map(x=>x.day_name)).size});
  let weight=lastM.weight?lastM.weight+' кг':'—';
  let lastDay=lastWorkout?sessionDay(lastWorkout):'—';
+ let latestCheck=(d.checkins||[])[0]||null;
  let profile=`
    <div class="trainer-client-kpis">
+    <div><strong>${comp===null?'—':comp+'%'}</strong><small>Дотримання плану</small></div>
     <div><strong>${weight}</strong><small>Поточна вага</small></div>
     <div><strong>${lastDay}</strong><small>Останнє тренування</small></div>
-    <div><strong>${esc(c.goal||'—')}</strong><small>Ціль</small></div>
    </div>
+   <div class="trainer-smart-summary ${smart.level}">
+     <strong>${esc(smart.label)}</strong><span>${esc(smart.reason)}</span>
+   </div>
+   ${latestCheck?trainerCheckinCard(latestCheck,c.id):'<div class="card trainer-checkin-empty"><strong>Check-in ще немає</strong><span>Перший щотижневий звіт клієнта з’явиться тут.</span></div>'}
    ${trainerProfileHTML(c)}
    ${trainerAccessHTML(c)}
  `;
+ let notes=trainerNotesHTML(d,c.id);
  app.innerHTML=shell(`<div class="trainer-client-page">
    <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="document.getElementById('trainerClientActions')?.classList.toggle('hidden')">•••</button></div>
    <div id="trainerClientActions" class="trainer-client-actions-pop hidden">
@@ -203,23 +255,49 @@ async function openClient(id,activeTab=null){
    </div>
    <div class="trainer-client-identity">
      <span class="trainer-client-avatar large">${esc(initials)}</span>
-     <div><h1>${esc(c.name)}</h1><p>${esc(age)} · ${esc(c.goal||'Без цілі')}</p><span class="trainer-status-pill ok">${esc(status)}</span></div>
+     <div><h1>${esc(c.name)}</h1><p>${esc(age)} · ${esc(c.goal||'Без цілі')}</p><span class="trainer-smart-status ${smart.level}">${esc(smart.label)}</span></div>
    </div>
    <div class="trainer-client-tabs">
      <button data-tab="profile" onclick="showTrainerClientTab('profile',this)">Огляд</button>
      <button data-tab="program" onclick="showTrainerClientTab('program',this)">Тренування</button>
      <button data-tab="results" onclick="showTrainerClientTab('results',this)">Заміри</button>
      <button data-tab="nutrition" onclick="showTrainerClientTab('nutrition',this)">Харчування</button>
+     <button data-tab="notes" onclick="showTrainerClientTab('notes',this)">Нотатки</button>
    </div>
    <div id="profile" class="tab">${profile}</div>
    <div id="program" class="tab hidden">${programHTML(d)}</div>
    <div id="results" class="tab hidden">${resultsHTML(d)}</div>
    <div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div>
+   <div id="notes" class="tab hidden">${notes}</div>
    <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${calendarHTML(d,'trainer')}</div></div></div>
  </div>`);
  refreshTrainerGlobalBadge();
  currentTrainerTab=activeTab||'profile';
  showTrainerClientTab(currentTrainerTab,document.querySelector('.trainer-client-tabs [data-tab="'+currentTrainerTab+'"]'),false);
+}
+
+function trainerCheckinCard(x,cid){
+ let avg=Math.round(((+x.mood||0)+(+x.sleep||0)+(+x.energy||0)+(6-(+x.hunger||3))+(6-(+x.difficulty||3)))/5*20);
+ return '<div class="card trainer-checkin-card"><div class="between"><div><small>ЩОТИЖНЕВИЙ CHECK-IN</small><h2>'+esc(String(x.week_start||''))+'</h2></div><span class="trainer-checkin-score">'+avg+'%</span></div>'
+   +'<div class="trainer-checkin-grid"><span>Самопочуття <b>'+x.mood+'/5</b></span><span>Сон <b>'+x.sleep+'/5</b></span><span>Енергія <b>'+x.energy+'/5</b></span><span>Голод <b>'+x.hunger+'/5</b></span><span>Складність <b>'+x.difficulty+'/5</b></span></div>'
+   +(x.comment?'<p>'+esc(x.comment)+'</p>':'')
+   +(!x.reviewed?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>')+'</div>';
+}
+async function reviewTrainerCheckin(cid,id){
+ await api('/client/'+cid+'/checkin/'+id+'/review',{method:'PATCH',body:JSON.stringify({reviewed:true})});
+ await openClient(cid,'profile');
+}
+function trainerNotesHTML(d,cid){
+ let note=String(d.trainer_note?.body||'');
+ let checkins=d.checkins||[];
+ return '<div class="card trainer-private-note"><div class="between"><div><small>ЛИШЕ ДЛЯ ТРЕНЕРА</small><h2>Приватні нотатки</h2></div></div><textarea id="trainerPrivateNote" placeholder="Наприклад: ліве коліно реагує на великий об’єм випадів...">'+esc(note)+'</textarea><button onclick="saveTrainerPrivateNote('+cid+')">Зберегти нотатку</button></div>'
+   +'<div class="card trainer-checkin-history"><h2>Історія check-in</h2>'+(checkins.length?checkins.map(x=>trainerCheckinCard(x,cid)).join(''):'<p class="muted">Check-in ще немає.</p>')+'</div>';
+}
+async function saveTrainerPrivateNote(cid){
+ let body=document.getElementById('trainerPrivateNote')?.value||'';
+ await api('/client/'+cid+'/trainer-note',{method:'PUT',body:JSON.stringify({body})});
+ if(window.currentClientData)window.currentClientData.trainer_note={body};
+ let btn=event?.target;if(btn){let old=btn.textContent;btn.textContent='Збережено ✓';setTimeout(()=>btn.textContent=old,1200)}
 }
 
 function showTrainerClientTab(id,btn,push=true){
