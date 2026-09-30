@@ -4770,3 +4770,18 @@ body.eplan-redesign.client-ui .workout-active-head .inline-rest-timer{
 body.eplan-redesign.client-ui .workout-active-card>.inline-rest-timer-choices{
   margin-top:2px!important;
 }
+
+
+/* Lyfta-like automatic rest timer */
+body.eplan-redesign.client-ui .workout-live-body .setrow{grid-template-columns:32px minmax(0,1fr) minmax(0,1fr) minmax(62px,.72fr) 42px!important}
+body.eplan-redesign.client-ui .workout-live-body .setrow .workout-set-check{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border-radius:999px!important;background:#eef2f7!important;color:#0f2342!important;font-size:20px!important;font-weight:900!important;box-shadow:none!important}
+body.eplan-redesign.client-ui .workout-live-body .setrow .workout-set-check.done{background:#31c96b!important;color:#fff!important}
+body.eplan-redesign.client-ui .redesign-rest-timer-icon{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:42px;height:42px;padding:0 10px;border:1px solid #d9e4f1;border-radius:13px;background:#f5f8fc;color:#183153;font-size:17px;box-shadow:none}
+body.eplan-redesign.client-ui .redesign-rest-timer-icon span{font-size:11px;font-weight:850}
+body.eplan-redesign.client-ui .redesign-rest-timer-icon.running{color:#1677ff;border-color:#b9d5ff;background:#edf5ff}
+.rest-timer-picker{align-items:flex-end!important;padding:0!important;background:rgba(8,18,34,.46)!important;z-index:1200!important}
+.rest-timer-picker-card{width:100%!important;max-width:520px!important;margin:0 auto!important;border-radius:26px 26px 0 0!important;padding:10px 18px calc(20px + env(safe-area-inset-bottom))!important;background:#fff!important;color:#0a1738!important}
+.rest-timer-picker-handle{width:42px;height:5px;border-radius:999px;background:#d4d9e0;margin:0 auto 16px}
+.rest-timer-picker-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px}.rest-timer-picker-head strong{display:block;font-size:20px}.rest-timer-picker-head span{display:block;color:#7a879b;font-size:12px;margin-top:4px}.rest-timer-picker-close{width:36px;height:36px;padding:0;border-radius:999px;background:#eef2f6;color:#24344e}
+.rest-timer-preset-list{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.rest-timer-preset-list button{padding:12px 4px;border-radius:12px;background:#f1f4f8;color:#23344e;font-size:13px}.rest-timer-preset-list button.selected{background:#1677ff;color:#fff}.rest-timer-custom{width:100%;margin-top:10px;background:#eef3f8;color:#183153}
+@media(max-width:390px){body.eplan-redesign.client-ui .workout-live-body .setrow{grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 58px 36px!important;gap:5px!important}body.eplan-redesign.client-ui .workout-live-body .setrow .workout-set-check{width:34px!important;height:34px!important;min-width:34px!important}.rest-timer-preset-list{grid-template-columns:repeat(3,1fr)}}
