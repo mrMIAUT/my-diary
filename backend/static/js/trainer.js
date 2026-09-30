@@ -61,17 +61,40 @@ async function showTrainerClientsView(){
  refreshTrainerGlobalBadge()
 }
 
-function showTrainerPrograms(){
+async function showTrainerPrograms(tab='templates'){
  currentTrainerMainView='programs';selected=null;window.currentClientData=null;
+ window.trainerProgramsTab=tab;
+ let assignedHTML='';
+ if(tab==='assigned'){
+   let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+   let rows=await Promise.all(cs.map(async c=>{
+     try{
+       let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
+       let label=days.length?days.join(' · '):'Програму ще не призначено';
+       return '<button class="trainer-assigned-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc((String(c.name||'К').trim().split(/\\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase())+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span><b>›</b></button>';
+     }catch(e){return ''}
+   }));
+   assignedHTML='<div class="trainer-assigned-list">'+rows.join('')+'</div>';
+ }
  app.innerHTML=shell(`<div class="trainer-programs-page">
    <div class="trainer-page-title"><h1>Програми</h1><button class="trainer-round-add" onclick="alert('Конструктор шаблонів програм додамо наступним етапом.')">＋</button></div>
-   <div class="trainer-segmented"><button class="active">Шаблони</button><button>Призначені</button></div>
-   <div class="trainer-program-empty">
-     <span class="trainer-program-empty-icon">${uiIcon('dumbbell')}</span>
-     <h2>Шаблони програм</h2>
-     <p>Тут буде бібліотека готових програм, які можна призначати клієнтам.</p>
-     <button onclick="alert('Конструктор шаблонів програм додамо наступним етапом.')">＋ Створити шаблон</button>
-   </div>
+   <div class="trainer-segmented"><button class="${tab==='templates'?'active':''}" onclick="showTrainerPrograms('templates')">Шаблони</button><button class="${tab==='assigned'?'active':''}" onclick="showTrainerPrograms('assigned')">Призначені</button></div>
+   ${tab==='templates'?'<div class="trainer-program-empty"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблони програм</h2><p>Тут буде бібліотека готових програм, які можна призначати клієнтам.</p><button onclick="alert(\'Конструктор шаблонів програм додамо наступним етапом.\')">＋ Створити шаблон</button></div>':assignedHTML}
+ </div>`);
+}
+
+async function showTrainerNutrition(){
+ currentTrainerMainView='nutrition';selected=null;window.currentClientData=null;
+ let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+ let rows=cs.map(c=>{
+   let initials=(String(c.name||'К').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase();
+   let kcal=+c.kcal||0;
+   return '<button class="trainer-nutrition-row" onclick="openClient('+c.id+',\'nutrition\')"><span class="trainer-client-avatar">'+esc(initials)+'</span><span><strong>'+esc(c.name)+'</strong><small>'+(kcal?esc(kcal)+' ккал':'Цілі харчування не задані')+'</small></span><b>›</b></button>';
+ }).join('');
+ app.innerHTML=shell(`<div class="trainer-nutrition-page">
+   <div class="trainer-page-title"><h1>Харчування</h1></div>
+   <p class="trainer-page-sub">Обери клієнта, щоб налаштувати калорійність, БЖВ та план харчування.</p>
+   <div class="trainer-nutrition-list">${rows||'<div class="trainer-empty">Клієнтів ще немає.</div>'}</div>
  </div>`);
 }
 
@@ -154,12 +177,57 @@ async function saveClientAccess(cid,btn){
 
 
 async function openClient(id,activeTab=null){
- selected=id;let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
- app.innerHTML=shell(`<div class="trainer-toolbar"><button class="dark" onclick="goToTrainerHome()">← До клієнтів</button></div><div class="card"><div class="trainer-client-head"><div class="trainer-client-main"><h1>${esc(c.name)}</h1><div class="muted trainer-client-email">${esc(c.email)} · ${esc(c.goal||'Без цілі')}</div></div><div class="trainer-client-side"><div class="trainer-client-actions">${c.status==='Заморожений'?`<button onclick="setClientStatus(${c.id},'Активний')">Розморозити</button>`:`<button class="freeze-btn" onclick="setClientStatus(${c.id},'Заморожений')">Заморозити</button>`}<button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button></div></div></div></div><div id="profile" class="tab">${trainerAccessHTML(c)}${trainerProfileHTML(c)}</div><div id="program" class="tab hidden">${programHTML(d)}</div><div id="results" class="tab hidden">${resultsHTML(d)}</div><div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div><div id="comments" class="tab hidden"></div><div id="cardio" class="tab hidden">${cardioHTML(d,c.id,true)}</div><div id="calendar" class="tab hidden"><div class="card"><button class="exercise-toggle open" onclick="toggleCalendar('trainerCalendarBody',this)"><span><strong>Календар історії</strong><span class="muted" style="display:block;margin-top:5px">Обери дату тренування</span></span><span class="arrow">⌃</span></button><div id="trainerCalendarBody" style="margin-top:14px">${calendarHTML(d,'trainer')}</div></div></div>`);
+ selected=id;currentTrainerMainView='clients';
+ let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
+ let initials=(String(c.name||'К').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase();
+ let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
+ let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
+ let age=c.age?c.age+' років':'Вік не вказано';
+ let status=(c.status==='Активний'&&!c.access?.expired)?'Активний':(c.status||'На паузі');
+ let weight=lastM.weight?lastM.weight+' кг':'—';
+ let lastDay=lastWorkout?sessionDay(lastWorkout):'—';
+ let profile=`
+   <div class="trainer-client-kpis">
+    <div><strong>${weight}</strong><small>Поточна вага</small></div>
+    <div><strong>${lastDay}</strong><small>Останнє тренування</small></div>
+    <div><strong>${esc(c.goal||'—')}</strong><small>Ціль</small></div>
+   </div>
+   ${trainerProfileHTML(c)}
+   ${trainerAccessHTML(c)}
+ `;
+ app.innerHTML=shell(`<div class="trainer-client-page">
+   <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="document.getElementById('trainerClientActions')?.classList.toggle('hidden')">•••</button></div>
+   <div id="trainerClientActions" class="trainer-client-actions-pop hidden">
+     ${c.status==='Заморожений'?'<button onclick="setClientStatus('+c.id+',\'Активний\')">Розморозити</button>':'<button onclick="setClientStatus('+c.id+',\'Заморожений\')">Заморозити</button>'}
+     <button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button>
+   </div>
+   <div class="trainer-client-identity">
+     <span class="trainer-client-avatar large">${esc(initials)}</span>
+     <div><h1>${esc(c.name)}</h1><p>${esc(age)} · ${esc(c.goal||'Без цілі')}</p><span class="trainer-status-pill ok">${esc(status)}</span></div>
+   </div>
+   <div class="trainer-client-tabs">
+     <button data-tab="profile" onclick="showTrainerClientTab('profile',this)">Огляд</button>
+     <button data-tab="program" onclick="showTrainerClientTab('program',this)">Тренування</button>
+     <button data-tab="results" onclick="showTrainerClientTab('results',this)">Заміри</button>
+     <button data-tab="nutrition" onclick="showTrainerClientTab('nutrition',this)">Харчування</button>
+   </div>
+   <div id="profile" class="tab">${profile}</div>
+   <div id="program" class="tab hidden">${programHTML(d)}</div>
+   <div id="results" class="tab hidden">${resultsHTML(d)}</div>
+   <div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div>
+   <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${calendarHTML(d,'trainer')}</div></div></div>
+ </div>`);
  refreshTrainerGlobalBadge();
- currentTrainerTab=activeTab||currentTrainerTab||'profile';
- if(currentTrainerTab!=='profile')showTab(currentTrainerTab,null,false);
+ currentTrainerTab=activeTab||'profile';
+ showTrainerClientTab(currentTrainerTab,document.querySelector('.trainer-client-tabs [data-tab="'+currentTrainerTab+'"]'),false);
+}
 
+function showTrainerClientTab(id,btn,push=true){
+ document.querySelectorAll('.trainer-client-page .tab').forEach(x=>x.classList.add('hidden'));
+ document.getElementById(id)?.classList.remove('hidden');
+ document.querySelectorAll('.trainer-client-tabs button').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));
+ currentTrainerTab=id;
+ if(session?.role==='trainer'&&selected&&history.state?.eplanPage==='client') history.replaceState({...history.state,eplanTab:id},'',location.href);
 }
 
 
@@ -184,5 +252,6 @@ function showTab(id,btn,push=true){
 
 function trainerProfileHTML(c){
  let d=window.currentClientData||{},lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>(b.finished_at||b.started_at||'').localeCompare(a.finished_at||a.started_at||''))[0],lastCardio=(d.cardio||[])[0];
- return `<div class="card"><h2>Огляд клієнта</h2><div class="trainer-client-meta">${lastWorkout?`<span class="trainer-meta-chip ok">Останнє тренування: ${esc(sessionDay(lastWorkout))}</span>`:'<span class="trainer-meta-chip">Тренувань ще немає</span>'}${lastCardio?`<span class="trainer-meta-chip">Активність: ${esc(lastCardio.day)}</span>`:''}</div></div><div class="card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div>`
+ let health=[c.contraindications,c.injuries].map(x=>String(x||'').trim()).filter(Boolean).join('\n');
+ return `<div class="card trainer-overview-card"><h2>Огляд клієнта</h2><div class="trainer-client-meta">${lastWorkout?'<span class="trainer-meta-chip ok">Останнє тренування: '+esc(sessionDay(lastWorkout))+'</span>':'<span class="trainer-meta-chip">Тренувань ще немає</span>'}${lastCardio?'<span class="trainer-meta-chip">Активність: '+esc(lastCardio.day)+'</span>':''}</div></div><div class="card trainer-profile-card"><h2>Анкета клієнта</h2><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div></div><div style="margin-top:16px"><div class="muted">Моя ціль</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.goal||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання та травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(health||'Не вказано')}</div></div></div>`;
 }
