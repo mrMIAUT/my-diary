@@ -1578,3 +1578,35 @@ body.eplan-redesign.client-ui .redesign-nutrition-modal p{margin-top:0}
   body.eplan-redesign.client-ui .redesign-bju-detail-grid{gap:6px}
   body.eplan-redesign.client-ui .redesign-macro-ring{width:52px;height:52px}
 }
+
+
+/* Bottom navigation — translucent fixed bar like the reference */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  bottom:0!important;
+  transform:translateX(-50%)!important;
+  width:100%!important;
+  max-width:440px!important;
+  z-index:950!important;
+  background:rgba(255,255,255,.82)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.25)!important;
+  backdrop-filter:blur(18px) saturate(1.25)!important;
+  border-top:1px solid rgba(215,225,238,.88)!important;
+  border-left:0!important;
+  border-right:0!important;
+  border-bottom:0!important;
+  border-radius:0!important;
+  box-shadow:0 -10px 28px rgba(29,58,96,.10)!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav button{
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav button.active{
+  background:rgba(234,243,255,.9)!important;
+}
+
+/* More space between BJU title row and summary card */
+body.eplan-redesign.client-ui .redesign-bju-page .redesign-back-title{
+  margin-bottom:18px!important;
+}
