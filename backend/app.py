@@ -1542,7 +1542,7 @@ def save_weekly_checkin(cid:int,x:WeeklyCheckinIn,user:AuthUser=Depends(require_
                        comment=EXCLUDED.comment,reviewed=FALSE,created_at=CURRENT_TIMESTAMP""",
                   (cid,week,x.mood,x.sleep,x.hunger,x.energy,x.difficulty,x.comment.strip()))
         c.execute("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(%s,%s,%s,%s,%s,%s)",
-                  (cid,"trainer","checkin","Клієнт заповнив щотижневий check-in","profile",str(today)))
+                  (cid,"trainer","checkin","Клієнт заповнив щотижневий звіт","profile",str(today)))
         c.commit()
     return {"ok":True,"week_start":str(week)}
 
@@ -1551,7 +1551,7 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
     authorize_client(user,cid)
     with con() as c:
         row=c.execute("SELECT id FROM weekly_checkins WHERE id=%s AND client_id=%s FOR UPDATE",(checkin_id,cid)).fetchone()
-        if not row:raise HTTPException(404,"Check-in не знайдено")
+        if not row:raise HTTPException(404,"Щотижневий звіт не знайдено")
         c.execute("UPDATE weekly_checkins SET reviewed=%s WHERE id=%s",(x.reviewed,checkin_id))
         c.commit()
     return {"ok":True}
@@ -2506,7 +2506,7 @@ def save_weekly_checkin(cid:int,x:WeeklyCheckinIn,user:AuthUser=Depends(require_
                        comment=EXCLUDED.comment,reviewed=FALSE,created_at=CURRENT_TIMESTAMP""",
                   (cid,week,x.mood,x.sleep,x.hunger,x.energy,x.difficulty,x.comment.strip()))
         c.execute("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(%s,%s,%s,%s,%s,%s)",
-                  (cid,"trainer","checkin","Клієнт заповнив щотижневий check-in","profile",str(today)))
+                  (cid,"trainer","checkin","Клієнт заповнив щотижневий звіт","profile",str(today)))
         c.commit()
     return {"ok":True,"week_start":str(week)}
 
@@ -2515,7 +2515,7 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
     authorize_client(user,cid)
     with con() as c:
         row=c.execute("SELECT id FROM weekly_checkins WHERE id=%s AND client_id=%s FOR UPDATE",(checkin_id,cid)).fetchone()
-        if not row:raise HTTPException(404,"Check-in не знайдено")
+        if not row:raise HTTPException(404,"Щотижневий звіт не знайдено")
         c.execute("UPDATE weekly_checkins SET reviewed=%s WHERE id=%s",(x.reviewed,checkin_id))
         c.commit()
     return {"ok":True}
