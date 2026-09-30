@@ -3196,3 +3196,49 @@ body.eplan-redesign.client-ui .client-home-metric .neutral-change{
   color:#34425A!important;
   font-weight:800!important;
 }
+
+
+/* Progress KPI selector: same typography as Weight, arrows-only switching */
+body.eplan-redesign.client-ui .redesign-progress-kpi-select{
+  position:relative;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-labelrow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  width:100%;
+  margin:4px 0 2px;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-labelrow>small{
+  margin:0!important;
+  color:#6f7f94!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  line-height:1.2;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-arrows{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex:0 0 auto;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-arrows button{
+  width:24px!important;
+  min-width:24px!important;
+  height:24px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#eef3f9!important;
+  color:#34425A!important;
+  box-shadow:none!important;
+  font-size:18px!important;
+  font-weight:800!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-kpi-arrows button:active{
+  transform:scale(.96);
+}
