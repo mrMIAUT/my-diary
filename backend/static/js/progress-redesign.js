@@ -22,8 +22,7 @@ function redesignMeasureValue(x,key,unit){
 }
 function redesignDeltaHTML(v,unit){
   if(v===null)return '<small>Немає порівняння</small>';
-  let cls=v<0?'good':v>0?'warn':'';
-  return '<small class="'+cls+'">'+(v>0?'+':'')+fmtProgress(v)+' '+unit+'</small>';
+  return '<small class="neutral-change">'+(v>0?'+':'')+fmtProgress(v)+' '+unit+'</small>';
 }
 
 function redesignWeightChartHTML(measures){
@@ -39,8 +38,32 @@ function redesignWeightChartHTML(measures){
   return '<div class="redesign-weight-chart"><svg viewBox="0 0 100 86" preserveAspectRatio="none" aria-label="Динаміка ваги">'
     +'<line x1="8" y1="76" x2="92" y2="76" class="chart-axis"/>'
     +'<polyline points="'+poly+'" class="chart-line"/>'
-    +points.map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.8" class="chart-dot"/>').join('')
+    +points.map(p=>'<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx=".45" ry="1.05" class="chart-dot"/>').join('')
     +'</svg><div class="redesign-weight-chart-labels"><span>'+esc(formatProgressDate(pts[0].day))+'</span><span>'+esc(formatProgressDate(pts[pts.length-1].day))+'</span></div></div>';
+}
+
+function redesignOverviewMetricOptions(last){
+ let cfg=[
+  ['waist','Талія','см'],['chest','Груди','см'],['hips','Стегна','см'],
+  ['thighs_right','Стегно праве','см'],['thighs_left','Стегно ліве','см'],
+  ['arms_right','Рука права','см'],['arms_left','Рука ліва','см'],
+  ['calves_right','Гомілка права','см'],['calves_left','Гомілка ліва','см'],
+  ['forearms_right','Передпліччя праве','см'],['forearms_left','Передпліччя ліве','см'],
+  ['shoulders','Плечі','см'],['neck','Шия','см']
+ ];
+ let available=cfg.filter(([k])=>+last?.[k]>0);
+ return available.length?available:cfg.slice(0,3);
+}
+function redesignOverviewMetricMeta(last){
+ let opts=redesignOverviewMetricOptions(last);
+ let key=String(window.clientProgressOverviewMetric||'waist');
+ if(!opts.some(x=>x[0]===key))key=opts[0][0];
+ window.clientProgressOverviewMetric=key;
+ return opts.find(x=>x[0]===key)||opts[0];
+}
+function setClientProgressOverviewMetric(value){
+ window.clientProgressOverviewMetric=value;
+ showClientSection('progress');
 }
 
 function redesignProgressOverviewHTML(d){
@@ -50,11 +73,14 @@ function redesignProgressOverviewHTML(d){
   let weekStart=redesignWeekStartISO();
   let weekDone=sessions.filter(x=>sessionDay(x)&&sessionDay(x)>=weekStart).length;
   let days=[...new Set((d.program||[]).map(x=>x.day_name))].filter(Boolean);
-  let weightDelta=redesignMeasureDelta(last,prev,'weight'),waistDelta=redesignMeasureDelta(last,prev,'waist');
+  let weightDelta=redesignMeasureDelta(last,prev,'weight');
+  let metric=redesignOverviewMetricMeta(last),metricKey=metric[0],metricLabel=metric[1],metricUnit=metric[2];
+  let metricDelta=redesignMeasureDelta(last,prev,metricKey);
+  let metricOptions=redesignOverviewMetricOptions(last).map(([k,n])=>'<option value="'+k+'" '+(k===metricKey?'selected':'')+'>'+esc(n)+'</option>').join('');
   return '<div class="redesign-progress-overview">'
     +'<div class="redesign-progress-topgrid">'
       +'<button class="redesign-progress-kpi" onclick="switchClientProgressView(\'measurements\')"><span class="kpi-icon blue">'+uiIcon('measure')+'</span><small>Вага</small><strong>'+redesignMeasureValue(last,'weight','кг')+'</strong>'+redesignDeltaHTML(weightDelta,'кг')+'</button>'
-      +'<button class="redesign-progress-kpi" onclick="switchClientProgressView(\'measurements\')"><span class="kpi-icon green">'+uiIcon('chart')+'</span><small>Талія</small><strong>'+redesignMeasureValue(last,'waist','см')+'</strong>'+redesignDeltaHTML(waistDelta,'см')+'</button>'
+      +'<div class="redesign-progress-kpi redesign-progress-kpi-select"><span class="kpi-icon green">'+uiIcon('chart')+'</span><select aria-label="Показник прогресу" onchange="setClientProgressOverviewMetric(this.value)">'+metricOptions+'</select><strong>'+redesignMeasureValue(last,metricKey,metricUnit)+'</strong>'+redesignDeltaHTML(metricDelta,metricUnit)+'</div>'
     +'</div>'
     +'<div class="card redesign-progress-week"><div class="between"><div><span class="progress-kicker">Тренування цього тижня</span><strong>'+weekDone+' з '+(days.length||0)+'</strong></div><span class="progress-week-icon">'+uiIcon('dumbbell')+'</span></div><div class="progress-week-bars">'+Array.from({length:7},(_,i)=>'<i class="'+(i<Math.min(weekDone,7)?'done':'')+'"></i>').join('')+'</div></div>'
     +'<div class="card redesign-progress-chart-card"><div class="between"><div><span class="progress-kicker">Динаміка ваги</span><strong>'+(last&&+last.weight>0?fmtProgress(last.weight)+' кг':'Немає даних')+'</strong></div><button onclick="switchClientProgressView(\'measurements\')">Детальніше ›</button></div>'+redesignWeightChartHTML(measures)+'</div>'
