@@ -1356,3 +1356,225 @@ body.eplan-redesign.client-ui .client-bottom-nav{
 body.eplan-redesign.client-ui .client-bottom-nav .ui-icon{
   transform:translateY(-2px);
 }
+
+
+/* Redesign V1 — Nutrition tab */
+body.eplan-redesign.client-ui .redesign-nutrition-page>h1,
+body.eplan-redesign.client-ui .redesign-bju-page h1{
+  margin:4px 2px 14px;
+  font-size:28px;
+  letter-spacing:-.025em;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-tabs{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  padding:5px;
+  margin-bottom:16px;
+  border-radius:15px;
+  background:#edf2f8;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-tabs button{
+  min-width:0;
+  padding:10px 8px;
+  border-radius:11px;
+  background:transparent!important;
+  color:#66758d!important;
+  box-shadow:none!important;
+  font-size:12px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-tabs button.active{
+  background:#1677ff!important;
+  color:#fff!important;
+}
+body.eplan-redesign.client-ui .redesign-calorie-card{
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);
+}
+body.eplan-redesign.client-ui .nutrition-kicker{
+  display:block;
+  color:#75839a;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+body.eplan-redesign.client-ui .redesign-calorie-card strong,
+body.eplan-redesign.client-ui .redesign-bju-summary strong{
+  display:block;
+  font-size:23px;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .redesign-calorie-card strong small,
+body.eplan-redesign.client-ui .redesign-bju-summary strong small{
+  font-size:13px;
+  color:#718097;
+}
+body.eplan-redesign.client-ui .nutrition-fire{
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:#fff1e7;color:#e96f28;
+  font-size:18px;
+}
+body.eplan-redesign.client-ui .redesign-calorie-progress{
+  height:8px;
+  margin-top:14px;
+  border-radius:999px;
+  background:#e8edf5;
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .redesign-calorie-progress i{
+  display:block;height:100%;
+  border-radius:inherit;
+  background:#1677ff;
+}
+body.eplan-redesign.client-ui .redesign-calorie-meta{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;
+  color:#6f7f96;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .redesign-calorie-meta button,
+body.eplan-redesign.client-ui .redesign-nutrition-section-head button{
+  padding:0!important;background:transparent!important;color:#1677ff!important;
+  border:0!important;box-shadow:none!important;font-size:11px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-section-head{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin:18px 2px 10px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-section-head h2{
+  margin:0;font-size:19px;
+}
+body.eplan-redesign.client-ui .redesign-macro-grid,
+body.eplan-redesign.client-ui .redesign-bju-detail-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+body.eplan-redesign.client-ui .redesign-macro-ring-card{
+  min-width:0;
+  padding:12px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid #e1e8f2;
+  box-shadow:0 7px 20px rgba(35,70,108,.045);
+}
+body.eplan-redesign.client-ui .redesign-macro-ring{
+  --ring:#1677ff;
+  --pct:0;
+  width:58px;height:58px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:conic-gradient(var(--ring) calc(var(--pct)*1%),#e9eef5 0);
+  position:relative;
+}
+body.eplan-redesign.client-ui .redesign-macro-ring:after{
+  content:"";
+  position:absolute;inset:7px;
+  border-radius:50%;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .redesign-macro-ring>span{
+  position:relative;z-index:1;
+  font-size:11px;font-weight:900;color:#0a1738;
+}
+body.eplan-redesign.client-ui .redesign-macro-ring.orange{--ring:#f0a318}
+body.eplan-redesign.client-ui .redesign-macro-ring.green{--ring:#20a664}
+body.eplan-redesign.client-ui .redesign-macro-ring-card>strong{font-size:12px}
+body.eplan-redesign.client-ui .redesign-macro-ring-card>small{
+  color:#718097;font-size:9.5px;text-align:center;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-actions{
+  margin:12px 0 16px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-actions button{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border-radius:13px;
+  padding:12px;
+  background:#edf4ff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-actions .ui-icon{width:17px;height:17px}
+
+body.eplan-redesign.client-ui .redesign-nutrition-summary-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-summary-grid>div{
+  padding:14px;border-radius:17px;background:#fff;border:1px solid #e1e8f2;
+  box-shadow:0 7px 20px rgba(35,70,108,.045);
+}
+body.eplan-redesign.client-ui .redesign-nutrition-summary-grid span{
+  display:block;color:#74839a;font-size:10px;font-weight:800;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-summary-grid strong{
+  display:block;margin-top:4px;font-size:21px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-summary-grid small{
+  color:#7d8a9d;font-size:10px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-average{
+  padding:16px;border-radius:18px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-average strong{font-size:18px}
+body.eplan-redesign.client-ui .redesign-average-bars{display:grid;gap:9px;margin-top:13px}
+body.eplan-redesign.client-ui .redesign-average-bars>span{
+  display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:center;
+}
+body.eplan-redesign.client-ui .redesign-average-bars b{font-size:11px;color:#62738b}
+body.eplan-redesign.client-ui .redesign-average-bars i{
+  display:block;height:7px;border-radius:99px;background:#e7edf5;overflow:hidden;
+}
+body.eplan-redesign.client-ui .redesign-average-bars em{
+  display:block;height:100%;border-radius:inherit;background:#1677ff;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-day-list{
+  display:grid;gap:8px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-day-row{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:15px;background:#fff;border:1px solid #e1e8f2;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-day-row>div{display:flex;flex-direction:column;gap:2px}
+body.eplan-redesign.client-ui .redesign-nutrition-day-row strong{font-size:12px}
+body.eplan-redesign.client-ui .redesign-nutrition-day-row small,
+body.eplan-redesign.client-ui .redesign-nutrition-day-row>span{font-size:10px;color:#77869a}
+
+body.eplan-redesign.client-ui .redesign-bju-summary{
+  padding:16px;border-radius:18px;
+}
+body.eplan-redesign.client-ui .redesign-bju-summary>span{
+  display:block;color:#75839a;font-size:11px;font-weight:800;margin-bottom:4px;
+}
+body.eplan-redesign.client-ui .redesign-bju-detail-grid{margin-top:12px}
+body.eplan-redesign.client-ui .redesign-back-title{
+  display:grid;
+  grid-template-columns:38px 1fr;
+  align-items:center;
+  gap:4px;
+}
+body.eplan-redesign.client-ui .redesign-back-title h1{margin:0}
+body.eplan-redesign.client-ui .redesign-back-title>button{
+  width:34px;height:34px;padding:0;
+  border-radius:11px;background:#edf3fb!important;color:#0a1738!important;
+  font-size:25px;line-height:1;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-modal{
+  max-width:440px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-modal h2{margin-bottom:4px}
+body.eplan-redesign.client-ui .redesign-nutrition-modal p{margin-top:0}
+
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .redesign-macro-grid,
+  body.eplan-redesign.client-ui .redesign-bju-detail-grid{gap:6px}
+  body.eplan-redesign.client-ui .redesign-macro-ring{width:52px;height:52px}
+}
