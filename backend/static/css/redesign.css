@@ -2605,3 +2605,39 @@ body.eplan-redesign.client-ui .metric-arms .measurement-svg-icon{
   background:#eef9f2;
   stroke:#1f9a5b;
 }
+
+
+/* Clear body-zone measurement pictograms */
+body.eplan-redesign.client-ui .measurement-zone-icon{
+  width:48px;
+  height:48px;
+  padding:5px;
+  border-radius:13px;
+  background:#f3f7fc;
+  stroke:#9aa8bb;
+  stroke-width:1.65;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+body.eplan-redesign.client-ui .measurement-zone-icon .body-base{
+  fill:#eef2f7;
+  stroke:#a6b2c2;
+}
+body.eplan-redesign.client-ui .measurement-zone-icon .zone-hot{
+  fill:#1677ff;
+  stroke:#1677ff;
+}
+body.eplan-redesign.client-ui .metric-hips .measurement-zone-icon .zone-hot,
+body.eplan-redesign.client-ui .metric-thighs .measurement-zone-icon .zone-hot{
+  fill:#7a67d9;
+  stroke:#7a67d9;
+}
+body.eplan-redesign.client-ui .metric-arms .measurement-zone-icon .zone-hot{
+  fill:#20a15f;
+  stroke:#20a15f;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual .measurement-zone-icon{
+  stroke:#71829a;
+  background:#f1f5fa;
+}
