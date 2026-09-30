@@ -6,10 +6,8 @@ function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
 function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
 
 function restTimerPanelHTML(){
- return `<div class="card rest-timer-card"><div class="rest-timer-top"><div><span class="rest-timer-label">⏱ Відпочинок між підходами</span><strong id="restTimerDisplay">${restTimerRemaining()?formatRestTimer(restTimerRemaining()):'Готовий до старту'}</strong></div><button class="dark rest-timer-main" onclick="toggleRestTimerChoices()">Таймер</button></div>
- <div id="restTimerChoices" class="rest-timer-choices hidden"><button class="dark" data-rest-seconds="60" onclick="startRestTimer(60,this)">1:00</button><button class="dark" data-rest-seconds="90" onclick="startRestTimer(90,this)">1:30</button><button class="dark" data-rest-seconds="120" onclick="startRestTimer(120,this)">2:00</button><button class="dark" data-rest-seconds="180" onclick="startRestTimer(180,this)">3:00</button><button class="dark" onclick="customRestTimer()">Свій час</button></div>
- <div id="restTimerActions" class="rest-timer-actions ${restTimerRemaining()?'':'hidden'}"><button class="dark" onclick="addRestTimer(30)">+30 сек</button><button class="dark" onclick="cancelRestTimer()">Скасувати</button></div>
- <div class="rest-timer-note">Можна згорнути застосунок — час не загубиться. Для сигналу у фоні дозволь сповіщення.</div></div>`;
+ // Legacy compatibility: old render paths must never restore the large timer card.
+ return restTimerInlineHTML();
 }
 
 function restTimerInlineHTML(){
