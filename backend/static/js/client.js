@@ -121,7 +121,7 @@ async function showClientTraining(cid){
  }else{
    let active=(d.workout_sessions||[]).find(x=>x.status==='training');
    if(active){
-     body=`${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,cid)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${cid},${active.id},this)">Завершити тренування</button></div></div>`;
+     body=`<div class="card workout-active-card">${restTimerInlineHTML()}${activeExercisesHTML(groups[active.day_name]||[],d,cid)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${cid},${active.id},this)">Завершити тренування</button></div></div>`;
    }else{
      body=`${todayGuidanceHTML(d,cid,groups)}${clientTrainingProgramHTML(d,cid,groups)}${trainingTermsHelpHTML()}`;
    }
@@ -173,7 +173,7 @@ async function clientCabinet(id){
  let active=(d.workout_sessions||[]).find(x=>x.status==='training');
  let programPart='';
  if(active){
-   programPart=`<h1>${esc(active.day_name)}</h1>${restTimerPanelHTML()}<div class="card"><div class="training-live">Тренування триває</div><div style="height:12px"></div>${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id},this)">Завершити тренування</button></div></div>`;
+   programPart=`<h1>${esc(active.day_name)}</h1><div class="card workout-active-card">${restTimerInlineHTML()}${activeExercisesHTML(groups[active.day_name]||[],d,id)}<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout(${id},${active.id},this)">Завершити тренування</button></div></div>`;
  }
  currentClientView='home';let nutritionPart=hasFeature('nutrition',c)?dailyNutritionHTML(d,id):`<div class="card plan-lock-card"><strong>🔒 БЖВ та харчування</strong><span class="muted">Доступно в тарифі «Онлайн-ведення».</span></div>`;let cardioPart=hasFeature('cardio',c)?cardioHTML(d,id):'';app.innerHTML=shell(`${accessBannerHTML(c)}<div class="card"><h1>Сьогодні</h1><p class="today-date">${esc(kyivTodayLong())}</p><p class="muted">${esc(c.name)} · ${esc(c.goal||'Твоя програма')}</p></div>${hasFeature('workouts',c)&&!active?todayGuidanceHTML(d,id,groups):''}${active?programPart:''}${hasFeature('workouts',c)?trainingTermsHelpHTML():''}${hasFeature('workouts',c)?clientTrainingProgramHTML(d,id,groups):''}${active?'':programPart}${cardioPart}${nutritionPart}`);refreshNotificationBadge(id,'client','clientNotifyBtn');setTimeout(()=>restoreTodayDrafts(id,hasFeature('cardio',c)&&!(d.cardio||[]).some(x=>x.day===isoToday()),hasFeature('nutrition',c)&&!(d.nutrition||[]).some(x=>x.day===isoToday())),0);setTimeout(toggleCardioFields,0);setTimeout(maybeShowClientOnboarding,180)
 }
