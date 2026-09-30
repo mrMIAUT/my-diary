@@ -2249,3 +2249,29 @@ body.eplan-redesign.client-ui .wrap.client-shell{
     bottom:calc(10px + env(safe-area-inset-bottom))!important;
   }
 }
+
+
+/* Make the floating bottom nav genuinely transparent on light screens */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  background:rgba(255,255,255,.28)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(1.18)!important;
+  backdrop-filter:blur(20px) saturate(1.18)!important;
+  border:1px solid rgba(255,255,255,.55)!important;
+  box-shadow:
+    0 10px 28px rgba(24,47,80,.08),
+    inset 0 1px 0 rgba(255,255,255,.36)!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav::before{
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.08) 0%,
+    rgba(255,255,255,.015) 100%
+  )!important;
+}
+
+body.eplan-redesign.client-ui .client-bottom-nav button,
+body.eplan-redesign.client-ui .client-bottom-nav button.active{
+  background:transparent!important;
+  box-shadow:none!important;
+}
