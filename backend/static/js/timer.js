@@ -6,20 +6,20 @@ function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
 function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
 
 function restTimerPanelHTML(){
- // Legacy compatibility: old render paths must never restore the large timer card.
- return restTimerInlineHTML();
+ return restTimerInlineHTML()+restTimerInlineControlsHTML();
 }
 
 function restTimerInlineHTML(){
  let remaining=restTimerRemaining();
- return `<div class="training-live-toolbar">
-   <div class="training-live">Тренування триває</div>
-   <button class="inline-rest-timer" onclick="toggleRestTimerChoices()" aria-label="Таймер відпочинку">
-     <span class="inline-rest-timer-icon">⏱</span>
-     <span id="restTimerDisplay">${remaining?formatRestTimer(remaining):'Таймер'}</span>
-   </button>
- </div>
- <div id="restTimerChoices" class="rest-timer-choices inline-rest-timer-choices hidden">
+ return `<button class="inline-rest-timer" onclick="toggleRestTimerChoices()" aria-label="Таймер відпочинку">
+   <span class="inline-rest-timer-icon">⏱</span>
+   <span id="restTimerDisplay">${remaining?formatRestTimer(remaining):'Таймер'}</span>
+ </button>`;
+}
+
+function restTimerInlineControlsHTML(){
+ let remaining=restTimerRemaining();
+ return `<div id="restTimerChoices" class="rest-timer-choices inline-rest-timer-choices hidden">
    <button class="dark" data-rest-seconds="60" onclick="startRestTimer(60,this)">1:00</button>
    <button class="dark" data-rest-seconds="90" onclick="startRestTimer(90,this)">1:30</button>
    <button class="dark" data-rest-seconds="120" onclick="startRestTimer(120,this)">2:00</button>
