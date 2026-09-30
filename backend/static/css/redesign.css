@@ -9,26 +9,21 @@ body.eplan-redesign.client-ui{
   --text:#0a1738;
   --muted:#69758e;
   --yellow:#1677ff;
-  background:#f8fbff;
+  background:#eef4fb;
   color:var(--text);
-  min-height:100dvh;
-}
-body.eplan-redesign.client-ui #app{
-  min-height:100dvh;
-  background:#f8fbff;
 }
 
 body.eplan-redesign.client-ui .wrap.client-shell{
   max-width:760px;
   min-height:100dvh;
   margin:0 auto;
-  padding:calc(18px + env(safe-area-inset-top)) 18px calc(104px + env(safe-area-inset-bottom));
+  padding:18px 18px calc(104px + env(safe-area-inset-bottom));
   background:#f8fbff;
 }
 
 body.eplan-redesign.client-ui .client-top{
   position:sticky;
-  top:env(safe-area-inset-top);
+  top:0;
   z-index:900;
   display:flex;
   align-items:center;
@@ -3251,18 +3246,14 @@ body.eplan-redesign.client-ui .redesign-progress-kpi-arrows button:active{
 
 /* Separate floating bottom navigation from content cards */
 body.eplan-redesign.client-ui .client-bottom-nav{
-  background:rgba(246,249,253,.24)!important;
-  -webkit-backdrop-filter:blur(26px) saturate(1.20)!important;
-  backdrop-filter:blur(26px) saturate(1.20)!important;
-  border:1px solid rgba(184,198,217,.48)!important;
+  background:rgba(246,249,253,.10)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.10)!important;
+  backdrop-filter:blur(18px) saturate(1.10)!important;
+  border:1px solid rgba(184,198,217,.34)!important;
   box-shadow:
-    0 12px 30px rgba(25,49,83,.12),
-    0 -1px 0 rgba(255,255,255,.62) inset!important;
+    0 10px 24px rgba(25,49,83,.10),
+    0 -1px 0 rgba(255,255,255,.34) inset!important;
 }
 body.eplan-redesign.client-ui .client-bottom-nav::before{
-  background:linear-gradient(
-    180deg,
-    rgba(255,255,255,.07) 0%,
-    rgba(232,240,250,.015) 100%
-  )!important;
+  background:rgba(255,255,255,.02)!important;
 }
