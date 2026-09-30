@@ -3482,3 +3482,128 @@ body.eplan-redesign.client-ui .client-avatar.compact{
 body.eplan-redesign.client-ui .client-avatar.compact span{
   font-size:12px!important;
 }
+
+
+/* Client avatar: small circular control that never covers page content */
+body.eplan-redesign.client-ui .client-top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .client-avatar{
+  width:38px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:0!important;
+  margin:0!important;
+  flex:0 0 38px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:999px!important;
+  background:#eaf2ff!important;
+  border:1px solid #d3e0f2!important;
+  color:#1677ff!important;
+  box-shadow:0 5px 14px rgba(41,83,132,.08)!important;
+}
+body.eplan-redesign.client-ui .client-avatar.compact{
+  width:36px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  flex-basis:36px!important;
+}
+body.eplan-redesign.client-ui .client-avatar img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  border-radius:50%!important;
+}
+body.eplan-redesign.client-ui .client-avatar span{
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1!important;
+}
+
+/* Profile photo editor */
+body.eplan-redesign.client-ui .client-profile-avatar-card{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin:0 0 14px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .client-profile-avatar{
+  position:relative;
+  width:78px!important;
+  min-width:78px!important;
+  height:78px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  border:1px solid #d5e1f0!important;
+  background:#edf4ff!important;
+  color:#1677ff!important;
+  display:grid!important;
+  place-items:center!important;
+}
+body.eplan-redesign.client-ui .client-profile-avatar>img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+body.eplan-redesign.client-ui .client-profile-avatar>span:not(.client-profile-avatar-edit){
+  font-size:22px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-edit{
+  position:absolute;
+  right:2px;
+  bottom:2px;
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#1677ff;
+  color:#fff;
+  border:2px solid #fff;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-edit .ui-icon{
+  width:12px;
+  height:12px;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-card>div{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-card small{
+  color:var(--muted);
+  font-size:12px;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-change{
+  width:auto!important;
+  min-height:0!important;
+  margin-top:4px!important;
+  padding:7px 11px!important;
+  border-radius:10px!important;
+  background:#eef4ff!important;
+  color:#1677ff!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .client-avatar-input{
+  display:none!important;
+}
