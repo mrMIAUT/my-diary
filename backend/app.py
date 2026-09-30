@@ -872,6 +872,27 @@ def init():
         c.execute("CREATE INDEX IF NOT EXISTS ix_auth_sessions_user ON auth_sessions(role,user_id)")
         c.execute("""CREATE TABLE IF NOT EXISTS comments(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,program_id INTEGER DEFAULT 0,exercise TEXT DEFAULT '',author TEXT,body TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         c.execute("""CREATE TABLE IF NOT EXISTS cardio_log(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,cardio_type TEXT DEFAULT '',minutes INTEGER DEFAULT 0,speed DOUBLE PRECISION DEFAULT 0,incline DOUBLE PRECISION DEFAULT 0,steps INTEGER DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(client_id,day))""")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_notes(
+            client_id INTEGER PRIMARY KEY REFERENCES clients(id),
+            body TEXT NOT NULL DEFAULT '',
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS weekly_checkins(
+            id BIGSERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL REFERENCES clients(id),
+            week_start DATE NOT NULL,
+            mood INTEGER NOT NULL CHECK(mood BETWEEN 1 AND 5),
+            sleep INTEGER NOT NULL CHECK(sleep BETWEEN 1 AND 5),
+            hunger INTEGER NOT NULL CHECK(hunger BETWEEN 1 AND 5),
+            energy INTEGER NOT NULL CHECK(energy BETWEEN 1 AND 5),
+            difficulty INTEGER NOT NULL CHECK(difficulty BETWEEN 1 AND 5),
+            comment TEXT NOT NULL DEFAULT '',
+            reviewed BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(client_id,week_start)
+        )""")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_weekly_checkins_client_week ON weekly_checkins(client_id,week_start DESC)")
+
         # M03A additive migration: business tables and H05 migration are unchanged.
         c.execute("""CREATE TABLE IF NOT EXISTS security_rate_limits(
             bucket_key TEXT PRIMARY KEY,
@@ -966,6 +987,18 @@ class MeasureIn(BaseModel):
     forearms_right:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
 class ClientProfileIn(BaseModel):
     first_name:str=Field(default="",max_length=120); last_name:str=Field(default="",max_length=120); age:int=Field(default=0,ge=0,le=150); sex:str=Field(default="",max_length=32); goal:str=Field(default="",max_length=2000); contraindications:str=Field(default="",max_length=10000); injuries:str=Field(default="",max_length=10000); contact:str=Field(default="",max_length=512); instagram:str=Field(default="",max_length=512); telegram:str=Field(default="",max_length=512); tiktok:str=Field(default="",max_length=512)
+class TrainerNoteIn(BaseModel):
+    body:str=Field(default="",max_length=10000)
+class WeeklyCheckinIn(BaseModel):
+    mood:int=Field(ge=1,le=5)
+    sleep:int=Field(ge=1,le=5)
+    hunger:int=Field(ge=1,le=5)
+    energy:int=Field(ge=1,le=5)
+    difficulty:int=Field(ge=1,le=5)
+    comment:str=Field(default="",max_length=5000)
+class CheckinReviewIn(BaseModel):
+    reviewed:bool=True
+
 class NutritionPlanItemIn(BaseModel):
     meal_number:int=Field(ge=1,le=100); variant_number:int=Field(default=1,ge=1,le=100); content:str=Field(default="",max_length=5000); sort:int=Field(default=0,ge=0,le=10_000)
 class NutritionTargetIn(BaseModel):
@@ -1313,6 +1346,7 @@ CLIENT_RESPONSE_FIELDS=(
     "contraindications","injuries","contact","instagram","telegram","tiktok","avatar",
     "plan_code","access_until","access","live_status","needs_review_count",
     "finished_workout_count","last_finished_at","review_state",
+    "workouts_28d","nutrition_days_7d","checkin_pending_count","last_checkin_at",
 )
 
 def client_response(record:dict|None):
@@ -1330,21 +1364,39 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
     ) THEN 'Тренується' ELSE c.status END AS live_status,
         COALESCE(w.needs_review_count,0) AS needs_review_count,
         COALESCE(w.finished_count,0) AS finished_count,
-        w.last_finished_at AS last_finished_at
+        COALESCE(w.workouts_28d,0) AS workouts_28d,
+        w.last_finished_at AS last_finished_at,
+        COALESCE(n.nutrition_days_7d,0) AS nutrition_days_7d,
+        COALESCE(ch.checkin_pending_count,0) AS checkin_pending_count,
+        ch.last_checkin_at AS last_checkin_at
     FROM clients c
     LEFT JOIN (
         SELECT client_id,
           COUNT(*) FILTER (WHERE status='finished' AND COALESCE(trainer_reviewed,FALSE)=FALSE) AS needs_review_count,
           COUNT(*) FILTER (WHERE status='finished') AS finished_count,
+          COUNT(*) FILTER (WHERE status='finished' AND COALESCE(finished_at,started_at)>=CURRENT_TIMESTAMP-INTERVAL '28 days') AS workouts_28d,
           MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
         FROM workout_sessions GROUP BY client_id
     ) w ON w.client_id=c.id
+    LEFT JOIN (
+        SELECT client_id,COUNT(DISTINCT day) FILTER (WHERE day>=CURRENT_DATE-INTERVAL '6 days') AS nutrition_days_7d
+        FROM nutrition GROUP BY client_id
+    ) n ON n.client_id=c.id
+    LEFT JOIN (
+        SELECT client_id,
+          COUNT(*) FILTER (WHERE reviewed=FALSE) AS checkin_pending_count,
+          MAX(created_at) AS last_checkin_at
+        FROM weekly_checkins GROUP BY client_id
+    ) ch ON ch.client_id=c.id
     WHERE c.status<>'Видалений' ORDER BY c.id DESC
     LIMIT ? OFFSET ?""",(limit,offset))
     for c in xs:
         c["access"]=access_info(c)
         c["needs_review_count"]=int(c.get("needs_review_count") or 0)
         c["finished_workout_count"]=int(c.get("finished_count") or 0)
+        c["workouts_28d"]=int(c.get("workouts_28d") or 0)
+        c["nutrition_days_7d"]=int(c.get("nutrition_days_7d") or 0)
+        c["checkin_pending_count"]=int(c.get("checkin_pending_count") or 0)
         c["last_finished_at"]=c.get("last_finished_at")
         c["review_state"]="needs_review" if c["needs_review_count"]>0 else ("reviewed" if c["finished_workout_count"]>0 else "none")
     return [client_response(c) for c in xs]
@@ -1414,6 +1466,7 @@ def client(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         "workout_sessions":"SELECT * FROM workout_sessions WHERE client_id=? ORDER BY id DESC",
         "comments":"SELECT * FROM comments WHERE client_id=? ORDER BY created_at DESC,id DESC",
         "cardio":"SELECT * FROM cardio_log WHERE client_id=? ORDER BY day DESC,id DESC",
+        "checkins":"SELECT * FROM weekly_checkins WHERE client_id=? ORDER BY week_start DESC,id DESC",
     }
     # Keep the whole page on one DB connection. M03B2 removes the old helper
     # pattern of opening a fresh connection for each collection in this card.
@@ -1431,6 +1484,9 @@ def client(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
                 for item in page:item["program_snapshot"]=sanitize_program_snapshot(item.get("program_snapshot") or "")
             data[key]=page
             more=more or has_more
+    if user.role=="trainer":
+        note=db_note=one("SELECT body,updated_at FROM trainer_notes WHERE client_id=?",(cid,))
+        data["trainer_note"]=note or {"body":"","updated_at":None}
     data["pagination"]={"limit":limit,"offset":offset,"has_more":more}
     return data
 @app.patch("/api/client/{cid}/profile")
@@ -1440,6 +1496,46 @@ def update_client_profile(cid:int,x:ClientProfileIn,user:AuthUser=Depends(curren
     display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
     run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,goal=?,contraindications=?,injuries=?,contact=?,instagram=?,telegram=?,tiktok=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.goal.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),display,display,cid))
     return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
+
+@app.put("/api/client/{cid}/trainer-note")
+def save_trainer_note(cid:int,x:TrainerNoteIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
+    with con() as c:
+        c.execute("""INSERT INTO trainer_notes(client_id,body,updated_at)
+                     VALUES(%s,%s,CURRENT_TIMESTAMP)
+                     ON CONFLICT(client_id) DO UPDATE SET body=EXCLUDED.body,updated_at=CURRENT_TIMESTAMP""",(cid,x.body.strip()))
+        c.commit()
+    return {"ok":True}
+
+@app.post("/api/client/{cid}/checkin")
+def save_weekly_checkin(cid:int,x:WeeklyCheckinIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,cid)
+    require_active_client(cid)
+    today=kyiv_today()
+    week=today-timedelta(days=today.weekday())
+    with con() as c:
+        c.execute("""INSERT INTO weekly_checkins(client_id,week_start,mood,sleep,hunger,energy,difficulty,comment,reviewed)
+                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s,FALSE)
+                     ON CONFLICT(client_id,week_start) DO UPDATE SET
+                       mood=EXCLUDED.mood,sleep=EXCLUDED.sleep,hunger=EXCLUDED.hunger,
+                       energy=EXCLUDED.energy,difficulty=EXCLUDED.difficulty,
+                       comment=EXCLUDED.comment,reviewed=FALSE,created_at=CURRENT_TIMESTAMP""",
+                  (cid,week,x.mood,x.sleep,x.hunger,x.energy,x.difficulty,x.comment.strip()))
+        c.execute("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(%s,%s,%s,%s,%s,%s)",
+                  (cid,"trainer","checkin","Клієнт заповнив щотижневий check-in","profile",str(today)))
+        c.commit()
+    return {"ok":True,"week_start":str(week)}
+
+@app.patch("/api/client/{cid}/checkin/{checkin_id}/review")
+def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    with con() as c:
+        row=c.execute("SELECT id FROM weekly_checkins WHERE id=%s AND client_id=%s FOR UPDATE",(checkin_id,cid)).fetchone()
+        if not row:raise HTTPException(404,"Check-in не знайдено")
+        c.execute("UPDATE weekly_checkins SET reviewed=%s WHERE id=%s",(x.reviewed,checkin_id))
+        c.commit()
+    return {"ok":True}
 
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
