@@ -504,6 +504,19 @@ function clientBottomNavHTML(){
  </nav>`;
 }
 
+function trainerBottomNavHTML(){
+ if(!session||session.role!=='trainer')return '';
+ let active=currentTrainerMainView||'home';
+ let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ return `<nav class="trainer-bottom-nav" aria-label="Навігація тренера">
+   ${item('home','Головна','home','trainerHome()')}
+   ${item('clients','Клієнти','users','showTrainerClientsView()')}
+   ${item('programs','Програми','chart','showTrainerPrograms()')}
+   ${item('library','Вправи','dumbbell','showExerciseLibrary()')}
+   ${item('more','Більше','menu','showTrainerMore()')}
+ </nav>`;
+}
+
 function shell(content){
  if(session&&session.role==='client'&&session.client_id){
    document.body.classList.add('eplan-redesign','client-ui');
@@ -516,7 +529,7 @@ function shell(content){
  if(session&&session.role==='trainer'){
    document.body.classList.add('eplan-redesign','trainer-ui');
    document.body.classList.remove('client-ui');
-   return `<div class="wrap trainer-shell"><div class="trainer-top"><div><strong>Вітаємо, Тренере! 👋</strong><span>${esc(kyivTodayLong())}</span></div><button id="trainerGlobalNotifyBtn" class="notify-btn" onclick="showTrainerNotifications()" aria-label="Сповіщення">${uiIcon('bell')}</button></div>${content}</div>`;
+   return `<div class="wrap trainer-shell"><div class="trainer-top"><div><strong>Вітаємо, Тренере! 👋</strong><span>${esc(kyivTodayLong())}</span></div><button id="trainerGlobalNotifyBtn" class="notify-btn" onclick="showTrainerNotifications()" aria-label="Сповіщення">${uiIcon('bell')}</button></div>${content}${trainerBottomNavHTML()}</div>`;
  }
  document.body.classList.remove('eplan-redesign','client-ui','trainer-ui');
  return `<div class="wrap">${content}</div>`
