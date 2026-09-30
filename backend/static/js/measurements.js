@@ -71,7 +71,7 @@ function measurementVisualCards(last,prev,d=window.currentClientData||{}){
    let sideDelta=(value,prevValue)=>{
     if(!(value>0)||!(prevValue>0))return '';
     let delta=value-prevValue,cls=delta<0?'down':delta>0?'up':'';
-    return '<em class="measurement-side-delta '+cls+'">'+(delta===0?'без змін':(delta>0?'+':'')+fmtProgress(delta)+' '+u)+'</em>';
+    return '<em class="measurement-side-delta neutral-change">'+(delta===0?'без змін':(delta>0?'+':'')+fmtProgress(delta)+' '+u)+'</em>';
    };
    let pairHtml=hasPair
     ?'<div class="measurement-side-values">'
@@ -83,14 +83,14 @@ function measurementVisualCards(last,prev,d=window.currentClientData||{}){
    return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div>'+pairHtml+note+'</div>';
   }
   let v=+last?.[k]||0,pv=+prev?.[k]||0,delta=(v>0&&pv>0)?v-pv:null;
-  return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div><strong>'+(v>0?fmtProgress(v)+' <small>'+u+'</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
+  return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div><strong>'+(v>0?fmtProgress(v)+' <small>'+u+'</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="neutral-change">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
  }).join('');
  return '<div class="measurement-places-grid">'+cards+'</div>';
 }
 
 function measurementWeightVisual(last,prev,d=window.currentClientData||{}){
  let v=+last?.weight||0,pv=+prev?.weight||0,delta=(v>0&&pv>0)?v-pv:null;
- return '<div class="measurement-weight-visual"><div class="measurement-place-top">'+measurementVisualIcon('weight',d)+'<span>Вага</span></div><div><strong>'+(v>0?fmtProgress(v)+' <small>кг</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' кг</em>')+'</div></div>';
+ return '<div class="measurement-weight-visual"><div class="measurement-place-top">'+measurementVisualIcon('weight',d)+'<span>Вага</span></div><div><strong>'+(v>0?fmtProgress(v)+' <small>кг</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="neutral-change">'+(delta>0?'+':'')+fmtProgress(delta)+' кг</em>')+'</div></div>';
 }
 
 
@@ -98,7 +98,7 @@ function measurementMetricCards(last,prev){
  let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let html=single.filter(([k])=>+last?.[k]>0).map(([k,n,u])=>{
   let v=+last[k],pv=+prev?.[k],delta=pv>0?v-pv:null;
-  return '<div class="measurement-metric"><span>'+n+'</span><strong>'+fmtProgress(v)+' <small>'+u+'</small></strong>'+(delta===null?'<em>—</em>':'<em class="'+(delta<0?'down':delta>0?'up':'')+'">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
+  return '<div class="measurement-metric"><span>'+n+'</span><strong>'+fmtProgress(v)+' <small>'+u+'</small></strong>'+(delta===null?'<em>—</em>':'<em class="neutral-change">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
  }).join('');
  Object.entries(measurementPairConfig()).forEach(([key,p])=>{
   let cur=measurementPairValues(last,key);if(!(cur.left||cur.right||cur.legacy))return;
@@ -129,8 +129,7 @@ function measurementHistoryCard(x,prev,cid=null){
  let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canEdit=ownerId>0&&session&&session.role==='client'&&x.id;
  let basics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let basicHtml=basics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{
-  let d=+prev?.[k]>0?(+x[k]-+prev[k]):null;
-  return '<div class="measurement-history-metric"><span>'+n+'</span><strong>'+fmtProgress(x[k])+' '+u+'</strong>'+(d===null?'':'<small class="'+(d<0?'down':d>0?'up':'')+'">'+(d>0?'+':'')+fmtProgress(d)+' '+u+'</small>')+'</div>';
+  return '<div class="measurement-history-metric"><span>'+n+'</span><strong>'+fmtProgress(x[k])+' '+u+'</strong></div>';
  }).join('');
  let pairedHtml=Object.entries(measurementPairConfig()).map(([key,p])=>{
   let cur=measurementPairValues(x,key);if(!(cur.left||cur.right||cur.legacy))return '';
@@ -200,8 +199,8 @@ function setMeasurementComparison(which,value){
 
 function measurementCompactDelta(current,previous,unit){
  if(!(current>0)||!(previous>0))return '<small class="muted">—</small>';
- let d=current-previous,cls=d<0?'down':d>0?'up':'';
- return '<small class="'+cls+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+unit)+'</small>';
+ let d=current-previous;
+ return '<small class="neutral-change">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+unit)+'</small>';
 }
 
 function measurementCompactChangesHTML(a,b){
@@ -220,11 +219,11 @@ function measurementCompactChangesHTML(a,b){
 
 function measurementChangesHTML(a,b){
  let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
- let html=single.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return '<div><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+u)+'</em></div>'}).join('');
+ let html=single.filter(([k])=>+a[k]>0&&+b[k]>0).map(([k,n,u])=>{let d=+a[k]-+b[k];return '<div><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong><em class="neutral-change">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+u)+'</em></div>'}).join('');
  Object.entries(measurementPairConfig()).forEach(([key,p])=>{
   let cur=measurementPairValues(a,key),old=measurementPairValues(b,key);
-  if(cur.right&&old.right){let d=cur.right-old.right;html+='<div><span>'+p.label+' · права</span><strong>'+fmtProgress(old.right)+' → '+fmtProgress(cur.right)+' см</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
-  if(cur.left&&old.left){let d=cur.left-old.left;html+='<div><span>'+p.label+' · ліва</span><strong>'+fmtProgress(old.left)+' → '+fmtProgress(cur.left)+' см</strong><em class="'+(d<0?'down':d>0?'up':'')+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
+  if(cur.right&&old.right){let d=cur.right-old.right;html+='<div><span>'+p.label+' · права</span><strong>'+fmtProgress(old.right)+' → '+fmtProgress(cur.right)+' см</strong><em class="neutral-change">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
+  if(cur.left&&old.left){let d=cur.left-old.left;html+='<div><span>'+p.label+' · ліва</span><strong>'+fmtProgress(old.left)+' → '+fmtProgress(cur.left)+' см</strong><em class="neutral-change">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' см')+'</em></div>'}
  });
  return '<div class="measurement-changes">'+html+'</div>';
 }
