@@ -68,16 +68,22 @@ function redesignNutritionTodayHTML(d,c,cid){
       +nutritionRing('Вуглеводи',carbs,c.carbs,'г','green')
     +'</div>'
     +'<div class="redesign-nutrition-actions">'
-      +(x?'<button onclick="editDailyNutrition('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>')
+      +(x?'<button onclick="openRedesignNutritionEntry('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>')
     +'</div>'
     +(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
   +'</div>';
 }
 
-function openRedesignNutritionEntry(cid){
+function openRedesignNutritionEntry(cid,nid=null){
   document.getElementById('redesignNutritionModal')?.remove();
-  let c=(window.currentClientData||{}).client||{};
-  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="redesignNutritionModal"><div class="card redesign-nutrition-modal"><div class="between"><div><h2>БЖВ за сьогодні</h2><p class="muted">Внеси підсумок за день.</p></div><button class="dark" onclick="redesignNutritionModal.remove()">✕</button></div><div class="grid"><input id="dkcal" type="number" placeholder="Ккал · ціль '+(+c.kcal||0)+'"><input id="dprotein" type="number" placeholder="Білки, г · '+(+c.protein||0)+'"><input id="dfat" type="number" placeholder="Жири, г · '+(+c.fat||0)+'"><input id="dcarbs" type="number" placeholder="Вуглеводи, г · '+(+c.carbs||0)+'"></div><button style="width:100%;margin-top:14px" onclick="addDailyNutrition('+cid+',null,event.currentTarget);document.getElementById(\'redesignNutritionModal\')?.remove()">Зберегти</button></div></div>');
+  let d=window.currentClientData||{},c=d.client||{},x=nid?(d.nutrition||[]).find(v=>+v.id===+nid)||{}:{};
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="redesignNutritionModal"><div class="card redesign-nutrition-modal"><div class="between"><div><h2>БЖВ за сьогодні</h2><p class="muted">Внеси підсумок за день.</p></div><button class="dark" onclick="redesignNutritionModal.remove()">✕</button></div><div class="grid"><input id="dkcal" type="number" value="'+(+x.kcal||'')+'" placeholder="Ккал · ціль '+(+c.kcal||0)+'"><input id="dprotein" type="number" value="'+(+x.protein||'')+'" placeholder="Білки, г · '+(+c.protein||0)+'"><input id="dfat" type="number" value="'+(+x.fat||'')+'" placeholder="Жири, г · '+(+c.fat||0)+'"><input id="dcarbs" type="number" value="'+(+x.carbs||'')+'" placeholder="Вуглеводи, г · '+(+c.carbs||0)+'"></div><button style="width:100%;margin-top:14px" onclick="saveRedesignNutritionEntry('+cid+','+(nid||'null')+',this)">Зберегти</button></div></div>');
+}
+
+async function saveRedesignNutritionEntry(cid,nid,btn){
+  await addDailyNutrition(cid,nid,btn);
+  document.getElementById('redesignNutritionModal')?.remove();
+  await showClientNutrition(cid);
 }
 
 window.showClientBJU = function(cid){
