@@ -3154,3 +3154,17 @@ body.eplan-redesign.client-ui .progress-history-back{
     grid-template-columns:1fr;
   }
 }
+
+
+/* Measurement deltas are informational, not good/bad. */
+body.eplan-redesign.client-ui .neutral-change,
+body.eplan-redesign.client-ui .measurement-side-delta.neutral-change,
+body.eplan-redesign.client-ui .measurement-compare-item>small.neutral-change,
+body.eplan-redesign.client-ui .measurement-metric em.neutral-change,
+body.eplan-redesign.client-ui .measurement-changes em.neutral-change{
+  color:#6f7f94!important;
+}
+body.eplan-redesign.client-ui .measurement-weight-visual em.neutral-change,
+body.eplan-redesign.client-ui .measurement-place-card em.neutral-change{
+  color:#6f7f94!important;
+}
