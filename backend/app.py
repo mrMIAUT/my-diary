@@ -887,6 +887,8 @@ class ClientIn(BaseModel):
     name:str=Field(max_length=200); email:str=Field(max_length=254); password:str=Field(default="",max_length=256,json_schema_extra=password_input_schema); goal:str=Field(default="",max_length=2000); weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class ProgramIn(BaseModel):
     client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
+class ClientProgramExerciseSwapIn(BaseModel):
+    exercise:str=Field(max_length=255)
 class ExerciseGroupIn(BaseModel): name:str=Field(max_length=120)
 class MuscleIn(BaseModel): name:str=Field(max_length=120)
 class ExerciseLibraryIn(BaseModel):
@@ -1553,6 +1555,38 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]",pid))
     return {"ok":True}
+
+@app.patch("/api/program/{pid}/client-exercise")
+def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:AuthUser=Depends(require_client)):
+    selected=x.exercise.strip()
+    if not selected:raise HTTPException(400,"Оберіть вправу")
+    require_active_client(user.client_id,'workouts')
+    with con() as c:
+        row=c.execute("SELECT * FROM program WHERE id=%s FOR UPDATE",(pid,)).fetchone()
+        if not row:raise HTTPException(404,"Вправу не знайдено")
+        p=dict(row)
+        authorize_client(user,p["client_id"])
+        if p["client_id"]!=user.client_id:raise HTTPException(403,"Немає доступу до цієї вправи")
+        try:
+            alternatives=json.loads(p.get("alternatives_json") or "[]")
+        except (TypeError,ValueError):
+            alternatives=[]
+        if not isinstance(alternatives,list):alternatives=[]
+        alternatives=[str(v).strip() for v in alternatives if str(v).strip()]
+        allowed=[str(p.get("exercise") or "").strip(),*alternatives]
+        if selected not in allowed:
+            raise HTTPException(400,"Цю вправу не дозволено як заміну")
+        current=str(p.get("exercise") or "").strip()
+        if selected!=current:
+            new_alts=[]
+            for name in [current,*alternatives]:
+                if name and name!=selected and name not in new_alts:new_alts.append(name)
+            lib=c.execute("SELECT technique_url FROM exercise_library WHERE lower(name)=lower(%s) ORDER BY id LIMIT 1",(selected,)).fetchone()
+            technique_url=safe_technique_url((lib["technique_url"] if lib else "") or "")
+            c.execute("UPDATE program SET exercise=%s,alternatives_json=%s,technique_url=%s WHERE id=%s",
+                      (selected,json.dumps(new_alts,ensure_ascii=False),technique_url,pid))
+        c.commit()
+    return {"ok":True,"exercise":selected}
 
 @app.put("/api/program-day-title")
 def save_program_day_title(x:ProgramDayTitleIn,user:AuthUser=Depends(require_trainer)):
