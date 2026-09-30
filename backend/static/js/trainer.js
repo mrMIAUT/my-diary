@@ -229,7 +229,17 @@ async function openClient(id,activeTab=null){
  let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
  let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
  let age=c.age?c.age+' років':'Вік не вказано';
- let smart=trainerAttention(c),comp=trainerCompliance({...c,workouts_28d:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerDaysSince(x.finished_at||x.started_at)<=28).length,program_days_count:new Set((d.program||[]).map(x=>x.day_name)).size});
+ let localMetrics={
+   ...c,
+   workouts_28d:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerDaysSince(x.finished_at||x.started_at)<=28).length,
+   program_days_count:new Set((d.program||[]).map(x=>x.day_name)).size,
+   needs_review_count:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&!x.trainer_reviewed).length,
+   checkin_pending_count:(d.checkins||[]).filter(x=>!x.reviewed).length,
+   nutrition_days_7d:new Set((d.nutrition||[]).filter(x=>trainerDaysSince(x.day+'T12:00:00')<=6).map(x=>x.day)).size,
+   finished_workout_count:(d.workout_sessions||[]).filter(x=>x.status==='finished').length,
+   last_finished_at:lastWorkout?.finished_at||lastWorkout?.started_at||null
+ };
+ let smart=trainerAttention(localMetrics),comp=trainerCompliance(localMetrics);
  let weight=lastM.weight?lastM.weight+' кг':'—';
  let lastDay=lastWorkout?sessionDay(lastWorkout):'—';
  let latestCheck=(d.checkins||[])[0]||null;
@@ -277,8 +287,7 @@ async function openClient(id,activeTab=null){
 }
 
 function trainerCheckinCard(x,cid){
- let avg=Math.round(((+x.mood||0)+(+x.sleep||0)+(+x.energy||0)+(6-(+x.hunger||3))+(6-(+x.difficulty||3)))/5*20);
- return '<div class="card trainer-checkin-card"><div class="between"><div><small>ЩОТИЖНЕВИЙ CHECK-IN</small><h2>'+esc(String(x.week_start||''))+'</h2></div><span class="trainer-checkin-score">'+avg+'%</span></div>'
+ return '<div class="card trainer-checkin-card"><div class="between"><div><small>ЩОТИЖНЕВИЙ CHECK-IN</small><h2>'+esc(String(x.week_start||''))+'</h2></div><span class="trainer-checkin-score">'+(x.reviewed?'✓':'Новий')+'</span></div>'
    +'<div class="trainer-checkin-grid"><span>Самопочуття <b>'+x.mood+'/5</b></span><span>Сон <b>'+x.sleep+'/5</b></span><span>Енергія <b>'+x.energy+'/5</b></span><span>Голод <b>'+x.hunger+'/5</b></span><span>Складність <b>'+x.difficulty+'/5</b></span></div>'
    +(x.comment?'<p>'+esc(x.comment)+'</p>':'')
    +(!x.reviewed?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>')+'</div>';
@@ -290,14 +299,14 @@ async function reviewTrainerCheckin(cid,id){
 function trainerNotesHTML(d,cid){
  let note=String(d.trainer_note?.body||'');
  let checkins=d.checkins||[];
- return '<div class="card trainer-private-note"><div class="between"><div><small>ЛИШЕ ДЛЯ ТРЕНЕРА</small><h2>Приватні нотатки</h2></div></div><textarea id="trainerPrivateNote" placeholder="Наприклад: ліве коліно реагує на великий об’єм випадів...">'+esc(note)+'</textarea><button onclick="saveTrainerPrivateNote('+cid+')">Зберегти нотатку</button></div>'
+ return '<div class="card trainer-private-note"><div class="between"><div><small>ЛИШЕ ДЛЯ ТРЕНЕРА</small><h2>Приватні нотатки</h2></div></div><textarea id="trainerPrivateNote" placeholder="Наприклад: ліве коліно реагує на великий об’єм випадів...">'+esc(note)+'</textarea><button onclick="saveTrainerPrivateNote('+cid+',this)">Зберегти нотатку</button></div>'
    +'<div class="card trainer-checkin-history"><h2>Історія check-in</h2>'+(checkins.length?checkins.map(x=>trainerCheckinCard(x,cid)).join(''):'<p class="muted">Check-in ще немає.</p>')+'</div>';
 }
-async function saveTrainerPrivateNote(cid){
+async function saveTrainerPrivateNote(cid,btn){
  let body=document.getElementById('trainerPrivateNote')?.value||'';
  await api('/client/'+cid+'/trainer-note',{method:'PUT',body:JSON.stringify({body})});
  if(window.currentClientData)window.currentClientData.trainer_note={body};
- let btn=event?.target;if(btn){let old=btn.textContent;btn.textContent='Збережено ✓';setTimeout(()=>btn.textContent=old,1200)}
+ if(btn){let old=btn.textContent;btn.textContent='Збережено ✓';setTimeout(()=>btn.textContent=old,1200)}
 }
 
 function showTrainerClientTab(id,btn,push=true){
