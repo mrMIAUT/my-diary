@@ -3162,9 +3162,9 @@ body.eplan-redesign.client-ui .measurement-side-delta.neutral-change,
 body.eplan-redesign.client-ui .measurement-compare-item>small.neutral-change,
 body.eplan-redesign.client-ui .measurement-metric em.neutral-change,
 body.eplan-redesign.client-ui .measurement-changes em.neutral-change{
-  color:#6f7f94!important;
+  color:#2f6fed!important;
 }
 body.eplan-redesign.client-ui .measurement-weight-visual em.neutral-change,
 body.eplan-redesign.client-ui .measurement-place-card em.neutral-change{
-  color:#6f7f94!important;
+  color:#2f6fed!important;
 }
