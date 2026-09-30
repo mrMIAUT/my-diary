@@ -68,8 +68,16 @@ function measurementVisualCards(last,prev,d=window.currentClientData||{}){
    let cur=measurementPairValues(last,k),old=measurementPairValues(prev,k);
    let hasPair=cur.left>0||cur.right>0;
    let sideNames=k==='thighs'?['Праве','Ліве']:k==='forearms'?['Праве','Ліве']:['Права','Ліва'];
+   let sideDelta=(value,prevValue)=>{
+    if(!(value>0)||!(prevValue>0))return '';
+    let delta=value-prevValue,cls=delta<0?'down':delta>0?'up':'';
+    return '<em class="measurement-side-delta '+cls+'">'+(delta===0?'без змін':(delta>0?'+':'')+fmtProgress(delta)+' '+u)+'</em>';
+   };
    let pairHtml=hasPair
-    ?'<div class="measurement-side-values">'+(cur.right?'<span><small>'+sideNames[0]+'</small><b>'+fmtProgress(cur.right)+' '+u+'</b></span>':'')+(cur.left?'<span><small>'+sideNames[1]+'</small><b>'+fmtProgress(cur.left)+' '+u+'</b></span>':'')+'</div>'
+    ?'<div class="measurement-side-values">'
+      +(cur.right?'<span><small>'+sideNames[0]+'</small><b>'+fmtProgress(cur.right)+' '+u+'</b>'+sideDelta(cur.right,old.right)+'</span>':'')
+      +(cur.left?'<span><small>'+sideNames[1]+'</small><b>'+fmtProgress(cur.left)+' '+u+'</b>'+sideDelta(cur.left,old.left)+'</span>':'')
+     +'</div>'
     :(cur.legacy?'<strong>'+fmtProgress(cur.legacy)+' <small>'+u+'</small></strong>':'<strong>—</strong>');
    let note=!hasPair?(cur.legacy?'<em>Старий замір</em>':'<em>Ще не додано</em>'):'';
    return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div>'+pairHtml+note+'</div>';
@@ -145,7 +153,7 @@ function clientMeasurementsHTML(d,cid){
   </div>
   ${due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
   ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev,d)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev,d)}</div>`:''}
-  ${last&&prev?`<div class="card"><h2>Зміни з минулого разу</h2><p class="muted">Порівняно з ${formatProgressDate(prev.day)}</p>${measurementChangesHTML(last,prev)}</div>`:''}
+  ${xs.length>1?measurementComparisonHTML(xs):''}
   <div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>
   ${xs.length?`<div class="card"><button class="exercise-toggle" onclick="toggleCalendar('measurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="measurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div>`:''}
  </div>`;
@@ -153,6 +161,62 @@ function clientMeasurementsHTML(d,cid){
 
 function ukDays(n){let x=Math.abs(n)%100,y=x%10;return x>10&&x<20?'днів':y===1?'день':y>=2&&y<=4?'дні':'днів'}
 
+
+
+function measurementCompareKey(x){return String(x?.id||x?.day||'')}
+
+function measurementComparisonHTML(xs){
+ let rows=(xs||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)||(+a.id||0)-(+b.id||0));
+ if(rows.length<2)return '';
+ let valid=new Set(rows.map(measurementCompareKey));
+ let fromKey=String(window.measureCompareFrom||''),toKey=String(window.measureCompareTo||'');
+ if(!valid.has(fromKey))fromKey=measurementCompareKey(rows[rows.length-2]);
+ if(!valid.has(toKey))toKey=measurementCompareKey(rows[rows.length-1]);
+ let from=rows.find(x=>measurementCompareKey(x)===fromKey)||rows[rows.length-2];
+ let to=rows.find(x=>measurementCompareKey(x)===toKey)||rows[rows.length-1];
+ window.measureCompareFrom=measurementCompareKey(from);
+ window.measureCompareTo=measurementCompareKey(to);
+ let opts=selected=>rows.map(x=>'<option value="'+esc(measurementCompareKey(x))+'" '+(measurementCompareKey(x)===selected?'selected':'')+'>'+esc(formatProgressDate(x.day))+'</option>').join('');
+ return '<div class="card measurement-compare-card">'
+  +'<div class="measurement-compare-head"><div><h2>Порівняння замірів</h2><p class="muted">Обери дві контрольні точки.</p></div></div>'
+  +'<div class="measurement-compare-selects">'
+    +'<label><span>Від</span><select onchange="setMeasurementComparison(\'from\',this.value)">'+opts(window.measureCompareFrom)+'</select></label>'
+    +'<span class="measurement-compare-arrow">→</span>'
+    +'<label><span>До</span><select onchange="setMeasurementComparison(\'to\',this.value)">'+opts(window.measureCompareTo)+'</select></label>'
+  +'</div>'
+  +'<div id="measurementCompareBody">'+measurementCompactChangesHTML(to,from)+'</div>'
+ +'</div>';
+}
+
+function setMeasurementComparison(which,value){
+ if(which==='from')window.measureCompareFrom=String(value);
+ else window.measureCompareTo=String(value);
+ let d=window.currentClientData||{},xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)||(+a.id||0)-(+b.id||0));
+ let from=xs.find(x=>measurementCompareKey(x)===String(window.measureCompareFrom));
+ let to=xs.find(x=>measurementCompareKey(x)===String(window.measureCompareTo));
+ let box=document.getElementById('measurementCompareBody');
+ if(box&&from&&to)box.innerHTML=measurementCompactChangesHTML(to,from);
+}
+
+function measurementCompactDelta(current,previous,unit){
+ if(!(current>0)||!(previous>0))return '<small class="muted">—</small>';
+ let d=current-previous,cls=d<0?'down':d>0?'up':'';
+ return '<small class="'+cls+'">'+(d===0?'без змін':(d>0?'+':'')+fmtProgress(d)+' '+unit)+'</small>';
+}
+
+function measurementCompactChangesHTML(a,b){
+ let items=[];
+ [['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']].forEach(([k,n,u])=>{
+  if(+a?.[k]>0&&+b?.[k]>0)items.push('<div class="measurement-compare-item"><span>'+n+'</span><strong>'+fmtProgress(b[k])+' → '+fmtProgress(a[k])+' '+u+'</strong>'+measurementCompactDelta(+a[k],+b[k],u)+'</div>');
+ });
+ Object.entries(measurementPairConfig()).forEach(([key,p])=>{
+  let cur=measurementPairValues(a,key),old=measurementPairValues(b,key);
+  let names=key==='thighs'?['Стегно праве','Стегно ліве']:key==='arms'?['Рука права','Рука ліва']:key==='calves'?['Гомілка права','Гомілка ліва']:['Передпліччя праве','Передпліччя ліве'];
+  if(cur.right&&old.right)items.push('<div class="measurement-compare-item"><span>'+names[0]+'</span><strong>'+fmtProgress(old.right)+' → '+fmtProgress(cur.right)+' см</strong>'+measurementCompactDelta(cur.right,old.right,'см')+'</div>');
+  if(cur.left&&old.left)items.push('<div class="measurement-compare-item"><span>'+names[1]+'</span><strong>'+fmtProgress(old.left)+' → '+fmtProgress(cur.left)+' см</strong>'+measurementCompactDelta(cur.left,old.left,'см')+'</div>');
+ });
+ return items.length?'<div class="measurement-compare-grid">'+items.join('')+'</div>':'<div class="redesign-progress-empty-chart">Для цих двох дат немає однакових замірів для порівняння.</div>';
+}
 
 function measurementChangesHTML(a,b){
  let single=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
