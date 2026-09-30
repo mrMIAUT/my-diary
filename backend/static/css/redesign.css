@@ -4679,3 +4679,41 @@ body.eplan-redesign.trainer-ui .trainer-history-duration{
     grid-column:1/-1;
   }
 }
+
+
+/* Live workout finishing states — refinement */
+body.eplan-redesign.client-ui .finish-workout-btn{
+  background:#1677ff!important;
+  color:#fff!important;
+  border-color:#1677ff!important;
+  box-shadow:0 8px 20px rgba(22,119,255,.16)!important;
+}
+body.eplan-redesign.client-ui .finish-workout-btn:active{
+  background:#0f69e6!important;
+}
+
+body.eplan-redesign.client-ui .exercise-done-badge.compact{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  padding:0!important;
+  margin-left:auto!important;
+  border-radius:999px!important;
+  background:#e9f7ef!important;
+  color:#24945c!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .workout-completed-label{
+  color:#24945c!important;
+  font-size:14px!important;
+  font-weight:850!important;
+}
+
+/* Per-set check buttons are redundant: the exercise is saved with the main action. */
+body.eplan-redesign.client-ui .workout-live-body .setrow button{
+  display:none!important;
+}
