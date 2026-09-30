@@ -73,6 +73,28 @@ function previousSets(d,pid){
  return `<div class="exercise workout-previous" style="margin-top:12px"><div class="muted">Попереднє тренування · ${esc(latest)}</div>${xs.map(s=>`<div style="margin-top:6px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`).join('')}</div>`;
 }
 
+function formatWorkoutDuration(seconds){
+ let sec=Math.max(0,Math.floor(+seconds||0)),min=Math.floor(sec/60),h=Math.floor(min/60),m=min%60;
+ if(h>0)return m?String(h)+' год '+String(m)+' хв':String(h)+' год';
+ return String(min)+' хв';
+}
+function workoutDurationBadgeHTML(s,extraClass=''){
+ if(!s||s.duration_seconds===undefined||s.duration_seconds===null)return '';
+ let active=s.status==='training';
+ return '<span class="workout-duration-badge '+(active?'live ':'')+extraClass+'" data-workout-duration="'+Math.max(0,+s.duration_seconds||0)+'" data-workout-live="'+(active?'1':'0')+'" data-workout-rendered="'+Date.now()+'">⏱ '+formatWorkoutDuration(s.duration_seconds)+'</span>';
+}
+function refreshWorkoutDurationBadges(){
+ document.querySelectorAll('[data-workout-duration]').forEach(el=>{
+   let base=+el.dataset.workoutDuration||0,live=el.dataset.workoutLive==='1',rendered=+el.dataset.workoutRendered||Date.now();
+   let sec=base+(live?Math.max(0,Math.floor((Date.now()-rendered)/1000)):0);
+   el.textContent='⏱ '+formatWorkoutDuration(sec);
+ });
+}
+if(!window.__eplanWorkoutDurationTicker){
+ window.__eplanWorkoutDurationTicker=setInterval(refreshWorkoutDurationBadges,15000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshWorkoutDurationBadges()});
+}
+
 function workoutDraftSessionId(d){return (d?.workout_sessions||[]).find(x=>x.status==='training')?.id||0}
 
 function workoutDraftKey(sid,pid){let scope=offlineLocalScopeKey();return scope?`eplanWorkoutDraftV2_${scope}_${sid}_${pid}`:''}
@@ -127,7 +149,7 @@ async function finishWorkout(cid,sid,button=null){
  let d=await loadClientData(cid);window.currentClientData=d;
  let s=(d.workout_sessions||[]).find(x=>x.id===sid)||{},sets=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===sessionDay(s)));
  let exercises=new Set(sets.map(x=>x.program_id)).size,cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{}));
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Робочих підходів</span><div class="summary-number">${sets.length}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid workout-finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Підходів</span><div class="summary-number">${sets.length}</div></div><div><span class="muted">Тривалість</span><div class="summary-number duration">${formatWorkoutDuration(s.duration_seconds||0)}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}<button style="width:100%" onclick="finishSummaryModal.remove();clientCabinet(${cid})">Готово</button></div></div>`);
  }catch(e){
   alert(e?.message||'Не вдалося завершити тренування. Перевір інтернет і спробуй ще раз.');
   if(button){button.dataset.finishing='0';button.disabled=false;button.textContent=button.dataset.oldText||'Завершити тренування'}
@@ -173,7 +195,7 @@ function todayGuidanceHTML(d,cid,groups){
        ||(todaySetsAll.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),
      cycle=workoutCycleState(d,groups),m=measurementReminderState(d),
      nutritionDone=(d.nutrition||[]).some(x=>x.day===today);
- if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>Продовжити ${esc(active.day_name)}</h2><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
+ if(active)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><div class="next-action-title-row"><h2>Продовжити ${esc(active.day_name)}</h2>${workoutDurationBadgeHTML(active)}</div><p class="muted">Тренування вже триває. Продовжуй з того місця, де зупинився.</p><button class="primary-wide" onclick="document.querySelector('.training-live')?.scrollIntoView({behavior:'smooth',block:'start'})">Продовжити тренування →</button></div>`;
  if(todaySession&&todaySession.status==='finished')return `<div class="card next-action-card today-done-card"><span class="next-action-kicker done">На сьогодні все ✓</span><h2>Тренування виконано</h2><p class="muted">${esc(todaySession.day_name||'Тренування')} завершено. Наступне тренування буде доступне завтра.</p><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
  if(cycle.next)return `<div class="card next-action-card"><span class="next-action-kicker">Наступна дія</span><h2>🏋️ ${esc(cycle.next)}</h2><p class="muted">Це наступне тренування за твоїм планом.</p><button class="primary-wide" data-day="${esc(cycle.next)}" onclick="startWorkout(${cid},this.dataset.day)">Почати тренування</button><div class="today-mini-status"><div><span>Харчування</span><strong>${nutritionDone?'Заповнено ✓':'Ще не заповнено'}</strong></div><div><span>Заміри</span><strong>${esc(m.text)}</strong></div></div>${m.due?`<button class="dark" style="width:100%;margin-top:9px" onclick="showClientSection('measurements')">Зробити заміри →</button>`:''}</div>`;
  return '';
@@ -260,7 +282,8 @@ async function selectWorkoutExercise(pid,cid,index){
 }
 
 function activeExercisesHTML(items,d,cid){
- let used=new Set(),html='';
+ let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training');
+ let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false){
   return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}" style="${inner?'padding:12px 0;':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><strong>${esc(workoutExerciseName(x))}</strong>${workoutExerciseName(x)!==x.exercise?`<span class="muted" style="display:block;margin-top:3px">Замість: ${esc(x.exercise)}</span>`:``}${(x.technique_url||(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday()))?`<span class="exercise-meta-row">${x.technique_url?techniqueLinkHTML(x.technique_url,'Техніка',true):''}${(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday())?'<span class="exercise-done-badge">Виконано&nbsp;✓</span>':''}</span>`:''}<span class="muted" style="display:block;margin-top:5px">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="dark swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
  }
