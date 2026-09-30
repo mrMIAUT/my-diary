@@ -3266,3 +3266,48 @@ body.eplan-redesign.client-ui .client-bottom-nav::before{
     rgba(232,240,250,.015) 100%
   )!important;
 }
+
+
+/* Restore classic iPhone safe-area layout: status bar stays outside app content */
+body.eplan-redesign.client-ui{
+  background:#eef4fb!important;
+  min-height:100dvh;
+}
+body.eplan-redesign.client-ui #app{
+  min-height:100dvh;
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .wrap.client-shell{
+  padding:18px 18px 104px!important;
+  background:#f8fbff!important;
+}
+body.eplan-redesign.client-ui .client-top{
+  top:0!important;
+}
+
+/* Lower floating nav and keep the previous frosted-glass look */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  bottom:6px!important;
+  width:min(398px,calc(100% - 34px))!important;
+  background:rgba(246,249,253,.24)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(1.20)!important;
+  backdrop-filter:blur(26px) saturate(1.20)!important;
+  border:1px solid rgba(184,198,217,.48)!important;
+  border-radius:26px!important;
+  box-shadow:
+    0 12px 30px rgba(25,49,83,.12),
+    0 -1px 0 rgba(255,255,255,.62) inset!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav::before{
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.07) 0%,
+    rgba(232,240,250,.015) 100%
+  )!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .client-bottom-nav{
+    width:calc(100% - 30px)!important;
+    bottom:5px!important;
+  }
+}
