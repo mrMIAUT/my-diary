@@ -11,16 +11,41 @@ async function goToTrainerHome(){
 }
 
 async function trainerHome(){
+ currentTrainerMainView='home';selected=null;window.currentClientData=null;
+ let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+ let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired);
+ let ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
+ let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0);
+ let attention=needsReviewClients.length,activeCount=active.length,total=cs.length;
+ let initials=c=>{let p=String(c.name||'').trim().split(/\s+/).filter(Boolean);return (p.slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase()};
+ let avatars=cs.slice(0,5).map(c=>'<span class="trainer-client-avatar">'+esc(initials(c))+'</span>').join('');
+ let recent=cs.slice(0,4).map(c=>{let r=+c.needs_review_count||0;let text=r?'Очікує перевірки тренування':c.live_status==='Тренується'?'Тренується зараз':'Остання активність без нових подій';return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(initials(c))+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(text)+'</small></span><span class="more-chevron">›</span></button>'}).join('');
+ app.innerHTML=shell(`<div class="trainer-home-page">
+   <button class="trainer-hero-card" onclick="showTrainerClientsView()">
+     <div class="trainer-hero-head"><span>${uiIcon('users')}</span><strong>Ваші клієнти</strong><span class="more-chevron">›</span></div>
+     <div class="trainer-hero-count">${activeCount} <small>активних клієнтів</small></div>
+     <div class="trainer-hero-sub">${activeCount} з ${total} загалом</div>
+     <div class="trainer-avatar-stack">${avatars}${total>5?'<span class="trainer-client-avatar more">+'+(total-5)+'</span>':''}</div>
+   </button>
+   <div class="trainer-home-stats">
+     <button onclick="window.trainerHomeFilter='review';showTrainerClientsView()"><span class="trainer-stat-icon orange">${uiIcon('users')}</span><strong>${attention}</strong><small>Потребують уваги</small></button>
+     <button onclick="window.trainerHomeFilter='active';showTrainerClientsView()"><span class="trainer-stat-icon green">✓</span><strong>${activeCount}</strong><small>Активні клієнти</small></button>
+     <button onclick="window.trainerHomeFilter='ending';showTrainerClientsView()"><span class="trainer-stat-icon blue">${uiIcon('calendar')}</span><strong>${ending.length}</strong><small>Доступ завершується</small></button>
+     <button onclick="newClient()"><span class="trainer-stat-icon blue">${uiIcon('plus')}</span><strong>+</strong><small>Новий клієнт</small></button>
+   </div>
+   <div class="trainer-home-section-head"><h2>Остання активність</h2><button onclick="showTrainerClientsView()">Усі</button></div>
+   <div class="trainer-activity-card">${recent||'<div class="trainer-empty">Клієнтів ще немає.</div>'}</div>
+ </div>`);
+ refreshTrainerGlobalBadge()
+}
+
+async function showTrainerClientsView(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
- let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired),ending=cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired);
- let needsReviewClients=cs.filter(c=>(+c.needs_review_count||0)>0),filter=window.trainerHomeFilter||'all';
- let shown=filter==='review'?needsReviewClients:filter==='ending'?ending:filter==='active'?active:cs;
- let stat=(key,n,label)=>`<div class="trainer-stat actionable ${filter===key?'active-filter':''}" onclick="window.trainerHomeFilter=window.trainerHomeFilter==='${key}'?'all':'${key}';trainerHome()"><strong>${n}</strong><span>${label}</span></div>`;
- app.innerHTML=shell(`<div class="card trainer-dashboard-card"><div class="between trainer-dashboard-top"><div class="trainer-dashboard-copy"><h1>Панель тренера</h1><p class="muted">Кому зараз потрібна твоя увага.</p></div><button class="trainer-add-client" onclick="newClient()">+ Додати клієнта</button></div>
- <div class="trainer-stats">${stat('review',needsReviewClients.length,'Потрібно перевірити')}${stat('ending',ending.length,'Доступ завершується')}${stat('active',active.length,'Активних клієнтів')}</div></div>
- <div class="trainer-queue-head"><h1 style="margin:0">${filter==='review'?'На перевірку':filter==='ending'?'Завершується доступ':filter==='active'?'Активні клієнти':'Клієнти'}</h1>${filter!=='all'?`<button class="dark" onclick="window.trainerHomeFilter='all';trainerHome()">Показати всіх</button>`:''}</div>
- ${shown.map(c=>{let a=c.access||{},r=+c.needs_review_count||0,days=a.days_left,exp=!!a.expired,frozen=c.status==='Заморожений';let accessText=exp?'Доступ закінчився':frozen?'Заморожено':days===null||days===undefined?'Безстроково':days===0?'Останній день':`${days} дн. залишилось`;let accessClass=exp||frozen?'alert':(days!==null&&days!==undefined&&days<=7?'warn':'ok');let workStatus=c.live_status==='Тренується'?'<span class="work-status live">● Тренується зараз</span>':r?'<span class="work-status review">● Очікує перевірки</span>':c.review_state==='reviewed'?'<span class="work-status idle">✓ Все перевірено</span>':'<span class="work-status idle">Ще без тренувань</span>';return `<div class="card client trainer-client-card" onclick="navigateToClient(${c.id})"><div>${workStatus}</div><div class="between"><div style="min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${esc(c.goal||'Без цілі')}</div><div class="trainer-client-meta"><span class="trainer-meta-chip ${accessClass}">${esc(a.plan_name||'Онлайн-ведення')} · ${accessText}</span></div></div><span class="${exp||frozen?'badge status-frozen':'badge'}">${exp?'Закінчився':esc(c.status||'Активний')}</span></div><div class="client-card-actions">${r?`<button onclick="event.stopPropagation();openPendingWorkoutForClient(${c.id})">Перевірити тренування →</button>`:''}${days!==null&&days!==undefined&&days<=7&&!exp?`<button class="dark" onclick="event.stopPropagation();quickExtendFromCard(${c.id},1)">+1 міс. доступу</button>`:''}</div></div>`}).join('')||'<div class="card"><p class="muted">У цій категорії зараз нікого немає.</p></div>'}`);
+ let filter=window.trainerHomeFilter||'all';
+ let shown=filter==='review'?cs.filter(c=>(+c.needs_review_count||0)>0):filter==='ending'?cs.filter(c=>c.access?.days_left!==null&&c.access.days_left>=0&&c.access.days_left<=7&&!c.access?.expired):filter==='active'?cs.filter(c=>c.status==='Активний'&&!c.access?.expired):cs;
+ let label=filter==='review'?'Потребують уваги':filter==='ending'?'Доступ завершується':filter==='active'?'Активні клієнти':'Клієнти';
+ app.innerHTML=shell(`<div class="trainer-clients-page"><div class="trainer-page-title"><h1>${label}</h1><button onclick="newClient()">＋</button></div><div class="trainer-client-list">${shown.map(c=>{let r=+c.needs_review_count||0;let goal=c.goal||'Без цілі';return '<button class="trainer-client-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc((String(c.name||'К').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase())+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(r?' · Потребує уваги':'')+'</small></span><span class="more-chevron">›</span></button>'}).join('')||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div><button class="trainer-back-home" onclick="window.trainerHomeFilter='all';trainerHome()">← На головну</button></div>`);
  refreshTrainerGlobalBadge()
 }
 
