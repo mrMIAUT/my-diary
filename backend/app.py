@@ -93,9 +93,10 @@ class ApiBodyLimit:
         path=scope.get("path","")
         method=scope.get("method","")
         parts=path.rstrip("/").split("/")
-        screenshot=(len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot")
+        image_upload=((len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot") or
+                      (len(parts)==5 and parts[1:3]==["api","client"] and parts[4]=="avatar"))
         if not (scope.get("type")=="http" and path.startswith("/api/") and
-                method not in ("GET","HEAD","OPTIONS") and not screenshot):
+                method not in ("GET","HEAD","OPTIONS") and not image_upload):
             return await self.app(scope,receive,send)
         error=JSONResponse({"detail":API_BODY_LIMIT_DETAIL},status_code=413)
         for key,value in scope.get("headers",[]):
@@ -130,8 +131,9 @@ class ScreenshotBodyLimit:
     def __init__(self,app):self.app=app
     async def __call__(self,scope,receive,send):
         parts=scope.get("path","").rstrip("/").split("/")
-        if not (scope["type"]=="http" and scope["method"]=="POST" and
-                len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot"):
+        image_upload=((len(parts)==5 and parts[1:3]==["api","nutrition"] and parts[4]=="screenshot") or
+                      (len(parts)==5 and parts[1:3]==["api","client"] and parts[4]=="avatar"))
+        if not (scope["type"]=="http" and scope["method"]=="POST" and image_upload):
             return await self.app(scope,receive,send)
         error=JSONResponse({"detail":"Зображення завелике. Максимум 10 MiB."},status_code=413)
         for key,value in scope.get("headers",[]):
@@ -216,6 +218,23 @@ def normalize_screenshot(data,content_type=None):
         raise HTTPException(415,"Файл не є допустимим JPEG, PNG або WebP") from None
     except (OSError,ValueError,SyntaxError):
         raise HTTPException(400,"Зображення пошкоджене або не може бути прочитане") from None
+
+
+def normalize_avatar(data,content_type=None):
+    """Validate like screenshots, then store a small metadata-free square avatar."""
+    clean,_,_=normalize_screenshot(data,content_type)
+    try:
+        with Image.open(io.BytesIO(clean)) as decoded:
+            decoded.load()
+            rgb=decoded.convert("RGBA")
+            canvas=Image.new("RGBA",rgb.size,(255,255,255,255))
+            canvas.alpha_composite(rgb)
+            square=ImageOps.fit(canvas.convert("RGB"),(512,512),method=Image.Resampling.LANCZOS)
+            with ScreenshotBuffer() as encoded:
+                square.save(encoded,format="JPEG",quality=88,optimize=True)
+                return encoded.getvalue(),"image/jpeg",".jpg"
+    except (OSError,ValueError,SyntaxError):
+        raise HTTPException(400,"Зображення аватара не вдалося обробити") from None
 
 # V93 C01: one trainer per installation, as in V92 (trainer_auth.id=1).
 SESSION_COOKIE="__Host-eplan_session"
@@ -777,6 +796,7 @@ def init():
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS instagram TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS telegram TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tiktok TEXT DEFAULT ''")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS plan_code TEXT DEFAULT 'coaching'")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS access_until DATE")
         c.execute("UPDATE clients SET plan_code='coaching' WHERE plan_code IS NULL OR plan_code=''")
@@ -1114,7 +1134,11 @@ def private_upload(filename:str,request:Request,user:AuthUser=Depends(current_us
     if len(filename)>255 or not filename or Path(filename).name!=filename or "\\" in filename:
         raise HTTPException(404,"Файл не знайдено")
     rec=one("SELECT client_id FROM nutrition WHERE screenshot=?",(filename,))
-    if not rec:raise HTTPException(404,"Файл не знайдено")
+    upload_kind="nutrition"
+    if not rec:
+        avatar_owner=one("SELECT id AS client_id FROM clients WHERE avatar=?",(filename,))
+        if not avatar_owner:raise HTTPException(404,"Файл не знайдено")
+        rec=avatar_owner;upload_kind="avatar"
     authorize_client(user,rec["client_id"])
     file=UPLOADS/filename
     try:
@@ -1131,7 +1155,7 @@ def private_upload(filename:str,request:Request,user:AuthUser=Depends(current_us
     content,media_type,extension=normalize_screenshot(data)
     return Response(content=b"" if request.method=="HEAD" else content,media_type=media_type,headers={
         "Content-Length":str(len(content)),"X-Content-Type-Options":"nosniff",
-        "Content-Disposition":'inline; filename="nutrition'+extension+'"',
+        "Content-Disposition":'inline; filename="'+upload_kind+extension+'"',
         "Cache-Control":"private, no-store"
     })
 
@@ -1292,7 +1316,7 @@ def password_reset_confirm(x:ResetConfirmIn,request:Request,response:Response):
 CLIENT_RESPONSE_FIELDS=(
     "id","name","email","goal","weight","kcal","protein","fat","carbs",
     "meal_plan","status","first_name","last_name","age","sex",
-    "contraindications","injuries","contact","instagram","telegram","tiktok",
+    "contraindications","injuries","contact","instagram","telegram","tiktok","avatar",
     "plan_code","access_until","access","live_status","needs_review_count",
     "finished_workout_count","last_finished_at","review_state",
 )
@@ -1422,6 +1446,44 @@ def update_client_profile(cid:int,x:ClientProfileIn,user:AuthUser=Depends(curren
     display=(x.first_name.strip()+" "+x.last_name.strip()).strip()
     run("UPDATE clients SET first_name=?,last_name=?,age=?,sex=?,contraindications=?,injuries=?,contact=?,instagram=?,telegram=?,tiktok=?,name=CASE WHEN ?<>'' THEN ? ELSE name END WHERE id=?",(x.first_name.strip(),x.last_name.strip(),max(0,x.age),x.sex.strip(),x.contraindications.strip(),x.injuries.strip(),x.contact.strip(),x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),display,display,cid))
     return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
+
+@app.post("/api/client/{cid}/avatar")
+def upload_client_avatar(cid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_client)):
+    authorize_client(user,cid)
+    require_active_client(cid)
+    consume_rate_limit("upload.actor",f"{user.role}:{user.user_id}")
+    content_type=(file.content_type or "").split(";",1)[0].strip().lower()
+    content,media_type,extension=normalize_avatar(read_screenshot_bytes(file.file),content_type)
+    name=None;old_name="";committed=False
+    try:
+        with con() as c:
+            rec=c.execute("SELECT id,avatar FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone()
+            if not rec:raise HTTPException(404,"Клієнта не знайдено")
+            authorize_client(user,rec["id"])
+            old_name=str(rec.get("avatar") or "")
+            for attempt in range(8):
+                candidate="avatar_"+secrets.token_hex(24)+extension
+                try:fd=os.open(UPLOADS/candidate,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+                except FileExistsError:continue
+                name=candidate
+                break
+            else:raise OSError("Unable to reserve avatar name")
+            with os.fdopen(fd,"wb") as target:
+                if target.write(content)!=len(content):raise OSError("Incomplete avatar write")
+                target.flush();os.fsync(target.fileno())
+            c.execute("UPDATE clients SET avatar=%s WHERE id=%s",(name,cid))
+        committed=True
+        if old_name.startswith("avatar_") and old_name!=name:
+            try:(UPLOADS/old_name).unlink(missing_ok=True)
+            except OSError as e:safe_log("h04_cleanup_failed",logging.ERROR,error_type=type(e).__name__)
+        return {"avatar":name,"url":"/uploads/"+name}
+    except HTTPException:raise
+    except Exception:
+        raise HTTPException(500,"Не вдалося зберегти фото профілю. Спробуйте ще раз.") from None
+    finally:
+        if name and not committed:
+            try:(UPLOADS/name).unlink(missing_ok=True)
+            except OSError as e:safe_log("h04_cleanup_failed",logging.ERROR,error_type=type(e).__name__)
 
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
