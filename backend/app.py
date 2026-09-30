@@ -784,6 +784,10 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs DOUBLE PRECISION DEFAULT 0")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS arms DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS shoulders DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS neck DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS calves DOUBLE PRECISION DEFAULT 0")
+        c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS forearms DOUBLE PRECISION DEFAULT 0")
 
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_reviewed BOOLEAN DEFAULT FALSE")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
@@ -914,7 +918,17 @@ class SetResultIn(BaseModel):
 class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
-    client_id:int; weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); waist:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False); chest:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False); hips:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False); thighs:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False); arms:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    client_id:int
+    weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
+    waist:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    chest:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    hips:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    thighs:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    arms:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    shoulders:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    neck:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    calves:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
+    forearms:float=Field(default=0,ge=0,le=MAX_MEASUREMENT,allow_inf_nan=False)
 class ClientProfileIn(BaseModel):
     first_name:str=Field(default="",max_length=120); last_name:str=Field(default="",max_length=120); age:int=Field(default=0,ge=0,le=150); sex:str=Field(default="",max_length=32); contraindications:str=Field(default="",max_length=10000); injuries:str=Field(default="",max_length=10000); contact:str=Field(default="",max_length=512); instagram:str=Field(default="",max_length=512); telegram:str=Field(default="",max_length=512); tiktok:str=Field(default="",max_length=512)
 class NutritionPlanItemIn(BaseModel):
@@ -2157,7 +2171,7 @@ def screenshot(nid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_c
 def measurement(x:MeasureIn,user:AuthUser=Depends(require_client)):
     authorize_client(user,x.client_id)
     require_active_client(x.client_id,'measurements')
-    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms) VALUES(?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms))
+    i=run("INSERT INTO measurements(client_id,day,weight,waist,chest,hips,thighs,arms,shoulders,neck,calves,forearms) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,str(kyiv_today()),x.weight,x.waist,x.chest,x.hips,x.thighs,x.arms,x.shoulders,x.neck,x.calves,x.forearms))
     if x.weight>0: run("UPDATE clients SET weight=? WHERE id=?",(x.weight,x.client_id))
     return {"id":i}
 
