@@ -3349,3 +3349,15 @@ body.eplan-redesign.client-ui .redesign-nutrition-tabs button.active{
   color:#0a1738!important;
   box-shadow:0 4px 12px rgba(42,72,108,.08)!important;
 }
+
+
+/* Secondary screens: remove the frosted top strip that overlaps page titles/tabs */
+@media(max-width:760px){
+  body.eplan-redesign.client-ui .client-top.client-top-compact{
+    background:transparent!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+}
