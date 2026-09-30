@@ -1,0 +1,108 @@
+// Lyfta-inspired workout UX for EPLAN redesign.
+// Reuses existing workout data/API; adds previous-result context, quick set completion,
+// rest auto-start and exercise history/PR visualization.
+
+function lyftaHistoryRows(d,pid){
+  return (d?.result_sets||[])
+    .filter(s=>+s.program_id===+pid && s.day)
+    .slice()
+    .sort((a,b)=>a.day.localeCompare(b.day)||(+a.set_number||0)-(+b.set_number||0));
+}
+
+function lyftaPreviousDaySets(d,pid){
+  let rows=lyftaHistoryRows(d,pid).filter(s=>s.day<isoToday());
+  if(!rows.length)return [];
+  let day=rows[rows.length-1].day;
+  return rows.filter(s=>s.day===day).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+}
+
+function lyftaAllTimeBestWeight(d,pid){
+  return Math.max(0,...lyftaHistoryRows(d,pid).filter(s=>s.day<isoToday()).map(s=>+s.weight||0));
+}
+
+function lyftaRestSeconds(x){
+  let s=+x.rest_seconds||0;
+  if(s>0)return s;
+  let t=String(x.rest_text||'').match(/(\d+(?:[.,]\d+)?)/);
+  if(!t)return 90;
+  let n=parseFloat(t[1].replace(',','.'));
+  return Math.max(30,Math.round(n*60));
+}
+
+function lyftaCopyPrevious(pid,n){
+  let d=window.currentClientData||{},prev=lyftaPreviousDaySets(d,pid),p=prev.find(x=>+x.set_number===+n);
+  if(!p)return;
+  let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
+  if(w){w.value=p.weight;w.dispatchEvent(new Event('input',{bubbles:true}))}
+  if(r){r.value=p.reps;r.dispatchEvent(new Event('input',{bubbles:true}))}
+  if(i){i.value=p.rir;i.dispatchEvent(new Event('input',{bubbles:true}))}
+  lyftaUpdatePR(pid,n);
+}
+
+function lyftaCopyAllPrevious(pid){
+  let d=window.currentClientData||{},prev=lyftaPreviousDaySets(d,pid);
+  prev.forEach(p=>lyftaCopyPrevious(pid,+p.set_number));
+}
+
+function lyftaUpdatePR(pid,n){
+  let d=window.currentClientData||{},best=lyftaAllTimeBestWeight(d,pid);
+  let w=+(document.getElementById('w'+pid+'_'+n)?.value||0);
+  let badge=document.getElementById('pr'+pid+'_'+n);
+  if(badge)badge.classList.toggle('show',best>0&&w>best);
+}
+
+async function lyftaCompleteSet(pid,n,restSeconds,btn){
+  let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n);
+  if(!w?.value||!r?.value){alert('Заповни вагу та повтори у цьому підході.');return}
+  btn?.closest('.lyfta-set-row')?.classList.add('is-complete');
+  if(btn){btn.textContent='✓';btn.classList.add('done')}
+  if(restSeconds>0)await startRestTimer(restSeconds);
+}
+
+function lyftaExerciseChartData(d,pid){
+  let rows=lyftaHistoryRows(d,pid),by={};
+  rows.forEach(s=>{
+    by[s.day]=Math.max(by[s.day]||0,+s.weight||0);
+  });
+  return Object.entries(by).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+}
+
+function showExerciseProgressHistory(pid){
+  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),data=lyftaExerciseChartData(d,pid);
+  let max=Math.max(1,...data.map(v=>v[1])),min=Math.min(...data.map(v=>v[1]),max),range=Math.max(1,max-min);
+  let points=data.map((v,i)=>{
+    let px=7+i*(86/Math.max(1,data.length-1));
+    let py=72-((v[1]-min)/range)*48;
+    return [px,py];
+  });
+  let chart=data.length>1
+    ?'<div class="lyfta-history-chart"><svg viewBox="0 0 100 80" preserveAspectRatio="none"><polyline points="'+points.map(p=>p.join(',')).join(' ')+'" class="lyfta-history-line"/>'+points.map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.7" class="lyfta-history-dot"/>').join('')+'</svg><div><span>'+esc(formatProgressDate(data[0][0]))+'</span><span>'+esc(formatProgressDate(data[data.length-1][0]))+'</span></div></div>'
+    :'<div class="redesign-progress-empty-chart">Потрібно щонайменше два тренування цієї вправи для графіка.</div>';
+  let rows=data.slice().reverse().map(v=>'<div class="lyfta-history-item"><span>'+esc(formatProgressDate(v[0]))+'</span><strong>'+fmtProgress(v[1])+' кг</strong></div>').join('');
+  document.getElementById('exerciseHistoryModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
+}
+
+window.setRows = function(x,d){
+  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
+  let prev=lyftaPreviousDaySets(d,x.id),rest=lyftaRestSeconds(x);
+  let hasPrev=prev.length>0;
+  let h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span></div>';
+  for(let n=1;n<=x.sets;n++){
+    let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null;
+    let wv=q.weight??'',rv=q.reps??'',iv=q.rir??rp[n-1];
+    h+='<div class="lyfta-set-wrap">'
+      +'<div class="lyfta-prev-line"><span>Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir:'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
+      +'<div class="lyfta-set-row"><div class="setnum">'+n+'</div>'
+        +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
+        +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
+        +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
+        +'<button class="lyfta-set-done" onclick="lyftaCompleteSet('+x.id+','+n+','+rest+',this)">✓</button>'
+      +'</div>'
+    +'</div>';
+  }
+  return '<div class="lyfta-workout-tools">'
+    +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
+    +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
+    +'</div>'+h;
+};
