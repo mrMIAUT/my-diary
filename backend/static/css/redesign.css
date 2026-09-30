@@ -3328,3 +3328,24 @@ body.eplan-redesign.client-ui .client-bottom-nav::before{
     bottom:9px!important;
   }
 }
+
+
+/* Tighter top spacing on secondary client sections */
+@media(max-width:760px){
+  body.eplan-redesign.client-ui .redesign-training-page,
+  body.eplan-redesign.client-ui .redesign-progress-page,
+  body.eplan-redesign.client-ui .redesign-nutrition-page,
+  body.eplan-redesign.client-ui .redesign-more-page,
+  body.eplan-redesign.client-ui .redesign-more-subpage,
+  body.eplan-redesign.client-ui .redesign-bju-page{
+    margin-top:-22px!important;
+  }
+}
+
+/* Unified segmented-control selection: white active tab like Training */
+body.eplan-redesign.client-ui .redesign-progress-tabs button.active,
+body.eplan-redesign.client-ui .redesign-nutrition-tabs button.active{
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:0 4px 12px rgba(42,72,108,.08)!important;
+}
