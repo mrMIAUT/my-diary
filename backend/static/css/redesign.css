@@ -3384,3 +3384,18 @@ body.eplan-redesign.client-ui .redesign-nutrition-tabs button.active{
     margin-top:0!important;
   }
 }
+
+
+/* Make bottom navigation visibly translucent over the very light app background */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  background:rgba(232,240,250,.10)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.08)!important;
+  backdrop-filter:blur(16px) saturate(1.08)!important;
+  border:1px solid rgba(150,170,195,.34)!important;
+  box-shadow:
+    0 10px 26px rgba(25,49,83,.10),
+    inset 0 1px 0 rgba(255,255,255,.28)!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav::before{
+  background:rgba(255,255,255,.015)!important;
+}
