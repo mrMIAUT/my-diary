@@ -471,6 +471,17 @@ function uiIcon(name){const p={menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',user:'
 
 function socialLinksHTML(){let links=[];const ig=`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" style="fill:currentColor;stroke:none"></circle></svg>`;const tg=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4 9.7 14.3"></path><path d="m21 4-7.2 16-4.1-5.7L3 11.8 21 4Z"></path></svg>`;const tt=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.4 3h3c.3 2.1 1.5 3.6 3.6 4.2v3a8.2 8.2 0 0 1-3.6-1.1v6.1a6.2 6.2 0 1 1-5.3-6.1v3.1a3.2 3.2 0 1 0 2.3 3V3Z"></path></svg>`;if(TRAINER_SOCIALS.instagram)links.push(`<a class="social-link instagram" href="${TRAINER_SOCIALS.instagram}" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">${ig}</a>`);if(TRAINER_SOCIALS.telegram)links.push(`<a class="social-link telegram" href="${TRAINER_SOCIALS.telegram}" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">${tg}</a>`);if(TRAINER_SOCIALS.tiktok)links.push(`<a class="social-link tiktok" href="${TRAINER_SOCIALS.tiktok}" target="_blank" rel="noopener" aria-label="TikTok" title="TikTok">${tt}</a>`);return `<div class="social-links">${links.join('')}</div>`}
 
+function clientInitials(c=(window.currentClientData||{}).client||{}){
+ let first=String(c.first_name||'').trim(),last=String(c.last_name||'').trim(),fallback=String(c.name||'').trim();
+ let parts=(first||last)?[first,last].filter(Boolean):fallback.split(/\s+/).filter(Boolean);
+ let initials=parts.slice(0,2).map(x=>x.charAt(0)).join('').toUpperCase();
+ return initials||'ЄП';
+}
+function clientAvatarHTML(cid,compact=false){
+ let c=(window.currentClientData||{}).client||{};
+ return '<button class="client-avatar '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль"><span>'+esc(clientInitials(c))+'</span></button>';
+}
+
 function clientNavGroup(view=currentClientView){
  if(view==='training')return 'training';
  if(view==='progress')return 'progress';
@@ -497,8 +508,8 @@ function shell(content){
    document.body.classList.add('eplan-redesign','client-ui');
    let isHome=clientNavGroup()==='home';
    let top=isHome
-    ?`<div class="client-top"><div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
-    :`<div class="client-top client-top-compact"><div></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
+    ?`<div class="client-top"><div class="client-top-left">${clientAvatarHTML(session.client_id)}<div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div></div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
+    :`<div class="client-top client-top-compact"><div class="client-top-left">${clientAvatarHTML(session.client_id,true)}</div><div class="client-top-actions"><button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
    return `<div class="wrap client-shell">${top}${content}${clientBottomNavHTML()}</div>`;
  }
  document.body.classList.remove('eplan-redesign','client-ui');
