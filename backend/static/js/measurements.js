@@ -12,15 +12,17 @@ function measurementDaysLeft(lastDay){
 }
 
 function measurementVisualIcon(key){
- let highlight={
-  waist:'<path class="hot" d="M13 12h6"/>',
-  chest:'<path class="hot" d="M12 8.5h8"/>',
-  hips:'<path class="hot" d="M12.5 15.5h7"/>',
-  thighs:'<path class="hot" d="M13.5 18.5h2M17.5 18.5h2"/>',
-  arms:'<path class="hot" d="M8.5 10.5l2 3M21.5 10.5l-2 3"/>',
-  weight:'<path class="hot" d="M11 20h10"/>'
- }[key]||'';
- return '<svg class="measurement-body-icon" viewBox="0 0 30 30" aria-hidden="true"><circle cx="16" cy="5" r="2.3"/><path d="M12.5 8.5c1.6-1 5.4-1 7 0l1.7 6-1.7 8M12.5 8.5l-1.7 6 1.7 8M12.5 11h7M14 22.5l-1 4M18 22.5l1 4M10.8 14.5l-2.4 5M21.2 14.5l2.4 5"/>'+highlight+'</svg>';
+ let icon='';
+ if(key==='weight'){
+   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="4"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M12 10l2-2"/></svg>';
+ }else if(key==='arms'){
+   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16c2-1 3-3 3-5V8l2 1 2-3 2 2-1 4c2 0 4 1 5 3 1 2 0 4-2 5H9c-2 0-3-1-3-4Z"/><path d="M10 13c2 0 3 1 4 3"/></svg>';
+ }else if(key==='height'){
+   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 10h8M10 14l-1 6M14 14l1 6M4 4v16M2.5 6H5.5M2.5 18H5.5"/></svg>';
+ }else{
+   icon='<svg class="measurement-body-icon measurement-svg-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="M7 6v4M10 6v2M13 6v4M16 6v2M19 6v4"/><circle cx="8" cy="14" r="1.5"/></svg>';
+ }
+ return icon;
 }
 
 function measurementVisualCards(last,prev){
