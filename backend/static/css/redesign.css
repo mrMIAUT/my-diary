@@ -3607,3 +3607,28 @@ body.eplan-redesign.client-ui .client-profile-avatar-change{
 body.eplan-redesign.client-ui .client-avatar-input{
   display:none!important;
 }
+
+
+/* Neutral placeholder avatar across all client screens */
+body.eplan-redesign.client-ui .client-avatar.is-placeholder,
+body.eplan-redesign.client-ui .client-profile-avatar.is-placeholder{
+  background:#e5e7eb!important;
+  border-color:#d7dce5!important;
+  color:#7d8796!important;
+}
+body.eplan-redesign.client-ui .client-avatar.is-placeholder span,
+body.eplan-redesign.client-ui .client-profile-avatar.is-placeholder span{
+  color:#7d8796!important;
+}
+body.eplan-redesign.client-ui .client-avatar.has-photo,
+body.eplan-redesign.client-ui .client-profile-avatar.has-photo{
+  background:#fff!important;
+  color:inherit!important;
+}
+body.eplan-redesign.client-ui .client-profile-avatar-edit,
+body.eplan-redesign.client-ui .client-profile-avatar-change{
+  display:none!important;
+}
+body.eplan-redesign.client-ui .client-profile-avatar{
+  cursor:pointer!important;
+}
