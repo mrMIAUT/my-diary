@@ -218,15 +218,33 @@ function workoutExerciseName(x){return window.workoutExerciseChoices[x.id]||x.ex
 function chooseWorkoutExercise(pid,cid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
  let opts=[x.exercise,...exerciseAlternatives(x)],cur=workoutExerciseName(x);
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="alternativeExerciseModal"><div class="card"><div class="edit-exercise-head"><div><h2>Обрати вправу</h2><p class="muted" style="margin:4px 0 0">Заміна діє тільки для цього тренування.</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="alternative-modal-list">${opts.map((v,i)=>`<button class="${v===cur?'alternative-current':'dark'}" onclick="selectWorkoutExercise(${pid},${cid},${i})">${i===0?'За планом: ':''}${esc(v)}</button>`).join('')}</div></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="alternativeExerciseModal"><div class="card swap-choice-card"><div class="edit-exercise-head"><div><h2>Замінити вправу</h2><p class="muted" style="margin:4px 0 0">Обери один із дозволених варіантів.</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="alternative-modal-list">${opts.map((v,i)=>`<button class="${v===cur?'alternative-current':'dark'}" onclick="pickWorkoutExerciseScope(${pid},${cid},${i})">${i===0?'За планом: ':''}${esc(v)}</button>`).join('')}</div></div></div>`);
 }
 
-async function selectWorkoutExercise(pid,cid,index){
+function pickWorkoutExerciseScope(pid,cid,index){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
- let opts=[x.exercise,...exerciseAlternatives(x)];
- window.workoutExerciseChoices[pid]=opts[index]||x.exercise;
- alternativeExerciseModal.remove();
- await clientCabinet(cid);
+ let opts=[x.exercise,...exerciseAlternatives(x)],chosen=opts[index]||x.exercise;
+ let card=document.querySelector('#alternativeExerciseModal .swap-choice-card');if(!card)return;
+ card.innerHTML=`<div class="edit-exercise-head"><div><span class="swap-step-label">Обрана вправа</span><h2>${esc(chosen)}</h2><p class="muted" style="margin:4px 0 0">Як застосувати цю заміну?</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="swap-scope-actions"><button onclick="applyWorkoutExerciseChoice(${pid},${cid},${index},'today')"><strong>Тільки сьогодні</strong><span>Поточна програма не зміниться</span></button><button onclick="applyWorkoutExerciseChoice(${pid},${cid},${index},'program')"><strong>Замінити в програмі</strong><span>Ця вправа стане основною надалі</span></button></div><button class="dark swap-back-btn" onclick="alternativeExerciseModal.remove();chooseWorkoutExercise(${pid},${cid})">← Назад до вправ</button>`;
+}
+
+async function applyWorkoutExerciseChoice(pid,cid,index,scope){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
+ let opts=[x.exercise,...exerciseAlternatives(x)],chosen=opts[index]||x.exercise;
+ if(scope==='program'){
+   try{
+     await api('/program/'+pid+'/client-exercise',{method:'PATCH',body:JSON.stringify({exercise:chosen})});
+     window.workoutExerciseChoices[pid]=chosen;
+     window.currentClientData=await loadClientData(cid);
+   }catch(e){
+     alert(e?.message||'Не вдалося змінити вправу в програмі.');
+     return;
+   }
+ }else{
+   window.workoutExerciseChoices[pid]=chosen;
+ }
+ alternativeExerciseModal?.remove();
+ await showClientTraining(cid);
  requestAnimationFrame(()=>{
    let body=document.getElementById('exerciseBody'+pid);
    if(!body)return;
@@ -235,6 +253,10 @@ async function selectWorkoutExercise(pid,cid,index){
    if(toggle){toggle.classList.add('open');let a=toggle.querySelector('.arrow');if(a)a.textContent='⌃'}
    setTimeout(()=>toggle?.scrollIntoView({behavior:'smooth',block:'center'}),60);
  });
+}
+
+async function selectWorkoutExercise(pid,cid,index){
+ return applyWorkoutExerciseChoice(pid,cid,index,'today');
 }
 
 function activeExercisesHTML(items,d,cid){
