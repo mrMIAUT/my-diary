@@ -2694,3 +2694,231 @@ body.eplan-redesign.client-ui .measurement-input-grid input{
     min-height:164px;
   }
 }
+
+
+/* Paired measurements: right/left entry and display */
+body.eplan-redesign.client-ui .measurement-side-values{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:auto;
+}
+body.eplan-redesign.client-ui .measurement-side-values>span{
+  min-width:0;
+  padding:9px 8px;
+  border-radius:12px;
+  background:#f6f9fd;
+  border:1px solid #e2e9f2;
+}
+body.eplan-redesign.client-ui .measurement-side-values small{
+  display:block;
+  margin-bottom:2px;
+  color:#7b899d;
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-side-values b{
+  display:block;
+  color:#0a1738;
+  font-size:13px;
+  white-space:nowrap;
+}
+
+body.eplan-redesign.client-ui .measurement-form-section{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+body.eplan-redesign.client-ui .measurement-form-section h3{
+  margin:0;
+  font-size:17px;
+}
+body.eplan-redesign.client-ui .measurement-form-section>p{
+  margin:0;
+  font-size:10.5px;
+  line-height:1.45;
+}
+body.eplan-redesign.client-ui .measurement-pair-list{
+  display:grid;
+  gap:10px;
+}
+body.eplan-redesign.client-ui .measurement-pair-group{
+  padding:12px;
+  border-radius:15px;
+  background:#f8faff;
+  border:1px solid #e1e8f2;
+}
+body.eplan-redesign.client-ui .measurement-pair-title{
+  margin-bottom:8px;
+  color:#0a1738;
+  font-size:12px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-pair-inputs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+body.eplan-redesign.client-ui .measurement-pair-inputs label{
+  display:grid;
+  gap:5px;
+  color:#718097;
+  font-size:9.5px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-pair-inputs input{
+  width:100%;
+  min-width:0;
+  padding:11px 10px!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  border:1px solid #dbe4ef!important;
+}
+
+/* Measurement history: structured cards instead of tag cloud */
+body.eplan-redesign.client-ui .measurement-history{
+  display:grid;
+  gap:12px;
+  padding-top:12px;
+}
+body.eplan-redesign.client-ui .measurement-history-card.redesigned-history{
+  position:relative;
+  padding:16px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:0 6px 18px rgba(37,61,92,.045);
+}
+body.eplan-redesign.client-ui .measurement-history-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:12px;
+  border-bottom:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .measurement-history-head>div{
+  display:grid;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .measurement-history-caption{
+  color:#8190a5;
+  font-size:9px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+body.eplan-redesign.client-ui .measurement-history-head strong{
+  font-size:17px;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .measurement-history-section{
+  display:grid;
+  gap:9px;
+  margin-top:12px;
+}
+body.eplan-redesign.client-ui .measurement-history-section h4{
+  margin:0;
+  color:#718097;
+  font-size:10px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+body.eplan-redesign.client-ui .measurement-history-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+body.eplan-redesign.client-ui .measurement-history-metric{
+  display:grid;
+  gap:2px;
+  padding:10px 11px;
+  border-radius:12px;
+  background:#f7f9fc;
+  border:1px solid #e7ecf3;
+}
+body.eplan-redesign.client-ui .measurement-history-metric>span{
+  color:#77869b;
+  font-size:9.5px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-history-metric>strong{
+  color:#0a1738;
+  font-size:12px;
+}
+body.eplan-redesign.client-ui .measurement-history-metric>small{
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-history-metric>small.down{color:#15965a}
+body.eplan-redesign.client-ui .measurement-history-metric>small.up{color:#d5821e}
+
+body.eplan-redesign.client-ui .measurement-history-pair-grid{
+  display:grid;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .measurement-history-pair{
+  display:grid;
+  grid-template-columns:minmax(90px,.8fr) 1.4fr;
+  gap:10px;
+  align-items:center;
+  padding:10px 11px;
+  border-radius:12px;
+  background:#fbfcfe;
+  border:1px solid #e7ecf3;
+}
+body.eplan-redesign.client-ui .measurement-history-pair-title{
+  color:#0a1738;
+  font-size:11px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-history-pair-sides{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+}
+body.eplan-redesign.client-ui .measurement-history-pair-sides>span{
+  display:grid;
+  gap:1px;
+}
+body.eplan-redesign.client-ui .measurement-history-pair-sides small{
+  color:#8190a5;
+  font-size:8.5px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-history-pair-sides b{
+  color:#0a1738;
+  font-size:11px;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .measurement-history-legacy{
+  color:#53647d;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-history-legacy small{
+  display:block;
+  color:#8b98aa;
+  font-size:8.5px;
+  font-weight:700;
+}
+body.eplan-redesign.client-ui .measurement-metric.paired{
+  display:grid;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .measurement-metric-sides{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+}
+body.eplan-redesign.client-ui .measurement-metric-sides b{
+  display:grid;
+  gap:1px;
+  font-size:11px;
+}
+body.eplan-redesign.client-ui .measurement-metric-sides small{
+  color:#7b899d;
+  font-size:8px;
+  font-weight:800;
+}
