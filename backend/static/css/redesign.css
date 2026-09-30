@@ -3361,3 +3361,26 @@ body.eplan-redesign.client-ui .redesign-nutrition-tabs button.active{
     box-shadow:none!important;
   }
 }
+
+
+/* Align primary client sections to one vertical level */
+@media(max-width:760px){
+  body.eplan-redesign.client-ui .redesign-training-page,
+  body.eplan-redesign.client-ui .redesign-progress-shell,
+  body.eplan-redesign.client-ui .redesign-nutrition-page,
+  body.eplan-redesign.client-ui .redesign-more-page{
+    margin-top:-22px!important;
+  }
+
+  body.eplan-redesign.client-ui .redesign-training-page>h1,
+  body.eplan-redesign.client-ui .redesign-progress-shell>h1,
+  body.eplan-redesign.client-ui .redesign-nutrition-page>h1,
+  body.eplan-redesign.client-ui .redesign-more-page>h1{
+    margin:4px 2px 14px!important;
+    line-height:1.08!important;
+  }
+
+  body.eplan-redesign.client-ui .redesign-progress-shell .redesign-progress-page{
+    margin-top:0!important;
+  }
+}
