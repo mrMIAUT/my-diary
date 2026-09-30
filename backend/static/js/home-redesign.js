@@ -23,14 +23,14 @@ function redesignCurrentWeekCheckin(d){
 function openWeeklyCheckin(cid){
  let d=window.currentClientData||{},cur=redesignCurrentWeekCheckin(d)||{};
  let scale=(id,label,val)=>'<div class="weekly-checkin-field"><label>'+label+'</label><div class="weekly-checkin-scale">'+[1,2,3,4,5].map(n=>'<label><input type="radio" name="'+id+'" value="'+n+'" '+((+val||3)===n?'checked':'')+'><span>'+n+'</span></label>').join('')+'</div></div>';
- document.body.insertAdjacentHTML('beforeend','<div class="modal" id="weeklyCheckinModal"><div class="card weekly-checkin-modal"><div class="between"><div><small>ЩОТИЖНЕВИЙ CHECK-IN</small><h2>Як минув твій тиждень?</h2></div><button class="dark" onclick="weeklyCheckinModal.remove()">✕</button></div>'
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="weeklyCheckinModal"><div class="card weekly-checkin-modal"><div class="between"><div><small>ЩОТИЖНЕВИЙ ЗВІТ</small><h2>Як минув твій тиждень?</h2></div><button class="dark" onclick="weeklyCheckinModal.remove()">✕</button></div>'
    +scale('ciMood','Самопочуття',cur.mood)
    +scale('ciSleep','Сон',cur.sleep)
    +scale('ciEnergy','Енергія',cur.energy)
    +scale('ciHunger','Голод',cur.hunger)
    +scale('ciDifficulty','Складність тренувань',cur.difficulty)
    +'<label class="weekly-checkin-comment">Коментар<textarea id="ciComment" placeholder="Що було добре або що заважало?">'+esc(cur.comment||'')+'</textarea></label>'
-   +'<button onclick="saveWeeklyCheckin('+cid+')">Зберегти check-in</button></div></div>');
+   +'<button onclick="saveWeeklyCheckin('+cid+')">Зберегти звіт</button></div></div>');
 }
 async function saveWeeklyCheckin(cid){
  let pick=name=>+(document.querySelector('input[name="'+name+'"]:checked')?.value||3);
@@ -126,8 +126,8 @@ function redesignClientHomeHTML(d,c,cid,groups){
     +'</div>'
 
     +(redesignCurrentWeekCheckin(d)
-      ?'<button class="client-weekly-checkin done" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий check-in</span><strong>Заповнено ✓</strong><em>Можна оновити до кінця тижня</em><b>›</b></button>'
-      :'<button class="client-weekly-checkin" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий check-in</span><strong>Як минув твій тиждень?</strong><em>Займе близько хвилини</em><b>›</b></button>')
+      ?'<button class="client-weekly-checkin done" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий звіт</span><strong>Заповнено ✓</strong><em>Можна оновити до кінця тижня</em><b>›</b></button>'
+      :'<button class="client-weekly-checkin" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий звіт</span><strong>Як минув твій тиждень?</strong><em>Займе близько хвилини</em><b>›</b></button>')
 
     +'<div class="client-home-section-head">'
       +'<h2>Мій прогрес</h2>'
