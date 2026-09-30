@@ -1696,3 +1696,174 @@ body.eplan-redesign.client-ui .wrap.client-shell{
     border-radius:24px!important;
   }
 }
+
+
+/* Redesign V1 — More tab */
+body.eplan-redesign.client-ui .redesign-more-page>h1,
+body.eplan-redesign.client-ui .redesign-more-subpage h1{
+  margin:4px 2px 14px;
+  font-size:28px;
+  letter-spacing:-.025em;
+}
+body.eplan-redesign.client-ui .redesign-more-list{
+  display:grid;
+  gap:9px;
+}
+body.eplan-redesign.client-ui .redesign-more-item{
+  width:100%;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  padding:13px 14px;
+  text-align:left;
+  border-radius:17px;
+  background:#fff!important;
+  color:#0a1738!important;
+  border:1px solid #e1e8f2!important;
+  box-shadow:0 8px 22px rgba(35,70,108,.045)!important;
+}
+body.eplan-redesign.client-ui .redesign-more-icon{
+  width:40px;height:40px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:#edf4ff;
+  color:#1677ff;
+}
+body.eplan-redesign.client-ui .redesign-more-icon.green{background:#eaf8ef;color:#1b9a5b}
+body.eplan-redesign.client-ui .redesign-more-icon.orange{background:#fff3e7;color:#e17a22}
+body.eplan-redesign.client-ui .redesign-more-icon .ui-icon{width:20px;height:20px}
+body.eplan-redesign.client-ui .redesign-more-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .redesign-more-copy strong{font-size:14px}
+body.eplan-redesign.client-ui .redesign-more-copy small{font-size:10.5px;color:#7b899d}
+body.eplan-redesign.client-ui .redesign-more-chevron{font-size:22px;color:#8a98ab}
+
+body.eplan-redesign.client-ui .redesign-more-settings-card{
+  margin-top:12px;
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  border-radius:17px;
+  background:#fff;
+  border:1px solid #e1e8f2;
+}
+body.eplan-redesign.client-ui .redesign-more-settings-card>div:first-child{
+  display:flex;flex-direction:column;gap:2px;
+}
+body.eplan-redesign.client-ui .redesign-more-settings-card strong{font-size:14px}
+body.eplan-redesign.client-ui .redesign-more-settings-card small{font-size:10.5px;color:#7b899d}
+body.eplan-redesign.client-ui .redesign-language-switch{
+  display:flex;
+  gap:5px;
+  padding:4px;
+  border-radius:12px;
+  background:#eef3f9;
+}
+body.eplan-redesign.client-ui .redesign-language-switch button{
+  min-width:42px;
+  padding:8px 10px;
+  border-radius:9px;
+  background:transparent!important;
+  color:#738198!important;
+  box-shadow:none!important;
+  font-size:11px;
+}
+body.eplan-redesign.client-ui .redesign-language-switch button.active{
+  background:#fff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .redesign-more-logout{
+  width:100%;
+  margin-top:12px;
+  padding:13px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  border-radius:15px;
+  background:#fff2f2!important;
+  color:#c8454e!important;
+  border:1px solid #ffdadd!important;
+}
+body.eplan-redesign.client-ui .redesign-more-logout .ui-icon{width:18px;height:18px}
+
+body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title{
+  margin-bottom:16px;
+}
+body.eplan-redesign.client-ui .redesign-achievements-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+body.eplan-redesign.client-ui .redesign-achievements-grid>div{
+  padding:14px 9px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:4px;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid #e1e8f2;
+}
+body.eplan-redesign.client-ui .redesign-achievements-grid span{
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:11px;
+  background:#fff4db;color:#d29400;
+  font-size:17px;
+}
+body.eplan-redesign.client-ui .redesign-achievements-grid strong{font-size:13px}
+body.eplan-redesign.client-ui .redesign-achievements-grid small{font-size:9.5px;color:#7a889c;line-height:1.2}
+
+body.eplan-redesign.client-ui .redesign-settings-panel{
+  padding:16px;border-radius:18px;
+}
+body.eplan-redesign.client-ui .redesign-settings-panel>strong{font-size:15px}
+body.eplan-redesign.client-ui .redesign-settings-panel p{font-size:11px;line-height:1.45}
+body.eplan-redesign.client-ui .redesign-settings-panel .phone-notify-enable{
+  margin:10px 0 0!important;
+  background:#edf4ff!important;
+  color:#1677ff!important;
+  border:1px solid #d7e7fb!important;
+}
+
+body.eplan-redesign.client-ui .redesign-help-list{
+  display:grid;gap:9px;
+}
+body.eplan-redesign.client-ui .redesign-help-item{
+  border:1px solid #e1e8f2;
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .redesign-help-item>button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 14px;
+  text-align:left;
+  background:#fff!important;
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .redesign-help-item strong{font-size:13px}
+body.eplan-redesign.client-ui .redesign-help-item>div{
+  padding:0 14px 13px;
+  color:#718097;
+  font-size:11px;
+  line-height:1.45;
+}
+
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .redesign-achievements-grid{gap:6px}
+  body.eplan-redesign.client-ui .redesign-achievements-grid>div{padding:12px 7px}
+}
