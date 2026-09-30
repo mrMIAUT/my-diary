@@ -1940,3 +1940,56 @@ body.eplan-redesign.client-ui .measurement-history-values span{
   border-color:#e1e8f2!important;
   color:#183153!important;
 }
+
+
+/* Measurements history accordion — light theme */
+body.eplan-redesign.client-ui .measurements-page .exercise-toggle{
+  background:transparent!important;
+  color:#0a1738!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .measurements-page .exercise-toggle strong{
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .measurements-page .exercise-toggle .muted{
+  color:#718097!important;
+}
+body.eplan-redesign.client-ui .measurements-page .exercise-toggle .arrow{
+  color:#8a98ab!important;
+}
+body.eplan-redesign.client-ui .measurements-page>.card:last-child{
+  padding:0!important;
+  overflow:hidden;
+  background:#fff!important;
+  border:1px solid #e1e8f2!important;
+}
+body.eplan-redesign.client-ui .measurements-page>.card:last-child .exercise-toggle{
+  width:100%;
+  padding:16px 18px!important;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+body.eplan-redesign.client-ui .measurement-history{
+  margin-top:0!important;
+  padding:0 18px 14px;
+  border-top:1px solid #edf1f6;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .measurement-history-card{
+  padding:14px 0!important;
+  border-bottom:1px solid #edf1f6!important;
+}
+body.eplan-redesign.client-ui .measurement-history-card:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui .measurement-history-date{
+  color:#0a1738!important;
+}
+body.eplan-redesign.client-ui .measurement-history-values span{
+  background:#f6f9fd!important;
+  border-color:#dfe7f2!important;
+  color:#183153!important;
+}
