@@ -100,7 +100,7 @@ function strengthProgressCard(x,i){
 function bodyProgressHTML(xs,period){
  if(!xs.length)return `<div class="progress-empty">Додай перші заміри — і тут з’явиться динаміка.</div>`;
  let from=periodStart(period),f=xs.filter(x=>!from||x.day>=from),a=f[0]||xs[0],b=f[f.length-1]||xs[xs.length-1];
- let metrics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Таз','см'],['thighs','Стегна','см'],['calves','Гомілки','см'],['arms','Руки','см'],['forearms','Передпліччя','см']];
+ let metrics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см'],['thighs','Стегна','см'],['calves','Гомілка','см'],['arms','Рука','см'],['forearms','Передпліччя','см']];
  return `<div class="body-progress-grid">${metrics.filter(([k])=>+b[k]>0).map(([k,n,u])=>{let dv=(+a[k]>0)?(+b[k]-+a[k]):null;return `<div class="body-progress-item"><span>${n}</span><strong>${fmtProgress(b[k])} ${u}</strong><small>${dv===null?'':`${dv>0?'+':''}${fmtProgress(dv)} ${u}`}</small></div>`}).join('')}</div><div class="muted" style="margin-top:12px">Останній замір: ${formatProgressDate(b.day)}</div>`;
 }
 
