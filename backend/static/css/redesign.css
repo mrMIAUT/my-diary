@@ -3246,18 +3246,18 @@ body.eplan-redesign.client-ui .redesign-progress-kpi-arrows button:active{
 
 /* Separate floating bottom navigation from content cards */
 body.eplan-redesign.client-ui .client-bottom-nav{
-  background:rgba(246,249,253,.62)!important;
-  -webkit-backdrop-filter:blur(20px) saturate(1.18)!important;
-  backdrop-filter:blur(20px) saturate(1.18)!important;
-  border:1px solid rgba(184,198,217,.72)!important;
+  background:rgba(246,249,253,.36)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.18)!important;
+  backdrop-filter:blur(24px) saturate(1.18)!important;
+  border:1px solid rgba(184,198,217,.58)!important;
   box-shadow:
-    0 14px 34px rgba(25,49,83,.18),
-    0 -1px 0 rgba(255,255,255,.92) inset!important;
+    0 12px 30px rgba(25,49,83,.14),
+    0 -1px 0 rgba(255,255,255,.78) inset!important;
 }
 body.eplan-redesign.client-ui .client-bottom-nav::before{
   background:linear-gradient(
     180deg,
-    rgba(255,255,255,.20) 0%,
-    rgba(232,240,250,.06) 100%
+    rgba(255,255,255,.12) 0%,
+    rgba(232,240,250,.03) 100%
   )!important;
 }
