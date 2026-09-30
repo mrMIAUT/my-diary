@@ -1610,3 +1610,20 @@ body.eplan-redesign.client-ui .client-bottom-nav button.active{
 body.eplan-redesign.client-ui .redesign-bju-page .redesign-back-title{
   margin-bottom:18px!important;
 }
+
+
+/* Make bottom navigation translucency visually obvious on light screens */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  background:rgba(232,239,249,.78)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.35)!important;
+  backdrop-filter:blur(22px) saturate(1.35)!important;
+  border-top:1px solid rgba(184,199,219,.55)!important;
+  box-shadow:0 -8px 24px rgba(24,54,91,.12)!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav button{
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav button.active{
+  background:rgba(255,255,255,.58)!important;
+  color:#1677ff!important;
+}
