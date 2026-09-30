@@ -4020,3 +4020,87 @@ body.eplan-redesign.trainer-ui .trainer-nutrition-row small{display:block}
 body.eplan-redesign.trainer-ui .trainer-assigned-row small,
 body.eplan-redesign.trainer-ui .trainer-nutrition-row small{margin-top:3px;color:#7b8799}
 body.eplan-redesign.trainer-ui .trainer-page-sub{margin:-4px 2px 14px;color:#74829a;font-size:13px}
+
+
+/* Smart coaching states */
+body.eplan-redesign.trainer-ui .trainer-smart-status{
+  display:inline-flex;align-items:center;max-width:100%;margin-top:6px;padding:4px 8px;border-radius:999px;
+  font-size:10px;font-weight:850;line-height:1.15;white-space:nowrap;
+}
+body.eplan-redesign.trainer-ui .trainer-smart-status.ok{background:#e9f7ef;color:#238b57}
+body.eplan-redesign.trainer-ui .trainer-smart-status.attention{background:#fff3e8;color:#c86c25}
+body.eplan-redesign.trainer-ui .trainer-smart-status.risk{background:#ffecef;color:#c94755}
+body.eplan-redesign.trainer-ui .trainer-smart-status.paused{background:#eef1f5;color:#78869b}
+body.eplan-redesign.trainer-ui .trainer-client-copy em{
+  display:block;margin-top:5px;color:#8a96a8;font-size:10px;font-style:normal;line-height:1.25;
+}
+body.eplan-redesign.trainer-ui .trainer-smart-summary{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 12px;padding:13px 14px;
+  border-radius:15px;border:1px solid #dce5f1;background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-smart-summary strong{font-size:13px}
+body.eplan-redesign.trainer-ui .trainer-smart-summary span{color:#738198;font-size:11px;text-align:right}
+body.eplan-redesign.trainer-ui .trainer-smart-summary.attention{border-color:#f2d8bf;background:#fffaf5}
+body.eplan-redesign.trainer-ui .trainer-smart-summary.risk{border-color:#f1c9cf;background:#fff7f8}
+body.eplan-redesign.trainer-ui .trainer-smart-summary.ok{border-color:#cfe9da;background:#f8fdf9}
+
+/* Trainer private notes + weekly check-ins */
+body.eplan-redesign.trainer-ui .trainer-private-note small,
+body.eplan-redesign.trainer-ui .trainer-checkin-card small{color:#8a96a8;font-weight:850;letter-spacing:.04em}
+body.eplan-redesign.trainer-ui .trainer-private-note textarea{
+  min-height:150px;margin:12px 0;background:#f7f9fd!important;color:#081633!important;border:1px solid #dce5f1!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history{margin-top:12px}
+body.eplan-redesign.trainer-ui .trainer-checkin-card{margin-bottom:12px}
+body.eplan-redesign.trainer-ui .trainer-checkin-card:last-child{margin-bottom:0}
+body.eplan-redesign.trainer-ui .trainer-checkin-card h2{margin:3px 0 0;font-size:18px}
+body.eplan-redesign.trainer-ui .trainer-checkin-score{
+  min-width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#eaf2ff;color:#1677ff;font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-grid span{
+  display:flex;justify-content:space-between;gap:8px;padding:9px 10px;border-radius:11px;background:#f5f8fc;color:#687790;font-size:11px;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-grid b{color:#081633}
+body.eplan-redesign.trainer-ui .trainer-checkin-card p{margin:10px 0;color:#43516a;line-height:1.45}
+body.eplan-redesign.trainer-ui .trainer-checkin-reviewed{
+  display:inline-flex;margin-top:5px;padding:6px 9px;border-radius:999px;background:#e9f7ef;color:#238b57;font-size:11px;font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-empty{
+  display:flex;flex-direction:column;gap:4px;margin-bottom:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-empty span{color:#7a879b;font-size:12px}
+body.eplan-redesign.trainer-ui .trainer-client-tabs{grid-template-columns:repeat(5,1fr)!important}
+body.eplan-redesign.trainer-ui .trainer-client-tabs button{font-size:10px!important;padding-inline:2px!important}
+
+/* Client weekly check-in */
+body.eplan-redesign.client-ui .client-weekly-checkin{
+  position:relative;width:100%;display:grid;grid-template-columns:1fr auto;gap:3px 10px;align-items:center;
+  margin:14px 0 4px;padding:15px 46px 15px 16px;border:1px solid #d7e2f0;border-radius:18px;
+  background:linear-gradient(135deg,#f7fbff,#eef5ff);color:#081633;text-align:left;
+}
+body.eplan-redesign.client-ui .client-weekly-checkin>span{
+  grid-column:1/2;color:#6f7f98;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.03em;
+}
+body.eplan-redesign.client-ui .client-weekly-checkin>strong{grid-column:1/2;font-size:15px}
+body.eplan-redesign.client-ui .client-weekly-checkin>em{grid-column:1/2;color:#8490a3;font-size:11px;font-style:normal}
+body.eplan-redesign.client-ui .client-weekly-checkin>b{
+  position:absolute;right:17px;top:50%;transform:translateY(-50%);color:#1677ff;font-size:24px;
+}
+body.eplan-redesign.client-ui .client-weekly-checkin.done{
+  background:#f8fcfa;border-color:#d6eadf;
+}
+.weekly-checkin-modal{max-width:520px!important;max-height:min(86dvh,760px);overflow:auto}
+.weekly-checkin-field{margin-top:14px}
+.weekly-checkin-field>label{display:block;margin-bottom:7px;color:#4e5c73;font-size:12px;font-weight:800}
+.weekly-checkin-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.weekly-checkin-scale label{display:block}
+.weekly-checkin-scale input{position:absolute;opacity:0;pointer-events:none}
+.weekly-checkin-scale span{
+  height:42px;display:grid;place-items:center;border:1px solid #d9e3ef;border-radius:12px;background:#f7f9fc;color:#6f7e95;font-weight:850;
+}
+.weekly-checkin-scale input:checked+span{background:#1677ff;color:#fff;border-color:#1677ff}
+.weekly-checkin-comment{display:block;margin-top:15px;color:#4e5c73;font-size:12px;font-weight:800}
+.weekly-checkin-comment textarea{min-height:90px;margin-top:7px}
