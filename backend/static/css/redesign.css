@@ -4912,3 +4912,16 @@ body.eplan-redesign.client-ui .unified-back-button>svg,
 body.eplan-redesign.client-ui .redesign-back-title>button>svg{
  display:block!important;margin:auto!important;transform:none!important;
 }
+
+/* Back button: use a drawn chevron so glyph font metrics cannot shift it */
+body.eplan-redesign.client-ui .unified-back-button,
+body.eplan-redesign.client-ui .redesign-back-title>button{
+ font-size:0!important;color:transparent!important;
+}
+body.eplan-redesign.client-ui .unified-back-button::before,
+body.eplan-redesign.client-ui .redesign-back-title>button::before{
+ content:""!important;display:block!important;width:11px!important;height:11px!important;
+ border-left:3px solid #183153!important;border-bottom:3px solid #183153!important;
+ transform:rotate(45deg)!important;transform-origin:50% 50%!important;
+ margin-left:4px!important;box-sizing:border-box!important;
+}
