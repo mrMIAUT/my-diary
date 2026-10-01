@@ -174,12 +174,17 @@ function workoutCycleState(d,groups){
    }
    seen.add(day);
  }
- // If the latest session itself would close a cycle, it should still be shown as completed until
- // the next workout starts; otherwise the UI jumps from 100% straight to 0%.
+ // If the latest session itself closes a cycle, keep 100% only for that calendar day.
+ // On the next day the new cycle starts from the first planned workout.
  if(!seen.size){
    let tail=new Set();
    for(let i=sessions.length-1;i>=0&&tail.size<days.length;i--)tail.add(sessions[i].day_name);
-   if(tail.size===days.length)seen=tail;
+   if(tail.size===days.length){
+     let latestSession=sessions[sessions.length-1];
+     let latestDay=sessionDay(latestSession);
+     if(latestDay===isoToday())seen=tail;
+     else return {done:[],next:days[0]};
+   }
  }
  done=days.filter(day=>seen.has(day));
  let next=days.find(day=>!seen.has(day))||days[0];
