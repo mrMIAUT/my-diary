@@ -4972,3 +4972,42 @@ body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-detail
 body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-details span{
  color:#102044!important;opacity:1!important;
 }
+
+
+/* v67 — auth + drawn logo splash */
+body.eplan-auth-page{background:#f8fbff;color:#0a1738;min-height:100dvh}
+body.eplan-auth-page #app{min-height:100dvh;background:#f8fbff}
+.auth-shell{width:min(100%,440px);min-height:100dvh;margin:0 auto;padding:calc(58px + env(safe-area-inset-top)) 22px calc(34px + env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center}
+.auth-logo{width:92px;height:92px;margin:0 auto 30px;border-radius:24px;overflow:hidden;box-shadow:0 12px 34px rgba(30,67,111,.12)}
+.auth-logo img{display:block;width:100%;height:100%;object-fit:cover}
+.auth-card{padding:24px 20px 20px;background:#fff;border:1px solid #e1e8f2;border-radius:24px;box-shadow:0 18px 48px rgba(31,64,104,.08)}
+.auth-heading span{display:block;margin-bottom:5px;color:#1677ff;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.auth-heading h1{margin:0 0 7px;color:#0a1738;font-size:30px;letter-spacing:-.03em}
+.auth-heading p{margin:0 0 22px;color:#74839a;font-size:14px}
+.auth-field{display:block;margin-top:14px}
+.auth-field>span{display:block;margin:0 0 7px 2px;color:#53647e;font-size:12px;font-weight:800}
+body.eplan-auth-page .auth-field input{height:54px;margin:0;padding:0 15px;background:#f7f9fd;color:#0a1738;border:1px solid #dfe7f2;border-radius:15px;font-size:16px;outline:0;box-shadow:none}
+body.eplan-auth-page .auth-field input:focus{border-color:#9bc6ff;box-shadow:0 0 0 3px rgba(22,119,255,.09)}
+body.eplan-auth-page .password-field-wrap{position:relative}
+body.eplan-auth-page .password-field-wrap input{padding-right:50px}
+body.eplan-auth-page .password-eye-btn{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:40px;height:40px;padding:0;display:grid;place-items:center;background:transparent!important;color:#74839a!important;border:0!important;box-shadow:none!important}
+body.eplan-auth-page .password-eye-icon{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.auth-options{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 6px}
+body.eplan-auth-page .remember-row{margin:0;color:#687892;font-size:12px;gap:8px}
+body.eplan-auth-page .remember-row input{width:18px;height:18px;accent-color:#1677ff}
+body.eplan-auth-page .auth-forgot{padding:6px 0;background:transparent!important;color:#1677ff!important;border:0!important;border-radius:0!important;font-size:12px;box-shadow:none!important}
+.auth-error{min-height:20px;margin:5px 0 8px;color:#c64a55;font-size:12px}
+body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;background:#1677ff!important;color:#fff!important;font-size:15px;box-shadow:0 8px 20px rgba(22,119,255,.18)}
+@media(max-width:380px){.auth-shell{padding-left:16px;padding-right:16px}.auth-card{padding:21px 17px 18px}.auth-options{align-items:flex-start;flex-direction:column}.auth-logo{width:82px;height:82px;margin-bottom:22px}}
+
+.eplan-splash{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#f8fbff!important;opacity:1;visibility:visible;transition:opacity .2s ease,visibility .2s ease}
+.eplan-splash.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.eplan-splash-draw{position:relative;width:154px;height:154px}
+.eplan-splash-draw .splash-final{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:34px;opacity:0;animation:splashFinal .22s ease .9s forwards;box-shadow:0 12px 36px rgba(31,64,104,.10)}
+.eplan-splash-draw svg{position:absolute;inset:18%;width:64%;height:64%;overflow:visible}
+.eplan-splash-draw path{fill:none;stroke:#0b2f75;stroke-width:13;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:360;stroke-dashoffset:360;filter:drop-shadow(0 0 4px rgba(22,119,255,.16))}
+.eplan-splash-draw .draw-e{animation:splashStroke .55s cubic-bezier(.45,0,.25,1) .08s forwards}
+.eplan-splash-draw .draw-p{animation:splashStroke .55s cubic-bezier(.45,0,.25,1) .34s forwards}
+@keyframes splashStroke{to{stroke-dashoffset:0}}
+@keyframes splashFinal{to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.eplan-splash-draw path{stroke-dashoffset:0;animation:none}.eplan-splash-draw .splash-final{opacity:1;animation:none}}
