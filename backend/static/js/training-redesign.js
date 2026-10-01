@@ -35,7 +35,7 @@ function redesignTrainingDayCard(d,cid,groups,day,index,cycle,todayCompletedDay=
           return '<div class="redesign-training-exercise"><span>'+(i+1)+'</span><div><strong>'+esc(x.exercise)+'</strong><small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small></div><b>RIR '+esc(rir)+'</b></div>';
         }).join('')
       +'</div>'
-      +(isNext?'<button class="redesign-start-workout" data-day="'+esc(day)+'" onclick="event.stopPropagation();startWorkout('+cid+',this.dataset.day,this)">Почати тренування</button>':'')
+      +(isNext&&!isDone?'<button class="redesign-start-workout" data-day="'+esc(day)+'" onclick="event.stopPropagation();startWorkout('+cid+',this.dataset.day,this)">Почати тренування</button>':isDone?'<div class="redesign-completed-workout-note">✓ Тренування вже виконано</div>':'')
     +'</div>'
   +'</article>';
 }
