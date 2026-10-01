@@ -47,10 +47,10 @@ function toggleRedesignTrainingDay(day,btn){
 }
 
 function redesignTrainingProgramHTML(d,cid,groups){
-  let days=Object.keys(groups||{}),cycle=workoutCycleState(d,groups||{}),today=isoToday(),sessions=d.workout_sessions||[],todaySets=(d.result_sets||[]).filter(x=>x.day===today),todaySession=sessions.find(x=>x.status==='finished'&&sessionDay(x)===today)||(todaySets.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),todayCompletedDay=todaySession?.day_name||'';
+  let days=Object.keys(groups||{}),cycle=workoutCycleState(d,groups||{}),today=isoToday(),sessions=d.workout_sessions||[],todaySets=(d.result_sets||[]).filter(x=>x.day===today),todaySession=sessions.find(x=>x.status==='finished'&&sessionDay(x)===today)||(todaySets.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),todayCompletedDay=todaySession?.day_name||'',todayDuration=todaySession?.duration_seconds;
   if(!days.length)return '<div class="redesign-empty-panel"><strong>Програму ще не додано</strong><span>Коли тренер призначить програму, тренувальні дні з’являться тут.</span></div>';
   let completed=Math.min(days.length,cycle.done.length),pct=days.length?Math.round(completed/days.length*100):0;
-  return '<div class="redesign-training-overview">'+(todayCompletedDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayCompletedDay)+' виконано. Наступне тренування — за планом.</small></div></div>':'')
+  return '<div class="redesign-training-overview">'+(todayCompletedDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayCompletedDay)+' виконано'+(todayDuration!==undefined&&todayDuration!==null?' · ⏱ '+esc(formatWorkoutDuration(todayDuration)):'')+'. Наступне тренування — за планом.</small></div></div>':'')
     +'<div class="redesign-training-summary"><div><span>Поточний цикл</span><strong>'+completed+' з '+days.length+'</strong></div><div class="redesign-training-cycle"><i style="width:'+pct+'%"></i></div><b>'+pct+'%</b></div>'
     +'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle,todayCompletedDay)}).join('')+'</div>'
     +'<div class="redesign-training-help">'
