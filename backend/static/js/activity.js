@@ -36,13 +36,8 @@ function cardioHTML(d,cid,readonly=false){
 }
 
 function activityIcon(kind){
- const icons={
-  steps:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 3.5c1.6.4 2.6 2.1 2.2 3.8-.4 1.7-2 2.8-3.6 2.4-1.6-.4-2.6-2.1-2.2-3.8.4-1.7 2-2.8 3.6-2.4Zm7.6 10.8c1.6.4 2.6 2.1 2.2 3.8-.4 1.7-2 2.8-3.6 2.4-1.6-.4-2.6-2.1-2.2-3.8.4-1.7 2-2.8 3.6-2.4ZM9.6 11.1c1.3.8 2 2 1.8 3.2-.3 1.5-1.9 2.2-3.6 1.6-1.8-.6-3-2.3-2.7-3.8.3-1.4 2-2 4.5-1Zm6.7-6c1.7.6 3 2.3 2.7 3.8-.3 1.5-1.9 2.2-3.6 1.6-1.8-.6-3-2.3-2.7-3.8.3-1.5 1.9-2.2 3.6-1.6Z"/></svg>',
-  treadmill:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19h13M7 19l2-7h8l2 7M15 12l2-6h3M18 6h3M10 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm0 1.5-2 3 3 2 1.5 4M10 10l3 2 2-2"/></svg>',
-  elliptical:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M8 20l2-8m6 8-2-8M7 12h10M12 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm0 1.5v5m0-3-4-2m4 2 4-2M8 9l-2-4m10 4 2-4"/></svg>',
-  bike:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="m6 17 4-7 3 7h5l-4-7h-4m2-3h3"/></svg>',
-  other:'<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="9" cy="8" rx="4.1" ry="5.2" transform="rotate(35 9 8)"/><path d="m6.5 12.2-3.1 5.1 2.1 1.3 3.2-5.2M6.2 5.2l5.6 5.6M5.2 7.3l5.4 5.3M8.1 3.7l5.1 5.1M10.1 3.1 5.4 10.9"/><circle cx="17.4" cy="16.7" r="3.6"/><path d="m15.7 13.7 1.7 1.2 1.7-1.1m-1.7 1.1v2.1l-1.8 1.2m1.8-1.2 1.9 1.2"/></svg>'
- };return icons[kind]||'';
+ const files={steps:'steps.svg',treadmill:'treadmill.svg',elliptical:'elliptical.svg',bike:'bike.svg',other:'other.svg'};
+ return files[kind]?`<img src="/static/icons/activity/${files[kind]}" alt="" aria-hidden="true" class="activity-approved-icon">`:'';
 }
 function cardioMetricsHTML(type,cur={}){
  const treadmill=type==='Доріжка',other=type==='Інше';
