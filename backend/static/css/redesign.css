@@ -5225,3 +5225,45 @@ body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;back
   .eplan-splash-ribbon{display:none}
   .eplan-splash-ribbon-complete{opacity:1;animation:none}
 }
+
+
+/* v71 — continuous Є -> П -> center bar */
+.eplan-ribbon-e{
+  stroke-width:170;
+  stroke-dasharray:1390;
+  stroke-dashoffset:1390;
+  animation:eplanRibbonE71 .48s cubic-bezier(.58,.02,.2,1) .05s forwards;
+}
+.eplan-ribbon-p{
+  stroke-width:180;
+  stroke-dasharray:1120;
+  stroke-dashoffset:1120;
+  animation:eplanRibbonP71 .42s cubic-bezier(.58,.02,.2,1) .53s forwards;
+}
+.eplan-ribbon-bar-ready{
+  fill:none;
+  stroke:#fff;
+  stroke-width:126;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.eplan-ribbon-bar-cover{
+  fill:#fff;
+  transform-box:fill-box;
+  transform-origin:right center;
+  animation:eplanBarReveal71 .18s cubic-bezier(.58,.02,.2,1) .95s forwards;
+}
+@keyframes eplanRibbonE71{
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanRibbonP71{
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanBarReveal71{
+  to{transform:scaleX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .eplan-ribbon-e,
+  .eplan-ribbon-p{stroke-dashoffset:0;animation:none}
+  .eplan-ribbon-bar-cover{display:none}
+}
