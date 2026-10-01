@@ -194,9 +194,20 @@ async function notificationBadge(cid,recipient){
 
 async function showNotifications(cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
- let body=xs.length?xs.map(x=>`<div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal" onclick="if(event.target===this)this.remove()"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
+ let body=xs.length?xs.map(x=>`<div class="notification-swipe"><button class="notification-delete-bg client-notification-delete" aria-label="Видалити сповіщення" onclick="event.stopPropagation();deleteClientNotification(${x.id},${cid},'${recipient}',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="if(this.closest('.notification-swipe')?.classList.contains('reveal')){event.stopPropagation();this.closest('.notification-swipe').classList.remove('reveal');return}openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
+ initNotificationSwipes();
  setTimeout(()=>refreshPhoneNotificationButton(document.getElementById('phoneNotifyEnableBtn')),0);
+}
+
+async function deleteClientNotification(nid,cid,recipient,btn){
+ try{
+  await api('/notifications/item/'+nid,{method:'DELETE'});
+  btn.closest('.notification-swipe')?.remove();
+  refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
+ }catch(e){
+  alert(e?.message||'Не вдалося видалити сповіщення.');
+ }
 }
 
 async function openNotification(nid,cid,recipient){
