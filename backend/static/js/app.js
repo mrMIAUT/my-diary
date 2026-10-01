@@ -101,6 +101,15 @@ let currentClientView='home';
 
 new MutationObserver(()=>syncOverlayLock()).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 
+// Close any modal when the dimmed backdrop itself is tapped/clicked.
+document.addEventListener('click',e=>{
+  let modal=e.target?.closest?.('.modal');
+  if(modal&&e.target===modal){
+    modal.remove();
+    syncOverlayLock();
+  }
+});
+
 new MutationObserver(ms=>{if(appLanguage==='en')ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)translateTree(n);else if(n.nodeType===3)n.nodeValue=enText(n.nodeValue)}))}).observe(document.body,{childList:true,subtree:true});
 
 setTimeout(()=>translateTree(document.body),0);
