@@ -4815,3 +4815,8 @@ body.eplan-redesign.client-ui .redesign-training-day.is-done{border-color:#cfe8d
 body.eplan-redesign.client-ui .redesign-training-day.is-done .redesign-training-day-status{background:#e7f6ed!important;color:#258858!important}
 
 body.eplan-redesign.client-ui .redesign-completed-workout-note{margin-top:12px;padding:12px 14px;border-radius:13px;background:#eef8f2;color:#258858;text-align:center;font-size:13px;font-weight:800}
+
+
+/* Unified client back navigation + neutral secondary save action */
+body.eplan-redesign.client-ui .unified-back-button,body.eplan-redesign.client-ui .redesign-back-title>button{display:grid!important;place-items:center!important;width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;border:1px solid #d8e3f0!important;border-radius:13px!important;background:#f1f6fc!important;color:#183153!important;font-size:29px!important;font-weight:500!important;line-height:1!important;box-shadow:none!important}
+body.eplan-redesign.client-ui .weekly-checkin-save{background:#eef2f6!important;color:#183153!important;border:1px solid #dce4ee!important;box-shadow:none!important}
