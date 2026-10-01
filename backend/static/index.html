@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-10-01-redesign-v1-71"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-10-01-redesign-v1-72"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#f7faff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,27 +15,24 @@
 <link rel="stylesheet" href="/static/css/components.css">
 <link rel="stylesheet" href="/static/css/refinements.css"><link rel="stylesheet" href="/static/css/today.css">
 <link rel="stylesheet" href="/static/css/layout.css">
-<link rel="stylesheet" href="/static/css/redesign.css?v=71"></head><body>
+<link rel="stylesheet" href="/static/css/redesign.css?v=72"></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-ribbon-stage">
     <svg class="eplan-splash-ribbon" viewBox="0 0 1024 1024" aria-hidden="true">
       <defs>
         <mask id="eplanRibbonWriteMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
           <rect x="0" y="0" width="1024" height="1024" fill="black"/>
-          <path class="eplan-ribbon-mask eplan-ribbon-e"
-            d="M500 462 C498 372 430 316 342 316 C224 316 148 405 154 520 C160 641 250 708 363 699 C420 694 466 672 500 642 L500 744 L555 744"/>
-          <path class="eplan-ribbon-mask eplan-ribbon-p"
-            d="M555 744 L555 356 L793 356 C851 356 879 391 879 447 L879 744"/>
-          <path class="eplan-ribbon-mask eplan-ribbon-bar-ready"
-            d="M168 520 L438 520"/>
+          <rect class="eplan-write-sweep eplan-write-e" x="105" y="245" width="525" height="545" rx="90" fill="white"/>
+          <rect class="eplan-write-sweep eplan-write-p" x="500" y="245" width="425" height="545" rx="90" fill="white"/>
+          <rect class="eplan-bar-hide" x="238" y="458" width="205" height="116" rx="18" fill="black"/>
+          <rect class="eplan-write-sweep eplan-write-bar" x="238" y="458" width="205" height="116" rx="18" fill="white"/>
         </mask>
       </defs>
       <image class="eplan-splash-ribbon-image"
-        href="/static/icons/apple-touch-icon.png?v=71"
+        href="/static/icons/apple-touch-icon.png?v=72"
         x="0" y="0" width="1024" height="1024"
         preserveAspectRatio="xMidYMid meet"
         mask="url(#eplanRibbonWriteMask)"/>
-      <rect class="eplan-ribbon-bar-cover" x="202" y="458" width="248" height="112" rx="18"/>
     </svg>
   </div>
 </div>
@@ -63,6 +60,6 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/pwa.js"></script>
 
-<script src="/static/js/startup-ui.js?v=71"></script>
+<script src="/static/js/startup-ui.js?v=72"></script>
 
 </body></html>
