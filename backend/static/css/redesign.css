@@ -4886,3 +4886,10 @@ body.eplan-redesign.client-ui .activity-always-open .client-collapsible-body{dis
 body.eplan-redesign.client-ui .activity-static-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 14px;color:#102044}
 body.eplan-redesign.client-ui .activity-static-heading>strong{font-size:16px;font-weight:850}
 body.eplan-redesign.client-ui .activity-static-heading .client-status{font-size:12px}
+
+/* Approved activity SVG assets: keep original Premium Navy, no blue tint */
+body.eplan-redesign.client-ui .activity-approved-icon{display:block;width:24px;height:24px;object-fit:contain}
+body.eplan-redesign.client-ui .cardio-entry-icon:has(.activity-approved-icon),
+body.eplan-redesign.client-ui .activity-field-icon:has(.activity-approved-icon){background:#f1f4f8!important;color:#10203A!important}
+body.eplan-redesign.client-ui .cardio-entry-icon .activity-approved-icon{width:26px;height:26px}
+body.eplan-redesign.client-ui .activity-steps-card .activity-approved-icon{width:25px;height:25px}
