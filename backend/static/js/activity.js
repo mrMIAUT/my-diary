@@ -35,17 +35,30 @@ function cardioHTML(d,cid,readonly=false){
  return `<div class="card client-collapsible cardio-activity-card"><button class="exercise-toggle" onclick="toggleClientPanel('cardioPanel',this)"><span><strong>Кардіо та активність сьогодні</strong></span><span class="arrow">⌄</span></button><div id="cardioPanel" class="client-collapsible-body hidden">${cardioEditHTML(cid,cur).replace(/^<div class="card">|<\/div>$/g,'')}</div></div>`;
 }
 
+function activityIcon(kind){
+ const icons={
+  steps:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 3.5c1.6.4 2.6 2.1 2.2 3.8-.4 1.7-2 2.8-3.6 2.4-1.6-.4-2.6-2.1-2.2-3.8.4-1.7 2-2.8 3.6-2.4Zm7.6 10.8c1.6.4 2.6 2.1 2.2 3.8-.4 1.7-2 2.8-3.6 2.4-1.6-.4-2.6-2.1-2.2-3.8.4-1.7 2-2.8 3.6-2.4ZM9.6 11.1c1.3.8 2 2 1.8 3.2-.3 1.5-1.9 2.2-3.6 1.6-1.8-.6-3-2.3-2.7-3.8.3-1.4 2-2 4.5-1Zm6.7-6c1.7.6 3 2.3 2.7 3.8-.3 1.5-1.9 2.2-3.6 1.6-1.8-.6-3-2.3-2.7-3.8.3-1.5 1.9-2.2 3.6-1.6Z"/></svg>',
+  treadmill:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19h13M7 19l2-7h8l2 7M15 12l2-6h3M18 6h3M10 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm0 1.5-2 3 3 2 1.5 4M10 10l3 2 2-2"/></svg>',
+  elliptical:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M8 20l2-8m6 8-2-8M7 12h10M12 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm0 1.5v5m0-3-4-2m4 2 4-2M8 9l-2-4m10 4 2-4"/></svg>',
+  bike:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="m6 17 4-7 3 7h5l-4-7h-4m2-3h3"/></svg>'
+ };return icons[kind]||'';
+}
+function cardioMetricsHTML(type,cur={}){
+ const treadmill=type==='Доріжка';
+ return `<div class="cardio-inline-editor"><div class="activity-metric-cards"><div class="activity-field-card"><span class="activity-field-icon">◷</span><div><label for="cardioMinutes">Тривалість</label><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="0 хв"></div></div>${treadmill?`<div class="activity-field-card" id="cardioSpeedWrap"><span class="activity-field-icon">↗</span><div><label for="cardioSpeed">Швидкість</label><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="0"></div></div>`:''}<div class="activity-field-card"><span class="activity-field-icon">⌁</span><div><label id="cardioMetricLabel" for="cardioIncline">${treadmill?'Нахил, %':'Опір'}</label><input id="cardioIncline" type="number" min="0" step="${treadmill?'0.5':'1'}" value="${cur.incline||''}" placeholder="0"></div></div></div></div>`;
+}
 function cardioEditHTML(cid,cur={}){
- let cards=[['Доріжка','↗','Швидкість · нахил · час'],['Орбітрек','◎','Опір · час'],['Велосипед','◉','Опір · час']];
- return `<div class="card cardio-editor-card"><h2>Активність за сьогодні</h2><p class="muted">Додай кроки та кардіо за сьогодні.</p><div class="activity-field-card activity-steps-card"><span class="activity-field-icon">⌁</span><div><label for="dailySteps">Кроки</label><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="0"></div></div><div class="activity-section-label">Кардіо</div><div class="cardio-entry-cards">${cards.map(([v,icon,sub])=>`<button type="button" class="cardio-entry-card ${cur.cardio_type===v?'selected':''}" data-cardio-type="${v}" onclick="openCardioEntry(this)"><span class="cardio-entry-icon">${icon}</span><span><strong>${v}</strong><small>${sub}</small></span><b>›</b></button>`).join('')}</div><select id="cardioType" class="cardio-type-native" onchange="toggleCardioFields()"><option value=""></option>${cards.map(([v])=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><div id="cardioFields" class="cardio-entry-editor ${cur.cardio_type?'':'hidden'}"><div class="cardio-entry-editor-head"><button type="button" class="cardio-entry-close" onclick="closeCardioEntry()" aria-label="Закрити">‹</button><strong id="cardioEditorTitle">${cur.cardio_type||'Кардіо'}</strong></div><div class="activity-metric-cards"><div class="activity-field-card"><span class="activity-field-icon">◷</span><div><label for="cardioMinutes">Тривалість</label><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="0 хв"></div></div><div class="activity-field-card" id="cardioSpeedWrap"><span class="activity-field-icon">↗</span><div><label for="cardioSpeed">Швидкість</label><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="0"></div></div><div class="activity-field-card"><span class="activity-field-icon">⌁</span><div><label id="cardioMetricLabel" for="cardioIncline">Нахил</label><input id="cardioIncline" type="number" min="0" step="0.5" value="${cur.incline||''}" placeholder="0"></div></div></div></div><button class="cardio-save-neutral" onclick="saveCardio(${cid},event.currentTarget)">Зберегти активність</button></div>`;
+ let cards=[['Доріжка','treadmill','Швидкість · нахил · час'],['Орбітрек','elliptical','Опір · час'],['Велосипед','bike','Опір · час']];
+ return `<div class="card cardio-editor-card"><h2>Активність за сьогодні</h2><p class="muted">Додай кроки та кардіо за сьогодні.</p><div class="activity-field-card activity-steps-card"><span class="activity-field-icon activity-svg-icon">${activityIcon('steps')}</span><div><label for="dailySteps">Кроки</label><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="0"></div></div><div class="activity-section-label">Кардіо</div><div class="cardio-entry-cards">${cards.map(([v,icon,sub])=>`<div class="cardio-entry-wrap"><button type="button" class="cardio-entry-card ${cur.cardio_type===v?'selected':''}" data-cardio-type="${v}" onclick="openCardioEntry(this)"><span class="cardio-entry-icon activity-svg-icon">${activityIcon(icon)}</span><span><strong>${v}</strong><small>${sub}</small></span><b>›</b></button>${cur.cardio_type===v?cardioMetricsHTML(v,cur):''}</div>`).join('')}</div><select id="cardioType" class="cardio-type-native"><option value=""></option>${cards.map(([v])=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><button class="cardio-save-neutral" onclick="saveCardio(${cid},event.currentTarget)">Зберегти активність</button></div>`;
 }
 function openCardioEntry(button){
- let select=$('#cardioType');if(!select)return;select.value=button.dataset.cardioType||'';
- document.querySelectorAll('.cardio-entry-card').forEach(x=>x.classList.toggle('selected',x===button));
- let editor=$('#cardioFields'),title=$('#cardioEditorTitle');if(editor)editor.classList.remove('hidden');if(title)title.textContent=select.value;
- toggleCardioFields();
+ let select=$('#cardioType');if(!select)return;
+ const type=button.dataset.cardioType||'',wrap=button.closest('.cardio-entry-wrap'),already=button.classList.contains('selected');
+ document.querySelectorAll('.cardio-inline-editor').forEach(x=>x.remove());
+ document.querySelectorAll('.cardio-entry-card').forEach(x=>x.classList.remove('selected'));
+ if(already){select.value='';return}
+ select.value=type;button.classList.add('selected');wrap.insertAdjacentHTML('beforeend',cardioMetricsHTML(type,{}));
 }
-function closeCardioEntry(){let e=$('#cardioFields');if(e)e.classList.add('hidden')}
 
 function editCardio(cid){
  let d=window.clientData||window.currentClientData;
