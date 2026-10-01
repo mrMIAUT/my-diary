@@ -81,8 +81,10 @@ function redesignProgressOverviewHTML(d){
   let last=measures[measures.length-1]||null,prev=measures[measures.length-2]||null;
   let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished');
   let weekStart=redesignWeekStartISO();
-  let weekDone=sessions.filter(x=>sessionDay(x)&&sessionDay(x)>=weekStart).length;
+  let weekSessions=sessions.filter(x=>sessionDay(x)&&sessionDay(x)>=weekStart);
+  let weekDone=weekSessions.length;
   let days=[...new Set((d.program||[]).map(x=>x.day_name))].filter(Boolean);
+  let weeklyTarget=days.length||0;
   let weightDelta=redesignMeasureDelta(last,prev,'weight');
   let metric=redesignOverviewMetricMeta(last),metricKey=metric[0],metricLabel=metric[1],metricUnit=metric[2];
   let metricDelta=redesignMeasureDelta(last,prev,metricKey);
@@ -91,7 +93,7 @@ function redesignProgressOverviewHTML(d){
       +'<button class="redesign-progress-kpi redesign-progress-kpi-weight" onclick="switchClientProgressView(\'measurements\')"><span class="kpi-icon blue">'+uiIcon('measure')+'</span><div class="redesign-progress-kpi-labelrow redesign-progress-kpi-labelrow-static"><small>Вага</small></div><strong>'+redesignMeasureValue(last,'weight','кг')+'</strong>'+redesignDeltaHTML(weightDelta,'кг')+'</button>'
       +'<div class="redesign-progress-kpi redesign-progress-kpi-select" role="button" tabindex="0" onclick="switchClientProgressView(\'measurements\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();switchClientProgressView(\'measurements\')}"><span class="kpi-icon green">'+uiIcon('chart')+'</span><div class="redesign-progress-kpi-labelrow"><small>'+esc(metricLabel)+'</small><div class="redesign-progress-kpi-arrows"><button type="button" aria-label="Попередній показник" onclick="event.stopPropagation();cycleClientProgressOverviewMetric(-1)">‹</button><button type="button" aria-label="Наступний показник" onclick="event.stopPropagation();cycleClientProgressOverviewMetric(1)">›</button></div></div><strong>'+redesignMeasureValue(last,metricKey,metricUnit)+'</strong>'+redesignDeltaHTML(metricDelta,metricUnit)+'</div>'
     +'</div>'
-    +'<div class="card redesign-progress-week"><div class="between"><div><span class="progress-kicker">Тренування цього тижня</span><strong>'+weekDone+' з '+(days.length||0)+'</strong></div><span class="progress-week-icon">'+uiIcon('dumbbell')+'</span></div><div class="progress-week-bars">'+Array.from({length:7},(_,i)=>'<i class="'+(i<Math.min(weekDone,7)?'done':'')+'"></i>').join('')+'</div></div>'
+    +'<div class="card redesign-progress-week"><div class="between"><div><span class="progress-kicker">Тренування цього тижня</span><strong>'+weekDone+(weeklyTarget?' / '+weeklyTarget:'')+'</strong><small class="progress-week-caption">'+(weeklyTarget&&weekDone>weeklyTarget?'План виконано · +'+(weekDone-weeklyTarget)+' додаткове '+((weekDone-weeklyTarget)===1?'тренування':'тренування'):(weeklyTarget?'тижнева ціль':'') )+'</small></div><span class="progress-week-icon">'+uiIcon('dumbbell')+'</span></div><div class="progress-week-bars">'+Array.from({length:Math.max(weeklyTarget,weekDone,1)},(_,i)=>'<i class="'+(i<weekDone?'done':'')+'"></i>').join('')+'</div></div>'
     +'<div class="card redesign-progress-chart-card"><div class="between"><div><span class="progress-kicker">Динаміка ваги</span><strong>'+(last&&+last.weight>0?fmtProgress(last.weight)+' кг':'Немає даних')+'</strong></div><button onclick="switchClientProgressView(\'measurements\')">Детальніше ›</button></div>'+redesignWeightChartHTML(measures)+'</div>'
     +'<div class="redesign-progress-achievements">'
       +'<div><span class="achievement-icon trophy">★</span><strong>'+sessions.length+'</strong><small>тренувань виконано</small></div>'
