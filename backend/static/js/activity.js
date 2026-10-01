@@ -86,7 +86,8 @@ async function saveCardio(cid,button=null){
  let custom=other?(document.getElementById('cardioCustomName')?.value||'').trim():'';
  if(other&&!custom)return alert('Вкажи вид активності');
  let minutesEl=document.getElementById('cardioMinutes'),speedEl=document.getElementById('cardioSpeed'),inclineEl=document.getElementById('cardioIncline');
- let body={client_id:cid,day:isoToday(),cardio_type:other?custom:selected,minutes:+(minutesEl?.value||0),speed:treadmill?(+(speedEl?.value||0)):0,incline:other?0:+(inclineEl?.value||0),steps:+dailySteps.value||0};
+ let storedType=selected==='Велотренажер'?'Велосипед':selected;
+ let body={client_id:cid,day:isoToday(),cardio_type:other?custom:storedType,minutes:+(minutesEl?.value||0),speed:treadmill?(+(speedEl?.value||0)):0,incline:other?0:+(inclineEl?.value||0),steps:+dailySteps.value||0};
  if(!body.cardio_type&&!body.steps)return alert('Вкажи кроки або обери вид кардіо');
  if(body.cardio_type&&!body.minutes)return alert('Вкажи тривалість кардіо');
  let restore=setActionLoading(button,'Зберігаємо…');
