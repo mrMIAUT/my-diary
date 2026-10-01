@@ -119,9 +119,8 @@ window.showClientTraining = async function(cid){
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
   }
 
-  if(window.clientTrainingTab==='exercises')await loadExerciseLibrary();
-  let body=window.clientTrainingTab==='exercises'?redesignClientExerciseLibraryHTML():window.clientTrainingTab==='stats'?redesignTrainingStatsHTML(d,cid,groups):redesignTrainingProgramHTML(d,cid,groups);
-  let tabs='<div class="redesign-training-tabs">'+clientTrainingTabButton('program','Моя програма')+clientTrainingTabButton('exercises','Вправи')+clientTrainingTabButton('stats','Статистика')+'</div>';
+  let body=window.clientTrainingTab==='activity'?cardioHTML(d,cid,false):window.clientTrainingTab==='stats'?redesignTrainingStatsHTML(d,cid,groups):redesignTrainingProgramHTML(d,cid,groups);
+  let tabs='<div class="redesign-training-tabs">'+clientTrainingTabButton('program','Моя програма')+clientTrainingTabButton('activity','Активність')+clientTrainingTabButton('stats','Статистика')+'</div>';
   app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+tabs+body+'</div>');
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
