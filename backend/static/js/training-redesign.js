@@ -12,15 +12,15 @@ async function switchClientTrainingTab(key){
   if(session?.role==='client'&&session.client_id)await showClientTraining(session.client_id);
 }
 
-function redesignTrainingDayCard(d,cid,groups,day,index,cycle){
-  let xs=groups[day]||[],isNext=cycle.next===day,isDone=cycle.done.includes(day);
+function redesignTrainingDayCard(d,cid,groups,day,index,cycle,todayCompletedDay=''){
+  let xs=groups[day]||[],isTodayDone=todayCompletedDay===day,isNext=!isTodayDone&&cycle.next===day,isDone=isTodayDone||cycle.done.includes(day);
   let title=programDayTitle(d,day)||'Силове тренування';
   let muscleNames=[];
   xs.forEach(function(x){
     (x.primary_muscles||[]).forEach(function(m){if(m&&!muscleNames.includes(m))muscleNames.push(m)});
   });
   let desc=muscleNames.slice(0,3).join(' · ')||title;
-  let status=isDone?'Виконано':isNext?'Наступне':'За планом';
+  let status=isTodayDone?'Виконано сьогодні':isDone?'Виконано':isNext?'Наступне':'За планом';
   return '<article class="redesign-training-day '+(isNext?'is-next ':'')+(isDone?'is-done':'')+'">'
     +'<button class="redesign-training-day-main" data-day="'+esc(day)+'" onclick="toggleRedesignTrainingDay(this.dataset.day,this)">'
       +'<span class="redesign-training-day-index">'+(index+1)+'</span>'
@@ -47,12 +47,12 @@ function toggleRedesignTrainingDay(day,btn){
 }
 
 function redesignTrainingProgramHTML(d,cid,groups){
-  let days=Object.keys(groups||{}),cycle=workoutCycleState(d,groups||{});
+  let days=Object.keys(groups||{}),cycle=workoutCycleState(d,groups||{}),today=isoToday(),sessions=d.workout_sessions||[],todaySets=(d.result_sets||[]).filter(x=>x.day===today),todaySession=sessions.find(x=>x.status==='finished'&&sessionDay(x)===today)||(todaySets.length?sessions.filter(x=>x.status==='finished').slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0]:null),todayCompletedDay=todaySession?.day_name||'';
   if(!days.length)return '<div class="redesign-empty-panel"><strong>Програму ще не додано</strong><span>Коли тренер призначить програму, тренувальні дні з’являться тут.</span></div>';
   let completed=Math.min(days.length,cycle.done.length),pct=days.length?Math.round(completed/days.length*100):0;
-  return '<div class="redesign-training-overview">'
+  return '<div class="redesign-training-overview">'+(todayCompletedDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayCompletedDay)+' виконано. Наступне тренування — за планом.</small></div></div>':'')
     +'<div class="redesign-training-summary"><div><span>Поточний цикл</span><strong>'+completed+' з '+days.length+'</strong></div><div class="redesign-training-cycle"><i style="width:'+pct+'%"></i></div><b>'+pct+'%</b></div>'
-    +'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle)}).join('')+'</div>'
+    +'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle,todayCompletedDay)}).join('')+'</div>'
     +'<div class="redesign-training-help">'
       +'<button onclick="toggleClientPanel(\'trainingRulesBody\',this)"><span class="client-home-today-icon">'+uiIcon('run')+'</span><span><strong>Розминка та правила</strong><small>RIR, робочі підходи, суперсети</small></span><span class="redesign-training-rule-chevron">⌄</span></button>'
       +'<div id="trainingRulesBody" class="hidden redesign-training-help-body">'
