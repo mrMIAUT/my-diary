@@ -4946,3 +4946,16 @@ body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title h1{
   grid-template-columns:44px minmax(0,1fr)!important;column-gap:14px!important;
  }
 }
+
+/* Training statistics: make "view all progress" clearly actionable, not muted */
+body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-progress-link{
+ background:#fff!important;
+ color:#102044!important;
+ border:1px solid #d5e0ed!important;
+ opacity:1!important;
+ font-weight:800!important;
+ box-shadow:0 1px 2px rgba(16,32,68,.03)!important;
+}
+body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-progress-link *{
+ color:inherit!important;opacity:1!important;
+}
