@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-10-01-redesign-v1-70"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-10-01-redesign-v1-71"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#f7faff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="/static/css/components.css">
 <link rel="stylesheet" href="/static/css/refinements.css"><link rel="stylesheet" href="/static/css/today.css">
 <link rel="stylesheet" href="/static/css/layout.css">
-<link rel="stylesheet" href="/static/css/redesign.css?v=70"></head><body>
+<link rel="stylesheet" href="/static/css/redesign.css?v=71"></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
   <div class="eplan-splash-ribbon-stage">
     <svg class="eplan-splash-ribbon" viewBox="0 0 1024 1024" aria-hidden="true">
@@ -23,20 +23,20 @@
         <mask id="eplanRibbonWriteMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
           <rect x="0" y="0" width="1024" height="1024" fill="black"/>
           <path class="eplan-ribbon-mask eplan-ribbon-e"
-            d="M500 748 L500 462 C498 372 430 316 342 316 C224 316 148 405 154 520 C160 641 250 708 363 699 C420 694 466 672 500 642"/>
-          <path class="eplan-ribbon-mask eplan-ribbon-e-bar"
-            d="M178 542 L438 542"/>
+            d="M500 462 C498 372 430 316 342 316 C224 316 148 405 154 520 C160 641 250 708 363 699 C420 694 466 672 500 642 L500 744 L555 744"/>
           <path class="eplan-ribbon-mask eplan-ribbon-p"
-            d="M556 744 L556 357 L793 357 C850 357 878 392 878 447 L878 744"/>
+            d="M555 744 L555 356 L793 356 C851 356 879 391 879 447 L879 744"/>
+          <path class="eplan-ribbon-mask eplan-ribbon-bar-ready"
+            d="M168 520 L438 520"/>
         </mask>
       </defs>
       <image class="eplan-splash-ribbon-image"
-        href="/static/icons/apple-touch-icon.png?v=70"
+        href="/static/icons/apple-touch-icon.png?v=71"
         x="0" y="0" width="1024" height="1024"
         preserveAspectRatio="xMidYMid meet"
         mask="url(#eplanRibbonWriteMask)"/>
+      <rect class="eplan-ribbon-bar-cover" x="202" y="458" width="248" height="112" rx="18"/>
     </svg>
-    <img class="eplan-splash-ribbon-complete" src="/static/icons/apple-touch-icon.png?v=70" alt="">
   </div>
 </div>
 <div id="app"></div>
@@ -63,6 +63,6 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/pwa.js"></script>
 
-<script src="/static/js/startup-ui.js?v=70"></script>
+<script src="/static/js/startup-ui.js?v=71"></script>
 
 </body></html>
