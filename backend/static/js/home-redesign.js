@@ -134,8 +134,8 @@ function redesignClientHomeHTML(d,c,cid,groups){
       +'<button onclick="showClientSection(\'progress\')">Детальніше ›</button>'
     +'</div>'
     +'<div class="client-home-metrics">'
-      +redesignClientMetric('Вага',last&&+last.weight>0?fmtProgress(last.weight):'', 'кг', redesignClientDelta(last,prev,'weight'), 'measure', 'showClientSection(\'progress\')','')
-      +redesignClientMetric('Талія',last&&+last.waist>0?fmtProgress(last.waist):'', 'см', redesignClientDelta(last,prev,'waist'), 'chart', 'showClientSection(\'progress\')','')
+      +redesignClientMetric('Вага',last&&+last.weight>0?fmtProgress(last.weight):'', 'кг', redesignClientDelta(last,prev,'weight'), 'scale', 'showClientSection(\'progress\')','')
+      +redesignClientMetric('Талія',last&&+last.waist>0?fmtProgress(last.waist):'', 'см', redesignClientDelta(last,prev,'waist'), 'ruler', 'showClientSection(\'progress\')','')
       +'<button class="client-home-metric client-home-training-metric" onclick="showClientSection(\'history\')"><span class="client-home-metric-icon">'+uiIcon('dumbbell')+'</span><span>Тренування</span><strong>'+weekDone+'<small>'+(days.length?' / '+days.length:'')+'</small></strong><div class="home-week-bars">'+weekBars+'</div><em>цього тижня</em></button>'
     +'</div>'
   +'</section>';
