@@ -161,28 +161,30 @@ function workoutCycleState(d,groups){
  if(!days.length)return {done,next:null};
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&days.includes(x.day_name)).slice().sort((a,b)=>new Date(a.finished_at||a.started_at||0)-new Date(b.finished_at||b.started_at||0));
  if(!sessions.length)return {done,next:days[0]};
- // The current cycle starts immediately after the most recent completed full cycle.
- // Count unique planned days since that boundary, regardless of which day the client started with.
+ // A cycle is complete once every planned day has been performed once.
+ // Walk backwards: the distinct days after the latest completed cycle are the current progress.
  let seen=new Set();
  for(let i=sessions.length-1;i>=0;i--){
    let day=sessions[i].day_name;
    if(seen.has(day))continue;
+   if(seen.size===days.length-1){
+     // Including this session completes the previous cycle, so none of it belongs to the new cycle.
+     seen.clear();
+     break;
+   }
    seen.add(day);
-   if(seen.size===days.length){seen.clear();break}
  }
- // Rebuild the incomplete cycle from the tail after the last full-cycle boundary.
- seen=new Set();
- for(let i=sessions.length-1;i>=0;i--){
-   let day=sessions[i].day_name;
-   if(seen.has(day))continue;
-   if(seen.size===days.length-1){seen.clear();break}
-   seen.add(day);
+ // If the latest session itself would close a cycle, it should still be shown as completed until
+ // the next workout starts; otherwise the UI jumps from 100% straight to 0%.
+ if(!seen.size){
+   let tail=new Set();
+   for(let i=sessions.length-1;i>=0&&tail.size<days.length;i--)tail.add(sessions[i].day_name);
+   if(tail.size===days.length)seen=tail;
  }
  done=days.filter(day=>seen.has(day));
  let next=days.find(day=>!seen.has(day))||days[0];
  return {done,next};
 }
-
 function workoutDayButtons(d,cid,groups){
  let cycle=workoutCycleState(d,groups);
  return Object.keys(groups).map(day=>{
