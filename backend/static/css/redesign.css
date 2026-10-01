@@ -5011,3 +5011,22 @@ body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;back
 @keyframes splashStroke{to{stroke-dashoffset:0}}
 @keyframes splashFinal{to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.eplan-splash-draw path{stroke-dashoffset:0;animation:none}.eplan-splash-draw .splash-final{opacity:1;animation:none}}
+
+
+/* Login brand name below the app emblem */
+.eplan-auth-page .auth-logo{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.eplan-auth-page .auth-logo-name{
+  color:#0b1f44;
+  font-size:22px;
+  line-height:1.15;
+  font-weight:750;
+  letter-spacing:-0.02em;
+}
+@media (prefers-color-scheme: dark){
+  .eplan-auth-page .auth-logo-name{color:#f5f8ff;}
+}
