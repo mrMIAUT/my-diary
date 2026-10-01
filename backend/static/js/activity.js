@@ -36,7 +36,15 @@ function cardioHTML(d,cid,readonly=false){
 }
 
 function cardioEditHTML(cid,cur={}){
- return `<div class="card"><h2>Кардіо та активність за сьогодні</h2><p class="muted">Можна заповнити кроки, кардіо або обидва.</p><div class="grid"><select id="cardioType" onchange="toggleCardioFields()"><option value="">Без окремого кардіо</option>${['Доріжка','Орбітрек','Велосипед'].map(v=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="Кроків за день"></div><div id="cardioFields" class="grid" style="margin-top:12px"><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="Хвилин"><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="Швидкість"><input id="cardioIncline" type="number" min="0" step="0.5" value="${cur.incline||''}" placeholder="Нахил, %"></div><button class="cardio-save-neutral" style="margin-top:12px" onclick="saveCardio(${cid},event.currentTarget)">Зберегти активність</button></div>`;
+ let types=[['','Без кардіо','○'],['Доріжка','Доріжка','↗'],['Орбітрек','Орбітрек','◎'],['Велосипед','Велосипед','◉']];
+ return `<div class="card cardio-editor-card"><h2>Активність за сьогодні</h2><p class="muted">Додай кроки та, за потреби, кардіо.</p><div class="activity-field-card"><span class="activity-field-icon">⌁</span><div><label for="dailySteps">Кроки</label><input id="dailySteps" type="number" min="0" value="${cur.steps||''}" placeholder="0"></div></div><div class="activity-section-label">Кардіо</div><div class="cardio-type-cards">${types.map(([v,label,icon])=>`<button type="button" class="cardio-type-card ${cur.cardio_type===v?'selected':''}" data-cardio-type="${v}" onclick="selectCardioType(this)"><span>${icon}</span><strong>${label}</strong></button>`).join('')}</div><select id="cardioType" class="cardio-type-native" onchange="toggleCardioFields()"><option value="">Без окремого кардіо</option>${['Доріжка','Орбітрек','Велосипед'].map(v=>`<option value="${v}" ${cur.cardio_type===v?'selected':''}>${v}</option>`).join('')}</select><div id="cardioFields" class="activity-metric-cards"><div class="activity-field-card"><span class="activity-field-icon">◷</span><div><label for="cardioMinutes">Тривалість</label><input id="cardioMinutes" type="number" min="0" value="${cur.minutes||''}" placeholder="0 хв"></div></div><div class="activity-field-card" id="cardioSpeedWrap"><span class="activity-field-icon">↗</span><div><label for="cardioSpeed">Швидкість</label><input id="cardioSpeed" type="number" min="0" step="0.1" value="${cur.speed||''}" placeholder="0"></div></div><div class="activity-field-card"><span class="activity-field-icon">⌁</span><div><label id="cardioMetricLabel" for="cardioIncline">Нахил</label><input id="cardioIncline" type="number" min="0" step="0.5" value="${cur.incline||''}" placeholder="0"></div></div></div><button class="cardio-save-neutral" onclick="saveCardio(${cid},event.currentTarget)">Зберегти активність</button></div>`;
+}
+
+function selectCardioType(button){
+ let select=document.getElementById('cardioType');if(!select)return;
+ select.value=button.dataset.cardioType||'';
+ document.querySelectorAll('.cardio-type-card').forEach(x=>x.classList.toggle('selected',x===button));
+ toggleCardioFields();
 }
 
 function editCardio(cid){
@@ -56,8 +64,9 @@ function toggleCardioFields(){
  let f=$('#cardioFields'),t=$('#cardioType'),speed=$('#cardioSpeed'),metric=$('#cardioIncline');if(!f||!t)return;
  f.style.display=t.value?'grid':'none';if(!t.value)return;
  let treadmill=t.value==='Доріжка';
- if(speed){speed.style.display=treadmill?'block':'none';speed.placeholder='Швидкість';if(!treadmill)speed.value=''}
- if(metric){metric.placeholder=treadmill?'Нахил, %':'Опір';metric.step=treadmill?'0.5':'1'}
+ let speedWrap=$('#cardioSpeedWrap'),metricLabel=$('#cardioMetricLabel');
+ if(speed){speed.style.display='block';if(speedWrap)speedWrap.style.display=treadmill?'flex':'none';speed.placeholder='0';if(!treadmill)speed.value=''}
+ if(metric){metric.placeholder='0';metric.step=treadmill?'0.5':'1';if(metricLabel)metricLabel.textContent=treadmill?'Нахил, %':'Опір'}
 }
 
 async function saveCardio(cid,button=null){
