@@ -4,7 +4,7 @@
   if(!splash)return;
   const started=performance.now();
   const hide=()=>{
-    const wait=Math.max(0,1350-(performance.now()-started));
+    const wait=Math.max(0,1650-(performance.now()-started));
     setTimeout(()=>{
       splash.classList.add('is-hidden');
       setTimeout(()=>splash.remove(),180);
