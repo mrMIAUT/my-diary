@@ -99,7 +99,7 @@ function redesignProgressOverviewHTML(d){
     +'<div class="redesign-progress-achievements">'
       +'<div><span class="achievement-icon trophy">★</span><strong>'+sessions.length+'</strong><small>тренувань виконано</small></div>'
       +'<div><span class="achievement-icon fire">◎</span><strong>'+Math.min(weekDone,7)+'</strong><small>активних днів</small></div>'
-      +'<div><span class="achievement-icon blue">'+uiIcon('chart')+'</span><strong>'+measures.length+'</strong><small>замірів додано</small></div>'
+      +'<div><span class="achievement-icon blue">'+uiIcon('ruler')+'</span><strong>'+measures.length+'</strong><small>замірів додано</small></div>'
     +'</div>'
   +'</div>';
 }
