@@ -5325,3 +5325,74 @@ body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;back
 @media(prefers-reduced-motion:reduce){
   .eplan-v73-mask{stroke-dashoffset:0;animation:none}
 }
+
+
+/* v75 — simple Є | ПЛАН launch wordmark */
+.eplan-wordmark-splash{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:250px;
+  color:#0b1f44;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:760;
+  letter-spacing:-.035em;
+}
+.eplan-wordmark-e{
+  display:inline-block;
+  font-size:54px;
+  line-height:1;
+  opacity:0;
+  transform:translateY(2px) scale(.96);
+  animation:eplanWordmarkE .18s ease .04s forwards;
+}
+.eplan-wordmark-divider{
+  width:2px;
+  height:48px;
+  margin:0 14px;
+  border-radius:999px;
+  background:#0b1f44;
+  transform:scaleY(0);
+  transform-origin:center;
+  animation:eplanWordmarkDivider .18s ease .18s forwards;
+}
+.eplan-wordmark-plan-wrap{
+  display:inline-block;
+  width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  animation:eplanWordmarkReveal .34s cubic-bezier(.35,0,.15,1) .30s forwards;
+}
+.eplan-wordmark-plan{
+  display:inline-block;
+  font-size:42px;
+  line-height:1;
+  letter-spacing:.035em;
+  transform:translateX(-10px);
+  animation:eplanWordmarkPlanSlide .34s cubic-bezier(.35,0,.15,1) .30s forwards;
+}
+@keyframes eplanWordmarkE{
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes eplanWordmarkDivider{
+  to{transform:scaleY(1)}
+}
+@keyframes eplanWordmarkReveal{
+  to{width:124px}
+}
+@keyframes eplanWordmarkPlanSlide{
+  to{transform:translateX(0)}
+}
+@media(max-width:380px){
+  .eplan-wordmark-splash{min-width:225px}
+  .eplan-wordmark-e{font-size:48px}
+  .eplan-wordmark-divider{height:43px;margin:0 12px}
+  .eplan-wordmark-plan{font-size:37px}
+  @keyframes eplanWordmarkReveal{to{width:110px}}
+}
+@media(prefers-reduced-motion:reduce){
+  .eplan-wordmark-e{opacity:1;transform:none;animation:none}
+  .eplan-wordmark-divider{transform:none;animation:none}
+  .eplan-wordmark-plan-wrap{width:124px;animation:none}
+  .eplan-wordmark-plan{transform:none;animation:none}
+}
