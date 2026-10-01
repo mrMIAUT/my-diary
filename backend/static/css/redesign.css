@@ -4899,3 +4899,16 @@ body.eplan-redesign.client-ui .activity-custom-cardio{margin:8px 0 12px!importan
 body.eplan-redesign.client-ui .activity-custom-cardio label{display:block;margin:0 0 6px!important;color:#102044;font-size:14px;font-weight:700}
 body.eplan-redesign.client-ui .activity-custom-cardio input{display:block!important;width:100%!important;box-sizing:border-box!important;margin:0!important}
 body.eplan-redesign.client-ui .activity-custom-cardio + .activity-metric-cards{margin-top:12px!important}
+
+/* Standardize and optically center back chevron in every client page */
+body.eplan-redesign.client-ui .unified-back-button,
+body.eplan-redesign.client-ui .redesign-back-title>button{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ position:relative!important;text-align:center!important;text-indent:0!important;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+ line-height:1!important;
+}
+body.eplan-redesign.client-ui .unified-back-button>svg,
+body.eplan-redesign.client-ui .redesign-back-title>button>svg{
+ display:block!important;margin:auto!important;transform:none!important;
+}
