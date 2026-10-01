@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-10-01-redesign-v1-73"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-10-02-redesign-v1-74"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#f7faff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,47 +15,14 @@
 <link rel="stylesheet" href="/static/css/components.css">
 <link rel="stylesheet" href="/static/css/refinements.css"><link rel="stylesheet" href="/static/css/today.css">
 <link rel="stylesheet" href="/static/css/layout.css">
-<link rel="stylesheet" href="/static/css/redesign.css?v=73"></head><body>
+<link rel="stylesheet" href="/static/css/redesign.css?v=74"></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
-  <div class="eplan-splash-ribbon-stage">
-    <svg class="eplan-splash-ribbon" viewBox="0 0 1024 1024" aria-hidden="true">
-      <defs>
-        <mask id="eplanRibbonWriteMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
-          <rect x="0" y="0" width="1024" height="1024" fill="black"/>
-
-          <!-- Є: starts at the far left and follows the actual round ribbon -->
-          <path class="eplan-v73-mask eplan-v73-e"
-            pathLength="100"
-            d="M145 520
-               C145 385 240 315 365 315
-               C485 315 555 400 555 520
-               C555 640 475 705 360 705
-               C250 705 165 645 145 545"/>
-
-          <!-- П: continues immediately from the left/top connection to the right leg -->
-          <path class="eplan-v73-mask eplan-v73-p"
-            pathLength="100"
-            d="M520 350
-               C610 350 700 350 790 350
-               C845 350 865 392 865 445
-               L865 748"/>
-
-          <!-- Keep the middle bar hidden until the last stroke -->
-          <rect x="112" y="454" width="338" height="122" rx="18" fill="black"/>
-
-          <!-- Middle bar of Є: last, left to right -->
-          <path class="eplan-v73-mask eplan-v73-bar"
-            pathLength="100"
-            d="M145 515 L432 515"/>
-        </mask>
-      </defs>
-
-      <image class="eplan-splash-ribbon-image"
-        href="/static/icons/apple-touch-icon.png?v=73"
-        x="0" y="0" width="1024" height="1024"
-        preserveAspectRatio="xMidYMid meet"
-        mask="url(#eplanRibbonWriteMask)"/>
+  <div class="eplan-splash-draw">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <path class="draw-e" d="M53 22C29 18 14 31 14 50s15 32 35 28c7-1 12-4 16-8M14 50h35"/>
+      <path class="draw-p" d="M55 78V25h19c9 0 13 5 13 13v40M55 25h32"/>
     </svg>
+    <img class="splash-final" src="/static/icons/apple-touch-icon.png?v=74" alt="">
   </div>
 </div>
 <div id="app"></div>
@@ -82,6 +49,6 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/pwa.js"></script>
 
-<script src="/static/js/startup-ui.js?v=73"></script>
+<script src="/static/js/startup-ui.js?v=74"></script>
 
 </body></html>
