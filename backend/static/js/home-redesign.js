@@ -30,7 +30,7 @@ function openWeeklyCheckin(cid){
    +scale('ciHunger','Голод',cur.hunger)
    +scale('ciDifficulty','Складність тренувань',cur.difficulty)
    +'<label class="weekly-checkin-comment">Коментар<textarea id="ciComment" placeholder="Що було добре або що заважало?">'+esc(cur.comment||'')+'</textarea></label>'
-   +'<button onclick="saveWeeklyCheckin('+cid+')">Зберегти звіт</button></div></div>');
+   +'<button class="weekly-checkin-save" onclick="saveWeeklyCheckin('+cid+')">Зберегти звіт</button></div></div>');
 }
 async function saveWeeklyCheckin(cid){
  let pick=name=>+(document.querySelector('input[name="'+name+'"]:checked')?.value||3);
