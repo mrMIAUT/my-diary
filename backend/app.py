@@ -2236,7 +2236,7 @@ def get_notifications(cid:int,recipient:str=Query(max_length=16),user:AuthUser=D
     return rows("SELECT * FROM notifications WHERE client_id=? AND recipient=? AND kind IN ('workout_review','comment') ORDER BY created_at DESC,id DESC LIMIT 50",(cid,recipient))
 
 @app.delete("/api/notifications/item/{nid}")
-def delete_notification_item(nid:int,user:AuthUser=Depends(require_trainer)):
+def delete_notification_item(nid:int,user:AuthUser=Depends(current_user)):
     n=one("SELECT * FROM notifications WHERE id=?",(nid,))
     if not n: raise HTTPException(404,"Сповіщення не знайдено")
     authorize_recipient(user,n["client_id"],n["recipient"])
