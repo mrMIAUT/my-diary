@@ -5406,3 +5406,39 @@ body.eplan-redesign.client-ui .client-program-hero{
     linear-gradient(145deg,#05284f 0%,#06467f 60%,#0a61ad 100%)!important;
   box-shadow:0 18px 38px rgba(7,43,82,.24)!important;
 }
+
+
+/* v80 — achievements live under Progress */
+body.eplan-redesign.client-ui .redesign-progress-achievements-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  margin:2px 2px 10px;
+}
+body.eplan-redesign.client-ui .redesign-progress-achievements-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .redesign-progress-achievements-head span{
+  color:#0a1738;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.client-ui .redesign-progress-achievements-head strong{
+  color:#7a899f;
+  font-size:11px;
+  font-weight:700;
+}
+body.eplan-redesign.client-ui .redesign-progress-achievements-head button{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
+  font-size:12px;
+  font-weight:850;
+  white-space:nowrap;
+}
