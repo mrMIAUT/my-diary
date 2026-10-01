@@ -97,7 +97,7 @@ async function saveClientProfile(cid){
 
 function onboardingKey(){return 'eplanClientOnboardingV1_'+(session?.client_id||'client')}
 
-function maybeShowClientOnboarding(){if(!session||session.role!=='client')return;try{if(localStorage.getItem(onboardingKey())==='done')return}catch(e){}if(!document.getElementById('clientOnboarding'))showClientOnboarding(0)}
+function maybeShowClientOnboarding(){document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
 
 function showClientOnboarding(step=0){
  const steps=[
