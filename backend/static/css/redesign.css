@@ -4880,3 +4880,9 @@ body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card input::
 body.eplan-redesign.client-ui .activity-steps-card input{display:block!important;width:100%!important;height:25px!important;min-height:25px!important;margin:1px 0 0!important;padding:0!important;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;color:#102044!important;font-size:16px!important;line-height:25px!important;font-weight:750!important;-webkit-appearance:none!important;appearance:none!important}
 body.eplan-redesign.client-ui .activity-steps-card input:focus{border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
 body.eplan-redesign.client-ui .activity-steps-card input::placeholder{color:#a7b0bf!important;font-size:16px!important;font-weight:650!important;opacity:1}
+
+/* Activity section stays expanded */
+body.eplan-redesign.client-ui .activity-always-open .client-collapsible-body{display:block!important}
+body.eplan-redesign.client-ui .activity-static-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 14px;color:#102044}
+body.eplan-redesign.client-ui .activity-static-heading>strong{font-size:16px;font-weight:850}
+body.eplan-redesign.client-ui .activity-static-heading .client-status{font-size:12px}
