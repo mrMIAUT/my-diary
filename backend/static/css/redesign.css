@@ -4860,3 +4860,11 @@ body.eplan-redesign.client-ui .cardio-entry-editor.hidden{display:none!important
 body.eplan-redesign.client-ui .cardio-entry-editor-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 body.eplan-redesign.client-ui .cardio-entry-close{display:grid!important;place-items:center!important;width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;border:0!important;border-radius:10px!important;background:#edf2f7!important;color:#183153!important;font-size:22px!important;box-shadow:none!important}
 body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-progress-link,body.eplan-redesign.client-ui .redesign-training-stats a,body.eplan-redesign.client-ui .redesign-training-stats button{background:#eef2f6!important;color:#183153!important;border-color:#dce4ee!important;box-shadow:none!important}
+
+/* Inline cardio editors + minimal line icons */
+body.eplan-redesign.client-ui .cardio-entry-wrap{display:grid;gap:8px}
+body.eplan-redesign.client-ui .cardio-inline-editor{padding:2px 0 6px}
+body.eplan-redesign.client-ui .cardio-inline-editor .activity-metric-cards{margin-top:0!important}
+body.eplan-redesign.client-ui .activity-svg-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+body.eplan-redesign.client-ui .activity-steps-card .activity-svg-icon svg{width:23px;height:23px;fill:currentColor;stroke:none}
+body.eplan-redesign.client-ui .cardio-entry-card.selected>b{transform:rotate(90deg)}
