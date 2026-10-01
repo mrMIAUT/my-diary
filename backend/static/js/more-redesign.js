@@ -111,6 +111,7 @@ window.showClientMore = function(cid){
     +'<div class="redesign-more-list">'
       +redesignMoreItem('user','Мій профіль','Особисті дані та анкета','showClientProfile('+cid+')')
       +redesignMoreItem('calendar','Історія тренувань','Усі виконані тренування','showClientSection(\'history\')')
+      +redesignMoreItem('chart','Активність','Кроки та кардіо за сьогодні','showClientActivity('+cid+')','green')
       +(a.features?.measurements?redesignMoreItem('measure','Мої заміри','Вага, талія та об’єми тіла','showClientSection(\'measurements\')','green'):'')
       +redesignMoreItem('chart','Досягнення','Результати та активність','showClientAchievements('+cid+')','orange')
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
@@ -144,4 +145,11 @@ window.showClientHelp = function(cid){
   ];
   app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button onclick="showClientMore('+cid+')">‹</button><h1>Допомога</h1></div><div class="redesign-help-list">'+qa.map((x,i)=>'<div class="redesign-help-item"><button onclick="toggleClientPanel(\'help'+i+'\',this)"><span><strong>'+esc(x[0])+'</strong></span><span>⌄</span></button><div id="help'+i+'" class="hidden"><p>'+esc(x[1])+'</p></div></div>').join('')+'</div></div>');
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+
+window.showClientActivity = function(cid){
+  let d=window.currentClientData||{};currentClientView='more';
+  app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button class="unified-back-button" onclick="showClientMore('+cid+')" aria-label="Назад">‹</button><h1>Активність</h1></div>'+cardioEditHTML(cid,(d.cardio||[]).find(x=>x.day===isoToday())||{})+'</div>');
+  setTimeout(toggleCardioFields,0);refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
