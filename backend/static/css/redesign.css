@@ -4868,3 +4868,10 @@ body.eplan-redesign.client-ui .cardio-inline-editor .activity-metric-cards{margi
 body.eplan-redesign.client-ui .activity-svg-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 body.eplan-redesign.client-ui .activity-steps-card .activity-svg-icon svg{width:23px;height:23px;fill:currentColor;stroke:none}
 body.eplan-redesign.client-ui .cardio-entry-card.selected>b{transform:rotate(90deg)}
+
+/* Cleaner cardio value entry */
+body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card{min-height:58px!important;padding:9px 13px!important;background:#f7f9fc!important}
+body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card>div{width:100%}
+body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card input{display:block!important;width:100%!important;height:25px!important;min-height:25px!important;margin:1px 0 0!important;padding:0!important;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;color:#102044!important;font-size:16px!important;line-height:25px!important;font-weight:750!important;-webkit-appearance:none!important;appearance:none!important}
+body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card input:focus{border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
+body.eplan-redesign.client-ui .cardio-metric-inputs .activity-field-card input::placeholder{color:#a7b0bf!important;font-size:16px!important;font-weight:650!important;opacity:1}
