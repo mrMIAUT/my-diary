@@ -258,3 +258,22 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 .library-muscle-admin-list button.library-icon-btn{width:30px!important;height:30px!important;min-width:30px!important;border-radius:9px!important}
 .library-add-exercise{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 @media(max-width:620px){.library-muscle-picker{grid-template-columns:1fr}.library-edit-card{max-height:90vh;overflow:auto}}
+
+/* v61 — short light launch splash using the approved app icon */
+.eplan-splash{
+ background:#f7faff!important;
+ transition:opacity .16s ease,visibility .16s ease!important;
+}
+.eplan-splash-app-icon{
+ display:block;width:132px;height:132px;object-fit:cover;
+ border-radius:29px;
+ box-shadow:0 10px 30px rgba(16,32,68,.10);
+ animation:eplanSplashIcon .22s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes eplanSplashIcon{
+ from{opacity:0;transform:scale(.94)}
+ to{opacity:1;transform:scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+ .eplan-splash-app-icon{animation:none!important}
+}
