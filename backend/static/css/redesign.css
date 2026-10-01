@@ -5155,3 +5155,73 @@ body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;back
   .eplan-splash-contour{display:none}
   .eplan-splash-final-logo{opacity:1;transform:none;animation:none}
 }
+
+
+/* v70 — draw the real logo itself, stroke by stroke */
+.eplan-splash{
+  background:#fff!important;
+}
+.eplan-splash-ribbon-stage{
+  position:relative;
+  width:190px;
+  height:190px;
+}
+.eplan-splash-ribbon,
+.eplan-splash-ribbon-complete{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.eplan-splash-ribbon{
+  overflow:visible;
+}
+.eplan-splash-ribbon-image{
+  width:100%;
+  height:100%;
+}
+.eplan-ribbon-mask{
+  fill:none;
+  stroke:#fff;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.eplan-ribbon-e{
+  stroke-width:128;
+  stroke-dasharray:1410;
+  stroke-dashoffset:1410;
+  animation:eplanRibbonE .82s cubic-bezier(.58,.02,.2,1) .08s forwards;
+}
+.eplan-ribbon-e-bar{
+  stroke-width:116;
+  stroke-dasharray:280;
+  stroke-dashoffset:280;
+  animation:eplanRibbonBar .28s cubic-bezier(.58,.02,.2,1) .56s forwards;
+}
+.eplan-ribbon-p{
+  stroke-width:132;
+  stroke-dasharray:1130;
+  stroke-dashoffset:1130;
+  animation:eplanRibbonP .78s cubic-bezier(.58,.02,.2,1) .78s forwards;
+}
+.eplan-splash-ribbon-complete{
+  object-fit:contain;
+  opacity:0;
+  animation:eplanRibbonComplete .18s ease 1.50s forwards;
+}
+@keyframes eplanRibbonE{
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanRibbonBar{
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanRibbonP{
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanRibbonComplete{
+  to{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .eplan-splash-ribbon{display:none}
+  .eplan-splash-ribbon-complete{opacity:1;animation:none}
+}
