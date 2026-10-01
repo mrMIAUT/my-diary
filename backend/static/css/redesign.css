@@ -4925,3 +4925,24 @@ body.eplan-redesign.client-ui .redesign-back-title>button::before{
  transform:rotate(45deg)!important;transform-origin:50% 50%!important;
  margin-left:4px!important;box-sizing:border-box!important;
 }
+
+/* More subpages: separate back control from title and keep a clean header rhythm */
+body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title{
+ display:grid!important;
+ grid-template-columns:44px minmax(0,1fr)!important;
+ column-gap:14px!important;
+ align-items:center!important;
+ margin:0 0 22px!important;
+}
+body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title>button{
+ width:44px!important;height:44px!important;min-width:44px!important;margin:0!important;
+}
+body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title h1{
+ margin:0!important;min-width:0!important;font-size:30px!important;line-height:1.08!important;
+ letter-spacing:-.02em!important;
+}
+@media(max-width:520px){
+ body.eplan-redesign.client-ui .redesign-more-subpage .redesign-back-title{
+  grid-template-columns:44px minmax(0,1fr)!important;column-gap:14px!important;
+ }
+}
