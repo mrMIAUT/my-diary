@@ -4959,3 +4959,16 @@ body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-progre
 body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-progress-link *{
  color:inherit!important;opacity:1!important;
 }
+
+/* Training stats CTA — actual button class */
+body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-details{
+ background:#fff!important;
+ color:#102044!important;
+ border:1px solid #d5e0ed!important;
+ opacity:1!important;
+ font-weight:800!important;
+ box-shadow:0 1px 2px rgba(16,32,68,.04)!important;
+}
+body.eplan-redesign.client-ui .redesign-training-stats .redesign-training-details span{
+ color:#102044!important;opacity:1!important;
+}
