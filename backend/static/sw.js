@@ -1,4 +1,4 @@
-const VERSION='eplan-v57';
+const VERSION='eplan-v63';
 let restTimerHandle=null;
 
 self.addEventListener('install',event=>{
@@ -35,8 +35,8 @@ self.addEventListener('message',event=>{
     restTimerHandle=setTimeout(()=>{
       self.registration.showNotification('Є ПЛАН · Відпочинок завершено',{
         body:'Час починати наступний підхід.',
-        icon:'/static/icons/icon-192.png',
-        badge:'/static/icons/icon-192.png',
+        icon:'/static/icons/icon-192.png?v=63',
+        badge:'/static/icons/icon-192.png?v=63',
         tag:'eplan-rest-finished',
         renotify:true
       });
@@ -48,8 +48,8 @@ self.addEventListener('push',event=>{
   try{data=event.data?event.data.json():{}}catch(e){data={body:event.data?.text()||''}}
   event.waitUntil(self.registration.showNotification(data.title||'Є ПЛАН',{
     body:data.body||'',
-    icon:'/static/icons/icon-192.png',
-    badge:'/static/icons/icon-192.png',
+    icon:'/static/icons/icon-192.png?v=63',
+    badge:'/static/icons/icon-192.png?v=63',
     data:{url:data.url||'/'}
   }));
 });
