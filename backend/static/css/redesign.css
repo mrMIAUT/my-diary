@@ -4813,3 +4813,5 @@ body.eplan-redesign.client-ui .redesign-training-today-done strong{display:block
 body.eplan-redesign.client-ui .redesign-training-today-done small{display:block;margin-top:3px;color:#74829a;font-size:11px;font-weight:650;line-height:1.35}
 body.eplan-redesign.client-ui .redesign-training-day.is-done{border-color:#cfe8da!important;background:#fbfefc!important}
 body.eplan-redesign.client-ui .redesign-training-day.is-done .redesign-training-day-status{background:#e7f6ed!important;color:#258858!important}
+
+body.eplan-redesign.client-ui .redesign-completed-workout-note{margin-top:12px;padding:12px 14px;border-radius:13px;background:#eef8f2;color:#258858;text-align:center;font-size:13px;font-weight:800}
