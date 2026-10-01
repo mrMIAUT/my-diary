@@ -89,11 +89,12 @@ async function bootstrapAuthentication(){
 }
 
 function renderLogin(){
- document.body.classList.remove('eplan-redesign','client-ui');
+ document.body.classList.remove('client-ui');
+ document.body.classList.add('eplan-redesign','eplan-auth-page');
  let token=new URLSearchParams(location.search).get('reset');
  if(token)return renderResetPassword(token);
  let rememberedEmail=localStorage.getItem('rememberedEmail')||'';
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><form class="card" onsubmit="event.preventDefault();login()" autocomplete="on"><h1>Вхід</h1><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="Email"><div class="password-field-wrap"><input id="pass" name="password" type="password" data-password-field="1" autocomplete="current-password" placeholder="Пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'pass')">${passwordEyeSVG(true)}</button></div><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати email на цьому пристрої</span></label><p id="err" class="muted"></p><button type="submit">Увійти</button><button type="button" class="dark" style="margin-left:8px" onclick="renderForgotPassword()">Забули пароль?</button><p class="muted" style="font-size:13px;margin-top:16px">Пароль може зберегти браузер або менеджер паролів. Сам сайт не зберігає пароль у відкритому вигляді.</p></form></div>`
+ app.innerHTML=`<main class="auth-shell"><div class="auth-logo"><img src="/static/icons/apple-touch-icon.png?v=67" alt="Є ПЛАН"></div><form class="auth-card" onsubmit="event.preventDefault();login()" autocomplete="on"><div class="auth-heading"><span>З поверненням</span><h1>Вхід</h1><p>Увійди, щоб продовжити тренування.</p></div><label class="auth-field"><span>Email</span><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="name@email.com"></label><label class="auth-field"><span>Пароль</span><div class="password-field-wrap"><input id="pass" name="password" type="password" data-password-field="1" autocomplete="current-password" placeholder="Введи пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'pass')">${passwordEyeSVG(true)}</button></div></label><div class="auth-options"><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати email</span></label><button type="button" class="auth-forgot" onclick="renderForgotPassword()">Забули пароль?</button></div><p id="err" class="auth-error"></p><button class="auth-submit" type="submit">Увійти</button></form></main>`
 }
 
 function renderForgotPassword(){
