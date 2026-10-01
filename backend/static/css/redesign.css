@@ -5443,3 +5443,151 @@ body.eplan-redesign.client-ui .redesign-progress-achievements-head button{
   font-weight:850;
   white-space:nowrap;
 }
+
+
+/* v84 — final client UI polish */
+
+/* Activity: one clear heading, tighter card, compact saved state */
+body.eplan-redesign.client-ui .redesign-training-page .cardio-activity-card{
+  padding:20px 18px!important;
+}
+body.eplan-redesign.client-ui .redesign-training-page .cardio-activity-card #cardioPanel{
+  margin-top:0!important;
+}
+body.eplan-redesign.client-ui .activity-saved-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 12px;
+}
+body.eplan-redesign.client-ui .activity-saved-heading>strong{
+  color:#102044;
+  font-size:23px;
+  line-height:1.15;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.client-ui .activity-saved-heading .client-status{
+  color:#258858!important;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+/* Measurements: make the section name primary and timing secondary */
+body.eplan-redesign.client-ui .measurements-page .measurement-next .measurement-kicker{
+  color:#0a1738!important;
+  font-size:20px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  text-transform:none!important;
+  letter-spacing:-.02em!important;
+  margin:0 0 9px!important;
+}
+body.eplan-redesign.client-ui .measurements-page .measurement-next h2{
+  margin:0 0 5px!important;
+  color:#607089!important;
+  font-size:17px!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+}
+
+/* Client notification swipe action */
+body.eplan-redesign.client-ui .notification-swipe{
+  border-radius:16px;
+}
+body.eplan-redesign.client-ui .notification-delete-bg.client-notification-delete{
+  width:72px!important;
+  padding:0!important;
+  border:1px solid #ffd2d6!important;
+  border-radius:16px!important;
+  background:#fff0f1!important;
+  color:#c64a55!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .notification-delete-bg.client-notification-delete svg{
+  width:22px;
+  height:22px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+body.eplan-redesign.client-ui .notification-swipe .notification-item{
+  background:#f8faff!important;
+  border-color:#dfe7f2!important;
+}
+
+/* Profile editor: unified close control + polished native select */
+body.eplan-redesign.client-ui #profileModal .profile-modal-sticky{
+  position:sticky;
+  top:-28px;
+  z-index:6;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  align-items:start;
+  gap:14px;
+  margin:-28px -28px 18px;
+  padding:28px 28px 16px;
+  background:#fff;
+  border-bottom:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui #profileModal .profile-modal-head{
+  min-width:0;
+  margin:0!important;
+  padding:0!important;
+}
+body.eplan-redesign.client-ui #profileModal .profile-close{
+  position:static!important;
+  top:auto!important;
+  right:auto!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #dce5f0!important;
+  border-radius:13px!important;
+  background:#eef3f8!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:24px!important;
+  font-weight:500!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui #profileModal #pfSex{
+  width:100%!important;
+  min-height:54px!important;
+  padding:0 46px 0 14px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:15px!important;
+  background-color:#f8faff!important;
+  color:#0a1738!important;
+  font:inherit!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#718097 50%),
+    linear-gradient(135deg,#718097 50%,transparent 50%)!important;
+  background-position:
+    calc(100% - 20px) 24px,
+    calc(100% - 14px) 24px!important;
+  background-size:6px 6px,6px 6px!important;
+  background-repeat:no-repeat!important;
+}
+body.eplan-redesign.client-ui #profileModal #pfSex:focus{
+  border-color:#9bc6ff!important;
+  box-shadow:0 0 0 3px rgba(22,119,255,.08)!important;
+}
+@media(max-width:650px){
+  body.eplan-redesign.client-ui #profileModal .profile-modal-sticky{
+    top:-22px;
+    margin:-22px -18px 16px;
+    padding:22px 18px 14px;
+  }
+}
