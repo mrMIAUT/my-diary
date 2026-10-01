@@ -4893,3 +4893,9 @@ body.eplan-redesign.client-ui .cardio-entry-icon:has(.activity-approved-icon),
 body.eplan-redesign.client-ui .activity-field-icon:has(.activity-approved-icon){background:#f1f4f8!important;color:#10203A!important}
 body.eplan-redesign.client-ui .cardio-entry-icon .activity-approved-icon{width:26px;height:26px}
 body.eplan-redesign.client-ui .activity-steps-card .activity-approved-icon{width:25px;height:25px}
+
+/* Fix custom activity fields spacing */
+body.eplan-redesign.client-ui .activity-custom-cardio{margin:8px 0 12px!important}
+body.eplan-redesign.client-ui .activity-custom-cardio label{display:block;margin:0 0 6px!important;color:#102044;font-size:14px;font-weight:700}
+body.eplan-redesign.client-ui .activity-custom-cardio input{display:block!important;width:100%!important;box-sizing:border-box!important;margin:0!important}
+body.eplan-redesign.client-ui .activity-custom-cardio + .activity-metric-cards{margin-top:12px!important}
