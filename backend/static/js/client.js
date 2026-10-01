@@ -11,7 +11,7 @@ function showClientSection(section){
  if(section==='mealplan')html=`<h1>План харчування</h1><div class="card"><h2>Моє харчування</h2><div class="daily-macros-line"><div class="daily-macro"><strong>${c.kcal||0}</strong><br>ккал</div><div class="daily-macro"><strong>${c.protein||0}</strong><br>Б</div><div class="daily-macro"><strong>${c.fat||0}</strong><br>Ж</div><div class="daily-macro"><strong>${c.carbs||0}</strong><br>В</div></div></div>${clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>'}`;
  else if(section==='measurements')html=`<h1>Заміри</h1>${clientMeasurementsHTML(d,c.id)}`;
  else if(section==='progress')html=`<div class="client-section-page redesign-progress-shell"><h1>Прогрес</h1>${clientProgressHTML(d)}</div>`;
- else if(section==='history')html=`${window.progressHistoryReturn?'<button class="progress-history-back" onclick="returnFromProgressHistory()">‹ До тренувань</button>':''}<h1>Історія</h1><div id="clientCalendar">${calendarHTML(d,'client')}</div>`;
+ else if(section==='history')html=`${window.progressHistoryReturn?'<button class="unified-back-button" onclick="returnFromProgressHistory()" aria-label="Назад">‹</button>':''}<h1>Історія</h1><div id="clientCalendar">${calendarHTML(d,'client')}</div>`;
  app.innerHTML=shell(html);refreshNotificationBadge(c.id,'client','clientNotifyBtn');
 }
 
