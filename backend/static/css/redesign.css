@@ -4790,3 +4790,17 @@ body.eplan-redesign.client-ui .redesign-rest-timer-icon.running{color:#1677ff;bo
 .rest-timer-preset-list button{background:#eef2f6!important;color:#183153!important;border:1px solid #dde5ee!important;box-shadow:none!important}
 .rest-timer-preset-list button.selected{background:#e9f2ff!important;color:#1268d8!important;border-color:#bcd6fb!important}
 .rest-timer-custom{background:#eef2f6!important;color:#183153!important;border:1px solid #dde5ee!important;box-shadow:none!important}
+
+
+/* ===== Finished workout summary — Redesign V1 ===== */
+body.eplan-redesign.client-ui #finishSummaryModal{background:rgba(10,23,56,.48)!important;backdrop-filter:blur(3px);padding:18px!important}
+body.eplan-redesign.client-ui #finishSummaryModal .finish-summary{width:min(520px,100%)!important;margin:auto!important;padding:24px 20px 20px!important;border:1px solid #dce5f1!important;border-radius:24px!important;background:#fff!important;color:#0a1738!important;box-shadow:0 24px 70px rgba(15,35,66,.20)!important}
+body.eplan-redesign.client-ui #finishSummaryModal .finish-summary h2{margin:0 0 8px!important;font-size:25px!important;line-height:1.15!important;letter-spacing:-.4px!important;color:#0a1738!important}
+body.eplan-redesign.client-ui #finishSummaryModal .finish-summary>p{margin:0 0 18px!important;color:#74829a!important;font-size:14px!important;line-height:1.45!important}
+body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin:0 0 18px!important}
+body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid>div{min-width:0!important;padding:14px 12px!important;border:1px solid #e0e8f2!important;border-radius:16px!important;background:#f7f9fc!important;color:#0a1738!important;box-shadow:none!important}
+body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid .muted{display:block!important;margin-bottom:5px!important;color:#7a879b!important;font-size:11px!important;font-weight:750!important}
+body.eplan-redesign.client-ui #finishSummaryModal .summary-number{color:#0a1738!important;font-size:25px!important;font-weight:900!important;line-height:1.05!important}
+body.eplan-redesign.client-ui #finishSummaryModal .summary-number.duration{font-size:15px!important;line-height:1.25!important;overflow-wrap:anywhere}
+body.eplan-redesign.client-ui #finishSummaryModal .finish-summary>button{width:100%!important;margin-top:2px!important;padding:14px 18px!important;border-radius:14px!important;background:#1677ff!important;color:#fff!important;font-size:15px!important;box-shadow:none!important}
+@media(max-width:380px){body.eplan-redesign.client-ui #finishSummaryModal .finish-summary{padding:22px 16px 16px!important}body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid{gap:6px!important}body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid>div{padding:12px 9px!important}body.eplan-redesign.client-ui #finishSummaryModal .summary-number{font-size:22px!important}}
