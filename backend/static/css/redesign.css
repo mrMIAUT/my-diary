@@ -4804,3 +4804,12 @@ body.eplan-redesign.client-ui #finishSummaryModal .summary-number{color:#0a1738!
 body.eplan-redesign.client-ui #finishSummaryModal .summary-number.duration{font-size:15px!important;line-height:1.25!important;overflow-wrap:anywhere}
 body.eplan-redesign.client-ui #finishSummaryModal .finish-summary>button{width:100%!important;margin-top:2px!important;padding:14px 18px!important;border-radius:14px!important;background:#1677ff!important;color:#fff!important;font-size:15px!important;box-shadow:none!important}
 @media(max-width:380px){body.eplan-redesign.client-ui #finishSummaryModal .finish-summary{padding:22px 16px 16px!important}body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid{gap:6px!important}body.eplan-redesign.client-ui #finishSummaryModal .workout-finish-summary-grid>div{padding:12px 9px!important}body.eplan-redesign.client-ui #finishSummaryModal .summary-number{font-size:22px!important}}
+
+
+/* Training tab — make today's completed workout unmistakable. */
+body.eplan-redesign.client-ui .redesign-training-today-done{display:flex;align-items:center;gap:11px;margin:0 0 12px;padding:13px 14px;border:1px solid #cfe8da;border-radius:16px;background:#f1faf5;color:#183153}
+body.eplan-redesign.client-ui .redesign-training-today-done-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:999px;background:#e0f5e8;color:#24945c;font-size:18px;font-weight:900}
+body.eplan-redesign.client-ui .redesign-training-today-done strong{display:block;color:#176b43;font-size:14px;font-weight:850;line-height:1.25}
+body.eplan-redesign.client-ui .redesign-training-today-done small{display:block;margin-top:3px;color:#74829a;font-size:11px;font-weight:650;line-height:1.35}
+body.eplan-redesign.client-ui .redesign-training-day.is-done{border-color:#cfe8da!important;background:#fbfefc!important}
+body.eplan-redesign.client-ui .redesign-training-day.is-done .redesign-training-day-status{background:#e7f6ed!important;color:#258858!important}
