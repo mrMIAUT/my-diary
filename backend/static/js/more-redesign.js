@@ -111,7 +111,7 @@ window.showClientMore = function(cid){
     +'<div class="redesign-more-list">'
       +redesignMoreItem('user','Мій профіль','Особисті дані та анкета','showClientProfile('+cid+')')
       +redesignMoreItem('calendar','Історія тренувань','Усі виконані тренування','showClientSection(\'history\')')
-      +redesignMoreItem('chart','Активність','Кроки та кардіо за сьогодні','showClientActivity('+cid+')','green')
+      +redesignMoreItem('dumbbell','Вправи','Бібліотека вправ і техніка','showClientExerciseLibrary('+cid+')')
       +(a.features?.measurements?redesignMoreItem('measure','Мої заміри','Вага, талія та об’єми тіла','showClientSection(\'measurements\')','green'):'')
       +redesignMoreItem('chart','Досягнення','Результати та активність','showClientAchievements('+cid+')','orange')
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
@@ -148,8 +148,8 @@ window.showClientHelp = function(cid){
 };
 
 
-window.showClientActivity = function(cid){
-  let d=window.currentClientData||{};currentClientView='more';
-  app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button class="unified-back-button" onclick="showClientMore('+cid+')" aria-label="Назад">‹</button><h1>Активність</h1></div>'+cardioEditHTML(cid,(d.cardio||[]).find(x=>x.day===isoToday())||{})+'</div>');
-  setTimeout(toggleCardioFields,0);refreshNotificationBadge(cid,'client','clientNotifyBtn');
+window.showClientExerciseLibrary = async function(cid){
+  await loadExerciseLibrary();currentClientView='more';
+  app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button class="unified-back-button" onclick="showClientMore('+cid+')" aria-label="Назад">‹</button><h1>Вправи</h1></div>'+redesignClientExerciseLibraryHTML()+'</div>');
+  refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
