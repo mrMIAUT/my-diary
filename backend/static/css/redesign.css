@@ -5084,3 +5084,74 @@ body.eplan-auth-page .auth-submit{width:100%;height:52px;border-radius:15px;back
   .eplan-splash-logo-reveal{opacity:1;transform:none;clip-path:none;animation:none}
   .eplan-splash-tracer{display:none}
 }
+
+
+/* v69 — contour-drawn launch monogram */
+.eplan-splash-contour-stage{
+  position:relative;
+  width:190px;
+  height:190px;
+}
+.eplan-splash-contour,
+.eplan-splash-final-logo{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.eplan-splash-final-logo{
+  object-fit:contain;
+  opacity:0;
+  transform:scale(.985);
+  animation:eplanFinalLogoIn .24s ease 1.23s forwards;
+}
+.eplan-splash-contour{
+  overflow:visible;
+  opacity:1;
+  animation:eplanContourFade .24s ease 1.27s forwards;
+}
+.eplan-contour-trace,
+.eplan-contour-head{
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.eplan-contour-trace{
+  stroke:url(#eplanSplashStroke);
+  stroke-width:3.6px;
+  stroke-dasharray:4625;
+  stroke-dashoffset:4625;
+  filter:drop-shadow(0 0 4px rgba(26,126,255,.22));
+  animation:eplanContourDraw 1.16s cubic-bezier(.62,.01,.24,1) .08s forwards;
+}
+.eplan-contour-head{
+  stroke:#85edff;
+  stroke-width:5.2px;
+  stroke-dasharray:84 4541;
+  stroke-dashoffset:4625;
+  opacity:.95;
+  filter:url(#eplanSplashGlow);
+  animation:eplanContourHead 1.16s cubic-bezier(.62,.01,.24,1) .08s forwards;
+}
+@keyframes eplanContourDraw{
+  from{stroke-dashoffset:4625}
+  to{stroke-dashoffset:0}
+}
+@keyframes eplanContourHead{
+  0%{stroke-dashoffset:4625;opacity:0}
+  8%{opacity:.95}
+  92%{opacity:.95}
+  100%{stroke-dashoffset:0;opacity:0}
+}
+@keyframes eplanContourFade{
+  to{opacity:0}
+}
+@keyframes eplanFinalLogoIn{
+  from{opacity:0;transform:scale(.985)}
+  to{opacity:1;transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .eplan-splash-contour{display:none}
+  .eplan-splash-final-logo{opacity:1;transform:none;animation:none}
+}
