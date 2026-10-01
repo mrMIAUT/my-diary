@@ -161,34 +161,31 @@ function workoutCycleState(d,groups){
  if(!days.length)return {done,next:null};
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&days.includes(x.day_name)).slice().sort((a,b)=>new Date(a.finished_at||a.started_at||0)-new Date(b.finished_at||b.started_at||0));
  if(!sessions.length)return {done,next:days[0]};
- // A cycle is complete once every planned day has been performed once.
- // Walk backwards: the distinct days after the latest completed cycle are the current progress.
- let seen=new Set();
- for(let i=sessions.length-1;i>=0;i--){
+
+ // Build cycles chronologically. Once every planned day has been completed,
+ // close that cycle and start collecting the next one.
+ let seen=new Set(),lastCycleFinished=null;
+ for(let i=0;i<sessions.length;i++){
    let day=sessions[i].day_name;
-   if(seen.has(day))continue;
-   if(seen.size===days.length-1){
-     // Including this session completes the previous cycle, so none of it belongs to the new cycle.
-     seen.clear();
-     break;
-   }
    seen.add(day);
- }
- // If the latest session itself closes a cycle, keep 100% only for that calendar day.
- // On the next day the new cycle starts from the first planned workout.
- if(!seen.size){
-   let tail=new Set();
-   for(let i=sessions.length-1;i>=0&&tail.size<days.length;i--)tail.add(sessions[i].day_name);
-   if(tail.size===days.length){
-     let latestSession=sessions[sessions.length-1];
-     let latestDay=sessionDay(latestSession);
-     if(latestDay===isoToday())seen=tail;
-     else return {done:[],next:days[0]};
+   if(seen.size===days.length){
+     lastCycleFinished=sessions[i];
+     seen.clear();
    }
  }
- done=days.filter(day=>seen.has(day));
- let next=days.find(day=>!seen.has(day))||days[0];
- return {done,next};
+
+ // If a new cycle already has completed workouts, show only those.
+ if(seen.size){
+   done=days.filter(day=>seen.has(day));
+   return {done,next:days.find(day=>!seen.has(day))||days[0]};
+ }
+
+ // A just-finished cycle remains at 100% for the rest of that day.
+ // From the next calendar day it becomes a fresh 0% cycle with Day 1 available.
+ if(lastCycleFinished&&sessionDay(lastCycleFinished)===isoToday()){
+   return {done:days.slice(),next:days[0]};
+ }
+ return {done:[],next:days[0]};
 }
 function workoutDayButtons(d,cid,groups){
  let cycle=workoutCycleState(d,groups);
