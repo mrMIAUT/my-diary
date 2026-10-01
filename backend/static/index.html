@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uk"><head>
-<meta name="eplan-build" content="2026-10-01-redesign-v1-68"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="eplan-build" content="2026-10-01-redesign-v1-69"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Є | ПЛАН</title>
 <meta name="theme-color" content="#f7faff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,11 +15,25 @@
 <link rel="stylesheet" href="/static/css/components.css">
 <link rel="stylesheet" href="/static/css/refinements.css"><link rel="stylesheet" href="/static/css/today.css">
 <link rel="stylesheet" href="/static/css/layout.css">
-<link rel="stylesheet" href="/static/css/redesign.css?v=68"></head><body>
+<link rel="stylesheet" href="/static/css/redesign.css?v=69"></head><body>
 <div id="eplanSplash" class="eplan-splash" aria-hidden="true">
-  <div class="eplan-splash-logo-stage">
-    <img class="eplan-splash-logo-reveal" src="/static/icons/apple-touch-icon.png?v=68" alt="">
-    <span class="eplan-splash-tracer" aria-hidden="true"></span>
+  <div class="eplan-splash-contour-stage">
+    <img class="eplan-splash-final-logo" src="/static/icons/apple-touch-icon.png?v=69" alt="">
+    <svg class="eplan-splash-contour" viewBox="0 0 1024 1024" aria-hidden="true">
+      <defs>
+        <linearGradient id="eplanSplashStroke" x1="0%" y1="20%" x2="100%" y2="80%">
+          <stop offset="0%" stop-color="#082c78"/>
+          <stop offset="48%" stop-color="#126dff"/>
+          <stop offset="100%" stop-color="#28d7ff"/>
+        </linearGradient>
+        <filter id="eplanSplashGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="7" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path class="eplan-contour-trace" d="M 401 268 L 372 267 L 333 271 L 271 290 L 213 325 L 164 375 L 132 429 L 116 486 L 115 556 L 131 618 L 157 666 L 171 684 L 202 714 L 232 735 L 257 748 L 306 763 L 368 764 L 421 749 L 449 734 L 472 717 L 472 628 L 442 645 L 405 658 L 358 661 L 331 656 L 302 644 L 279 628 L 254 601 L 235 563 L 430 562 L 436 556 L 436 473 L 430 467 L 254 467 L 241 470 L 240 468 L 256 439 L 277 415 L 301 396 L 331 381 L 362 373 L 401 372 L 431 378 L 453 389 L 471 405 L 482 421 L 493 456 L 491 755 L 499 762 L 612 762 L 621 752 L 619 493 L 611 444 L 595 400 L 726 399 L 736 402 L 749 416 L 756 436 L 756 754 L 761 761 L 767 763 L 893 762 L 899 756 L 899 390 L 889 358 L 869 326 L 845 304 L 822 291 L 790 282 L 494 282 L 474 285 L 439 274 Z"/>
+      <path class="eplan-contour-head" d="M 401 268 L 372 267 L 333 271 L 271 290 L 213 325 L 164 375 L 132 429 L 116 486 L 115 556 L 131 618 L 157 666 L 171 684 L 202 714 L 232 735 L 257 748 L 306 763 L 368 764 L 421 749 L 449 734 L 472 717 L 472 628 L 442 645 L 405 658 L 358 661 L 331 656 L 302 644 L 279 628 L 254 601 L 235 563 L 430 562 L 436 556 L 436 473 L 430 467 L 254 467 L 241 470 L 240 468 L 256 439 L 277 415 L 301 396 L 331 381 L 362 373 L 401 372 L 431 378 L 453 389 L 471 405 L 482 421 L 493 456 L 491 755 L 499 762 L 612 762 L 621 752 L 619 493 L 611 444 L 595 400 L 726 399 L 736 402 L 749 416 L 756 436 L 756 754 L 761 761 L 767 763 L 893 762 L 899 756 L 899 390 L 889 358 L 869 326 L 845 304 L 822 291 L 790 282 L 494 282 L 474 285 L 439 274 Z"/>
+    </svg>
   </div>
 </div>
 <div id="app"></div>
@@ -46,6 +60,6 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/pwa.js"></script>
 
-<script src="/static/js/startup-ui.js?v=68"></script>
+<script src="/static/js/startup-ui.js?v=69"></script>
 
 </body></html>
