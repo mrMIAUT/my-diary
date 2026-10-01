@@ -112,7 +112,6 @@ window.showClientMore = function(cid){
       +redesignMoreItem('user','Мій профіль','Особисті дані та анкета','showClientProfile('+cid+')')
       +redesignMoreItem('calendar','Історія тренувань','Усі виконані тренування','showClientSection(\'history\')')
       +redesignMoreItem('dumbbell','Вправи','Бібліотека вправ і техніка','showClientExerciseLibrary('+cid+')')
-      +redesignMoreItem('chart','Досягнення','Результати та активність','showClientAchievements('+cid+')','orange')
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
       +redesignMoreItem('message','Допомога','Відповіді на часті питання','showClientHelp('+cid+')')
     +'</div>'
@@ -124,8 +123,8 @@ window.showClientMore = function(cid){
 };
 
 window.showClientAchievements = function(cid){
-  let d=window.currentClientData||{};currentClientView='more';
-  app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button onclick="showClientMore('+cid+')">‹</button><h1>Досягнення</h1></div>'+redesignAchievementsHTML(d)+'</div>');
+  let d=window.currentClientData||{};currentClientView='progress';
+  app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button class="unified-back-button" onclick="showClientSection(\'progress\')" aria-label="Назад">‹</button><h1>Досягнення</h1></div>'+redesignAchievementsHTML(d)+'</div>');
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
 
