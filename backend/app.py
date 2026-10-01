@@ -1208,6 +1208,10 @@ def pwa_reset():
 
 @app.get("/sw.js")
 def service_worker(): return FileResponse(BASE/"static"/"sw.js",media_type="application/javascript",headers={"Service-Worker-Allowed":"/","Cache-Control":"no-cache"})
+@app.get("/apple-touch-icon.png")
+def apple_touch_icon():
+    return FileResponse(STATIC_DIR / "icons" / "apple-touch-icon-v62.png", media_type="image/png", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
 @app.get("/manifest.webmanifest")
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
 @app.get("/health")
