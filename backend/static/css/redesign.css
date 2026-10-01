@@ -5523,7 +5523,7 @@ body.eplan-redesign.client-ui .notification-swipe .notification-item{
 /* Profile editor: unified close control + polished native select */
 body.eplan-redesign.client-ui #profileModal .profile-modal-sticky{
   position:sticky;
-  top:-28px;
+  top:0;
   z-index:6;
   display:grid;
   grid-template-columns:minmax(0,1fr) 44px;
@@ -5586,7 +5586,7 @@ body.eplan-redesign.client-ui #profileModal #pfSex:focus{
 }
 @media(max-width:650px){
   body.eplan-redesign.client-ui #profileModal .profile-modal-sticky{
-    top:-22px;
+    top:0;
     margin:-22px -18px 16px;
     padding:22px 18px 14px;
   }
