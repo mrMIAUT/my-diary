@@ -5800,3 +5800,74 @@ body.eplan-redesign.client-ui .measurement-calendar-hint{
   font-size:12px;
   font-weight:700;
 }
+
+
+/* v90 — show supersets and alternatives in client workout preview */
+body.eplan-redesign.client-ui .redesign-training-superset{
+  margin:8px 0;
+  padding:0 10px;
+  border:1px solid #dbe7f5;
+  border-radius:14px;
+  background:#f8fbff;
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .redesign-training-superset-label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 -10px;
+  padding:9px 10px;
+  border-bottom:1px solid #e3ebf5;
+  background:#eef5ff;
+}
+body.eplan-redesign.client-ui .redesign-training-superset-label span{
+  color:#1677ff;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+body.eplan-redesign.client-ui .redesign-training-superset-label small{
+  color:#7b899e;
+  font-size:9.5px;
+  font-weight:700;
+}
+body.eplan-redesign.client-ui .redesign-training-superset .redesign-training-exercise{
+  padding-left:0;
+  padding-right:0;
+}
+body.eplan-redesign.client-ui .redesign-training-superset .redesign-training-exercise:last-child{
+  border-bottom:0;
+}
+body.eplan-redesign.client-ui .redesign-training-exercise-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:5px;
+  margin-top:5px;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives em{
+  color:#7b899e;
+  font-size:9.5px;
+  font-style:normal;
+  font-weight:750;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives i{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef3f8;
+  color:#43546d;
+  font-size:9.5px;
+  font-style:normal;
+  font-weight:750;
+}
