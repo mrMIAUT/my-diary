@@ -144,7 +144,7 @@ function redesignAchievementsHTML(d){
       +'<div class="achievement-pr-head"><div><h2>Нові рекорди</h2><span>за останні 30 днів</span></div><div class="achievement-pr-summary"><strong>'+recentPRs.count30+'</strong><small>нових PR</small></div></div>'
       +(visiblePRs.length?'<div class="achievement-pr-events">'+visiblePRs.map(x=>
         '<div class="achievement-pr-event">'
-          +'<span class="achievement-pr-icon">↗</span>'
+          +'<span class="achievement-pr-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M10 7h7v7"/></svg></span>'
           +'<div class="achievement-pr-copy"><strong>'+esc(x.exercise)+'</strong><small>'+esc(formatProgressDate(x.day))+'</small></div>'
           +'<div class="achievement-pr-values">'
             +(x.first
