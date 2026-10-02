@@ -50,7 +50,7 @@ function nutritionHistoryHTML(d,daysBack,label){
         +'<span><b>В</b><i><em style="width:'+nutritionPct(avg('carbs'),c.carbs)+'%"></em></i></span>'
       +'</div>'
     +'</div>'
-    +(xs.length?'<div class="redesign-nutrition-day-list">'+visible.map(x=>'<div class="redesign-nutrition-day-row"><div><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+x.kcal+' ккал</small></div><span>Б '+x.protein+' · Ж '+x.fat+' · В '+x.carbs+'</span></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Ще немає даних</strong><span>Коли ти почнеш заповнювати харчування, статистика з’явиться тут.</span></div>')
+    +(xs.length?'<div class="redesign-nutrition-day-list">'+visible.map(x=>'<div class="redesign-nutrition-day-row"><div class="nutrition-row-date"><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+x.kcal+' ккал</small></div><span class="nutrition-row-values">Б '+x.protein+' · Ж '+x.fat+' · В '+x.carbs+'</span><button class="nutrition-row-edit" onclick="openNutritionDateEditor(\''+esc(x.day)+'\','+(d.client?.id||session?.client_id||0)+',\'nutrition\')" aria-label="Редагувати БЖВ за '+esc(formatProgressDate(x.day))+'">'+uiIcon('edit')+'</button></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Ще немає даних</strong><span>Коли ти почнеш заповнювати харчування, статистика з’явиться тут.</span></div>')
     +(isMonth&&xs.length>7?'<button class="nutrition-history-more" onclick="toggleNutritionHistory()">'+(window.clientNutritionHistoryExpanded?'Згорнути':'Переглянути всі')+' <span>›</span></button>':'')
   +'</div>';
 }
@@ -59,6 +59,46 @@ function toggleNutritionHistory(){
   window.clientNutritionHistoryExpanded=!window.clientNutritionHistoryExpanded;
   if(session?.role==='client'&&session.client_id)showClientNutrition(session.client_id);
 }
+
+window.openNutritionDateEditor = function(day,cid,source='nutrition'){
+  document.getElementById('nutritionDateModal')?.remove();
+  let d=window.currentClientData||{},c=d.client||{};
+  let x=(d.nutrition||[]).filter(v=>v.day===day).sort((a,b)=>(+b.id||0)-(+a.id||0))[0]||{};
+  let pretty=formatProgressDate(day);
+  let val=(v)=>v==null||v===''?'':String(v);
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal" id="nutritionDateModal"><div class="card nutrition-date-modal">'
+    +'<div class="nutrition-date-head"><div><h2>БЖВ за '+esc(pretty)+'</h2><p>Внеси або відредагуй підсумок харчування за цей день.</p></div><button class="nutrition-date-close" onclick="nutritionDateModal.remove()" aria-label="Закрити">×</button></div>'
+    +'<div class="nutrition-date-grid">'
+      +'<label><span>Калорії</span><input id="ndKcal" type="number" inputmode="decimal" value="'+val(x.kcal)+'" placeholder="Ккал · ціль '+(+c.kcal||0)+'"></label>'
+      +'<label><span>Білки</span><input id="ndProtein" type="number" inputmode="decimal" value="'+val(x.protein)+'" placeholder="г · ціль '+(+c.protein||0)+'"></label>'
+      +'<label><span>Жири</span><input id="ndFat" type="number" inputmode="decimal" value="'+val(x.fat)+'" placeholder="г · ціль '+(+c.fat||0)+'"></label>'
+      +'<label><span>Вуглеводи</span><input id="ndCarbs" type="number" inputmode="decimal" value="'+val(x.carbs)+'" placeholder="г · ціль '+(+c.carbs||0)+'"></label>'
+    +'</div>'
+    +'<button class="nutrition-date-save" data-day="'+esc(day)+'" data-source="'+esc(source)+'" onclick="saveNutritionDateEditor(this.dataset.day,'+cid+',this.dataset.source,this)">Зберегти БЖВ</button>'
+    +'</div></div>');
+};
+
+window.saveNutritionDateEditor = async function(day,cid,source='nutrition',button=null){
+  let fields=['ndKcal','ndProtein','ndFat','ndCarbs'].map(id=>document.getElementById(id));
+  if(fields.some(el=>!el||String(el.value).trim()===''))return alert('Заповни калорії, білки, жири та вуглеводи.');
+  let [kcal,protein,fat,carbs]=fields.map(el=>+el.value);
+  if([kcal,protein,fat,carbs].some(v=>!Number.isFinite(v)||v<0))return alert('Перевір значення БЖВ.');
+  if(kcal>10000)return alert('Перевір калорії: значення понад 10 000 ккал виглядає помилковим.');
+  if(protein>1000||fat>1000||carbs>1000)return alert('Перевір БЖВ: значення понад 1000 г виглядає помилковим.');
+  let original=button?.textContent||'Зберегти БЖВ';
+  if(button){button.disabled=true;button.textContent='Зберігаємо…'}
+  try{
+    await api('/history/nutrition',{method:'POST',body:JSON.stringify({client_id:cid,day,kcal,protein,fat,carbs})});
+    document.getElementById('nutritionDateModal')?.remove();
+    let nd=await loadClientData(cid);window.currentClientData=nd;
+    if(source==='calendar'&&typeof showCalendarDay==='function')showCalendarDay(day,null,false);
+    else await showClientNutrition(cid);
+  }catch(e){
+    if(button){button.disabled=false;button.textContent=original}
+    alert(e.message||'Не вдалося зберегти БЖВ.');
+  }
+};
 
 function redesignNutritionTodayHTML(d,c,cid){
   let today=isoToday(),x=(d.nutrition||[]).filter(v=>v.day===today).sort((a,b)=>(+b.id||0)-(+a.id||0))[0]||null;
