@@ -5871,3 +5871,39 @@ body.eplan-redesign.client-ui .redesign-training-alternatives i{
   font-style:normal;
   font-weight:750;
 }
+
+
+/* v91 — technique links in workout preview */
+body.eplan-redesign.client-ui .redesign-training-technique{
+  margin-top:4px;
+}
+body.eplan-redesign.client-ui .redesign-training-tech-link,
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  color:#1677ff!important;
+  text-decoration:none!important;
+  font-size:9.5px!important;
+  font-weight:850!important;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives{
+  align-items:flex-start;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:24px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef3f8;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip i{
+  padding:0!important;
+  min-height:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  padding-left:6px;
+  border-left:1px solid #d3deeb;
+}
