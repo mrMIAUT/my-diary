@@ -8345,3 +8345,27 @@ body.eplan-redesign.client-ui .redesign-library-group-body{
 body.eplan-redesign.client-ui .redesign-library-group-body.hidden{
   display:none!important;
 }
+
+
+/* v127 — calendar day label left, vertically centered */
+body.eplan-redesign.client-ui .calendar-workout-session-top{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:12px!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-top>strong{
+  grid-column:1!important;
+  justify-self:start!important;
+  align-self:center!important;
+  margin:0!important;
+  text-align:left!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-state{
+  grid-column:2!important;
+  justify-self:end!important;
+  align-self:center!important;
+  align-items:center!important;
+  text-align:center!important;
+}
