@@ -32,16 +32,31 @@ function achievementWeekStreak(sessions){
   return streak;
 }
 
-function achievementHeatmapHTML(sessions){
+function achievementHeatmapData(sessions){
   let active=new Set(sessions.map(x=>sessionDay(x)).filter(Boolean));
-  let today=new Date(),cells=[];
-  today.setHours(12,0,0,0);
-  for(let i=55;i>=0;i--){
-    let d=new Date(today);d.setDate(today.getDate()-i);
-    let day=d.toISOString().slice(0,10);
-    cells.push('<i class="'+(active.has(day)?'active':'')+'" title="'+esc(formatProgressDate(day))+'"></i>');
+  let today=new Date();today.setHours(12,0,0,0);
+  let monday=new Date(today),wd=(monday.getDay()+6)%7;
+  monday.setDate(monday.getDate()-wd);
+  let start=new Date(monday);start.setDate(start.getDate()-49);
+  let cells=[],windowStart=start.toISOString().slice(0,10),todayKey=today.toISOString().slice(0,10);
+
+  for(let week=0;week<8;week++){
+    for(let dow=0;dow<7;dow++){
+      let d=new Date(start);d.setDate(start.getDate()+week*7+dow);
+      let day=d.toISOString().slice(0,10),future=d>today;
+      let cls=(active.has(day)?'active ':'')+(future?'future ':'')+(day===todayKey?'today':'');
+      cells.push('<i class="'+cls.trim()+'" title="'+esc(formatProgressDate(day))+'"></i>');
+    }
   }
-  return '<div class="achievement-heatmap">'+cells.join('')+'</div>';
+
+  let weekdays=['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+  let count=sessions.filter(x=>{let day=sessionDay(x);return day&&day>=windowStart&&day<=todayKey}).length;
+  let html='<div class="achievement-heatmap-wrap">'
+    +'<div class="achievement-heatmap-weekdays">'+weekdays.map(x=>'<span>'+x+'</span>').join('')+'</div>'
+    +'<div class="achievement-heatmap-main"><div class="achievement-heatmap">'+cells.join('')+'</div>'
+    +'<div class="achievement-heatmap-scale"><span>8 тижнів</span><span>Зараз</span></div></div>'
+    +'</div>';
+  return {html,count};
 }
 
 function achievementRecords(d){
@@ -73,6 +88,7 @@ function redesignAchievementsHTML(d){
   let streak=achievementWeekStreak(sessions);
   let records=achievementRecords(d);
   let monthly=achievementMonthlyPRs(d);
+  let heatmap=achievementHeatmapData(sessions);
   let monthKeys=Object.keys(monthly).sort().slice(-6);
   let maxPR=Math.max(1,...monthKeys.map(m=>monthly[m]||0));
   let milestones=[
@@ -89,7 +105,7 @@ function redesignAchievementsHTML(d){
       +'<div><span>Твоя серія</span><strong>'+streak+' '+ukDays(streak).replace('день','тиждень').replace('дні','тижні').replace('днів','тижнів')+'</strong><small>Тижнів поспіль з тренуваннями</small></div>'
       +'<span class="achievement-streak-icon">🔥</span>'
     +'</div>'
-    +'<div class="card achievement-activity-card"><div class="between"><div><span class="achievement-kicker">Активність</span><strong>Останні 8 тижнів</strong></div><span class="achievement-count">'+sessions.length+' всього</span></div>'+achievementHeatmapHTML(sessions)+'</div>'
+    +'<div class="card achievement-activity-card"><div class="between"><div><span class="achievement-kicker">Активність</span><strong>Останні 8 тижнів</strong></div><span class="achievement-count">'+heatmap.count+' трен.</span></div>'+heatmap.html+'</div>'
     +'<div class="achievement-section-head"><h2>Особисті рекорди</h2><span>'+records.length+'</span></div>'
     +(records.length?'<div class="achievement-record-list">'+records.map((x,i)=>'<div class="achievement-record-row"><span class="record-rank">'+(i+1)+'</span><div><strong>'+esc(x.exercise||'Вправа')+'</strong><small>'+esc(formatProgressDate(x.day))+'</small></div><b>'+fmtProgress(+x.weight||0)+' кг</b></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Рекордів ще немає</strong><span>Після тренувань з вагами вони з’являться тут автоматично.</span></div>')
     +'<div class="card achievement-pr-card"><div class="achievement-section-head inside"><h2>Нові рекорди</h2><span>за місяцями</span></div>'
