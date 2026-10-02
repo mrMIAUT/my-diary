@@ -6821,3 +6821,92 @@ body.eplan-redesign.client-ui .trainer-calendar-review textarea{
     gap:2px;
   }
 }
+
+
+/* v109 — lighter completed summary + polished diary header */
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete .workout-live-body{
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .workout-completed-summary{
+  background:#fff!important;
+  border-color:#dce9e1!important;
+}
+body.eplan-redesign.client-ui .workout-completed-set{
+  background:#f7faf8!important;
+}
+body.eplan-redesign.client-ui .workout-completed-replacement{
+  background:#f7faf8!important;
+}
+
+body.eplan-redesign.client-ui .diary-day-hero{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:18px!important;
+  min-height:112px;
+  border:1px solid #dce5f1!important;
+  background:linear-gradient(145deg,#ffffff 0%,#f7faff 100%)!important;
+  box-shadow:0 8px 24px rgba(31,64,104,.045)!important;
+}
+body.eplan-redesign.client-ui .diary-day-icon{
+  width:50px;
+  height:50px;
+  flex:0 0 50px;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  background:#eef5ff;
+  color:#1677ff;
+}
+body.eplan-redesign.client-ui .diary-day-icon svg{
+  width:24px;
+  height:24px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+body.eplan-redesign.client-ui .diary-day-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+body.eplan-redesign.client-ui .diary-day-kicker{
+  margin-bottom:3px;
+  color:#7c8ba1;
+  font-size:10.5px;
+  line-height:1.1;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+body.eplan-redesign.client-ui .diary-day-copy h1{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:24px!important;
+  line-height:1.12!important;
+  letter-spacing:-.025em!important;
+}
+body.eplan-redesign.client-ui .diary-day-weekday{
+  margin-top:5px;
+  color:#63748c;
+  font-size:11.5px;
+  line-height:1.2;
+  font-weight:750;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .diary-day-hero{
+    min-height:102px;
+    padding:15px!important;
+  }
+  body.eplan-redesign.client-ui .diary-day-icon{
+    width:46px;
+    height:46px;
+    flex-basis:46px;
+    border-radius:14px;
+  }
+  body.eplan-redesign.client-ui .diary-day-copy h1{
+    font-size:22px!important;
+  }
+}
