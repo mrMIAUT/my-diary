@@ -106,7 +106,12 @@ async function syncRestTimerWorker(end){
 }
 
 function renderFloatingRestTimer(){
- let s=restTimerRemaining();if(!s){document.querySelector('#floatingRestTimer')?.remove();return}
+ let s=restTimerRemaining();
+ if(document.body.classList.contains('eplan-redesign')&&document.body.classList.contains('client-ui')){
+   document.querySelector('#floatingRestTimer')?.remove();
+   return;
+ }
+ if(!s){document.querySelector('#floatingRestTimer')?.remove();return}
  let el=$('#floatingRestTimer');if(!el){document.body.insertAdjacentHTML('beforeend',`<button id="floatingRestTimer" class="floating-rest-timer" onclick="window.scrollTo({top:0,behavior:'smooth'})">⏱ <span id="floatingRestTimerValue">${formatRestTimer(s)}</span></button>`)}
  else $('#floatingRestTimerValue').textContent=formatRestTimer(s);
 }
