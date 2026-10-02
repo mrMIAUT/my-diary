@@ -7400,3 +7400,31 @@ body.eplan-redesign.client-ui .achievement-pr-more span{
     white-space:normal!important;
   }
 }
+
+
+/* v113 — warm gold accent for new PRs */
+body.eplan-redesign.client-ui .achievement-pr-summary{
+  border-color:#ecd8ad!important;
+  background:#fff7e8!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary strong{
+  color:#c7821d!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary small{
+  color:#8b6a2d!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-icon{
+  background:#fff6e7!important;
+  color:#c7821d!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-main b{
+  color:#c7821d!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta{
+  background:#fff4df!important;
+  color:#b87218!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta.first{
+  background:#f0f3f7!important;
+  color:#7c899d!important;
+}
