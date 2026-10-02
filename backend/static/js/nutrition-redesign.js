@@ -1,6 +1,7 @@
 // Redesign V1 — client Nutrition tab.
 
 window.clientNutritionPeriod = window.clientNutritionPeriod || 'today';
+window.clientNutritionHistoryExpanded = window.clientNutritionHistoryExpanded || false;
 
 function nutritionPct(v,target){
   if(!target)return 0;
@@ -23,6 +24,7 @@ function nutritionPeriodTabs(){
 
 async function switchClientNutritionPeriod(key){
   window.clientNutritionPeriod=key;
+  window.clientNutritionHistoryExpanded=false;
   if(session?.role==='client'&&session.client_id)await showClientNutrition(session.client_id);
 }
 
@@ -35,6 +37,7 @@ function nutritionRangeItems(d,daysBack){
 function nutritionHistoryHTML(d,daysBack,label){
   let xs=nutritionRangeItems(d,daysBack),c=d.client||{};
   let avg=(key)=>xs.length?Math.round(xs.reduce((s,x)=>s+(+x[key]||0),0)/xs.length):0;
+  let isMonth=daysBack>7,limit=isMonth&&!window.clientNutritionHistoryExpanded?7:xs.length,visible=xs.slice(0,limit);
   return '<div class="redesign-nutrition-history">'
     +'<div class="redesign-nutrition-summary-grid">'
       +'<div><span>Середні калорії</span><strong>'+avg('kcal')+'</strong><small>ккал / день</small></div>'
@@ -47,8 +50,14 @@ function nutritionHistoryHTML(d,daysBack,label){
         +'<span><b>В</b><i><em style="width:'+nutritionPct(avg('carbs'),c.carbs)+'%"></em></i></span>'
       +'</div>'
     +'</div>'
-    +(xs.length?'<div class="redesign-nutrition-day-list">'+xs.map(x=>'<div class="redesign-nutrition-day-row"><div><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+x.kcal+' ккал</small></div><span>Б '+x.protein+' · Ж '+x.fat+' · В '+x.carbs+'</span></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Ще немає даних</strong><span>Коли ти почнеш заповнювати харчування, статистика з’явиться тут.</span></div>')
+    +(xs.length?'<div class="redesign-nutrition-day-list">'+visible.map(x=>'<div class="redesign-nutrition-day-row"><div><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+x.kcal+' ккал</small></div><span>Б '+x.protein+' · Ж '+x.fat+' · В '+x.carbs+'</span></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Ще немає даних</strong><span>Коли ти почнеш заповнювати харчування, статистика з’явиться тут.</span></div>')
+    +(isMonth&&xs.length>7?'<button class="nutrition-history-more" onclick="toggleNutritionHistory()">'+(window.clientNutritionHistoryExpanded?'Згорнути':'Переглянути всі')+' <span>›</span></button>':'')
   +'</div>';
+}
+
+function toggleNutritionHistory(){
+  window.clientNutritionHistoryExpanded=!window.clientNutritionHistoryExpanded;
+  if(session?.role==='client'&&session.client_id)showClientNutrition(session.client_id);
 }
 
 function redesignNutritionTodayHTML(d,c,cid){
@@ -81,6 +90,13 @@ function openRedesignNutritionEntry(cid,nid=null){
 }
 
 async function saveRedesignNutritionEntry(cid,nid,btn){
+  let kcal=+document.getElementById('dkcal')?.value||0,
+      protein=+document.getElementById('dprotein')?.value||0,
+      fat=+document.getElementById('dfat')?.value||0,
+      carbs=+document.getElementById('dcarbs')?.value||0;
+  if([kcal,protein,fat,carbs].some(v=>v<0))return alert('Значення не можуть бути від’ємними.');
+  if(kcal>10000)return alert('Перевір калорії: значення понад 10 000 ккал виглядає помилковим.');
+  if(protein>1000||fat>1000||carbs>1000)return alert('Перевір БЖВ: значення понад 1000 г виглядає помилковим.');
   await addDailyNutrition(cid,nid,btn);
   document.getElementById('redesignNutritionModal')?.remove();
   await showClientNutrition(cid);
