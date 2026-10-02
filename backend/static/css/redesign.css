@@ -7889,3 +7889,45 @@ body.eplan-redesign.client-ui .calendar-nutrition-empty-copy small{
     width:100%!important;
   }
 }
+
+
+/* v122 — calendar workout status with duration below */
+body.eplan-redesign.client-ui .calendar-workout-session-top{
+  align-items:flex-start!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-state{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+  text-align:right;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-duration-inline{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  color:#7b899c;
+  font-size:10.5px;
+  line-height:1.15;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-duration-inline svg{
+  width:13px;
+  height:13px;
+  fill:none;
+  stroke:#7b899c;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .calendar-workout-session-top{
+    gap:10px!important;
+  }
+  body.eplan-redesign.client-ui .calendar-workout-session-top>strong{
+    font-size:17px!important;
+  }
+}
