@@ -59,7 +59,7 @@ function completedExerciseHTML(x,d,cid){
 function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
  let d=window.currentClientData||{},done=todaySets(d,pid),body=$('#exerciseBody'+pid);if(!body)return;
  let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;
- for(let n=1;n<=count;n++){let s=done.find(z=>z.set_number===n)||{};h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${pid}_${n}" type="number" step="0.5" value="${s.weight??''}" placeholder="кг"><input id="r${pid}_${n}" type="number" value="${s.reps??''}" placeholder="${esc(reps)}"><input id="i${pid}_${n}" type="number" value="${s.rir??targetRir}" min="0" max="10"></div>`}
+ for(let n=1;n<=count;n++){let s=done.find(z=>z.set_number===n)||{};h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${pid}_${n}" type="number" step="0.5" value="${s.weight??''}" placeholder="кг"><input id="r${pid}_${n}" type="number" value="${s.reps??''}" placeholder="${esc(reps)}"><input id="i${pid}_${n}" type="number" value="${s.rir??''}" placeholder="${esc(String(targetRir??''))}" min="0" max="10"></div>`}
  body.innerHTML=h+`<br><button data-exercise="${esc(exercise)}" onclick="saveSets(${cid},${pid},this.dataset.exercise,${count})">Зберегти зміни</button>`;
  body.classList.remove('hidden');
 }
@@ -109,7 +109,7 @@ function clearWorkoutDraftsForSession(sid){if(!sid)return;try{let scope=offlineL
 
 function setRows(x,d){
  let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div><div></div></div>`,rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
- for(let n=1;n<=x.sets;n++){let q=draft[n]||{},wv=q.weight??'',rv=q.reps??'',iv=q.rir??rp[n-1];h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" value="${esc(String(wv))}" placeholder="кг" oninput="saveWorkoutDraft(${sid},${x.id},${n},'weight',this.value)"><input id="r${x.id}_${n}" type="number" value="${esc(String(rv))}" placeholder="${esc(x.reps)}" oninput="saveWorkoutDraft(${sid},${x.id},${n},'reps',this.value)"><input id="i${x.id}_${n}" type="number" value="${esc(String(iv))}" min="0" max="10" oninput="saveWorkoutDraft(${sid},${x.id},${n},'rir',this.value)"><button type="button" class="workout-set-check" onclick="completeWorkoutSetAndStartTimer(${x.id},${n},this)" aria-label="Завершити підхід ${n}">✓</button></div>`}
+ for(let n=1;n<=x.sets;n++){let q=draft[n]||{},wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" value="${esc(String(wv))}" placeholder="кг" oninput="saveWorkoutDraft(${sid},${x.id},${n},'weight',this.value)"><input id="r${x.id}_${n}" type="number" value="${esc(String(rv))}" placeholder="${esc(x.reps)}" oninput="saveWorkoutDraft(${sid},${x.id},${n},'reps',this.value)"><input id="i${x.id}_${n}" type="number" value="${esc(String(iv))}" placeholder="${esc(String(rirHint))}" min="0" max="10" oninput="saveWorkoutDraft(${sid},${x.id},${n},'rir',this.value)"><button type="button" class="workout-set-check" onclick="completeWorkoutSetAndStartTimer(${x.id},${n},this)" aria-label="Завершити підхід ${n}">✓</button></div>`}
  return previousSets(d,x.id)+h
 }
 
@@ -370,9 +370,9 @@ async function saveSets(cid,pid,exercise,count){
  let sets=[];
  for(let n=1;n<=count;n++){
   let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
-  if(!w.value&&!r.value)continue;
-  if(!w.value||!r.value)return alert(`Заповни вагу та повтори у підході ${n}`);
-  sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value||0})
+  if(!w.value&&!r.value&&!i.value)continue;
+  if(!w.value||!r.value||!i.value)return alert(`Заповни вагу, повтори та RIR у підході ${n}`);
+  sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value})
  }
  if(!sets.length)return alert('Заповни хоча б один підхід');
  await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
