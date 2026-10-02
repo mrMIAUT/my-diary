@@ -6910,3 +6910,67 @@ body.eplan-redesign.client-ui .diary-day-weekday{
     font-size:22px!important;
   }
 }
+
+
+/* v110 — QA: completed exercise bounds + manual rest timer control */
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete{
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-exercise-inner.is-exercise-complete{
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete>.workout-live-toggle,
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-exercise.is-exercise-complete>.workout-live-toggle{
+  background:#f4fbf6!important;
+}
+
+body.eplan-redesign.client-ui .redesign-active-workout-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+}
+body.eplan-redesign.client-ui .redesign-rest-timer-control{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+body.eplan-redesign.client-ui .redesign-rest-timer-play{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #d9e4f1!important;
+  border-radius:12px!important;
+  background:#f5f8fc!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .redesign-rest-timer-play.running{
+  border-color:#b9d5ff!important;
+  background:#edf5ff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .redesign-rest-timer-play:active{
+  transform:scale(.96);
+}
+body.eplan-redesign.client-ui .redesign-rest-timer-icon.paused{
+  border-color:#d9e4f1;
+  background:#f5f8fc;
+  color:#64748b;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .redesign-active-workout-head{gap:8px!important}
+  body.eplan-redesign.client-ui .redesign-rest-timer-control{gap:5px}
+  body.eplan-redesign.client-ui .redesign-rest-timer-play{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+  }
+}
