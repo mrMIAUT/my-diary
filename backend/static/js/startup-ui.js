@@ -10,8 +10,13 @@
       setTimeout(()=>splash.remove(),180);
     },wait);
   };
-  if(document.readyState==='complete') hide();
-  else window.addEventListener('load',hide,{once:true});
+  const pageLoaded=document.readyState==='complete'
+    ? Promise.resolve()
+    : new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+  const appReady=(typeof authReady!=='undefined'&&authReady&&typeof authReady.then==='function')
+    ? Promise.resolve(authReady).catch(()=>{})
+    : Promise.resolve();
+  Promise.all([pageLoaded,appReady]).then(hide);
 })();
 
 document.addEventListener('DOMContentLoaded',()=>setTimeout(syncAllPasswordEyes,0));
