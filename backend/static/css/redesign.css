@@ -8369,3 +8369,26 @@ body.eplan-redesign.client-ui .calendar-workout-session-state{
   align-items:center!important;
   text-align:center!important;
 }
+
+
+/* v129 — cleaner completed sets + centered weight input */
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete{
+  background:#f2fbf5!important;
+  box-shadow:none!important;
+  outline:none!important;
+  border-top-color:transparent!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-set-row input{
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .lyfta-input-wrap input{
+  padding-left:28px!important;
+  padding-right:28px!important;
+  text-align:center!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .lyfta-input-wrap input{
+    padding-left:24px!important;
+    padding-right:24px!important;
+  }
+}
