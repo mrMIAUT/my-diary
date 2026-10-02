@@ -127,6 +127,10 @@ async function startWorkout(cid,day,btn=null){
    if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
    {let k=offlineLocalScopeKey();if(k)localStorage.setItem(`eplanActiveWorkoutV2_${k}_${cid}`,JSON.stringify(s));}
    previewWorkoutDay=null;
+   // The start endpoint creates/reuses the active session on the server.
+   // Refresh client data before rendering, otherwise showClientTraining()
+   // can reuse the pre-start cache and keep showing the program screen.
+   window.currentClientData=await loadClientData(cid);
    await showClientTraining(cid);
    requestAnimationFrame(()=>{
      let live=document.querySelector('.training-live');
