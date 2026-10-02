@@ -6041,3 +6041,25 @@ body.eplan-redesign.client-ui .redesign-training-alt-chip>.redesign-training-alt
   color:#d66a20!important;
   box-shadow:none!important;
 }
+
+
+/* v95 — primary exercise technique inline with title */
+body.eplan-redesign.client-ui .redesign-training-main-title-row{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:0;
+}
+body.eplan-redesign.client-ui .redesign-training-main-title-row>strong{
+  min-width:0;
+}
+body.eplan-redesign.client-ui .redesign-training-main-title-row>.redesign-training-tech-link{
+  flex:0 0 auto;
+  margin-left:8px!important;
+  padding-left:8px!important;
+  border-left:1px solid #d3deeb!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  border-radius:0!important;
+}
