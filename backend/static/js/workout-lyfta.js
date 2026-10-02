@@ -51,10 +51,22 @@ function lyftaUpdatePR(pid,n){
   if(badge)badge.classList.toggle('show',best>0&&w>best);
 }
 
+function lyftaShouldStartRestAfterSet(x,d){
+  if(!x?.superset_group)return true;
+  let peers=(d?.program||[])
+    .filter(v=>v.day_name===x.day_name&&v.superset_group===x.superset_group)
+    .slice()
+    .sort((a,b)=>(+a.superset_order||0)-(+b.superset_order||0)||(+a.id||0)-(+b.id||0));
+  if(peers.length<2)return true;
+  return +peers[peers.length-1].id===+x.id;
+}
+
 async function lyftaCompleteSet(pid,n,restSeconds,btn){
   let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
   if(!w?.value||!r?.value||!i?.value){alert('Заповни вагу, повтори та RIR у цьому підході.');return}
-  btn?.closest('.lyfta-set-row')?.classList.add('is-complete');
+  let row=btn?.closest('.lyfta-set-row'),wrap=btn?.closest('.lyfta-set-wrap');
+  row?.classList.add('is-complete');
+  wrap?.classList.add('is-complete');
   if(btn){btn.textContent='✓';btn.classList.add('done')}
   if(restSeconds>0)await startRestTimer(restSeconds);
 }
@@ -86,6 +98,7 @@ function showExerciseProgressHistory(pid){
 window.setRows = function(x,d){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
   let prev=lyftaPreviousDaySets(d,x.id),rest=lyftaRestSeconds(x);
+  let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
   let hasPrev=prev.length>0;
   let h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span></div>';
   for(let n=1;n<=x.sets;n++){
@@ -97,7 +110,7 @@ window.setRows = function(x,d){
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
         +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
-        +'<button class="lyfta-set-done" onclick="lyftaCompleteSet('+x.id+','+n+','+rest+',this)">✓</button>'
+        +'<button class="lyfta-set-done" onclick="lyftaCompleteSet('+x.id+','+n+','+restAfterSet+',this)">✓</button>'
       +'</div>'
     +'</div>';
   }
