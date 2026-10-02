@@ -62,6 +62,7 @@ function lyftaShouldStartRestAfterSet(x,d){
 }
 
 async function lyftaCompleteSet(pid,n,restSeconds,btn){
+  if(btn?.classList.contains('done'))return;
   let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
   if(!w?.value||!r?.value||!i?.value){alert('Заповни вагу, повтори та RIR у цьому підході.');return}
   let row=btn?.closest('.lyfta-set-row'),wrap=btn?.closest('.lyfta-set-wrap');
