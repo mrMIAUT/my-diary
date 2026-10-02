@@ -207,9 +207,10 @@ function shiftMeasurementHistoryMonth(step){
 }
 
 function selectMeasurementHistoryDay(day){
+ let picked=String(day||'');
  window.measurementHistoryOpen=true;
- window.measurementHistorySelectedDay=String(day||'');
- window.measurementHistoryMonth=String(day||'').slice(0,7)||window.measurementHistoryMonth;
+ window.measurementHistoryMonth=picked.slice(0,7)||window.measurementHistoryMonth;
+ window.measurementHistorySelectedDay=window.measurementHistorySelectedDay===picked?'':picked;
  renderMeasurementHistoryCalendar();
 }
 
