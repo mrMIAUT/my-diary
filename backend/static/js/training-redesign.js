@@ -16,9 +16,11 @@ function redesignTrainingExerciseRow(x,num,inSuperset=false){
   let rest=restLabel(x),rir=rirPlan(x).join(' / '),alts=exerciseAlternatives(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url);
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
     +'<span>'+num+'</span>'
-    +'<div class="redesign-training-exercise-copy"><strong>'+esc(x.exercise)+'</strong>'
+    +'<div class="redesign-training-exercise-copy">'
+      +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong>'
+        +(mainTech?techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link'):'')
+      +'</div>'
       +'<small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small>'
-      +(mainTech?'<div class="redesign-training-technique">'+techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link')+'</div>':'')
       +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){
         let tech=exerciseTechniqueUrl(v);
         return '<span class="redesign-training-alt-chip"><i>'+esc(v)+'</i>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'redesign-training-alt-tech'):'')+'</span>';
