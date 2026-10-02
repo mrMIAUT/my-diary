@@ -5978,3 +5978,29 @@ body.eplan-redesign.client-ui .redesign-training-alt-tech{
   padding:4px 9px!important;
   border-left:0!important;
 }
+
+
+/* v93 — technique links as clean orange text */
+body.eplan-redesign.client-ui .redesign-training-tech-link,
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  box-shadow:none!important;
+  text-decoration:none!important;
+  font-size:9.5px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .redesign-training-technique{
+  margin-top:5px!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip{
+  gap:7px!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  margin-left:1px!important;
+}
