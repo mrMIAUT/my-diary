@@ -5907,3 +5907,74 @@ body.eplan-redesign.client-ui .redesign-training-alt-tech{
   padding-left:6px;
   border-left:1px solid #d3deeb;
 }
+
+
+/* v92 — polished technique links, soft orange without borders */
+body.eplan-redesign.client-ui .redesign-training-technique{
+  display:flex;
+  align-items:center;
+  margin-top:6px;
+}
+body.eplan-redesign.client-ui .redesign-training-tech-link,
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:24px!important;
+  padding:4px 9px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:#fff1e6!important;
+  color:#d66a20!important;
+  text-decoration:none!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin-top:7px!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alternatives>em{
+  flex:0 0 100%;
+  margin-bottom:1px;
+  color:#7b899e!important;
+  font-size:9.5px!important;
+  font-style:normal!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-height:24px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip>i{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:24px!important;
+  padding:4px 9px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:#eef3f8!important;
+  color:#43546d!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-tech{
+  margin:0!important;
+  padding:4px 9px!important;
+  border-left:0!important;
+}
