@@ -101,6 +101,14 @@ function redesignTrainingProgramHTML(d,cid,groups){
   +'</div>';
 }
 
+function toggleClientLibraryGroup(id,button){
+  let body=document.getElementById(id);if(!body)return;
+  let open=!body.classList.contains('hidden');
+  body.classList.toggle('hidden',open);
+  button?.classList.toggle('open',!open);
+  button?.setAttribute('aria-expanded',String(!open));
+}
+
 function redesignClientExerciseLibraryHTML(){
   let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]};
   if(!(L.exercises||[]).length)return '<div class="redesign-empty-panel"><strong>Бібліотека поки порожня</strong><span>Вправи з’являться тут після додавання тренером.</span></div>';
@@ -108,13 +116,20 @@ function redesignClientExerciseLibraryHTML(){
     +(L.groups||[]).map(function(g){
       let xs=(L.exercises||[]).filter(function(x){return +x.group_id===+g.id});
       if(!xs.length)return '';
-      return '<section class="redesign-library-group"><div class="redesign-library-group-head"><strong>'+esc(g.name)+'</strong><span>'+xs.length+'</span></div>'
-        +xs.map(function(x){
-          let primary=(x.primary_muscle_ids||[]).map(libraryMuscleName).filter(Boolean).slice(0,2);
-          return '<div class="redesign-library-row"><div><strong>'+esc(x.name)+'</strong><small>'+esc(primary.join(' · ')||'Вправа')+'</small></div>'
-            +(x.technique_url?techniqueLinkHTML(x.technique_url,'Відео',false,'redesign-library-video'):'')
-          +'</div>';
-        }).join('')+'</section>';
+      let bodyId='clientLibGroup'+g.id;
+      return '<section class="redesign-library-group">'
+        +'<button class="redesign-library-group-head" type="button" aria-expanded="false" aria-controls="'+bodyId+'" onclick="toggleClientLibraryGroup(\''+bodyId+'\',this)">'
+          +'<strong>'+esc(g.name)+'</strong><span class="redesign-library-group-meta"><b>'+xs.length+'</b><i>⌄</i></span>'
+        +'</button>'
+        +'<div id="'+bodyId+'" class="redesign-library-group-body hidden">'
+          +xs.map(function(x){
+            let primary=(x.primary_muscle_ids||[]).map(libraryMuscleName).filter(Boolean).slice(0,2);
+            return '<div class="redesign-library-row"><div><strong>'+esc(x.name)+'</strong><small>'+esc(primary.join(' · ')||'Вправа')+'</small></div>'
+              +(x.technique_url?techniqueLinkHTML(x.technique_url,'Відео',false,'redesign-library-video'):'')
+            +'</div>';
+          }).join('')
+        +'</div>'
+      +'</section>';
     }).join('')
   +'</div>';
 }
