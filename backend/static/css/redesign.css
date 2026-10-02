@@ -7464,3 +7464,31 @@ body.eplan-redesign.client-ui .calendar-workout-replacement{
   line-height:1.2;
   font-weight:750;
 }
+
+
+/* v119 — compact expandable nutrition history */
+body.eplan-redesign.client-ui .nutrition-history-more{
+  width:100%!important;
+  min-height:44px!important;
+  margin-top:10px!important;
+  padding:0 14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  border:1px solid #dce5ef!important;
+  border-radius:13px!important;
+  background:#f3f6fa!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .nutrition-history-more span{
+  color:#748299!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .nutrition-history-more:active{
+  transform:scale(.995);
+}
