@@ -6004,3 +6004,40 @@ body.eplan-redesign.client-ui .redesign-training-alt-chip{
 body.eplan-redesign.client-ui .redesign-training-alt-tech{
   margin-left:1px!important;
 }
+
+
+/* v94 — keep each alternative and its technique link in one neutral chip */
+body.eplan-redesign.client-ui .redesign-training-alt-chip{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:0!important;
+  min-height:26px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:#eef3f8!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip>i{
+  min-height:26px!important;
+  padding:5px 9px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#43546d!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip>.redesign-training-alt-tech{
+  align-self:stretch!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:26px!important;
+  margin:0!important;
+  padding:5px 9px!important;
+  border:0!important;
+  border-left:1px solid #d3deeb!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  box-shadow:none!important;
+}
