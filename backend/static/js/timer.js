@@ -99,6 +99,11 @@ function updateRestTimerUI(s){
  let d=$('#restTimerDisplay');if(d)d.textContent=shown?formatRestTimer(shown):'Таймер';
  let a=$('#restTimerActions');if(a)a.classList.toggle('hidden',!s);
  let f=$('#floatingRestTimerValue');if(f)f.textContent=formatRestTimer(s);
+ let timerButton=document.querySelector('.redesign-rest-timer-icon');
+ if(timerButton){
+   timerButton.classList.toggle('running',s>0);
+   timerButton.classList.toggle('paused',!s&&paused>0);
+ }
  let p=$('#restTimerPlayPause');
  if(p){
    let running=s>0;
