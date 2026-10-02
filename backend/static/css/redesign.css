@@ -7428,3 +7428,17 @@ body.eplan-redesign.client-ui .achievement-pr-delta.first{
   background:#f0f3f7!important;
   color:#7c899d!important;
 }
+
+
+/* v114 — blue activity heatmap, no icons */
+body.eplan-redesign.client-ui .achievement-heatmap i.active{
+  background:#1677ff!important;
+  border-color:#1677ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .achievement-heatmap i.active .ui-icon{
+  display:none!important;
+}
+body.eplan-redesign.client-ui .achievement-heatmap i.today{
+  box-shadow:0 0 0 2px #fff,0 0 0 3px #9fc7ff!important;
+}
