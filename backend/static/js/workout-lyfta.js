@@ -2,22 +2,28 @@
 // Reuses existing workout data/API; adds previous-result context, quick set completion,
 // rest auto-start and exercise history/PR visualization.
 
-function lyftaHistoryRows(d,pid){
+function lyftaHistoryExerciseName(d,pid){
+  let x=(d?.program||[]).find(v=>+v.id===+pid);
+  return x?workoutExerciseName(x):'';
+}
+
+function lyftaHistoryRows(d,pid,exerciseName=''){
+  let name=String(exerciseName||lyftaHistoryExerciseName(d,pid)||'').trim();
   return (d?.result_sets||[])
-    .filter(s=>+s.program_id===+pid && s.day)
+    .filter(s=>+s.program_id===+pid && s.day && (!name||String(s.exercise||'').trim()===name))
     .slice()
     .sort((a,b)=>a.day.localeCompare(b.day)||(+a.set_number||0)-(+b.set_number||0));
 }
 
-function lyftaPreviousDaySets(d,pid){
-  let rows=lyftaHistoryRows(d,pid).filter(s=>s.day<isoToday());
+function lyftaPreviousDaySets(d,pid,exerciseName=''){
+  let rows=lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<isoToday());
   if(!rows.length)return [];
   let day=rows[rows.length-1].day;
   return rows.filter(s=>s.day===day).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
 }
 
-function lyftaAllTimeBestWeight(d,pid){
-  return Math.max(0,...lyftaHistoryRows(d,pid).filter(s=>s.day<isoToday()).map(s=>+s.weight||0));
+function lyftaAllTimeBestWeight(d,pid,exerciseName=''){
+  return Math.max(0,...lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<isoToday()).map(s=>+s.weight||0));
 }
 
 function lyftaRestSeconds(x){
@@ -74,8 +80,8 @@ async function lyftaCompleteSet(pid,n,restSeconds,btn){
   if(restSeconds>0)await startRestTimer(restSeconds);
 }
 
-function lyftaExerciseChartData(d,pid){
-  let rows=lyftaHistoryRows(d,pid),by={};
+function lyftaExerciseChartData(d,pid,exerciseName=''){
+  let rows=lyftaHistoryRows(d,pid,exerciseName),by={};
   rows.forEach(s=>{
     by[s.day]=Math.max(by[s.day]||0,+s.weight||0);
   });
@@ -83,7 +89,7 @@ function lyftaExerciseChartData(d,pid){
 }
 
 function showExerciseProgressHistory(pid){
-  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),data=lyftaExerciseChartData(d,pid);
+  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),exerciseName=x?workoutExerciseName(x):'',data=lyftaExerciseChartData(d,pid,exerciseName);
   let max=Math.max(1,...data.map(v=>v[1])),min=Math.min(...data.map(v=>v[1]),max),range=Math.max(1,max-min);
   let points=data.map((v,i)=>{
     let px=7+i*(86/Math.max(1,data.length-1));
@@ -95,12 +101,12 @@ function showExerciseProgressHistory(pid){
     :'<div class="redesign-progress-empty-chart">Потрібно щонайменше два тренування цієї вправи для графіка.</div>';
   let rows=data.slice().reverse().map(v=>'<div class="lyfta-history-item"><span>'+esc(formatProgressDate(v[0]))+'</span><strong>'+fmtProgress(v[1])+' кг</strong></div>').join('');
   document.getElementById('exerciseHistoryModal')?.remove();
-  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(exerciseName||x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
 }
 
 window.setRows = function(x,d){
-  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
-  let prev=lyftaPreviousDaySets(d,x.id),rest=lyftaRestSeconds(x);
+  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
+  let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
   let hasPrev=prev.length>0;
   let h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span></div>';
