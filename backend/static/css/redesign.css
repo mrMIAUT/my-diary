@@ -6421,3 +6421,19 @@ body.eplan-redesign.client-ui .workout-live-superset-divider{
     margin-right:20px!important;
   }
 }
+
+
+/* v102 — active workout CTA, option 5: green with light outline */
+body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-hero-cta.active{
+  background:linear-gradient(135deg,#12b96a 0%,#17c978 100%)!important;
+  border:1px solid rgba(218,255,235,.92)!important;
+  color:#fff!important;
+  box-shadow:
+    0 8px 18px rgba(18,185,106,.20),
+    0 0 0 1px rgba(255,255,255,.08) inset!important;
+}
+body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-hero-cta.active:active{
+  background:linear-gradient(135deg,#0fa75f 0%,#13b96b 100%)!important;
+  border-color:rgba(218,255,235,.78)!important;
+  box-shadow:0 5px 12px rgba(18,185,106,.16)!important;
+}
