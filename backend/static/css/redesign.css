@@ -5591,3 +5591,147 @@ body.eplan-redesign.client-ui #profileModal #pfSex:focus{
     padding:22px 18px 14px;
   }
 }
+
+
+/* v87 — measurement history calendar */
+body.eplan-redesign.client-ui .measurement-history-calendar-card{
+  margin:0!important;
+  padding:18px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-title>div{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-title strong{
+  color:#0a1738;
+  font-size:20px;
+  line-height:1.15;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-title span{
+  color:#7a899f;
+  font-size:12px;
+  font-weight:750;
+}
+body.eplan-redesign.client-ui .measurement-calendar-head{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 42px;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+body.eplan-redesign.client-ui .measurement-calendar-head>strong{
+  color:#102044;
+  text-align:center;
+  font-size:15px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .measurement-calendar-head>button{
+  display:grid!important;
+  place-items:center!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  padding:0!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:12px!important;
+  background:#f2f6fb!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:25px!important;
+  font-weight:500!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-weekdays,
+body.eplan-redesign.client-ui .measurement-calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:6px;
+}
+body.eplan-redesign.client-ui .measurement-calendar-weekdays{
+  margin-bottom:6px;
+}
+body.eplan-redesign.client-ui .measurement-calendar-weekdays span{
+  color:#8a98ab;
+  text-align:center;
+  font-size:10px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day{
+  position:relative;
+  aspect-ratio:1/1;
+  min-width:0!important;
+  width:100%!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid transparent!important;
+  border-radius:11px!important;
+  background:#f7f9fc!important;
+  color:#7d8ba0!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day.empty{
+  visibility:hidden;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day:disabled{
+  opacity:.72!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day.has-data{
+  border-color:#bcd5fa!important;
+  background:#eef5ff!important;
+  color:#0d63d8!important;
+  opacity:1!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day.has-data::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:5px;
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:#1677ff;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day.active{
+  border-color:#1677ff!important;
+  background:#1677ff!important;
+  color:#fff!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-day.active::after{
+  background:#fff;
+}
+body.eplan-redesign.client-ui .measurement-calendar-selected{
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .measurement-calendar-selected .measurement-history-card{
+  margin:0!important;
+}
+body.eplan-redesign.client-ui .measurement-calendar-empty{
+  margin-top:14px;
+  padding:14px;
+  border-radius:13px;
+  background:#f7f9fc;
+  color:#7a899f;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+}
