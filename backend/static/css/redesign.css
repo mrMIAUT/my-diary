@@ -8392,3 +8392,92 @@ body.eplan-redesign.client-ui .lyfta-input-wrap input{
     padding-right:24px!important;
   }
 }
+
+
+/* v131 — frozen client redesigned home */
+body.eplan-redesign.client-ui .client-paused-home{
+  display:grid!important;
+  gap:14px!important;
+}
+body.eplan-redesign.client-ui .client-paused-view-card{
+  padding:20px!important;
+  border:1px solid #dfe7f1!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .client-paused-kicker{
+  display:block!important;
+  margin-bottom:6px!important;
+  color:#7b899c!important;
+  font-size:10.5px!important;
+  font-weight:850!important;
+  text-transform:uppercase!important;
+  letter-spacing:.04em!important;
+}
+body.eplan-redesign.client-ui .client-paused-view-card h2{
+  margin:0 0 8px!important;
+  color:#0a1738!important;
+  font-size:22px!important;
+  line-height:1.15!important;
+}
+body.eplan-redesign.client-ui .client-paused-view-card p{
+  margin:0!important;
+  color:#75849a!important;
+  font-size:14px!important;
+  line-height:1.45!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-card{
+  width:100%!important;
+  min-height:78px!important;
+  padding:14px 16px!important;
+  display:grid!important;
+  grid-template-columns:42px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:12px!important;
+  border:1px solid #dfe7f1!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-icon{
+  width:42px!important;
+  height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:12px!important;
+  background:#eef4fb!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-icon .ui-icon{
+  width:21px!important;
+  height:21px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-copy{
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-copy strong{
+  display:block!important;
+  color:#0a1738!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-copy small{
+  display:block!important;
+  margin-top:4px!important;
+  color:#7b899c!important;
+  font-size:10.5px!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.client-ui .client-paused-history-chevron{
+  color:#718097!important;
+  font-size:24px!important;
+  line-height:1!important;
+}
