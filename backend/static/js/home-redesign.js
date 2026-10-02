@@ -90,7 +90,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
 
   let programMeta=days.length ? days.length+' тренувальних '+(days.length===1?'день':days.length<5?'дні':'днів') : 'Програма формується';
   let trainMain=active?'Триває зараз':todayFinished?'Виконано ✓':days.length?'День '+nextIndex+' з '+days.length:'Ще немає плану';
-  let trainSub=active?'Продовжити '+nextDay:todayFinished?nextDay:nextTitle;
+  let trainSub=active?'Продовжити '+nextDay:todayFinished?(todayFinished.day_name||'Тренування'):nextTitle;
   let foodMain=(kcalNow||kcalTarget)?kcalNow.toLocaleString('uk-UA')+(kcalTarget?' / '+kcalTarget.toLocaleString('uk-UA'):'')+' ккал':'БЖВ за сьогодні';
   let foodSub=todayNutrition?'Дані збережено':'Заповнити сьогодні';
 
