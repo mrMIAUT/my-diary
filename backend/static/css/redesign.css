@@ -2075,15 +2075,15 @@ body.eplan-redesign.client-ui .achievement-heatmap i{
   background:#e6edf5;
 }
 body.eplan-redesign.client-ui .achievement-heatmap i.active{
-  background:#eaf3ff;
-  border-color:#c9def8;
+  background:#eef8f1;
+  border-color:#cfe7d6;
   box-shadow:none;
 }
 body.eplan-redesign.client-ui .achievement-heatmap i.active .ui-icon{
   width:17px;
   height:17px;
   fill:none;
-  stroke:#4a78b8;
+  stroke:#4e9a68;
   stroke-width:1.8;
   stroke-linecap:round;
   stroke-linejoin:round;
@@ -2094,7 +2094,7 @@ body.eplan-redesign.client-ui .achievement-heatmap i.future{
   box-shadow:none;
 }
 body.eplan-redesign.client-ui .achievement-heatmap i.today{
-  box-shadow:0 0 0 2px #fff,0 0 0 3px #bfd4ee;
+  box-shadow:0 0 0 2px #fff,0 0 0 3px #bfdcc9;
 }
 body.eplan-redesign.client-ui .achievement-heatmap-scale{
   display:flex;
