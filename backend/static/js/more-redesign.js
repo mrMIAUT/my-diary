@@ -69,28 +69,60 @@ function achievementRecords(d){
   return Object.values(by).sort((a,b)=>(+b.weight||0)-(+a.weight||0)).slice(0,5);
 }
 
-function achievementMonthlyPRs(d){
-  let sets=(d.result_sets||[]).filter(x=>x.day&&(+x.weight||0)>0).slice().sort((a,b)=>a.day.localeCompare(b.day));
-  let best={},months={};
+let achievementPRExpanded=false;
+
+function achievementRecentPRs(d){
+  let sets=(d.result_sets||[])
+    .filter(x=>x.day&&(+x.weight||0)>0)
+    .slice()
+    .sort((a,b)=>String(a.day||'').localeCompare(String(b.day||''))||(+a.id||0)-(+b.id||0));
+
+  // A workout can contain several progressively heavier sets. Count at most
+  // one record event per exercise per day by using that day's heaviest set.
+  let daily={};
   sets.forEach(x=>{
-    let key=String(x.exercise||'Вправа'),w=+x.weight||0;
-    if(w>(best[key]||0)){
-      best[key]=w;
-      let m=x.day.slice(0,7);
-      months[m]=(months[m]||0)+1;
-    }
+    let exercise=String(x.exercise||'Вправа').trim()||'Вправа';
+    let key=x.day+'__'+exercise;
+    let weight=+x.weight||0;
+    if(!daily[key]||weight>(+daily[key].weight||0))daily[key]={exercise,day:x.day,weight};
   });
-  return months;
+
+  let best={},events=[];
+  Object.values(daily)
+    .sort((a,b)=>String(a.day).localeCompare(String(b.day))||a.exercise.localeCompare(b.exercise,'uk'))
+    .forEach(x=>{
+      let previous=best[x.exercise]||0;
+      if(x.weight>previous){
+        events.push({
+          exercise:x.exercise,
+          day:x.day,
+          previous,
+          current:x.weight,
+          delta:previous?x.weight-previous:0,
+          first:!previous
+        });
+        best[x.exercise]=x.weight;
+      }
+    });
+
+  events.sort((a,b)=>String(b.day).localeCompare(String(a.day))||(+b.current||0)-(+a.current||0));
+
+  let cutoff=new Date();
+  cutoff.setHours(12,0,0,0);
+  cutoff.setDate(cutoff.getDate()-29);
+  let cutoffKey=cutoff.toISOString().slice(0,10);
+  let recent=events.filter(x=>x.day>=cutoffKey);
+
+  return {all:events,recent,count30:recent.length};
 }
 
 function redesignAchievementsHTML(d){
   let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished');
   let streak=achievementWeekStreak(sessions);
   let records=achievementRecords(d);
-  let monthly=achievementMonthlyPRs(d);
+  let recentPRs=achievementRecentPRs(d);
   let heatmap=achievementHeatmapData(sessions);
-  let monthKeys=Object.keys(monthly).sort().slice(-6);
-  let maxPR=Math.max(1,...monthKeys.map(m=>monthly[m]||0));
+  let visiblePRs=achievementPRExpanded?recentPRs.all:recentPRs.recent.slice(0,3);
   let milestones=[
     {n:1,label:'Перше тренування',done:sessions.length>=1},
     {n:10,label:'10 тренувань',done:sessions.length>=10},
@@ -108,8 +140,20 @@ function redesignAchievementsHTML(d){
     +'<div class="card achievement-activity-card"><div class="between"><div><span class="achievement-kicker">Активність</span><strong>Останні 8 тижнів</strong></div><span class="achievement-count">'+heatmap.count+' трен.</span></div>'+heatmap.html+'</div>'
     +'<div class="achievement-section-head"><h2>Особисті рекорди</h2><span>'+records.length+'</span></div>'
     +(records.length?'<div class="achievement-record-list">'+records.map((x,i)=>'<div class="achievement-record-row"><span class="record-rank">'+(i+1)+'</span><div><strong>'+esc(x.exercise||'Вправа')+'</strong><small>'+esc(formatProgressDate(x.day))+'</small></div><b>'+fmtProgress(+x.weight||0)+' кг</b></div>').join('')+'</div>':'<div class="redesign-empty-panel"><strong>Рекордів ще немає</strong><span>Після тренувань з вагами вони з’являться тут автоматично.</span></div>')
-    +'<div class="card achievement-pr-card"><div class="achievement-section-head inside"><h2>Нові рекорди</h2><span>за місяцями</span></div>'
-      +(monthKeys.length?'<div class="achievement-pr-chart">'+monthKeys.map(m=>'<div><i style="height:'+Math.max(12,Math.round((monthly[m]/maxPR)*72))+'px"></i><b>'+monthly[m]+'</b><small>'+esc(new Date(m+'-01T12:00:00').toLocaleDateString('uk-UA',{month:'short'}))+'</small></div>').join('')+'</div>':'<div class="redesign-progress-empty-chart">Нові PR з’являться після прогресії робочих ваг.</div>')
+    +'<div class="card achievement-pr-card">'
+      +'<div class="achievement-pr-head"><div><h2>Нові рекорди</h2><span>за останні 30 днів</span></div><div class="achievement-pr-summary"><strong>'+recentPRs.count30+'</strong><small>нових PR</small></div></div>'
+      +(visiblePRs.length?'<div class="achievement-pr-events">'+visiblePRs.map(x=>
+        '<div class="achievement-pr-event">'
+          +'<span class="achievement-pr-icon">↗</span>'
+          +'<div class="achievement-pr-copy"><strong>'+esc(x.exercise)+'</strong><small>'+esc(formatProgressDate(x.day))+'</small></div>'
+          +'<div class="achievement-pr-values">'
+            +(x.first
+              ?'<div class="achievement-pr-main first"><b>'+fmtProgress(x.current)+' кг</b></div><small class="achievement-pr-delta first">Перший результат</small>'
+              :'<div class="achievement-pr-main"><span>'+fmtProgress(x.previous)+' кг</span><b>→ '+fmtProgress(x.current)+' кг</b></div><small class="achievement-pr-delta">+'+fmtProgress(x.delta)+' кг</small>')
+          +'</div>'
+        +'</div>').join('')+'</div>'
+        :'<div class="redesign-empty-panel"><strong>Нових рекордів поки немає</strong><span>Коли робоча вага перевищить твій попередній максимум, рекорд з’явиться тут.</span></div>')
+      +(recentPRs.all.length>3?'<button class="achievement-pr-more" onclick="toggleAchievementPRList()">'+(achievementPRExpanded?'Згорнути':'Переглянути всі')+' <span>›</span></button>':'')
     +'</div>'
     +'<div class="achievement-section-head"><h2>Етапи</h2><span>'+reached+' / '+milestones.length+'</span></div>'
     +'<div class="achievement-milestones">'+milestones.map(x=>'<div class="'+(x.done?'done':'')+'"><span>'+ (x.done?'✓':'○') +'</span><strong>'+esc(x.label)+'</strong></div>').join('')+'</div>'
@@ -136,6 +180,12 @@ window.showClientMore = function(cid){
   +'</div>';
   app.innerHTML=shell(body);
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+window.toggleAchievementPRList = function(){
+  achievementPRExpanded=!achievementPRExpanded;
+  let cid=window.currentClientData?.client?.id||session?.client_id||0;
+  showClientAchievements(cid);
 };
 
 window.showClientAchievements = function(cid){
