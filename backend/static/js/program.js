@@ -12,6 +12,16 @@ function restLabel(x){let t=String(x.rest_text||'').trim();if(t)return t.replace
 
 function exerciseAlternatives(x){try{let a=JSON.parse(x?.alternatives_json||'[]');return Array.isArray(a)?a.filter(Boolean):[]}catch(e){return []}}
 
+function libraryExerciseByName(name){
+ let q=String(name||'').trim().toLowerCase();
+ return (window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===q)||null;
+}
+
+function exerciseTechniqueUrl(name,fallback=''){
+ let lib=libraryExerciseByName(name);
+ return safeTechniqueUrl(lib?.technique_url||fallback||'');
+}
+
 function alternativesInputValue(x){return exerciseAlternatives(x).join(', ')}
 
 function parseAlternatives(v,main=''){let seen=new Set(),m=String(main||'').trim().toLowerCase();return String(v||'').split(',').map(x=>x.trim()).filter(x=>x&&x.toLowerCase()!==m&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase()))}
