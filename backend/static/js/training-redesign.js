@@ -12,6 +12,39 @@ async function switchClientTrainingTab(key){
   if(session?.role==='client'&&session.client_id)await showClientTraining(session.client_id);
 }
 
+function redesignTrainingExerciseRow(x,num,inSuperset=false){
+  let rest=restLabel(x),rir=rirPlan(x).join(' / '),alts=exerciseAlternatives(x);
+  return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
+    +'<span>'+num+'</span>'
+    +'<div class="redesign-training-exercise-copy"><strong>'+esc(x.exercise)+'</strong>'
+      +'<small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small>'
+      +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){return '<i>'+esc(v)+'</i>';}).join('')+'</div>':'')
+    +'</div>'
+    +'<b>RIR '+esc(rir)+'</b>'
+  +'</div>';
+}
+
+function redesignTrainingExerciseList(xs){
+  let used=new Set(),html='';
+  xs.forEach(function(x,i){
+    if(used.has(x.id))return;
+    if(x.superset_group){
+      let pair=xs.filter(function(y){return y.superset_group===x.superset_group;})
+        .slice()
+        .sort(function(a,b){return (+a.superset_order||0)-(+b.superset_order||0)||xs.indexOf(a)-xs.indexOf(b);});
+      pair.forEach(function(y){used.add(y.id);});
+      html+='<div class="redesign-training-superset">'
+        +'<div class="redesign-training-superset-label"><span>Суперсет</span><small>виконати вправи по черзі</small></div>'
+        +pair.map(function(y){return redesignTrainingExerciseRow(y,xs.indexOf(y)+1,true);}).join('')
+      +'</div>';
+    }else{
+      used.add(x.id);
+      html+=redesignTrainingExerciseRow(x,i+1,false);
+    }
+  });
+  return html;
+}
+
 function redesignTrainingDayCard(d,cid,groups,day,index,cycle,todayCompletedDay=''){
   let xs=groups[day]||[],isTodayDone=todayCompletedDay===day,isNext=!isTodayDone&&cycle.next===day,isDone=isTodayDone||cycle.done.includes(day);
   let title=programDayTitle(d,day)||'Силове тренування';
@@ -29,12 +62,7 @@ function redesignTrainingDayCard(d,cid,groups,day,index,cycle,todayCompletedDay=
       +'<span class="redesign-training-chevron">⌄</span>'
     +'</button>'
     +'<div class="redesign-training-day-body hidden" data-training-day="'+esc(day)+'">'
-      +'<div class="redesign-training-exercises">'
-        +xs.map(function(x,i){
-          let rest=restLabel(x),rir=rirPlan(x).join(' / ');
-          return '<div class="redesign-training-exercise"><span>'+(i+1)+'</span><div><strong>'+esc(x.exercise)+'</strong><small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small></div><b>RIR '+esc(rir)+'</b></div>';
-        }).join('')
-      +'</div>'
+      +'<div class="redesign-training-exercises">'+redesignTrainingExerciseList(xs)+'</div>'
       +(isTodayDone
         ?'<div class="redesign-completed-workout-note">✓ Тренування вже виконано сьогодні</div>'
         :'<button class="redesign-start-workout" data-day="'+esc(day)+'" onclick="event.stopPropagation();startWorkout('+cid+',this.dataset.day,this)">'+(isDone?'Почати ще раз':'Почати тренування')+'</button>')
