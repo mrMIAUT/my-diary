@@ -59,9 +59,9 @@ function redesignNutritionTodayHTML(d,c,cid){
     +'<div class="card redesign-calorie-card">'
       +'<div class="between"><div><span class="nutrition-kicker">Калорії на сьогодні</span><strong>'+kcal.toLocaleString('uk-UA')+'<small> / '+(+c.kcal||0).toLocaleString('uk-UA')+' ккал</small></strong></div><span class="nutrition-fire">◉</span></div>'
       +'<div class="redesign-calorie-progress"><i style="width:'+kcalPct+'%"></i></div>'
-      +'<div class="redesign-calorie-meta"><span>'+kcalPct+'%</span><button onclick="showClientBJU('+cid+')">Детальніше ›</button></div>'
+      +'<div class="redesign-calorie-meta"><span>'+kcalPct+'%</span></div>'
     +'</div>'
-    +'<div class="redesign-nutrition-section-head"><h2>Мої БЖВ на сьогодні</h2><button onclick="showClientBJU('+cid+')">Детальніше ›</button></div>'
+    +'<div class="redesign-nutrition-section-head"><h2>Мої БЖВ на сьогодні</h2></div>'
     +'<div class="redesign-macro-grid">'
       +nutritionRing('Білки',protein,c.protein,'г','blue')
       +nutritionRing('Жири',fat,c.fat,'г','orange')
@@ -85,21 +85,6 @@ async function saveRedesignNutritionEntry(cid,nid,btn){
   document.getElementById('redesignNutritionModal')?.remove();
   await showClientNutrition(cid);
 }
-
-window.showClientBJU = function(cid){
-  let d=window.currentClientData||{},c=d.client||{},x=(d.nutrition||[]).filter(v=>v.day===isoToday()).sort((a,b)=>(+b.id||0)-(+a.id||0))[0]||{};
-  currentClientView='nutrition';
-  let body='<div class="client-section-page redesign-bju-page"><div class="redesign-back-title"><button onclick="showClientNutrition('+cid+')">‹</button><h1>Моє БЖВ</h1></div>'
-    +'<div class="card redesign-bju-summary"><span>Загальний підсумок</span><strong>'+((+x.kcal||0).toLocaleString('uk-UA'))+' <small>/ '+(+c.kcal||0).toLocaleString('uk-UA')+' ккал</small></strong><div class="redesign-calorie-progress"><i style="width:'+nutritionPct(x.kcal,c.kcal)+'%"></i></div></div>'
-    +'<div class="redesign-bju-detail-grid">'
-      +nutritionRing('Білки',x.protein||0,c.protein,'г','blue')
-      +nutritionRing('Жири',x.fat||0,c.fat,'г','orange')
-      +nutritionRing('Вуглеводи',x.carbs||0,c.carbs,'г','green')
-    +'</div>'
-  +'</div>';
-  app.innerHTML=shell(body);
-  refreshNotificationBadge(cid,'client','clientNotifyBtn');
-};
 
 window.showClientNutrition = async function(cid){
   let d=window.currentClientData;
