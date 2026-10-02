@@ -53,12 +53,14 @@ function savedActivityHTML(cur,cid){
      <div><span class="activity-saved-kicker">Активність за сьогодні</span><strong>Готово</strong></div>
      <span class="activity-saved-status">Виконано ✓</span>
    </div>
-   <div class="activity-saved-hero">
-     <span class="activity-saved-icon activity-svg-icon">${icon}</span>
-     <div><strong>${esc(heroLabel)}</strong><small>${esc(heroSub)}</small></div>
+   <div id="cardioPanel" class="client-collapsible-body">
+     <div class="activity-saved-hero">
+       <span class="activity-saved-icon activity-svg-icon">${icon}</span>
+       <div><strong>${esc(heroLabel)}</strong><small>${esc(heroSub)}</small></div>
+     </div>
+     ${metrics.length?`<div class="activity-saved-metrics">${metrics.map(([label,value])=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')}</div>`:''}
+     <button class="activity-saved-edit" onclick="event.stopPropagation();editCardio(${cid})">${uiIcon('edit')} Редагувати активність</button>
    </div>
-   ${metrics.length?`<div class="activity-saved-metrics">${metrics.map(([label,value])=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')}</div>`:''}
-   <button class="activity-saved-edit" onclick="event.stopPropagation();editCardio(${cid})">${uiIcon('edit')} Редагувати активність</button>
  </div>`;
 }
 function cardioHTML(d,cid,readonly=false){
