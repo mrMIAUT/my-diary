@@ -19,6 +19,15 @@ function isoToday(){
  }catch(e){let x=new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 }
 
+function diaryDayParts(day){
+ try{
+  let [y,m,d]=String(day||'').split('-').map(Number),dt=new Date(Date.UTC(y,m-1,d,12));
+  let date=new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(dt);
+  let weekday=new Intl.DateTimeFormat('uk-UA',{weekday:'long',timeZone:'UTC'}).format(dt);
+  return {date,weekday:weekday.charAt(0).toUpperCase()+weekday.slice(1)};
+ }catch(e){return {date:String(day||''),weekday:''}}
+}
+
 function sessionDay(s){return String(s?.workout_day||s?.started_at||s?.finished_at||'').slice(0,10)}
 
 function monthKey(day){return day ? day.slice(0,7) : ''}
@@ -121,7 +130,8 @@ function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
  let cardioHTMLDay=cardio.length?(()=>{let x=cardio[0],parts=[];if(x.cardio_type)parts.push(esc(x.cardio_type));if(x.minutes)parts.push(`${x.minutes} хв`);if(x.speed&&x.cardio_type==='Доріжка')parts.push(`Швидкість ${x.speed}`);if(x.incline)parts.push(`${x.cardio_type==='Доріжка'?'Нахил':'Опір'} ${x.incline}${x.cardio_type==='Доріжка'?'%':''}`);if(x.steps)parts.push(`${x.steps} кроків`);return `<div class="exercise">${parts.length?`<div class="cardio-summary">${parts.map(v=>`<div class="cardio-chip">${v}</div>`).join('')}</div>`:'<div class="muted">Активність за цей день не внесено.</div>'}</div>`})():'<div class="exercise muted">Активність за цей день не внесено.</div>';
  let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>measurementRowHTML(x)).join('')}</div>`:'';
 
- let content=`<button class="unified-back-button" onclick="returnFromCalendarDay()" aria-label="Назад до календаря">‹</button><div style="height:16px"></div><div class="card"><div class="muted">Щоденник</div><h1>${esc(day)}</h1></div><div class="card"><h2>Тренування</h2>${sessionHTML}${workoutHTML}</div><div class="card"><h2>Харчування</h2>${nutritionHTML}</div><div class="card"><h2>Активність</h2>${cardioHTMLDay}</div>${measures}`;
+ let diaryDate=diaryDayParts(day);
+ let content=`<button class="unified-back-button" onclick="returnFromCalendarDay()" aria-label="Назад до календаря">‹</button><div style="height:16px"></div><div class="card diary-day-hero"><div class="diary-day-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></div><div class="diary-day-copy"><span class="diary-day-kicker">Щоденник</span><h1>${esc(diaryDate.date)}</h1><span class="diary-day-weekday">${esc(diaryDate.weekday)}</span></div></div><div class="card"><h2>Тренування</h2>${sessionHTML}${workoutHTML}</div><div class="card"><h2>Харчування</h2>${nutritionHTML}</div><div class="card"><h2>Активність</h2>${cardioHTMLDay}</div>${measures}`;
  window.calendarReturnHTML=app.innerHTML;
  app.innerHTML=shell(content);
 }
