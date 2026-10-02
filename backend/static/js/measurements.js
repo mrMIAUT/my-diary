@@ -142,6 +142,69 @@ function measurementHistoryCard(x,prev,cid=null){
  return '<div class="measurement-history-card redesigned-history"><div class="measurement-history-head"><div><span class="measurement-history-caption">Контрольна точка</span><strong>'+formatProgressDate(x.day)+'</strong></div>'+(canEdit?'<div class="measurement-history-actions"><button type="button" class="measurement-edit" aria-label="Редагувати замір" title="Редагувати замір" onclick="openMeasurementEditor('+ownerId+','+(+x.id)+')">✎</button><button type="button" class="measurement-delete" aria-label="Видалити замір" title="Видалити замір" data-day="'+esc(x.day)+'" onclick="deleteMeasurement('+ownerId+','+(+x.id)+',this.dataset.day)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></div>':'')+'</div>'+(basicHtml?'<div class="measurement-history-section"><h4>Основні</h4><div class="measurement-history-grid">'+basicHtml+'</div></div>':'')+(pairedHtml?'<div class="measurement-history-section"><h4>Права / ліва</h4><div class="measurement-history-pair-grid">'+pairedHtml+'</div></div>':'')+'</div>';
 }
 
+function measurementHistoryCalendarState(xs){
+ let rows=(xs||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let latest=rows[rows.length-1]?.day||isoToday();
+ let month=String(window.measurementHistoryMonth||latest.slice(0,7));
+ if(!/^\d{4}-\d{2}$/.test(month))month=latest.slice(0,7);
+ let selected=String(window.measurementHistorySelectedDay||'');
+ if(!rows.some(x=>x.day===selected)||selected.slice(0,7)!==month){
+   let inMonth=rows.filter(x=>x.day.slice(0,7)===month);
+   selected=inMonth[inMonth.length-1]?.day||'';
+ }
+ window.measurementHistoryMonth=month;
+ window.measurementHistorySelectedDay=selected;
+ return {rows,month,selected};
+}
+
+function measurementHistoryCalendarHTML(xs,cid){
+ let {rows,month,selected}=measurementHistoryCalendarState(xs);
+ if(!rows.length)return '';
+ let [year,mon]=month.split('-').map(Number);
+ let first=new Date(year,mon-1,1),daysInMonth=new Date(year,mon,0).getDate();
+ let offset=(first.getDay()+6)%7;
+ let byDay=new Map(rows.map(x=>[x.day,x]));
+ let title=new Intl.DateTimeFormat('uk-UA',{month:'long',year:'numeric'}).format(new Date(year,mon-1,1));
+ title=title.charAt(0).toUpperCase()+title.slice(1);
+ let cells=Array.from({length:offset},()=>'<span class="measurement-calendar-day empty"></span>');
+ for(let day=1;day<=daysInMonth;day++){
+   let iso=month+'-'+String(day).padStart(2,'0'),has=byDay.has(iso),active=selected===iso;
+   cells.push('<button type="button" class="measurement-calendar-day '+(has?'has-data ':'')+(active?'active':'')+'" '+(has?'onclick="selectMeasurementHistoryDay(\''+iso+'\')"':'disabled')+'><span>'+day+'</span></button>');
+ }
+ let picked=rows.find(x=>x.day===selected)||null;
+ let previous=picked?rows[rows.findIndex(x=>x.day===picked.day)-1]||null:null;
+ return '<div class="card measurement-history-calendar-card">'
+  +'<div class="measurement-history-calendar-title"><div><strong>Історія замірів</strong><span>'+rows.length+' '+(rows.length===1?'запис':'записів')+'</span></div></div>'
+  +'<div class="measurement-calendar-head"><button type="button" aria-label="Попередній місяць" onclick="shiftMeasurementHistoryMonth(-1)">‹</button><strong>'+esc(title)+'</strong><button type="button" aria-label="Наступний місяць" onclick="shiftMeasurementHistoryMonth(1)">›</button></div>'
+  +'<div class="measurement-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
+  +'<div class="measurement-calendar-grid">'+cells.join('')+'</div>'
+  +(picked?'<div class="measurement-calendar-selected">'+measurementHistoryCard(picked,previous,cid)+'</div>':'<div class="measurement-calendar-empty">У цьому місяці немає замірів.</div>')
+ +'</div>';
+}
+
+function renderMeasurementHistoryCalendar(){
+ let box=document.getElementById('measurementHistoryCalendar');
+ if(!box)return;
+ let d=window.currentClientData||{},cid=+(d.client?.id||session?.client_id||0);
+ box.innerHTML=measurementHistoryCalendarHTML(d.measurements||[],cid);
+}
+
+function shiftMeasurementHistoryMonth(step){
+ let d=window.currentClientData||{},xs=(d.measurements||[]).filter(x=>x.day);
+ if(!xs.length)return;
+ let state=measurementHistoryCalendarState(xs),parts=state.month.split('-').map(Number);
+ let next=new Date(parts[0],parts[1]-1+(+step||0),1);
+ window.measurementHistoryMonth=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');
+ window.measurementHistorySelectedDay='';
+ renderMeasurementHistoryCalendar();
+}
+
+function selectMeasurementHistoryDay(day){
+ window.measurementHistorySelectedDay=String(day||'');
+ window.measurementHistoryMonth=String(day||'').slice(0,7)||window.measurementHistoryMonth;
+ renderMeasurementHistoryCalendar();
+}
+
 function clientMeasurementsHTML(d,cid){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)),last=xs[xs.length-1],prev=xs[xs.length-2],left=last?measurementDaysLeft(last.day):0,due=!last||left<=0;
  let nextDate=last?(()=>{let z=new Date(last.day+'T12:00:00');z.setDate(z.getDate()+30);return z.toISOString().slice(0,10)})():isoToday();
@@ -154,7 +217,7 @@ function clientMeasurementsHTML(d,cid){
   ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev,d)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev,d)}</div>`:''}
   ${xs.length>1?measurementComparisonHTML(xs):''}
   <div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>
-  ${xs.length?`<div class="card"><button class="exercise-toggle" onclick="toggleCalendar('measurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">${xs.length} ${xs.length===1?'запис':'записів'}</span></span><span class="arrow">⌄</span></button><div id="measurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1])).join('')}</div></div>`:''}
+  ${xs.length?`<div id="measurementHistoryCalendar">${measurementHistoryCalendarHTML(xs,cid)}</div>`:''}
  </div>`;
 }
 
