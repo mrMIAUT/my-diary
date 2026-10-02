@@ -53,7 +53,18 @@ function todaySets(d,pid){
 function completedExerciseHTML(x,d,cid){
  let done=todaySets(d,x.id);
  if(!done.length)return setRows(x,d)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${x.sets})">Закінчити вправу</button>`;
- let performed=done[0]?.exercise||x.exercise;return `<div class="exercise" style="margin-top:12px"><strong class="workout-completed-label">Вправу завершено</strong>${performed!==x.exercise?`<div class="muted" style="margin-top:5px">Виконано: <strong>${esc(performed)}</strong> · за планом ${esc(x.exercise)}</div>`:``}${done.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${x.sets},this.dataset.reps,${x.target_rir})">Редагувати</button></div></div>`;
+ let performed=done[0]?.exercise||x.exercise;
+ return `<div class="workout-completed-summary">
+   <div class="workout-completed-summary-head">
+     <span class="workout-completed-summary-icon">✓</span>
+     <div><strong>Виконано</strong><small>Результати вправи збережено</small></div>
+   </div>
+   ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
+   <div class="workout-completed-sets">
+     ${done.map(s=>`<div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}</em></div>`).join('')}
+   </div>
+   <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${x.sets},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
+ </div>`;
 }
 
 function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
@@ -305,7 +316,7 @@ function activeExercisesHTML(items,d,cid){
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false){
   let doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday()),shownName=workoutExerciseName(x),shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
-  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong>${shownTech?techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link'):''}${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span>${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${x.sets} × ${esc(x.reps)}</span>${restLabel(x)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(x))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
+  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong>${shownTech?techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link'):''}${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span>${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${x.sets} × ${esc(x.reps)}</span>${restLabel(x)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(x))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
