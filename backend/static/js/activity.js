@@ -44,7 +44,7 @@ function savedActivityHTML(cur,cid){
   let label=cur.cardio_type==='Доріжка'?'Нахил':'Опір',suffix=cur.cardio_type==='Доріжка'?'%':'';
   metrics.push([label,String(cur.incline)+suffix]);
  }
- if(cur.steps)metrics.push(['Кроки',Number(cur.steps).toLocaleString('uk-UA')]);
+ if(cur.steps&&hasCardio)metrics.push(['Кроки',Number(cur.steps).toLocaleString('uk-UA')]);
  let heroLabel=hasCardio?type:'Кроки';
  let heroSub=hasCardio?(cur.minutes?cur.minutes+' хв':'Кардіо'):(cur.steps?Number(cur.steps).toLocaleString('uk-UA')+' кроків':'');
  let icon=hasCardio?activityIcon(activityIconKindForCardio(cur.cardio_type)):activityIcon('steps');
