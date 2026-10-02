@@ -142,6 +142,21 @@ function redesignClientHomeHTML(d,c,cid,groups){
   +'</section>';
 }
 
+function redesignPausedClientHomeHTML(c,id){
+  return '<section class="client-paused-home">'
+    +'<div class="card client-paused-view-card">'
+      +'<span class="client-paused-kicker">Режим перегляду</span>'
+      +'<h2>Доступ призупинено</h2>'
+      +'<p>Ти можеш переглядати попередні тренування, прогрес та історію. Нові записи недоступні.</p>'
+    +'</div>'
+    +'<button class="client-paused-history-card" onclick="showClientSection(\'history\')">'
+      +'<span class="client-paused-history-icon">'+uiIcon('calendar')+'</span>'
+      +'<span class="client-paused-history-copy"><strong>Моя історія</strong><small>Усі попередні записи залишаються збереженими</small></span>'
+      +'<span class="client-paused-history-chevron">›</span>'
+    +'</button>'
+  +'</section>';
+}
+
 window.clientCabinet = async function(id){
   let d=await loadClientData(id),c=d.client;
   window.currentClientData=d;
@@ -150,7 +165,10 @@ window.clientCabinet = async function(id){
 
   let access=clientAccess(c);
   if(access.expired||access.manually_frozen||access.effective_plan==='free'){
-    return window.__legacyClientCabinet(id);
+    currentClientView='home';
+    app.innerHTML=shell(accessBannerHTML(c)+redesignPausedClientHomeHTML(c,id));
+    refreshNotificationBadge(id,'client','clientNotifyBtn');
+    return;
   }
 
   currentClientView='home';
