@@ -148,10 +148,7 @@ function measurementHistoryCalendarState(xs){
  let month=String(window.measurementHistoryMonth||latest.slice(0,7));
  if(!/^\d{4}-\d{2}$/.test(month))month=latest.slice(0,7);
  let selected=String(window.measurementHistorySelectedDay||'');
- if(!rows.some(x=>x.day===selected)||selected.slice(0,7)!==month){
-   let inMonth=rows.filter(x=>x.day.slice(0,7)===month);
-   selected=inMonth[inMonth.length-1]?.day||'';
- }
+ if(!rows.some(x=>x.day===selected)||selected.slice(0,7)!==month)selected='';
  window.measurementHistoryMonth=month;
  window.measurementHistorySelectedDay=selected;
  return {rows,month,selected};
@@ -160,6 +157,7 @@ function measurementHistoryCalendarState(xs){
 function measurementHistoryCalendarHTML(xs,cid){
  let {rows,month,selected}=measurementHistoryCalendarState(xs);
  if(!rows.length)return '';
+ let isOpen=window.measurementHistoryOpen===true;
  let [year,mon]=month.split('-').map(Number);
  let first=new Date(year,mon-1,1),daysInMonth=new Date(year,mon,0).getDate();
  let offset=(first.getDay()+6)%7;
@@ -173,13 +171,21 @@ function measurementHistoryCalendarHTML(xs,cid){
  }
  let picked=rows.find(x=>x.day===selected)||null;
  let previous=picked?rows[rows.findIndex(x=>x.day===picked.day)-1]||null:null;
- return '<div class="card measurement-history-calendar-card">'
-  +'<div class="measurement-history-calendar-title"><div><strong>Історія замірів</strong><span>'+rows.length+' '+(rows.length===1?'запис':'записів')+'</span></div></div>'
-  +'<div class="measurement-calendar-head"><button type="button" aria-label="Попередній місяць" onclick="shiftMeasurementHistoryMonth(-1)">‹</button><strong>'+esc(title)+'</strong><button type="button" aria-label="Наступний місяць" onclick="shiftMeasurementHistoryMonth(1)">›</button></div>'
-  +'<div class="measurement-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
-  +'<div class="measurement-calendar-grid">'+cells.join('')+'</div>'
-  +(picked?'<div class="measurement-calendar-selected">'+measurementHistoryCard(picked,previous,cid)+'</div>':'<div class="measurement-calendar-empty">У цьому місяці немає замірів.</div>')
+ return '<div class="card measurement-history-calendar-card '+(isOpen?'is-open':'')+'">'
+  +'<button type="button" class="measurement-history-calendar-toggle" onclick="toggleMeasurementHistoryCalendar()"><span><strong>Історія замірів</strong><small>'+rows.length+' '+(rows.length===1?'запис':'записів')+'</small></span><b aria-hidden="true">⌄</b></button>'
+  +'<div class="measurement-history-calendar-body '+(isOpen?'':'hidden')+'">'
+    +'<div class="measurement-calendar-head"><button type="button" aria-label="Попередній місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(-1)">‹</button><strong>'+esc(title)+'</strong><button type="button" aria-label="Наступний місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(1)">›</button></div>'
+    +'<div class="measurement-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
+    +'<div class="measurement-calendar-grid">'+cells.join('')+'</div>'
+    +(picked?'<div class="measurement-calendar-selected">'+measurementHistoryCard(picked,previous,cid)+'</div>':'<div class="measurement-calendar-hint">Обери дату із замірами, щоб переглянути запис.</div>')
+  +'</div>'
  +'</div>';
+}
+
+function toggleMeasurementHistoryCalendar(){
+ window.measurementHistoryOpen=window.measurementHistoryOpen!==true;
+ if(!window.measurementHistoryOpen)window.measurementHistorySelectedDay='';
+ renderMeasurementHistoryCalendar();
 }
 
 function renderMeasurementHistoryCalendar(){
@@ -194,12 +200,14 @@ function shiftMeasurementHistoryMonth(step){
  if(!xs.length)return;
  let state=measurementHistoryCalendarState(xs),parts=state.month.split('-').map(Number);
  let next=new Date(parts[0],parts[1]-1+(+step||0),1);
+ window.measurementHistoryOpen=true;
  window.measurementHistoryMonth=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');
  window.measurementHistorySelectedDay='';
  renderMeasurementHistoryCalendar();
 }
 
 function selectMeasurementHistoryDay(day){
+ window.measurementHistoryOpen=true;
  window.measurementHistorySelectedDay=String(day||'');
  window.measurementHistoryMonth=String(day||'').slice(0,7)||window.measurementHistoryMonth;
  renderMeasurementHistoryCalendar();
