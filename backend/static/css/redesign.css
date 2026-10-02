@@ -2154,20 +2154,181 @@ body.eplan-redesign.client-ui .achievement-record-row>b{
   font-size:12px;color:#0a1738;white-space:nowrap;
 }
 
-body.eplan-redesign.client-ui .achievement-pr-chart{
-  display:grid;grid-template-columns:repeat(6,1fr);
-  gap:8px;align-items:end;min-height:110px;padding-top:8px;
+body.eplan-redesign.client-ui .achievement-pr-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
 }
-body.eplan-redesign.client-ui .achievement-pr-chart>div{
-  display:grid;grid-template-rows:76px auto auto;
-  justify-items:center;align-items:end;gap:3px;
+body.eplan-redesign.client-ui .achievement-pr-head h2{
+  margin:0;
+  color:#0a1738;
+  font-size:18px;
+  line-height:1.12;
+  letter-spacing:-.015em;
 }
-body.eplan-redesign.client-ui .achievement-pr-chart i{
-  width:18px;border-radius:6px 6px 2px 2px;
-  background:linear-gradient(180deg,#53a5ff,#1677ff);
+body.eplan-redesign.client-ui .achievement-pr-head>div:first-child>span{
+  display:block;
+  margin-top:4px;
+  color:#7d8ba0;
+  font-size:10.5px;
+  font-weight:750;
 }
-body.eplan-redesign.client-ui .achievement-pr-chart b{font-size:10px;color:#0a1738}
-body.eplan-redesign.client-ui .achievement-pr-chart small{font-size:9px;color:#7b899c}
+body.eplan-redesign.client-ui .achievement-pr-summary{
+  flex:0 0 auto;
+  min-width:82px;
+  padding:9px 11px;
+  border:1px solid #d8ebde;
+  border-radius:14px;
+  background:#eef8f1;
+  text-align:center;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary strong{
+  display:block;
+  color:#178b57!important;
+  font-size:22px!important;
+  line-height:1;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary small{
+  display:block;
+  margin-top:4px;
+  color:#5f7c69;
+  font-size:9.5px;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .achievement-pr-events{
+  display:grid;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .achievement-pr-event{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid #e1e9f2;
+  border-radius:14px;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .achievement-pr-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:#eef8f1;
+  color:#178b57;
+  font-size:16px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy{
+  min-width:0;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy strong{
+  display:block;
+  overflow:hidden;
+  color:#0a1738!important;
+  font-size:12.5px!important;
+  line-height:1.2;
+  font-weight:850!important;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy small{
+  display:block;
+  margin-top:3px;
+  color:#8390a3;
+  font-size:9.5px;
+  font-weight:750;
+}
+body.eplan-redesign.client-ui .achievement-pr-values{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+  min-width:0;
+}
+body.eplan-redesign.client-ui .achievement-pr-main{
+  display:flex;
+  align-items:baseline;
+  justify-content:flex-end;
+  gap:6px;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .achievement-pr-main span{
+  color:#8a97aa;
+  font-size:10.5px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .achievement-pr-main b{
+  color:#178b57!important;
+  font-size:12.5px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-main.first b{
+  font-size:13.5px!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta{
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef8f1;
+  color:#178b57;
+  font-size:9px;
+  font-weight:850;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta.first{
+  background:#f2f5f8;
+  color:#7c899d;
+}
+body.eplan-redesign.client-ui .achievement-pr-more{
+  width:100%;
+  min-height:42px;
+  margin-top:10px;
+  padding:0 14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px;
+  border:1px solid #dce5f0!important;
+  border-radius:13px!important;
+  background:#f3f6fa!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-more span{
+  color:#728198;
+  font-size:16px;
+  line-height:1;
+}
+body.eplan-redesign.client-ui .achievement-pr-more:active{
+  transform:scale(.995);
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .achievement-pr-event{
+    grid-template-columns:34px minmax(0,1fr);
+    align-items:flex-start;
+  }
+  body.eplan-redesign.client-ui .achievement-pr-values{
+    grid-column:2;
+    align-items:flex-start;
+    margin-top:2px;
+  }
+  body.eplan-redesign.client-ui .achievement-pr-main{
+    justify-content:flex-start;
+    flex-wrap:wrap;
+    white-space:normal;
+  }
+  body.eplan-redesign.client-ui .achievement-pr-summary{
+    min-width:74px;
+    padding:8px 9px;
+  }
+}
 
 body.eplan-redesign.client-ui .achievement-milestones{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
