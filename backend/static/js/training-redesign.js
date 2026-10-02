@@ -135,6 +135,7 @@ function redesignTrainingStatsHTML(d,cid,groups){
 }
 
 window.showClientTraining = async function(cid){
+  if(!window.exerciseLibrary?.exercises?.length)await loadExerciseLibrary();
   let d=window.currentClientData;
   if(!d||+d.client?.id!==+cid)d=await loadClientData(cid);
   let c=d.client;window.currentClientData=d;currentClientView='training';
