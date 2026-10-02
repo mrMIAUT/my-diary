@@ -8246,3 +8246,102 @@ body.eplan-redesign.client-ui .notification-detail-back{
   color:#183153!important;
   box-shadow:none!important;
 }
+
+
+/* v126 — centered workout header + collapsible client library */
+/* Calendar workout header: day centered, duration directly beneath completion state. */
+body.eplan-redesign.client-ui .calendar-workout-session-top{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-top>strong{
+  grid-column:2!important;
+  justify-self:center!important;
+  margin:0!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-state{
+  grid-column:3!important;
+  justify-self:end!important;
+  align-items:center!important;
+  text-align:center!important;
+  gap:5px!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session-duration-inline{
+  width:100%!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+
+/* Client exercise library starts collapsed; group header is the navigation row. */
+body.eplan-redesign.client-ui .redesign-library-group-head{
+  width:100%!important;
+  min-height:64px!important;
+  padding:14px 16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-head:hover{
+  filter:none!important;
+  transform:none!important;
+  background:#f8faff!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-head strong{
+  color:#0a1738!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-head .redesign-library-group-meta{
+  min-width:0!important;
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#718097!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-meta b{
+  min-width:30px!important;
+  height:28px!important;
+  padding:0 9px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:999px!important;
+  background:#eaf3ff!important;
+  color:#1677ff!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-meta i{
+  display:block!important;
+  color:#718097!important;
+  font-size:19px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  transition:transform .18s ease!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-head.open .redesign-library-group-meta i{
+  transform:rotate(180deg)!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-body{
+  border-top:1px solid #edf1f6!important;
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .redesign-library-group-body.hidden{
+  display:none!important;
+}
