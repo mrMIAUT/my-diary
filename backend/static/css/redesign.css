@@ -8199,3 +8199,50 @@ body.eplan-redesign.client-ui .calendar-activity-empty small{
     grid-template-columns:1fr 1fr!important;
   }
 }
+
+
+/* v125 — calendar completion + notification polish */
+/* Finished workout uses the same positive-state language as nutrition/activity. */
+body.eplan-redesign.client-ui .calendar-workout-session.is-finished .calendar-workout-session-status{
+  padding:6px 9px!important;
+  border-radius:999px!important;
+  background:#eef8f1!important;
+  color:#238458!important;
+}
+body.eplan-redesign.client-ui .calendar-workout-session.is-finished .calendar-workout-session-status::before{
+  background:#32a66a!important;
+  box-shadow:none!important;
+}
+
+/* Keep notification list in DOM behind detail view so Back is instant and flicker-free. */
+body.eplan-redesign.client-ui #notificationModal.notification-list-hidden{
+  display:none!important;
+}
+
+/* Give the revealed trash control some breathing room from the message card. */
+body.eplan-redesign.client-ui .notification-swipe.reveal .notification-item{
+  transform:translateX(-84px)!important;
+}
+body.eplan-redesign.client-ui .notification-delete-bg.client-notification-delete{
+  width:72px!important;
+  right:0!important;
+}
+
+/* Enabled push state: calm, light success treatment instead of saturated green. */
+body.eplan-redesign.client-ui .phone-notify-enable.push-enabled{
+  background:#eef8f1!important;
+  border-color:#d2eadb!important;
+  color:#2b8053!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .phone-notify-enable.push-enabled:hover{
+  background:#e9f5ed!important;
+}
+
+/* Notification detail Back is a quiet secondary action. */
+body.eplan-redesign.client-ui .notification-detail-back{
+  background:#eef3f8!important;
+  border:1px solid #dce5f0!important;
+  color:#183153!important;
+  box-shadow:none!important;
+}
