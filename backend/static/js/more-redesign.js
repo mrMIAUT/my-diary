@@ -43,9 +43,9 @@ function achievementHeatmapData(sessions){
   for(let week=0;week<8;week++){
     for(let dow=0;dow<7;dow++){
       let d=new Date(start);d.setDate(start.getDate()+week*7+dow);
-      let day=d.toISOString().slice(0,10),future=d>today;
-      let cls=(active.has(day)?'active ':'')+(future?'future ':'')+(day===todayKey?'today':'');
-      cells.push('<i class="'+cls.trim()+'" title="'+esc(formatProgressDate(day))+'"></i>');
+      let day=d.toISOString().slice(0,10),future=d>today,isActive=active.has(day);
+      let cls=(isActive?'active ':'')+(future?'future ':'')+(day===todayKey?'today':'');
+      cells.push('<i class="'+cls.trim()+'" title="'+esc(formatProgressDate(day))+'">'+(isActive?uiIcon('dumbbell'):'')+'</i>');
     }
   }
 
