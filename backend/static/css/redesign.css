@@ -6437,3 +6437,29 @@ body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-her
   border-color:rgba(218,255,235,.78)!important;
   box-shadow:0 5px 12px rgba(18,185,106,.16)!important;
 }
+
+
+/* v104 — completed set highlight */
+body.eplan-redesign.client-ui .lyfta-set-wrap{
+  position:relative;
+  transition:background-color .16s ease, box-shadow .16s ease;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete{
+  margin-left:-6px;
+  margin-right:-6px;
+  padding-left:6px;
+  padding-right:6px;
+  border-radius:14px;
+  background:#f2fbf5;
+  box-shadow:inset 0 0 0 1px #d8f1e1;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-set-row{
+  opacity:1!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-set-row input{
+  background:#f8fdf9!important;
+  border-color:#d6eadc!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-prev-line{
+  color:#6d8b77!important;
+}
