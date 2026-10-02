@@ -4,6 +4,8 @@
 function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
 
 function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
+function restTimerPausedSeconds(){return Math.max(0,+(localStorage.getItem('eplanRestTimerPausedSeconds')||0))}
+function clearRestTimerPaused(){localStorage.removeItem('eplanRestTimerPausedSeconds')}
 
 function restTimerPanelHTML(){
  return restTimerInlineHTML()+restTimerInlineControlsHTML();
@@ -48,20 +50,37 @@ async function startRestTimer(seconds,sourceBtn=null){
  if(sourceBtn)sourceBtn.classList.add('selected');
  await unlockTimerSound();
  await ensureTimerNotifications();
+ clearRestTimerPaused();
  let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
  $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 
 function addRestTimer(seconds){
+ clearRestTimerPaused();
  let end=Math.max(Date.now(),restTimerEnd())+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 
 function cancelRestTimer(){
- localStorage.removeItem(REST_TIMER_KEY);document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
+ localStorage.removeItem(REST_TIMER_KEY);clearRestTimerPaused();document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
  updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
+}
+
+function pauseRestTimer(){
+ let remaining=restTimerRemaining();if(!remaining)return;
+ localStorage.setItem('eplanRestTimerPausedSeconds',String(remaining));
+ localStorage.removeItem(REST_TIMER_KEY);
+ if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
+ navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
+ updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
+}
+
+async function toggleRestTimerPlayback(){
+ if(restTimerRemaining()>0){pauseRestTimer();return}
+ let seconds=restTimerPausedSeconds()||preferredRestTimerSeconds();
+ await startRestTimer(seconds);
 }
 
 function customRestTimer(){
@@ -76,9 +95,18 @@ function startRestTimerTicker(){
 }
 
 function updateRestTimerUI(s){
- let d=$('#restTimerDisplay');if(d)d.textContent=s?formatRestTimer(s):'Таймер';
+ let paused=s?0:restTimerPausedSeconds(),shown=s||paused;
+ let d=$('#restTimerDisplay');if(d)d.textContent=shown?formatRestTimer(shown):'Таймер';
  let a=$('#restTimerActions');if(a)a.classList.toggle('hidden',!s);
  let f=$('#floatingRestTimerValue');if(f)f.textContent=formatRestTimer(s);
+ let p=$('#restTimerPlayPause');
+ if(p){
+   let running=s>0;
+   p.textContent=running?'Ⅱ':'▶';
+   p.classList.toggle('running',running);
+   p.setAttribute('aria-label',running?'Поставити таймер на паузу':'Запустити таймер відпочинку');
+   p.setAttribute('title',running?'Пауза':'Запустити таймер');
+ }
 }
 
 async function unlockTimerSound(){
@@ -95,7 +123,7 @@ function timerBeep(){
 
 async function finishRestTimer(){
  if(!restTimerEnd())return;
- localStorage.removeItem(REST_TIMER_KEY);document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
+ localStorage.removeItem(REST_TIMER_KEY);clearRestTimerPaused();document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
  if(document.visibilityState==='visible'&&Notification.permission==='granted'){
   try{let reg=await navigator.serviceWorker.ready;reg.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true})}catch(e){}
  }
@@ -143,17 +171,23 @@ function openRestTimerPicker(){
 }
 function closeRestTimerPicker(){document.getElementById('restTimerPicker')?.remove()}
 function customPreferredRestTimer(){let raw=prompt('Введи час відпочинку у секундах, наприклад 150');let sec=parseInt(raw||'',10);if(sec>0&&sec<=3600)setPreferredRestTimerSeconds(sec)}
-async function completeWorkoutSetAndStartTimer(pid,n,btn){
+async function completeWorkoutSetAndStartTimer(pid,n,total,btn){
  let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n);
  if(!w?.value||!r?.value)return alert('Спочатку заповни вагу та повтори у підході '+n);
  btn?.classList.toggle('done');
- if(btn?.classList.contains('done'))await startRestTimer(preferredRestTimerSeconds());
+ if(btn?.classList.contains('done')){
+   if(n>=total)cancelRestTimer();
+   else await startRestTimer(preferredRestTimerSeconds());
+ }
 }
 function compactRestTimerHTML(){
- let s=restTimerRemaining();
+ let s=restTimerRemaining(),paused=restTimerPausedSeconds(),shown=s||paused;
  setTimeout(()=>{
    if(s){startRestTimerTicker();renderFloatingRestTimer()}
-   else document.querySelector('#floatingRestTimer')?.remove();
+   else{document.querySelector('#floatingRestTimer')?.remove();updateRestTimerUI(0)}
  },0);
- return '<button class="redesign-rest-timer-icon '+(s?'running':'')+'" onclick="openRestTimerPicker()" aria-label="Налаштувати таймер відпочинку" title="Таймер відпочинку">⏱<span id="restTimerDisplay">'+(s?formatRestTimer(s):'')+'</span></button>';
+ return '<div class="redesign-rest-timer-control">'
+   +'<button class="redesign-rest-timer-icon '+(s?'running':(paused?'paused':''))+'" onclick="openRestTimerPicker()" aria-label="Налаштувати таймер відпочинку" title="Таймер відпочинку">⏱<span id="restTimerDisplay">'+(shown?formatRestTimer(shown):'')+'</span></button>'
+   +'<button id="restTimerPlayPause" class="redesign-rest-timer-play '+(s?'running':'')+'" onclick="toggleRestTimerPlayback()" aria-label="'+(s?'Поставити таймер на паузу':'Запустити таймер відпочинку')+'" title="'+(s?'Пауза':'Запустити таймер')+'">'+(s?'Ⅱ':'▶')+'</button>'
+   +'</div>';
 }
