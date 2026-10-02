@@ -5735,3 +5735,68 @@ body.eplan-redesign.client-ui .measurement-calendar-empty{
   font-size:12px;
   font-weight:700;
 }
+
+
+/* v88 — collapsible measurement history calendar */
+body.eplan-redesign.client-ui .measurement-history-calendar-card{
+  padding:0!important;
+  overflow:hidden;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-toggle{
+  width:100%!important;
+  min-height:78px!important;
+  padding:16px 18px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-toggle>span{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:4px;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-toggle strong{
+  color:#0a1738!important;
+  font-size:20px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  letter-spacing:-.02em!important;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-toggle small{
+  color:#7a899f!important;
+  font-size:12px!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-toggle>b{
+  color:#8a98ab!important;
+  font-size:24px!important;
+  line-height:1!important;
+  font-weight:600!important;
+  transform:rotate(0deg);
+  transition:transform .18s ease;
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-card.is-open .measurement-history-calendar-toggle>b{
+  transform:rotate(180deg);
+}
+body.eplan-redesign.client-ui .measurement-history-calendar-body{
+  padding:16px 18px 18px;
+  border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .measurement-calendar-hint{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#f7f9fc;
+  color:#7a899f;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+}
