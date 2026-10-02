@@ -6463,3 +6463,54 @@ body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-set-row input{
 body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-prev-line{
   color:#6d8b77!important;
 }
+
+
+/* v107 — persistent rest timer above the client bottom navigation */
+body.eplan-redesign.client-ui .redesign-floating-rest-timer{
+  position:fixed!important;
+  right:18px!important;
+  bottom:calc(98px + env(safe-area-inset-bottom))!important;
+  z-index:65!important;
+  width:66px!important;
+  height:66px!important;
+  min-width:66px!important;
+  padding:7px 6px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  border:1px solid #cfe0f2!important;
+  border-radius:19px!important;
+  background:rgba(248,251,255,.95)!important;
+  color:#17345a!important;
+  box-shadow:0 10px 28px rgba(31,64,104,.16)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(145%)!important;
+  backdrop-filter:blur(18px) saturate(145%)!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer:active{
+  transform:scale(.97)!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer-icon{
+  display:block;
+  font-size:23px;
+  line-height:1;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer #floatingRestTimerValue{
+  display:block;
+  font-size:11px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:-.01em;
+  color:#17345a;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .redesign-floating-rest-timer{
+    right:14px!important;
+    bottom:calc(96px + env(safe-area-inset-bottom))!important;
+    width:62px!important;
+    height:62px!important;
+    min-width:62px!important;
+    border-radius:18px!important;
+  }
+}
