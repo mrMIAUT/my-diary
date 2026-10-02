@@ -120,7 +120,7 @@ function clearWorkoutDraftsForSession(sid){if(!sid)return;try{let scope=offlineL
 
 function setRows(x,d){
  let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div><div></div></div>`,rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
- for(let n=1;n<=x.sets;n++){let q=draft[n]||{},wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" value="${esc(String(wv))}" placeholder="кг" oninput="saveWorkoutDraft(${sid},${x.id},${n},'weight',this.value)"><input id="r${x.id}_${n}" type="number" value="${esc(String(rv))}" placeholder="${esc(x.reps)}" oninput="saveWorkoutDraft(${sid},${x.id},${n},'reps',this.value)"><input id="i${x.id}_${n}" type="number" value="${esc(String(iv))}" placeholder="${esc(String(rirHint))}" min="0" max="10" oninput="saveWorkoutDraft(${sid},${x.id},${n},'rir',this.value)"><button type="button" class="workout-set-check" onclick="completeWorkoutSetAndStartTimer(${x.id},${n},this)" aria-label="Завершити підхід ${n}">✓</button></div>`}
+ for(let n=1;n<=x.sets;n++){let q=draft[n]||{},wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" value="${esc(String(wv))}" placeholder="кг" oninput="saveWorkoutDraft(${sid},${x.id},${n},'weight',this.value)"><input id="r${x.id}_${n}" type="number" value="${esc(String(rv))}" placeholder="${esc(x.reps)}" oninput="saveWorkoutDraft(${sid},${x.id},${n},'reps',this.value)"><input id="i${x.id}_${n}" type="number" value="${esc(String(iv))}" placeholder="${esc(String(rirHint))}" min="0" max="10" oninput="saveWorkoutDraft(${sid},${x.id},${n},'rir',this.value)"><button type="button" class="workout-set-check" onclick="completeWorkoutSetAndStartTimer(${x.id},${n},${x.sets},this)" aria-label="Завершити підхід ${n}">✓</button></div>`}
  return previousSets(d,x.id)+h
 }
 
@@ -159,6 +159,7 @@ async function finishWorkout(cid,sid,button=null){
  if(button){button.dataset.finishing='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Завершуємо…'}
  try{
  await api('/workout/'+sid+'/finish',{method:'POST'});
+ cancelRestTimer();
  clearWorkoutDraftsForSession(sid);
  {let k=offlineLocalScopeKey();if(k)localStorage.removeItem(`eplanActiveWorkoutV2_${k}_${cid}`)}previewWorkoutDay=null;window.workoutExerciseChoices={};
  let d=await loadClientData(cid);window.currentClientData=d;
@@ -387,6 +388,8 @@ async function saveSets(cid,pid,exercise,count){
  }
  if(!sets.length)return alert('Заповни хоча б один підхід');
  await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
+ // Finishing an exercise always ends its rest period. This also clears a paused timer.
+ cancelRestTimer();
  clearWorkoutDraft(workoutDraftSessionId(window.currentClientData||{}),pid);
  let body=$('#exerciseBody'+pid);
  if(body){
