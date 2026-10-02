@@ -7206,3 +7206,197 @@ body.eplan-redesign.client-ui .redesign-rest-timer-icon.paused{
     min-width:34px!important;
   }
 }
+
+
+/* v112 — PR card final polish */
+body.eplan-redesign.client-ui .achievement-pr-card{
+  padding:16px!important;
+  border:1px solid #dfe7f1!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:0 8px 24px rgba(35,70,108,.05)!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 0 12px!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:20px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+  letter-spacing:-.02em!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-head>div:first-child>span{
+  display:block!important;
+  margin-top:4px!important;
+  color:#7b899c!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary{
+  flex:0 0 auto!important;
+  min-width:86px!important;
+  padding:9px 11px!important;
+  border:1px solid #d7eadf!important;
+  border-radius:14px!important;
+  background:#f0f8f3!important;
+  box-shadow:none!important;
+  text-align:center!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary strong{
+  display:block!important;
+  color:#238458!important;
+  font-size:22px!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-summary small{
+  display:block!important;
+  margin-top:4px!important;
+  color:#6e8577!important;
+  font-size:9.5px!important;
+  line-height:1.1!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-events{
+  display:grid!important;
+  gap:8px!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-event{
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+  padding:11px 12px!important;
+  border:1px solid #e2e9f1!important;
+  border-radius:14px!important;
+  background:#fbfcfe!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-icon{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:11px!important;
+  background:#eef8f1!important;
+  color:#24895a!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-icon svg{
+  width:18px!important;
+  height:18px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy{
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy strong{
+  display:block!important;
+  overflow:hidden!important;
+  color:#0a1738!important;
+  font-size:13.5px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-copy small{
+  display:block!important;
+  margin-top:3px!important;
+  color:#8794a7!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-values{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:4px!important;
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-main{
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:flex-end!important;
+  gap:6px!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-main span{
+  color:#8b97a9!important;
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-main b{
+  color:#238458!important;
+  font-size:13px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:20px!important;
+  padding:3px 7px!important;
+  border-radius:999px!important;
+  background:#eef8f1!important;
+  color:#238458!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-delta.first{
+  background:#f0f3f7!important;
+  color:#7c899d!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-more{
+  width:100%!important;
+  min-height:42px!important;
+  margin:10px 0 0!important;
+  padding:0 14px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  border:1px solid #dce5ef!important;
+  border-radius:13px!important;
+  background:#f3f6fa!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .achievement-pr-more span{
+  color:#748299!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .achievement-pr-event{
+    grid-template-columns:36px minmax(0,1fr)!important;
+    align-items:flex-start!important;
+  }
+  body.eplan-redesign.client-ui .achievement-pr-values{
+    grid-column:2!important;
+    align-items:flex-start!important;
+    margin-top:2px!important;
+  }
+  body.eplan-redesign.client-ui .achievement-pr-main{
+    justify-content:flex-start!important;
+    flex-wrap:wrap!important;
+    white-space:normal!important;
+  }
+}
