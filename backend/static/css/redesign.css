@@ -6378,3 +6378,46 @@ body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-her
   background:linear-gradient(135deg,#36b978 0%,#48c98d 100%)!important;
   box-shadow:0 6px 16px rgba(55,199,133,.22)!important;
 }
+
+
+/* v101 — edge-to-edge open superset state */
+body.eplan-redesign.client-ui .workout-live-superset-body{
+  padding:0!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-toggle{
+  width:100%!important;
+  margin:0!important;
+  padding:15px 28px!important;
+  box-sizing:border-box!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-toggle.open{
+  width:100%!important;
+  margin:0!important;
+  padding:15px 28px!important;
+  background:#f8fbff!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-body{
+  width:100%!important;
+  margin:0!important;
+  padding:14px 28px 16px!important;
+  box-sizing:border-box!important;
+  background:#f8fbff!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset-divider{
+  margin:0 28px!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .workout-live-superset .workout-live-toggle,
+  body.eplan-redesign.client-ui .workout-live-superset .workout-live-toggle.open{
+    padding-left:20px!important;
+    padding-right:20px!important;
+  }
+  body.eplan-redesign.client-ui .workout-live-superset .workout-live-body{
+    padding-left:20px!important;
+    padding-right:20px!important;
+  }
+  body.eplan-redesign.client-ui .workout-live-superset-divider{
+    margin-left:20px!important;
+    margin-right:20px!important;
+  }
+}
