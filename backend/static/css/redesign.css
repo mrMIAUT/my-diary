@@ -6349,3 +6349,32 @@ body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-her
     font-size:12.5px!important;
   }
 }
+
+
+/* v100 — seamless superset open state + softer active-workout CTA */
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-toggle.open{
+  width:calc(100% + 28px)!important;
+  margin-left:-14px!important;
+  margin-right:-14px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+  background:#f8fbff!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-body{
+  width:calc(100% + 28px)!important;
+  margin-left:-14px!important;
+  margin-right:-14px!important;
+  background:#f8fbff!important;
+}
+body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-hero-cta.active{
+  background:linear-gradient(135deg,#43c98a 0%,#59d9a0 100%)!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  color:#fff!important;
+  box-shadow:
+    0 10px 24px rgba(55,199,133,.26),
+    0 0 18px rgba(89,217,160,.18)!important;
+}
+body.eplan-redesign.client-ui .client-program-hero.is-active .client-program-hero-cta.active:active{
+  background:linear-gradient(135deg,#36b978 0%,#48c98d 100%)!important;
+  box-shadow:0 6px 16px rgba(55,199,133,.22)!important;
+}
