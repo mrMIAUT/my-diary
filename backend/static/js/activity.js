@@ -29,10 +29,42 @@ function cardioMetricHTML(x,chip=false){
 }
 
 function cardioDisplayType(type){return type==='Велосипед'?'Велотренажер':type}
+function activityIconKindForCardio(type){
+ let t=cardioDisplayType(type||'');
+ if(t==='Доріжка')return 'treadmill';
+ if(t==='Орбітрек')return 'elliptical';
+ if(t==='Велотренажер')return 'bike';
+ return 'other';
+}
+function savedActivityHTML(cur,cid){
+ let type=cardioDisplayType(cur.cardio_type||''),hasCardio=!!cur.cardio_type,metrics=[];
+ if(hasCardio&&cur.minutes)metrics.push(['Тривалість',cur.minutes+' хв']);
+ if(hasCardio&&cur.speed&&cur.cardio_type==='Доріжка')metrics.push(['Швидкість',String(cur.speed)]);
+ if(hasCardio&&cur.incline){
+  let label=cur.cardio_type==='Доріжка'?'Нахил':'Опір',suffix=cur.cardio_type==='Доріжка'?'%':'';
+  metrics.push([label,String(cur.incline)+suffix]);
+ }
+ if(cur.steps)metrics.push(['Кроки',Number(cur.steps).toLocaleString('uk-UA')]);
+ let heroLabel=hasCardio?type:'Кроки';
+ let heroSub=hasCardio?(cur.minutes?cur.minutes+' хв':'Кардіо'):(cur.steps?Number(cur.steps).toLocaleString('uk-UA')+' кроків':'');
+ let icon=hasCardio?activityIcon(activityIconKindForCardio(cur.cardio_type)):activityIcon('steps');
+ return `<div class="card cardio-activity-card activity-saved-card">
+   <div class="activity-saved-top">
+     <div><span class="activity-saved-kicker">Активність за сьогодні</span><strong>Готово</strong></div>
+     <span class="activity-saved-status">Виконано ✓</span>
+   </div>
+   <div class="activity-saved-hero">
+     <span class="activity-saved-icon activity-svg-icon">${icon}</span>
+     <div><strong>${esc(heroLabel)}</strong><small>${esc(heroSub)}</small></div>
+   </div>
+   ${metrics.length?`<div class="activity-saved-metrics">${metrics.map(([label,value])=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')}</div>`:''}
+   <button class="activity-saved-edit" onclick="event.stopPropagation();editCardio(${cid})">${uiIcon('edit')} Редагувати активність</button>
+ </div>`;
+}
 function cardioHTML(d,cid,readonly=false){
  let today=isoToday(),xs=d.cardio||[],cur=xs.find(x=>x.day===today)||{},saved=!!cur.id;
  if(readonly)return `<div class="card"><h2>Кардіо та активність</h2>${xs.length?xs.slice(0,30).map(x=>`<div class="exercise"><div class="between"><strong>${esc(x.day)}</strong><span>${x.steps||0} кроків</span></div>${x.cardio_type?`<div class="muted" style="margin-top:6px">${esc(cardioDisplayType(x.cardio_type))} · ${x.minutes||0} хв${cardioMetricHTML(x)}</div>`:'<div class="muted" style="margin-top:6px">Без окремого кардіо</div>'}</div>`).join(''):'<p class="muted">Даних ще немає.</p>'}</div>`;
- if(saved)return `<div class="card client-collapsible done cardio-activity-card activity-always-open"><div class="activity-saved-heading"><strong>Активність за сьогодні</strong><span class="client-status">Виконано ✓</span></div><div id="cardioPanel" class="client-collapsible-body"><div class="cardio-summary">${cur.cardio_type?`<div class="cardio-chip">${esc(cardioDisplayType(cur.cardio_type))}</div><div class="cardio-chip">${cur.minutes||0} хв</div>${cardioMetricHTML(cur,true)}`:''}${cur.steps?`<div class="cardio-chip">${cur.steps} кроків</div>`:''}</div><button class="dark compact-edit" style="margin-top:14px" onclick="event.stopPropagation();editCardio(${cid})">Редагувати</button></div></div>`;
+ if(saved)return savedActivityHTML(cur,cid);
  return `<div class="card client-collapsible cardio-activity-card activity-always-open"><div id="cardioPanel" class="client-collapsible-body">${cardioEditHTML(cid,cur).replace(/^<div class="card">|<\/div>$/g,'')}</div></div>`;
 }
 
@@ -94,6 +126,9 @@ async function saveCardio(cid,button=null){
  try{
   await api('/cardio',{method:'POST',body:JSON.stringify(body)});
   clearDailyDraft('cardio',cid);
-  await clientCabinet(cid);
+  let d=await loadClientData(cid);
+  window.currentClientData=d;
+  window.clientTrainingTab='activity';
+  await showClientTraining(cid);
  }catch(e){restore();alert(e.message||'Не вдалося зберегти активність. Перевір інтернет і спробуй ще раз.')}
 }
