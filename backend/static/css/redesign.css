@@ -6063,3 +6063,15 @@ body.eplan-redesign.client-ui .redesign-training-main-title-row>.redesign-traini
   color:#d66a20!important;
   border-radius:0!important;
 }
+
+
+/* v96 — align primary technique text to exercise-name baseline */
+body.eplan-redesign.client-ui .redesign-training-main-title-row{
+  align-items:baseline!important;
+}
+body.eplan-redesign.client-ui .redesign-training-main-title-row>.redesign-training-tech-link{
+  align-self:baseline!important;
+  line-height:1!important;
+  position:relative;
+  top:0!important;
+}
