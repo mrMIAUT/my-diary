@@ -95,15 +95,16 @@ function redesignClientHomeHTML(d,c,cid,groups){
   let foodSub=todayNutrition?'Дані збережено':'Заповнити сьогодні';
 
   return '<section class="client-home">'
-    +'<button class="client-program-hero" onclick="showClientTraining('+cid+')">'
+    +'<button class="client-program-hero '+(active?'is-active':'')+'" onclick="showClientTraining('+cid+')">'
       +'<span class="client-program-hero-kicker">Моя програма</span>'
+      +(active?'<span class="client-program-active-status"><i></i>Тренування триває · '+esc(active.day_name||nextDay)+'</span>':'')
       +'<strong>'+esc(c.goal||'Твоя програма')+'</strong>'
       +'<span class="client-program-hero-meta">'+esc(programMeta)+'</span>'
       +'<div class="client-program-progress-label"><span>Прогрес циклу</span><b>'+(days.length?completedInCycle+' з '+days.length:'—')+'</b></div>'
       +'<div class="client-program-hero-progress">'
         +'<span><i style="width:'+cyclePercent+'%"></i></span><b>'+cyclePercent+'%</b>'
       +'</div>'
-      +'<span class="client-program-hero-cta">Перейти до тренувань <b>›</b></span>'
+      +'<span class="client-program-hero-cta '+(active?'active':'')+'">'+(active?'Перейти до активного тренування':'Перейти до тренувань')+' <b>›</b></span>'
     +'</button>'
 
     +'<div class="client-home-section-head"><h2>Сьогодні</h2></div>'
