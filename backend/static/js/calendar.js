@@ -61,13 +61,37 @@ function changeCalendarMonth(delta,mode){
 
 
 function historyNutritionForm(day,cid){
- return `<div class="exercise"><div class="grid"><input id="hkcal" type="number" placeholder="Ккал"><input id="hprotein" type="number" placeholder="Білки, г"><input id="hfat" type="number" placeholder="Жири, г"><input id="hcarbs" type="number" placeholder="Вуглеводи, г"></div><br><button data-day="${esc(day)}" onclick="saveHistoryNutrition(this.dataset.day,${cid})">Додати харчування</button></div>`;
+ return `<div class="exercise history-nutrition-empty"><span>Харчування за цей день не внесено.</span><button class="history-nutrition-add" data-day="${esc(day)}" onclick="openHistoryNutritionEntry(this.dataset.day,${cid})">Додати БЖВ</button></div>`;
 }
 
-async function saveHistoryNutrition(day,cid){
- let body={client_id:cid,day,kcal:+hkcal.value||0,protein:+hprotein.value||0,fat:+hfat.value||0,carbs:+hcarbs.value||0};
- await api('/history/nutrition',{method:'POST',body:JSON.stringify(body)});
- let d=await loadClientData(cid);window.currentClientData=d;showCalendarDay(day,null,false)
+function openHistoryNutritionEntry(day,cid){
+ document.getElementById('historyNutritionModal')?.remove();
+ let pretty=formatProgressDate(day);
+ document.body.insertAdjacentHTML('beforeend',
+  '<div class="modal" id="historyNutritionModal"><div class="card redesign-nutrition-modal history-nutrition-modal">'
+  +'<div class="history-nutrition-head"><div><h2>БЖВ за '+esc(pretty)+'</h2><p class="muted">Внеси підсумок харчування за цей день.</p></div><button class="history-nutrition-close" onclick="historyNutritionModal.remove()" aria-label="Закрити">×</button></div>'
+  +'<div class="grid"><input id="hkcal" type="number" inputmode="decimal" placeholder="Ккал"><input id="hprotein" type="number" inputmode="decimal" placeholder="Білки, г"><input id="hfat" type="number" inputmode="decimal" placeholder="Жири, г"><input id="hcarbs" type="number" inputmode="decimal" placeholder="Вуглеводи, г"></div>'
+  +'<button class="history-nutrition-save" data-day="'+esc(day)+'" onclick="saveHistoryNutrition(this.dataset.day,'+cid+',this)">Зберегти БЖВ</button>'
+  +'</div></div>');
+}
+
+async function saveHistoryNutrition(day,cid,button=null){
+ let els=['hkcal','hprotein','hfat','hcarbs'].map(id=>document.getElementById(id));
+ if(els.some(el=>!el||String(el.value).trim()===''))return alert('Заповни калорії, білки, жири та вуглеводи.');
+ let [kcal,protein,fat,carbs]=els.map(el=>+el.value);
+ if([kcal,protein,fat,carbs].some(v=>!Number.isFinite(v)||v<0))return alert('Перевір значення БЖВ.');
+ if(kcal>10000)return alert('Перевір калорії: значення понад 10 000 ккал виглядає помилковим.');
+ if(protein>1000||fat>1000||carbs>1000)return alert('Перевір БЖВ: значення понад 1000 г виглядає помилковим.');
+ if(button){button.disabled=true;button.textContent='Зберігаємо…'}
+ try{
+  let body={client_id:cid,day,kcal,protein,fat,carbs};
+  await api('/history/nutrition',{method:'POST',body:JSON.stringify(body)});
+  document.getElementById('historyNutritionModal')?.remove();
+  let d=await loadClientData(cid);window.currentClientData=d;showCalendarDay(day,null,false);
+ }catch(e){
+  if(button){button.disabled=false;button.textContent='Зберегти БЖВ'}
+  alert(e.message||'Не вдалося зберегти БЖВ.');
+ }
 }
 
 function historyWorkoutForm(day,cid,d){
@@ -126,7 +150,7 @@ function showCalendarDay(day,btn,pushHistory=true,targetSessionId=0){
  }else workoutHTML='<div class="exercise muted">Тренування за цей день не записано.</div>'+((session?.role==='trainer')?'':(d.client.status==='Заморожений'?'<div class="exercise muted">Акаунт на паузі: доступний лише перегляд історії.</div>':day<=isoToday()?historyWorkoutForm(day,d.client.id,d):'<div class="exercise muted">На майбутню дату дані додавати не можна.</div>'));
 
  let sessionHTML=workoutSession?`<div class="calendar-workout-session ${workoutSession.status==='finished'?'is-finished':'is-active'}" id="calendarWorkoutSession_${workoutSession.id}"><div class="calendar-workout-session-top"><strong>${esc(workoutSession.day_name)}</strong><span class="calendar-workout-session-status">${workoutSession.status==='finished'?'Завершено':'Тренування триває'}</span></div>${(+workoutSession.duration_seconds||0)>0?`<div class="calendar-workout-session-meta"><span class="calendar-workout-session-duration"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 13V9M9 3h6M12 6V3"/></svg><span>Тривалість</span><strong>${esc(formatWorkoutDuration(+workoutSession.duration_seconds||0))}</strong></span></div>`:''}${workoutSession.trainer_reviewed?`<div class="calendar-review-done"><strong>Перевірено тренером ✓</strong>${workoutSession.trainer_comment?`<div>${esc(workoutSession.trainer_comment)}</div>`:''}</div>`:(session?.role==='trainer'&&workoutSession.status==='finished'?`<div class="trainer-calendar-review"><strong>Потрібно перевірити</strong><textarea id="reviewComment${workoutSession.id}" placeholder="Коментар клієнту (необов’язково)..."></textarea><div class="review-actions"><button data-day="${esc(day)}" onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},this.dataset.day,true,event.currentTarget)">Надіслати та позначити перевіреним</button><button class="dark" data-day="${esc(day)}" onclick="reviewWorkoutFromCalendar(${workoutSession.id},${d.client.id},this.dataset.day,false,event.currentTarget)">Перевірено без коментаря</button></div></div>`:'')}</div>`:'';
- let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:'<div class="exercise muted">Харчування за цей день не внесено.</div>'+((session?.role==='client'&&d.client.status!=='Заморожений'&&day<=isoToday())?historyNutritionForm(day,d.client.id):'');
+ let nutritionHTML=nut.length?`<div class="exercise"><strong>${nut[0].kcal} ккал</strong><div class="muted">Б ${nut[0].protein} г · Ж ${nut[0].fat} г · В ${nut[0].carbs} г</div></div>`:((session?.role==='client'&&d.client.status!=='Заморожений'&&day<=isoToday())?historyNutritionForm(day,d.client.id):'<div class="exercise muted">Харчування за цей день не внесено.</div>');
  let cardioHTMLDay=cardio.length?(()=>{let x=cardio[0],parts=[];if(x.cardio_type)parts.push(esc(x.cardio_type));if(x.minutes)parts.push(`${x.minutes} хв`);if(x.speed&&x.cardio_type==='Доріжка')parts.push(`Швидкість ${x.speed}`);if(x.incline)parts.push(`${x.cardio_type==='Доріжка'?'Нахил':'Опір'} ${x.incline}${x.cardio_type==='Доріжка'?'%':''}`);if(x.steps)parts.push(`${x.steps} кроків`);return `<div class="exercise">${parts.length?`<div class="cardio-summary">${parts.map(v=>`<div class="cardio-chip">${v}</div>`).join('')}</div>`:'<div class="muted">Активність за цей день не внесено.</div>'}</div>`})():'<div class="exercise muted">Активність за цей день не внесено.</div>';
  let measures=meas.length?`<div class="card"><h2>Заміри</h2>${meas.map(x=>measurementRowHTML(x)).join('')}</div>`:'';
 
