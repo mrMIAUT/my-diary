@@ -51,6 +51,12 @@ const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'ht
 
 
 let appLanguage=localStorage.getItem('eplanLanguage')||'uk';
+// EN stays in the codebase for future full localization, but the current release
+// exposes only the complete Ukrainian interface.
+if(appLanguage!=='uk'){
+  appLanguage='uk';
+  try{localStorage.setItem('eplanLanguage','uk')}catch(e){}
+}
 
 const EN_MAP={
 'Клієнти':'Clients','Анкета':'Profile','Анкета клієнта':'Client profile','Програма':'Program','Результати':'Results','Харчування':'Nutrition','Заміри':'Measurements','Календар':'Calendar','Кардіо':'Cardio','Бібліотека вправ':'Exercise library',
