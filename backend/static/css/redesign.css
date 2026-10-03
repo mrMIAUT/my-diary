@@ -8212,10 +8212,10 @@ body.eplan-redesign.client-ui .progress-workout-stat strong{
   white-space:nowrap;
 }
 body.eplan-redesign.client-ui .progress-workout-stat.primary{
-  border-color:#dbe7f7;
-  background:#eef4ff;
+  border-color:#e1e8f2;
+  background:#fff;
 }
-body.eplan-redesign.client-ui .progress-workout-stat.primary small{color:#7a8aa3}
+body.eplan-redesign.client-ui .progress-workout-stat.primary small{color:#7b899d}
 body.eplan-redesign.client-ui .progress-workout-stat.primary strong{color:#0a1738}
 body.eplan-redesign.client-ui .progress-workout-muscles{
   margin-top:12px;
