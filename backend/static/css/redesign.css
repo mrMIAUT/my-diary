@@ -11521,3 +11521,81 @@ body.eplan-redesign.trainer-ui .trainer-progress-pr-card b{color:#c7821d!importa
 
 /* Compact empty state inside volume panel */
 body.eplan-redesign.trainer-ui .trainer-progress-empty.compact{padding:10px!important;font-size:9px!important}
+
+
+/* Trainer Progress comparison v30 — isolate previous result from legacy set grid */
+body.eplan-redesign.trainer-ui .trainer-review-sets>.trainer-review-set-block{
+  display:block!important;
+  grid-template-columns:none!important;
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-current{
+  display:grid!important;
+  grid-template-columns:64px minmax(0,1fr) 46px!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-height:42px!important;
+  padding:9px 10px!important;
+  border-radius:11px!important;
+  background:#f6f8fb!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-current>small{
+  color:#8b97a9!important;
+  font-size:9px!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-current>b{
+  color:#183153!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-current>em{
+  color:#718099!important;
+  font-size:9px!important;
+  font-style:normal!important;
+  font-weight:800!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-previous{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  min-height:24px!important;
+  padding:4px 10px 0!important;
+  background:transparent!important;
+  color:#8491a4!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-previous>span{
+  flex:0 0 auto!important;
+  color:#8b98aa!important;
+  font-size:8.5px!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-previous>strong{
+  min-width:0!important;
+  color:#617089!important;
+  font-size:9px!important;
+  font-weight:850!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* PR: only the PR badge is orange; result values stay Premium Navy. */
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card>span{
+  background:#fff4df!important;
+  color:#b87218!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card>b{
+  color:#0a1738!important;
+}
