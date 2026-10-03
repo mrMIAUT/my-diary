@@ -3121,17 +3121,6 @@ body.eplan-redesign.client-ui .measurement-history-pair-sides b{
   font-size:11px;
   white-space:nowrap;
 }
-body.eplan-redesign.client-ui .measurement-history-legacy{
-  color:#53647d;
-  font-size:11px;
-  font-weight:800;
-}
-body.eplan-redesign.client-ui .measurement-history-legacy small{
-  display:block;
-  color:#8b98aa;
-  font-size:8.5px;
-  font-weight:700;
-}
 body.eplan-redesign.client-ui .measurement-metric.paired{
   display:grid;
   gap:8px;
