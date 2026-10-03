@@ -86,8 +86,104 @@ function trainerPendingReviewsHTML(d){
  +'</section>';
 }
 
+function trainerWorkoutCalendarDates(d){
+ let sessionDates=(d.workout_sessions||[]).filter(x=>x.status==='finished').map(sessionDay).filter(Boolean);
+ let setDates=(d.result_sets||[]).map(x=>x.day).filter(Boolean);
+ return [...new Set([...sessionDates,...setDates])].sort().reverse();
+}
+
+function trainerWorkoutCalendarState(d){
+ let cid=+d?.client?.id||0,st=window.trainerWorkoutCalendarState;
+ if(!st||+st.cid!==cid){
+   let dates=trainerWorkoutCalendarDates(d),latest=dates[0]||isoToday();
+   st={cid,month:String(latest).slice(0,7),day:'',sid:0};
+   window.trainerWorkoutCalendarState=st;
+ }
+ return st;
+}
+
+function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
+ if(!day)return '<div class="trainer-workout-calendar-empty">Обери дату з позначкою, щоб переглянути тренування.</div>';
+ let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&sessionDay(x)===day).slice().sort((a,b)=>(+b.id||0)-(+a.id||0));
+ if(targetSid)sessions.sort((a,b)=>(+b.id===+targetSid)-(+a.id===+targetSid));
+ if(!sessions.length){
+   let hasSets=(d.result_sets||[]).some(x=>x.day===day);
+   if(!hasSets)return '<div class="trainer-workout-calendar-empty">На цю дату тренування не знайдено.</div>';
+   sessions=[{id:0,day_name:'Тренування',workout_day:day,status:'finished',trainer_reviewed:true}];
+ }
+ return '<div class="trainer-workout-calendar-day-head"><div><small>ОБРАНА ДАТА</small><strong>'+esc(formatProgressDate(day))+'</strong></div><span>'+sessions.length+' '+(sessions.length===1?'тренування':'тренування')+'</span></div>'
+   +'<div class="trainer-workout-calendar-sessions">'+sessions.map(s=>{
+      let reviewed=!!s.trainer_reviewed,sid=+s.id||0;
+      return '<article class="trainer-workout-calendar-session" data-session="'+sid+'">'
+        +'<div class="trainer-workout-calendar-session-head">'
+          +'<div><strong>'+esc(s.day_name||'Тренування')+'</strong><span>'+esc(day)+'</span></div>'
+          +'<div class="trainer-workout-calendar-session-meta">'
+            +(s.duration_seconds!==undefined&&s.duration_seconds!==null?workoutDurationBadgeHTML(s,'trainer-calendar-duration'):'')
+            +'<span class="trainer-workout-calendar-status '+(reviewed?'reviewed':'pending')+'">'+(reviewed?'Перевірено ✓':'До перевірки')+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div class="trainer-workout-calendar-exercises">'+trainerReviewExerciseRowsHTML(d,s)+'</div>'
+        +(reviewed&&s.trainer_comment?'<div class="trainer-workout-calendar-comment"><small>Коментар тренера</small><p>'+esc(s.trainer_comment)+'</p></div>':'')
+        +(!reviewed&&sid?'<button class="trainer-workout-calendar-review-link" onclick="focusTrainerPendingSession('+sid+')">Перейти до перевірки →</button>':'')
+      +'</article>';
+   }).join('')+'</div>';
+}
+
+function trainerWorkoutCalendarHTML(d){
+ let st=trainerWorkoutCalendarState(d),dates=trainerWorkoutCalendarDates(d);
+ if(!st.month)st.month=(dates[0]||isoToday()).slice(0,7);
+ let [yy,mm]=st.month.split('-').map(Number);
+ if(!yy||!mm){let now=isoToday();st.month=now.slice(0,7);[yy,mm]=st.month.split('-').map(Number)}
+ let first=new Date(yy,mm-1,1),count=new Date(yy,mm,0).getDate(),start=(first.getDay()+6)%7,dateSet=new Set(dates),cells='';
+ for(let i=0;i<start;i++)cells+='<span class="trainer-workout-calendar-cell empty"></span>';
+ for(let n=1;n<=count;n++){
+   let day=st.month+'-'+String(n).padStart(2,'0'),has=dateSet.has(day),selected=st.day===day;
+   cells+='<button type="button" class="trainer-workout-calendar-cell '+(has?'has-workout ':'')+(selected?'selected':'')+'" '+(has?'data-day="'+esc(day)+'" onclick="selectTrainerWorkoutCalendarDay(this.dataset.day)"':'disabled')+'><span>'+n+'</span>'+(has?'<i></i>':'')+'</button>';
+ }
+ let monthNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+ return '<section class="trainer-workout-calendar-card">'
+   +'<div class="trainer-workout-calendar-title"><div><small>ІСТОРІЯ</small><h2>Календар тренувань</h2><p>Завершені тренування клієнта за датами.</p></div><span>'+dates.length+'</span></div>'
+   +'<div class="trainer-workout-calendar-nav"><button type="button" onclick="changeTrainerWorkoutCalendarMonth(-1)" aria-label="Попередній місяць">‹</button><strong>'+monthNames[mm-1]+' '+yy+' р.</strong><button type="button" onclick="changeTrainerWorkoutCalendarMonth(1)" aria-label="Наступний місяць">›</button></div>'
+   +'<div class="trainer-workout-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
+   +'<div class="trainer-workout-calendar-grid">'+cells+'</div>'
+   +'<div id="trainerWorkoutCalendarDetails" class="trainer-workout-calendar-details">'+trainerWorkoutCalendarDayHTML(d,st.day,st.sid)+'</div>'
+ +'</section>';
+}
+
+function renderTrainerWorkoutCalendar(){
+ let host=document.getElementById('trainerWorkoutHistory'),d=window.currentClientData||{};
+ if(host)host.innerHTML=trainerWorkoutCalendarHTML(d);
+}
+
+function changeTrainerWorkoutCalendarMonth(delta){
+ let d=window.currentClientData||{},st=trainerWorkoutCalendarState(d),parts=st.month.split('-').map(Number),dt=new Date(parts[0],parts[1]-1+delta,1);
+ st.month=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');st.day='';st.sid=0;renderTrainerWorkoutCalendar();
+}
+
+function selectTrainerWorkoutCalendarDay(day,sid=0){
+ let d=window.currentClientData||{},st=trainerWorkoutCalendarState(d);
+ st.day=day||'';st.sid=+sid||0;if(day)st.month=String(day).slice(0,7);
+ renderTrainerWorkoutCalendar();
+ requestAnimationFrame(()=>document.getElementById('trainerWorkoutCalendarDetails')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+}
+
+function openTrainerWorkoutCalendar(day,sid=0){
+ let d=window.currentClientData||{},st=trainerWorkoutCalendarState(d);
+ if(day){st.month=String(day).slice(0,7);st.day=day}
+ st.sid=+sid||0;renderTrainerWorkoutCalendar();
+ setTimeout(()=>document.getElementById('trainerWorkoutHistory')?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+
+function focusTrainerPendingSession(sid){
+ let card=document.querySelector('#trainerPendingReviewQueue .trainer-review-card[data-session="'+(+sid||0)+'"]');
+ if(!card)return;
+ let btn=card.querySelector('.trainer-review-toggle'),body=card.querySelector('.trainer-review-detail');
+ if(body?.classList.contains('hidden')&&btn)toggleTrainerPendingReview(btn);
+ setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'center'}),40);
+}
+
 function trainerTrainingTabHTML(d){
- return trainerPendingReviewsHTML(d)+programHTML(d);
+ return trainerPendingReviewsHTML(d)+'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'+programHTML(d);
 }
 
 function toggleTrainerPendingReview(btn){
