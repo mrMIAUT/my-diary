@@ -41,11 +41,19 @@ async function showExerciseLibrary(){
 
  let adminCard=`<div class="card trainer-library-admin">
    <button class="exercise-toggle trainer-library-admin-toggle" onclick="toggleExercise('libraryAdminBody',this)">
-     <span><strong>Керування бібліотекою</strong><small>Групи вправ і довідник м’язів</small></span><span class="arrow">⌄</span>
+     <span><strong>Керування бібліотекою</strong><small>Групи вправ і довідник м’язів</small></span>
+     <span class="trainer-library-toggle-meta"><b>${L.groups.length+L.muscles.length}</b><i class="arrow">⌄</i></span>
    </button>
    <div id="libraryAdminBody" class="hidden trainer-library-admin-body">
-     <div class="trainer-library-admin-section"><h3>Групи вправ</h3><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Ноги"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>
-     <div class="trainer-library-admin-section"><h3>Довідник м’язів</h3><div class="grid"><input id="newLibraryMuscle" placeholder="Напр. Квадрицепс"><button onclick="addLibraryMuscle()">+ Додати м’яз</button></div><div class="library-muscle-admin-list">${L.muscles.map(m=>`<div><span>${esc(m.name)}</span><button class="library-icon-btn library-delete-btn" title="Видалити м’яз" onclick="deleteLibraryMuscle(${m.id})">×</button></div>`).join('')||'<p class="muted">М’язів ще немає.</p>'}</div></div>
+     <div class="trainer-library-admin-section">
+       <div class="trainer-library-admin-section-head"><div><strong>Групи вправ</strong><small>Наприклад: Ноги, Груди, Спина</small></div></div>
+       <div class="trainer-library-admin-form"><input id="newLibraryGroup" placeholder="Назва групи"><button class="trainer-library-primary-btn" onclick="addLibraryGroup()">+ Додати групу</button></div>
+     </div>
+     <div class="trainer-library-admin-section">
+       <div class="trainer-library-admin-section-head"><div><strong>Довідник м’язів</strong><small>Використовується для фільтрів та обсягу</small></div></div>
+       <div class="trainer-library-admin-form"><input id="newLibraryMuscle" placeholder="Назва м’яза"><button class="trainer-library-primary-btn" onclick="addLibraryMuscle()">+ Додати м’яз</button></div>
+       <div class="library-muscle-admin-list">${L.muscles.map(m=>`<div><span>${esc(m.name)}</span><button class="library-icon-btn library-delete-btn" title="Видалити м’яз" onclick="deleteLibraryMuscle(${m.id})">×</button></div>`).join('')||'<p class="muted">М’язів ще немає.</p>'}</div>
+     </div>
    </div>
  </div>`;
 
@@ -53,21 +61,25 @@ async function showExerciseLibrary(){
    let all=L.exercises.filter(x=>+x.group_id===+g.id),xs=all.filter(exerciseVisible);
    if((q||muscleFilter)&&!xs.length)return '';
    return `<div class="card trainer-library-group">
-     <button class="exercise-toggle trainer-library-group-toggle" onclick="toggleExercise('libGroup${g.id}',this)">
-       <span><strong>${esc(g.name)}</strong><small>${xs.length} ${xs.length===1?'вправа':'вправ'}</small></span><span class="arrow">⌄</span>
+     <button class="exercise-toggle trainer-library-group-toggle redesign-library-group-head" onclick="toggleExercise('libGroup${g.id}',this)">
+       <strong>${esc(g.name)}</strong>
+       <span class="redesign-library-group-meta trainer-library-toggle-meta"><b>${xs.length}</b><i class="arrow">⌄</i></span>
      </button>
      <div id="libGroup${g.id}" class="library-group-body hidden">
        <div class="trainer-library-exercise-list">
-         ${xs.map(x=>`<div class="library-exercise trainer-library-exercise">
-           <div class="library-exercise-main"><strong>${esc(x.name)}</strong>${libraryMuscleBadges(x)}${x.technique_url?`<div class="trainer-library-video">${techniqueLinkHTML(x.technique_url,'▶ Відео',false,'')}</div>`:''}</div>
+         ${xs.map(x=>`<div class="library-exercise trainer-library-exercise redesign-library-row">
+           <div class="library-exercise-main"><strong>${esc(x.name)}</strong>${libraryMuscleBadges(x)}${x.technique_url?`<div class="trainer-library-video">${techniqueLinkHTML(x.technique_url,'Відео',false,'redesign-library-video')}</div>`:''}</div>
            <div class="library-exercise-actions"><button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit(${x.id})">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise(${x.id})">×</button></div>
-         </div>`).join('')||'<p class="muted">Вправ ще немає.</p>'}
+         </div>`).join('')||'<p class="muted trainer-library-empty-row">Вправ ще немає.</p>'}
        </div>
-       <div class="library-add-exercise trainer-library-add">
-         <h3>Додати вправу</h3>
-         <div class="grid"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div>
-         ${libraryMuscleChecks('add'+g.id)}
-         <div class="trainer-library-add-actions"><button onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div>
+       <div class="trainer-library-group-footer">
+         <button class="trainer-library-add-toggle" type="button" onclick="toggleExercise('libAdd${g.id}',this)"><span>+ Додати вправу</span><span class="arrow">⌄</span></button>
+         <div id="libAdd${g.id}" class="library-add-exercise trainer-library-add hidden">
+           <div class="trainer-library-add-head"><strong>Нова вправа</strong><small>Назва, техніка та цільові м’язи</small></div>
+           <div class="trainer-library-input-stack"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div>
+           ${libraryMuscleChecks('add'+g.id)}
+           <div class="trainer-library-add-actions"><button class="trainer-library-primary-btn" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="trainer-library-danger-btn" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div>
+         </div>
        </div>
      </div>
    </div>`;
