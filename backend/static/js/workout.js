@@ -319,8 +319,10 @@ function activeExercisesHTML(items,d,cid){
 
 
 function commentsHTML(d,cid,day=isoToday()){
- let xs=(d.comments||[]).filter(x=>x.day===day);
- return `<div class="card"><h2>Коментарі</h2>${xs.length?xs.map(x=>`<div class="exercise comment-row"><strong>${x.author==='trainer'?'Тренер':'Клієнт'}</strong><div style="margin-top:6px">${esc(x.body)}</div>${session?.role==='trainer'||session?.role===x.author?`<button class="danger comment-delete" data-day="${esc(day)}" onclick="deleteComment(${x.id},${cid},this.dataset.day)">Видалити</button>`:''}</div>`).join(''):'<p class="muted">Коментарів ще немає.</p>'}<textarea id="commentText" placeholder="Написати коментар..." style="width:100%;min-height:90px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;resize:vertical"></textarea><br><br><button data-day="${esc(day)}" onclick="saveComment(${cid},this.dataset.day)">Надіслати</button></div>`;
+ let xs=(d.comments||[]).filter(x=>x.day===day),canComment=!!clientAccess(d.client).features?.trainer_review;
+ let rows=xs.length?xs.map(x=>`<div class="exercise comment-row"><strong>${x.author==='trainer'?'Тренер':'Клієнт'}</strong><div style="margin-top:6px">${esc(x.body)}</div>${canComment&&(session?.role==='trainer'||session?.role===x.author)?`<button class="danger comment-delete" data-day="${esc(day)}" onclick="deleteComment(${x.id},${cid},this.dataset.day)">Видалити</button>`:''}</div>`).join(''):'<p class="muted">Коментарів ще немає.</p>';
+ let composer=canComment?`<textarea id="commentText" placeholder="Написати коментар..." style="width:100%;min-height:90px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;resize:vertical"></textarea><br><br><button data-day="${esc(day)}" onclick="saveComment(${cid},this.dataset.day)">Надіслати</button>`:'<p class="muted" style="margin-bottom:0">Коментарі доступні в тарифі «Онлайн-ведення».</p>';
+ return `<div class="card"><h2>Коментарі</h2>${rows}${composer}</div>`;
 }
 
 async function deleteComment(id,cid,day){
