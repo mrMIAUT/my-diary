@@ -2211,23 +2211,6 @@ def get_all_trainer_notifications(user:AuthUser=Depends(require_trainer)):
                JOIN clients c ON c.id=n.client_id
                WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0 AND c.status<>'Видалений'
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
-    # Backfill a bell item for finished workouts that still need review and were
-    # completed before workout-finished notifications were introduced.
-    pending=rows("""SELECT s.id AS sid,s.client_id,s.day_name,s.started_at,s.finished_at,c.name AS client_name
-                    FROM workout_sessions s JOIN clients c ON c.id=s.client_id
-                    WHERE c.status<>'Видалений' AND s.status='finished' AND COALESCE(s.trainer_reviewed,FALSE)=FALSE
-                    ORDER BY COALESCE(s.finished_at,s.started_at) DESC""")
-    existing={int(x.get("target_session_id") or 0) for x in xs}
-    for s in pending:
-        if not s.get("client_name"): continue
-        if int(s["sid"]) in existing: continue
-        dt=s.get("finished_at") or s.get("started_at")
-        xs.append({"id":-int(s["sid"]),"client_id":s["client_id"],"recipient":"trainer",
-                   "kind":"workout_finished","message":f"{s['client_name']} завершив тренування «{s['day_name']}». Потрібно перевірити.",
-                   "is_read":False,"created_at":dt,"client_name":s["client_name"],
-                   "target_tab":"results","target_day":str(s.get("workout_day") or s.get("started_at") or "")[:10],
-                   "target_program_id":0,"target_session_id":s["sid"]})
-    xs.sort(key=lambda x:str(x.get("created_at") or ""),reverse=True)
     return xs[:200]
 
 @app.get("/api/notifications/{cid}")
@@ -2255,6 +2238,17 @@ def read_notification_item(nid:int,user:AuthUser=Depends(current_user)):
 def read_notifications(cid:int,x:NotificationReadIn,user:AuthUser=Depends(current_user)):
     authorize_recipient(user,cid,x.recipient)
     run("UPDATE notifications SET is_read=TRUE WHERE client_id=? AND recipient=?",(cid,x.recipient))
+    return {"ok":True}
+
+@app.delete("/api/notifications/trainer/all")
+def clear_all_trainer_notifications(user:AuthUser=Depends(require_trainer)):
+    run("DELETE FROM notifications WHERE recipient='trainer'")
+    return {"ok":True}
+
+@app.delete("/api/notifications/{cid}/all")
+def clear_all_notifications(cid:int,recipient:str=Query(max_length=16),user:AuthUser=Depends(current_user)):
+    authorize_recipient(user,cid,recipient)
+    run("DELETE FROM notifications WHERE client_id=? AND recipient=?",(cid,recipient))
     return {"ok":True}
 
 @app.post("/api/nutrition")
@@ -3175,23 +3169,6 @@ def get_all_trainer_notifications(user:AuthUser=Depends(require_trainer)):
                JOIN clients c ON c.id=n.client_id
                WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0 AND c.status<>'Видалений'
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
-    # Backfill a bell item for finished workouts that still need review and were
-    # completed before workout-finished notifications were introduced.
-    pending=rows("""SELECT s.id AS sid,s.client_id,s.day_name,s.started_at,s.finished_at,c.name AS client_name
-                    FROM workout_sessions s JOIN clients c ON c.id=s.client_id
-                    WHERE c.status<>'Видалений' AND s.status='finished' AND COALESCE(s.trainer_reviewed,FALSE)=FALSE
-                    ORDER BY COALESCE(s.finished_at,s.started_at) DESC""")
-    existing={int(x.get("target_session_id") or 0) for x in xs}
-    for s in pending:
-        if not s.get("client_name"): continue
-        if int(s["sid"]) in existing: continue
-        dt=s.get("finished_at") or s.get("started_at")
-        xs.append({"id":-int(s["sid"]),"client_id":s["client_id"],"recipient":"trainer",
-                   "kind":"workout_finished","message":f"{s['client_name']} завершив тренування «{s['day_name']}». Потрібно перевірити.",
-                   "is_read":False,"created_at":dt,"client_name":s["client_name"],
-                   "target_tab":"results","target_day":str(s.get("workout_day") or s.get("started_at") or "")[:10],
-                   "target_program_id":0,"target_session_id":s["sid"]})
-    xs.sort(key=lambda x:str(x.get("created_at") or ""),reverse=True)
     return xs[:200]
 
 @app.get("/api/notifications/{cid}")
