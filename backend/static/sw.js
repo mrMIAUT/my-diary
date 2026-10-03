@@ -1,4 +1,4 @@
-const VERSION='eplan-v82';
+const VERSION='eplan-v83';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -7,10 +7,10 @@ const APP_SHELL_URLS=[
   '/static/icons/icon-192.png?v=65',
   '/static/icons/icon-512.png?v=65',
   '/static/css/base.css',
-  '/static/css/components.css?v=150',
+  '/static/css/components.css?v=151',
   '/static/css/refinements.css?v=141',
   '/static/css/redesign.css?v=142',
-  '/static/js/core.js?v=147',
+  '/static/js/core.js?v=151',
   '/static/js/auth.js?v=67',
   '/static/js/trainer.js',
   '/static/js/client.js?v=150',
@@ -30,8 +30,8 @@ const APP_SHELL_URLS=[
   '/static/js/timer.js?v=107',
   '/static/js/workout-lyfta.js?v=144',
   '/static/js/notifications.js?v=125',
-  '/static/js/app.js?v=145',
-  '/static/js/pwa.js?v=82',
+  '/static/js/app.js?v=151',
+  '/static/js/pwa.js?v=83',
   '/static/js/startup-ui.js?v=90'
 ];
 let restTimerHandle=null;
