@@ -173,5 +173,4 @@ window.clientCabinet = async function(id){
   currentClientView='home';
   app.innerHTML=shell(accessBannerHTML(c)+redesignClientHomeHTML(d,c,id,groups));
   refreshNotificationBadge(id,'client','clientNotifyBtn');
-  setTimeout(maybeShowClientOnboarding,180);
 };
