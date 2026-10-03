@@ -20,8 +20,6 @@ function toggleClientPanel(id,btn){let el=$('#'+id);if(!el)return;el.classList.t
 
 function profileVal(v){return esc(v==null?'':String(v))}
 
-function contactHref(v){v=(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;if(/^@/.test(v))return 'https://t.me/'+v.slice(1);if(/^(instagram\.com|t\.me|telegram\.me|www\.)/i.test(v))return 'https://'+v;return ''}
-
 function socialHref(kind,v){
  v=String(v||'').trim();if(!v)return '';
  if(/^https?:\/\//i.test(v))return v;
@@ -59,8 +57,6 @@ function socialContactsHTML(c){
  if(!items.length)return '<strong>—</strong>';
  return `<div class="profile-socials">${items.map(([k,v])=>`<a class="profile-social ${k}" href="${esc(socialHref(k,v))}" target="_blank" rel="noopener" aria-label="${k}">${socialIcon(k)}</a>`).join('')}</div>`;
 }
-
-function contactLinkHTML(v){if(!v)return '<strong>—</strong>';let href=contactHref(v);return href?`<a class="contact-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(v)}</a>`:`<strong>${esc(v)}</strong>`}
 
 function clientProfileAvatarHTML(c,cid){
  let photo=String(c.avatar||'').trim(),state=photo?'has-photo':'is-placeholder';
