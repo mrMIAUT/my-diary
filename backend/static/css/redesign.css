@@ -11311,3 +11311,107 @@ body.eplan-redesign.trainer-ui .trainer-workout-calendar-review-link{
   width:100%!important;min-height:38px!important;margin-top:9px!important;border:1px solid #f1d4b8!important;border-radius:11px!important;
   background:#fff6ed!important;color:#bd6d2b!important;box-shadow:none!important;font-size:10.5px!important;font-weight:850!important;
 }
+
+
+/* Trainer unified Progress tab v28 */
+body.eplan-redesign.trainer-ui .trainer-progress-page{display:grid!important;gap:12px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-hero{
+  padding:18px!important;border:1px solid #dfe7f2!important;border-radius:20px!important;background:#fff!important;
+  box-shadow:0 7px 22px rgba(32,67,107,.045)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-hero small{
+  display:block!important;margin-bottom:3px!important;color:#8a98aa!important;font-size:9.5px!important;font-weight:900!important;letter-spacing:.06em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-hero h2{margin:0!important;color:#0a1738!important;font-size:22px!important;font-weight:900!important}
+body.eplan-redesign.trainer-ui .trainer-progress-hero p{margin:5px 0 0!important;color:#7d8ba0!important;font-size:11px!important;line-height:1.4!important}
+body.eplan-redesign.trainer-ui .trainer-progress-periods{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;margin-top:14px!important;padding:4px!important;
+  border-radius:13px!important;background:#edf2f8!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-periods button{
+  min-height:34px!important;padding:0 5px!important;border:0!important;border-radius:10px!important;background:transparent!important;color:#738198!important;
+  box-shadow:none!important;font-size:10px!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-periods button.active{
+  background:#fff!important;color:#176fe5!important;box-shadow:0 3px 10px rgba(32,67,107,.07)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-summary,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-stats{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-summary>div,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-stats>div{
+  min-width:0!important;padding:12px!important;border:1px solid #e1e8f2!important;border-radius:15px!important;background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-summary span,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-stats span{
+  display:block!important;color:#7d8ba0!important;font-size:9.5px!important;font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-summary strong,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-stats strong{
+  display:block!important;margin-top:5px!important;color:#0a1738!important;font-size:17px!important;font-weight:900!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-summary small,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-stats small{
+  display:block!important;overflow:hidden!important;margin-top:3px!important;color:#98a3b3!important;font-size:8.5px!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-section{
+  padding:18px!important;border:1px solid #dfe7f2!important;border-radius:20px!important;background:#fff!important;
+  box-shadow:0 7px 22px rgba(32,67,107,.045)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-section-head{margin-bottom:12px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-section-head h3{margin:0!important;color:#0a1738!important;font-size:18px!important;font-weight:900!important}
+body.eplan-redesign.trainer-ui .trainer-progress-section-head p{margin:4px 0 0!important;color:#8290a4!important;font-size:10.5px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-empty{
+  padding:14px!important;border:1px dashed #dce5f1!important;border-radius:13px!important;background:#f9fbfd!important;color:#7f8da1!important;
+  text-align:center!important;font-size:10.5px!important;font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card{
+  min-width:0!important;padding:12px!important;border:1px solid #e0e8f2!important;border-radius:14px!important;background:#f8faff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card>span{
+  display:inline-flex!important;padding:4px 7px!important;border-radius:999px!important;background:#eef8f1!important;color:#278156!important;font-size:8px!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card strong{
+  display:block!important;overflow:hidden!important;margin-top:8px!important;color:#183153!important;font-size:11px!important;font-weight:850!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card b{
+  display:block!important;margin-top:5px!important;color:#0a1738!important;font-size:15px!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-pr-card small{display:block!important;margin-top:3px!important;color:#8b98aa!important;font-size:8.5px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list{display:grid!important;gap:7px!important;margin-top:10px!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list>div,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:10px 11px!important;border-radius:12px!important;background:#f7f9fc!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list span,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list span{min-width:0!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list strong,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list strong{
+  display:block!important;overflow:hidden!important;color:#183153!important;font-size:10.5px!important;font-weight:850!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list small,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list small{
+  display:block!important;margin-top:3px!important;color:#8b98aa!important;font-size:8.5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list b,
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list b{
+  flex:0 0 auto!important;color:#53647d!important;font-size:10px!important;font-weight:850!important;text-align:right!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list b em{margin-left:4px!important;font-style:normal!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list b.up em{color:#278156!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list b.down em{color:#c64a55!important}
+body.eplan-redesign.trainer-ui .trainer-progress-compare-list b.same em{color:#8290a4!important}
+body.eplan-redesign.trainer-ui #profile .trainer-private-note{margin-top:12px!important}
+body.eplan-redesign.trainer-ui #profile .trainer-checkin-history{margin-top:12px!important}
+body.eplan-redesign.trainer-ui .trainer-client-tabs button{min-width:0!important}
+@media(max-width:390px){
+  body.eplan-redesign.trainer-ui .trainer-progress-summary,
+  body.eplan-redesign.trainer-ui .trainer-progress-activity-stats{gap:6px!important}
+  body.eplan-redesign.trainer-ui .trainer-progress-summary>div,
+  body.eplan-redesign.trainer-ui .trainer-progress-activity-stats>div{padding:10px 8px!important}
+  body.eplan-redesign.trainer-ui .trainer-progress-summary strong,
+  body.eplan-redesign.trainer-ui .trainer-progress-activity-stats strong{font-size:14px!important}
+}
