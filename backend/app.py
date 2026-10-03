@@ -1466,7 +1466,7 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
     if x.access_until.strip():
         try: until=date.fromisoformat(x.access_until.strip())
         except Exception: raise HTTPException(400,"Некоректна дата доступу")
-    run("UPDATE clients SET plan_code=?,access_until=?,status=CASE WHEN status='Видалений' THEN status ELSE 'Активний' END WHERE id=?",(x.plan_code,until,cid))
+    run("UPDATE clients SET plan_code=?,access_until=? WHERE id=?",(x.plan_code,until,cid))
     return {"ok":True,"access":access_info(one("SELECT * FROM clients WHERE id=?",(cid,)))}
 
 @app.delete("/api/clients/{cid}")
