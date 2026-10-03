@@ -9101,3 +9101,94 @@ body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actio
 body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move button{
   align-self:center!important;
 }
+
+
+/* Hard unify trainer exercise headers v14 */
+/* One exact header geometry for normal exercises and superset exercises */
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-shell>.trainer-exercise-head,
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-inner>.trainer-exercise-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  height:58px!important;
+  min-height:58px!important;
+  max-height:58px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0 10px 0 14px!important;
+  border:0!important;
+  border-bottom:1px solid #e5ebf3!important;
+  background:#f7f9fc!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-inner{
+  margin:0!important;
+  padding:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-shell{
+  margin:0!important;
+  padding:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .trainer-program-title-line{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:0!important;
+  min-width:0!important;
+  height:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:30px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .trainer-program-title-line>strong{
+  display:block!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  color:#0a1738!important;
+  font-size:15px!important;
+  font-weight:850!important;
+  line-height:30px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .trainer-program-title-line>.alternative-tech-link{
+  display:inline-flex!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+  height:30px!important;
+  margin:0 0 0 8px!important;
+  padding:0 0 0 9px!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  line-height:30px!important;
+  vertical-align:middle!important;
+  top:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions,
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:5px!important;
+  height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  align-self:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions button,
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  max-width:30px!important;
+  max-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  align-self:center!important;
+  line-height:30px!important;
+}
