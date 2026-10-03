@@ -1,7 +1,6 @@
 // Redesign V1 — client home dashboard override.
 // Loaded after client.js so production logic stays intact while the redesign evolves.
 
-window.__legacyClientCabinet = window.__legacyClientCabinet || window.clientCabinet;
 
 function redesignClientDelta(last,prev,key){
   if(!last||!prev||!(+last[key]>0)||!(+prev[key]>0))return null;
