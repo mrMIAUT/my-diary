@@ -324,21 +324,64 @@ async function openClient(id,activeTab=null){
  showTrainerClientTab(currentTrainerTab,document.querySelector('.trainer-client-tabs [data-tab="'+currentTrainerTab+'"]'),false);
 }
 
+function trainerCheckinDetailsHTML(x,cid){
+ return '<div class="trainer-checkin-grid"><span>Самопочуття <b>'+x.mood+'/5</b></span><span>Сон <b>'+x.sleep+'/5</b></span><span>Енергія <b>'+x.energy+'/5</b></span><span>Голод <b>'+x.hunger+'/5</b></span><span>Складність <b>'+x.difficulty+'/5</b></span></div>'
+   +(x.comment?'<p>'+esc(x.comment)+'</p>':'')
+   +(!x.reviewed?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>');
+}
 function trainerCheckinCard(x,cid){
  return '<div class="card trainer-checkin-card"><div class="between"><div><small>ЩОТИЖНЕВИЙ ЗВІТ</small><h2>'+esc(String(x.week_start||''))+'</h2></div><span class="trainer-checkin-score">'+(x.reviewed?'✓':'Новий')+'</span></div>'
-   +'<div class="trainer-checkin-grid"><span>Самопочуття <b>'+x.mood+'/5</b></span><span>Сон <b>'+x.sleep+'/5</b></span><span>Енергія <b>'+x.energy+'/5</b></span><span>Голод <b>'+x.hunger+'/5</b></span><span>Складність <b>'+x.difficulty+'/5</b></span></div>'
-   +(x.comment?'<p>'+esc(x.comment)+'</p>':'')
-   +(!x.reviewed?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>')+'</div>';
+   +trainerCheckinDetailsHTML(x,cid)+'</div>';
 }
 async function reviewTrainerCheckin(cid,id){
  await api('/client/'+cid+'/checkin/'+id+'/review',{method:'PATCH',body:JSON.stringify({reviewed:true})});
  await openClient(cid,'profile');
 }
+function trainerCheckinHistoryItem(x,cid){
+ return '<div class="trainer-checkin-history-item">'
+   +'<button type="button" class="trainer-checkin-history-toggle" onclick="toggleTrainerCheckinHistoryItem(this)">'
+     +'<span><small>ЩОТИЖНЕВИЙ ЗВІТ</small><strong>'+esc(String(x.week_start||''))+'</strong></span>'
+     +'<span class="trainer-checkin-history-status '+(x.reviewed?'reviewed':'new')+'">'+(x.reviewed?'Переглянуто':'Новий')+'</span>'
+     +'<b class="trainer-checkin-history-arrow" aria-hidden="true">⌄</b>'
+   +'</button>'
+   +'<div class="trainer-checkin-history-detail hidden">'+trainerCheckinDetailsHTML(x,cid)+'</div>'
+ +'</div>';
+}
+function toggleTrainerCheckinHistoryItem(btn){
+ let item=btn?.closest('.trainer-checkin-history-item'),detail=item?.querySelector('.trainer-checkin-history-detail');
+ if(!detail)return;
+ let open=detail.classList.contains('hidden');
+ detail.classList.toggle('hidden',!open);
+ item.classList.toggle('is-open',open);
+}
+function trainerCheckinHistoryLimit(cid){
+ window.trainerCheckinHistoryLimits=window.trainerCheckinHistoryLimits||{};
+ return Math.max(3,+window.trainerCheckinHistoryLimits[cid]||3);
+}
+function showMoreTrainerCheckins(cid){
+ window.trainerCheckinHistoryLimits=window.trainerCheckinHistoryLimits||{};
+ window.trainerCheckinHistoryLimits[cid]=trainerCheckinHistoryLimit(cid)+5;
+ let host=document.getElementById('trainerCheckinHistoryHost');
+ if(host&&window.currentClientData)host.innerHTML=trainerCheckinHistoryHTML(window.currentClientData,cid);
+}
+function trainerCheckinHistoryHTML(d,cid){
+ let xs=(d.checkins||[]).slice().sort((a,b)=>String(b.week_start||'').localeCompare(String(a.week_start||''))||(+b.id||0)-(+a.id||0));
+ if(!xs.length)return '<div class="trainer-checkin-history-empty">Щотижневих звітів ще немає.</div>';
+ let limit=trainerCheckinHistoryLimit(cid),shown=xs.slice(0,limit),left=Math.max(0,xs.length-shown.length);
+ return '<div class="trainer-checkin-history-list">'+shown.map(x=>trainerCheckinHistoryItem(x,cid)).join('')+'</div>'
+   +(left?'<button type="button" class="trainer-checkin-history-more" onclick="showMoreTrainerCheckins('+cid+')">Показати ще <span>('+left+')</span></button>':'');
+}
 function trainerNotesHTML(d,cid){
- let note=String(d.trainer_note?.body||'');
- let checkins=d.checkins||[];
- return '<div class="card trainer-private-note"><div class="between"><div><small>ЛИШЕ ДЛЯ ТРЕНЕРА</small><h2>Приватні нотатки</h2></div></div><textarea id="trainerPrivateNote" placeholder="Наприклад: ліве коліно реагує на великий об’єм випадів...">'+esc(note)+'</textarea><button onclick="saveTrainerPrivateNote('+cid+',this)">Зберегти нотатку</button></div>'
-   +'<div class="card trainer-checkin-history"><h2>Історія щотижневих звітів</h2>'+(checkins.length?checkins.map(x=>trainerCheckinCard(x,cid)).join(''):'<p class="muted">Щотижневих звітів ще немає.</p>')+'</div>';
+ let note=String(d.trainer_note?.body||''),total=(d.checkins||[]).length;
+ return '<div class="card trainer-private-note">'
+   +'<div class="trainer-private-note-head"><div><small>ЛИШЕ ДЛЯ ТРЕНЕРА</small><h2>Приватні нотатки</h2><p>Ці нотатки бачиш тільки ти.</p></div></div>'
+   +'<textarea id="trainerPrivateNote" placeholder="Наприклад: ліве коліно реагує на великий об’єм випадів...">'+esc(note)+'</textarea>'
+   +'<button class="trainer-private-note-save" onclick="saveTrainerPrivateNote('+cid+',this)">Зберегти нотатку</button>'
+ +'</div>'
+ +'<div class="card trainer-checkin-history">'
+   +'<div class="trainer-checkin-history-head"><div><h2>Історія щотижневих звітів</h2><p>Останні звіти клієнта</p></div><span>'+total+'</span></div>'
+   +'<div id="trainerCheckinHistoryHost">'+trainerCheckinHistoryHTML(d,cid)+'</div>'
+ +'</div>';
 }
 async function saveTrainerPrivateNote(cid,btn){
  let body=document.getElementById('trainerPrivateNote')?.value||'';
