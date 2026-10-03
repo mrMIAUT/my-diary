@@ -151,7 +151,7 @@ window.workoutExerciseChoices=window.workoutExerciseChoices||{};
 
 window.addEventListener('popstate',async e=>{
  if(!session)return;
- document.querySelectorAll('.modal').forEach(x=>x.remove());closeSideMenu();
+ document.querySelectorAll('.modal').forEach(x=>x.remove());
  let st=e.state||{};
  if(st.eplanPage==='calendarDay'&&st.eplanDay){
    if(session.role==='trainer'&&st.eplanClient){selected=st.eplanClient;window.currentClientData=await loadClientData(st.eplanClient)}
