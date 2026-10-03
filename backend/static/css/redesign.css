@@ -8811,3 +8811,32 @@ body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-move butto
   font-size:14px!important;
   font-weight:850!important;
 }
+
+
+/* Fix superset move pinning v8 */
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .trainer-superset-head{
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  min-height:46px!important;
+  box-sizing:border-box!important;
+  padding:15px 54px 13px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-move{
+  position:absolute!important;
+  top:50%!important;
+  right:10px!important;
+  transform:translateY(-50%)!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-move button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+}
