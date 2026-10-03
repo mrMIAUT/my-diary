@@ -336,8 +336,8 @@ async function openClient(id,activeTab=null){
    ${latestCheck?trainerCheckinCard(latestCheck,c.id):'<div class="card trainer-checkin-empty"><strong>Щотижневих звітів ще немає</strong><span>Перший щотижневий звіт клієнта з’явиться тут.</span></div>'}
    ${trainerProfileHTML(c)}
    ${trainerAccessHTML(c)}
+   ${trainerNotesHTML(d,c.id)}
  `;
- let notes=trainerNotesHTML(d,c.id);
  app.innerHTML=shell(`<div class="trainer-client-page">
    <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="toggleTrainerClientActions(event)" aria-label="Дії з клієнтом">•••</button></div>
    <div id="trainerClientActionsLayer" class="trainer-client-actions-layer hidden" onclick="closeTrainerClientActions()">
@@ -356,17 +356,20 @@ async function openClient(id,activeTab=null){
      <button data-tab="program" onclick="showTrainerClientTab('program',this)">Тренування</button>
      <button data-tab="results" onclick="showTrainerClientTab('results',this)">Заміри</button>
      <button data-tab="nutrition" onclick="showTrainerClientTab('nutrition',this)">Харчування</button>
-     <button data-tab="notes" onclick="showTrainerClientTab('notes',this)">Нотатки</button>
+     <button data-tab="progress" onclick="showTrainerClientTab('progress',this)">Прогрес</button>
    </div>
    <div id="profile" class="tab">${profile}</div>
    <div id="program" class="tab hidden">${trainerSafePane(()=>trainerTrainingTabHTML(d),'program')}</div>
    <div id="results" class="tab hidden">${trainerSafePane(()=>trainerMeasurementsResultsHTML(d),'measurements')}</div>
    <div id="nutrition" class="tab hidden">${trainerSafePane(()=>nutritionHTML(d),'nutrition')}</div>
-   <div id="notes" class="tab hidden">${notes}</div>
-   <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${trainerSafePane(()=>calendarHTML(d,'trainer'),'calendar')}</div></div></div>
+   <div id="progress" class="tab hidden">${trainerSafePane(()=>trainerProgressHTML(d),'progress')}</div>
  </div>`);
  refreshTrainerGlobalBadge();
- currentTrainerTab=activeTab||'profile';
+ let requestedTab=activeTab||'profile';
+ if(requestedTab==='notes')requestedTab='profile';
+ if(requestedTab==='calendar')requestedTab='progress';
+ if(!['profile','program','results','nutrition','progress'].includes(requestedTab))requestedTab='profile';
+ currentTrainerTab=requestedTab;
  showTrainerClientTab(currentTrainerTab,document.querySelector('.trainer-client-tabs [data-tab="'+currentTrainerTab+'"]'),false);
 }
 
