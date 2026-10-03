@@ -314,7 +314,7 @@ async function openClient(id,activeTab=null){
    </div>
    <div id="profile" class="tab">${profile}</div>
    <div id="program" class="tab hidden">${trainerSafePane(()=>programHTML(d),'program')}</div>
-   <div id="results" class="tab hidden">${trainerSafePane(()=>resultsHTML(d),'results')}</div>
+   <div id="results" class="tab hidden">${trainerSafePane(()=>trainerMeasurementsResultsHTML(d),'measurements')}</div>
    <div id="nutrition" class="tab hidden">${trainerSafePane(()=>nutritionHTML(d),'nutrition')}</div>
    <div id="notes" class="tab hidden">${notes}</div>
    <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${trainerSafePane(()=>calendarHTML(d,'trainer'),'calendar')}</div></div></div>
