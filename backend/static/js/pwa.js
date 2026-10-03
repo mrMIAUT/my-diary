@@ -2,7 +2,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js?v=77', {scope:'/'});
+      const reg = await navigator.serviceWorker.register('/sw.js?v=78', {scope:'/'});
       reg.update();
       await authReady;
       setTimeout(autoRegisterPhoneNotifications,300);
