@@ -10190,7 +10190,8 @@ body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-editor .icon-btn{
 
 
 /* Trainer notes + scalable checkin history v19 */
-body.eplan-redesign.trainer-ui .trainer-client-page #notes{display:grid!important;gap:12px!important}
+body.eplan-redesign.trainer-ui .trainer-client-page #notes:not(.hidden){display:grid!important;gap:12px!important}
+body.eplan-redesign.trainer-ui .trainer-client-page #notes.hidden{display:none!important}
 body.eplan-redesign.trainer-ui .trainer-private-note,
 body.eplan-redesign.trainer-ui .trainer-checkin-history{
   margin:0!important;padding:18px!important;border:1px solid #dfe7f2!important;border-radius:20px!important;
