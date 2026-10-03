@@ -8166,3 +8166,128 @@ body.eplan-redesign.trainer-ui .offline-pill{
   backdrop-filter:blur(16px) saturate(125%)!important;
   box-shadow:0 6px 20px rgba(10,18,30,.10)!important;
 }
+
+
+/* Progress workout volume + finite history list */
+body.eplan-redesign.client-ui .redesign-progress-training-more{
+  width:100%;
+  margin-top:3px;
+  padding:13px 16px;
+  border-radius:16px;
+  border:1px solid #dfe7f1!important;
+  background:#f6f9fd!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  font-size:13px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .progress-workout-stats{
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr);
+  gap:10px;
+  margin:12px 0;
+}
+body.eplan-redesign.client-ui .progress-workout-stat{
+  min-width:0;
+  padding:15px 16px;
+  border:1px solid #e1e8f2;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(35,70,108,.045);
+}
+body.eplan-redesign.client-ui .progress-workout-stat small{
+  display:block;
+  margin-bottom:5px;
+  font-size:10.5px;
+  font-weight:800;
+  color:#7b899d;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+}
+body.eplan-redesign.client-ui .progress-workout-stat strong{
+  display:block;
+  color:#0a1738;
+  font-size:22px;
+  line-height:1.05;
+  white-space:nowrap;
+}
+body.eplan-redesign.client-ui .progress-workout-stat.primary{
+  border-color:#0a1738;
+  background:#0a1738;
+}
+body.eplan-redesign.client-ui .progress-workout-stat.primary small{color:#aebbd0}
+body.eplan-redesign.client-ui .progress-workout-stat.primary strong{color:#fff}
+body.eplan-redesign.client-ui .progress-workout-muscles{
+  margin-top:12px;
+  padding:17px 18px;
+  border:1px solid #e1e8f2;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);
+}
+body.eplan-redesign.client-ui .progress-workout-muscles-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+body.eplan-redesign.client-ui .progress-workout-muscles-head>span{
+  font-size:18px;
+  font-weight:850;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .progress-workout-muscles-head>small{
+  flex:0 0 auto;
+  font-size:10.5px;
+  font-weight:750;
+  color:#8795a9;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row{
+  padding:10px 0;
+  border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row:first-of-type{
+  border-top:0;
+  padding-top:2px;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:7px;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row span{
+  min-width:0;
+  font-size:13px;
+  font-weight:750;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row strong{
+  flex:0 0 auto;
+  font-size:12.5px;
+  color:#0a1738;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row>i{
+  display:block;
+  height:6px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#edf2f8;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-row>i>b{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:#1677ff;
+}
+body.eplan-redesign.client-ui .progress-workout-muscle-empty{
+  padding:4px 0 2px;
+  font-size:12px;
+  line-height:1.45;
+  color:#7b899d;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .progress-workout-stats{grid-template-columns:1fr}
+}
