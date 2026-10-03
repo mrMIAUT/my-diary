@@ -1592,7 +1592,7 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
 @app.post("/api/cardio")
 def save_cardio(x:CardioIn,user:AuthUser=Depends(require_client)):
     authorize_client(user,x.client_id)
-    require_active_client(x.client_id,'cardio')
+    access=require_active_client(x.client_id,'cardio')
     cardio_day=x.day or kyiv_today()
     d=str(cardio_day)
     if cardio_day>kyiv_today(): raise HTTPException(400,"Майбутню дату заповнювати не можна")
@@ -1601,7 +1601,8 @@ def save_cardio(x:CardioIn,user:AuthUser=Depends(require_client)):
     vals=(cardio_type,x.minutes,x.speed,x.incline,x.steps)
     if old: run("UPDATE cardio_log SET cardio_type=?,minutes=?,speed=?,incline=?,steps=? WHERE id=?",vals+(old["id"],))
     else: run("INSERT INTO cardio_log(client_id,day,cardio_type,minutes,speed,incline,steps) VALUES(?,?,?,?,?,?,?)",(x.client_id,d)+vals)
-    run("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(?,?,?,?,?,?)",(x.client_id,"trainer","cardio","Клієнт оновив кардіо та активність за "+d,"cardio",d))
+    if access["features"].get("trainer_review",False):
+        run("INSERT INTO notifications(client_id,recipient,kind,message,target_tab,target_day) VALUES(?,?,?,?,?,?)",(x.client_id,"trainer","cardio","Клієнт оновив кардіо та активність за "+d,"cardio",d))
     return {"ok":True}
 
 
