@@ -44,16 +44,12 @@
 @media(max-width:650px){.results-date-range{grid-template-columns:1fr}.results-date-range>button{grid-column:auto;justify-self:start}.results-date-field{width:100%;overflow:hidden}.results-date-field input[type=date]{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;font-size:16px;padding:12px 9px}.superset-title-line{display:block}.superset-title-line .badge{display:inline-block;margin:8px 0 2px!important;padding:7px 11px}.superset-inner>div:first-child{padding-right:0}}
 @media(max-width:390px){.results-date-range{grid-template-columns:1fr}.results-date-range>button{grid-column:auto;width:100%}}
 
-/* Header alignment */
-.top-left{display:flex;align-items:center;gap:12px;padding-left:0}@media(max-width:650px){.top-left{gap:9px;padding-left:0}}
-
 /* Navigation cleanup + sticky menu + modal scroll lock */
-.top-left{padding-left:58px}
 body.overlay-open{overflow:hidden!important;touch-action:none}
 .modal{overscroll-behavior:contain}
 .modal .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .comment-row{position:relative;padding-right:112px!important}.comment-delete{position:absolute;right:12px;top:12px;padding:9px 11px!important;font-size:13px!important}
-@media(max-width:650px){.top-left{padding-left:52px}.comment-row{padding-right:16px!important}.comment-delete{position:static;margin-top:12px}}
+@media(max-width:650px){.comment-row{padding-right:16px!important}.comment-delete{position:static;margin-top:12px}}
 
 .social-links{display:flex;align-items:center;gap:8px}.social-link{width:42px;height:42px;border-radius:13px;background:#29292e;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-weight:900;font-size:17px}.social-link:hover{border-color:#666;transform:translateY(-1px)}.social-link svg{width:21px;height:21px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.social-link.tiktok svg{fill:currentColor;stroke:none}.top-right{display:flex;align-items:center;gap:10px}.measure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.measure-grid label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}.contact-link{color:var(--yellow);font-weight:800;text-decoration:none;overflow-wrap:anywhere}.contact-link:hover{text-decoration:underline}@media(max-width:700px){.top{align-items:center}.top-right{flex-direction:row;align-items:center;gap:6px}.top-right .notify-btn{padding:11px 12px;font-size:0}.top-right .notify-btn::first-letter{font-size:16px}.social-links{gap:5px}.social-link{width:36px!important;height:36px!important;font-size:13px!important}.social-links{gap:6px}.social-link{width:38px;height:38px;border-radius:12px}.measure-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:420px){.measure-grid{grid-template-columns:1fr}}
 
@@ -104,7 +100,6 @@ body.overlay-open{overflow:hidden!important;touch-action:none}
 /* Sticky menu access + workout prescription */
 .side-menu-btn{position:relative!important;left:auto!important;top:auto!important;z-index:auto!important;box-shadow:none!important;flex:0 0 auto}
 .top{position:sticky!important;top:0!important;z-index:1900!important;background:rgba(8,9,9,.96)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.top-left{padding-left:0!important;margin-left:0!important}
 .program-extra{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.program-extra .badge{font-size:12px}
 .workout-day-comment{margin-top:18px}.workout-day-comment textarea{width:100%;min-height:88px}
 
