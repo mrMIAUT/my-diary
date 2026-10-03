@@ -2103,16 +2103,18 @@ def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
             finished=session
         c.commit()
     if not was_finished:
-        client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
-        if client_info:
-            full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
-            client_name=full_name or client_info.get("name") or "Клієнт"
-            workout_day=str(session.get("day_name") or "Тренування")
-            workout_date=str(session.get("workout_day") or "")[:10] or str(kyiv_today())
-            send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
-            add_notification(session["client_id"],"trainer","workout_finished",
-                f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
-                "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
+        access=access_info(client_state(session["client_id"]))
+        if access["features"].get("trainer_review",False):
+            client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(session["client_id"],))
+            if client_info:
+                full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
+                client_name=full_name or client_info.get("name") or "Клієнт"
+                workout_day=str(session.get("day_name") or "Тренування")
+                workout_date=str(session.get("workout_day") or "")[:10] or str(kyiv_today())
+                send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
+                add_notification(session["client_id"],"trainer","workout_finished",
+                    f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
+                    "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
     return finished
 
 @app.post("/api/history/nutrition")
