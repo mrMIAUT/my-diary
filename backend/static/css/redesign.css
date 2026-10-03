@@ -8513,3 +8513,14 @@ body.eplan-redesign.trainer-ui .offline-pill{
   backdrop-filter:blur(14px) saturate(135%)!important;
   box-shadow:0 8px 24px rgba(10,18,30,.16)!important;
 }
+
+
+/* v135 — lighter translucent offline status */
+body.eplan-redesign.client-ui .offline-pill,
+body.eplan-redesign.trainer-ui .offline-pill{
+  background:rgba(20,24,31,.58)!important;
+  border-color:rgba(255,255,255,.08)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(125%)!important;
+  backdrop-filter:blur(16px) saturate(125%)!important;
+  box-shadow:0 6px 20px rgba(10,18,30,.10)!important;
+}
