@@ -8952,3 +8952,59 @@ body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-in
 body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner:last-child{
   padding-bottom:0!important;
 }
+
+
+/* Superset controls in exercise header + technique divider v10 */
+/* Superset label is now just a group label */
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .trainer-superset-head{
+  position:static!important;
+  display:block!important;
+  width:100%!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:11px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-head .trainer-superset-move{
+  display:none!important;
+}
+
+/* Superset reorder arrows use the same placement as regular exercise actions */
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #d7e1ee!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#53647d!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:850!important;
+}
+
+/* Technique link is separated from exercise name by a clean vertical divider */
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>.alternative-tech-link{
+  position:relative!important;
+  margin-left:8px!important;
+  padding-left:9px!important;
+  text-decoration:underline!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>.alternative-tech-link::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:50%!important;
+  width:1px!important;
+  height:14px!important;
+  background:#cfd9e6!important;
+  transform:translateY(-50%)!important;
+  border-radius:1px!important;
+}
