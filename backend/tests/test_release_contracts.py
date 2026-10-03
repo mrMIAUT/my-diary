@@ -107,7 +107,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertTrue(shell_urls, "no app shell assets found in index.html")
         for url in shell_urls:
             path = url.split("?", 1)[0].lstrip("/")
-            self.assertTrue((ROOT / "backend" / path).exists(), f"missing asset: {path}")
+            disk_path = ROOT / "backend" / ("static/manifest.webmanifest" if path == "manifest.webmanifest" else path)
+            self.assertTrue(disk_path.exists(), f"missing asset: {path}")
             self.assertIn(repr(url), SW, f"service worker cache is missing {url}")
 
 
