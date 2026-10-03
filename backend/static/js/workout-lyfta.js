@@ -104,7 +104,7 @@ function showExerciseProgressHistory(pid){
   document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(exerciseName||x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
 }
 
-window.setRows = function(x,d){
+function setRows(x,d){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
@@ -127,4 +127,4 @@ window.setRows = function(x,d){
     +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
     +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
     +'</div>'+h;
-};
+}
