@@ -2,6 +2,7 @@
 // Overrides only the client progress presentation; data and mutations stay unchanged.
 
 window.clientProgressView = window.clientProgressView || 'overview';
+window.clientProgressTrainingLimit = window.clientProgressTrainingLimit || 8;
 
 function redesignProgressTabs(){
   let tab=(key,label)=>'<button class="'+(window.clientProgressView===key?'active':'')+'" onclick="switchClientProgressView(\''+key+'\')">'+esc(label)+'</button>';
@@ -112,10 +113,16 @@ function redesignProgressMeasurementsHTML(d){
 function redesignProgressTrainingHTML(d){
   let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished').slice().sort((a,b)=>(b.finished_at||b.started_at||'').localeCompare(a.finished_at||a.started_at||''));
   if(!sessions.length)return '<div class="redesign-empty-panel"><strong>Ще немає завершених тренувань</strong><span>Після першого тренування тут з’явиться історія.</span></div>';
-  return '<div class="redesign-progress-training-list">'+sessions.slice(0,12).map(function(s){
+  let limit=Math.max(8,+window.clientProgressTrainingLimit||8),shown=sessions.slice(0,limit),hasMore=shown.length<sessions.length;
+  return '<div class="redesign-progress-training-list">'+shown.map(function(s){
     let day=sessionDay(s),title=s.day_name||'Тренування';
     return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
-  }).join('')+'</div>';
+  }).join('')+(hasMore?'<button type="button" class="redesign-progress-training-more" onclick="showMoreClientProgressTraining()">Показати ще</button>':'')+'</div>';
+}
+
+function showMoreClientProgressTraining(){
+ window.clientProgressTrainingLimit=(+window.clientProgressTrainingLimit||8)+8;
+ showClientSection('progress');
 }
 
 function progressWorkoutData(d,sid){
@@ -141,6 +148,70 @@ function progressWorkoutData(d,sid){
  return {workout,day,exercises};
 }
 
+function progressVolumeNumber(v){
+ let n=+v||0;
+ return Math.round(n).toLocaleString('uk-UA');
+}
+
+function progressExerciseVolume(exercise){
+ return (exercise?.sets||[]).reduce((sum,set)=>sum+(Math.max(0,+set.weight||0)*Math.max(0,+set.reps||0)),0);
+}
+
+function progressWorkoutStats(data){
+ let exercises=data?.exercises||[],total=0,workSets=0;
+ exercises.forEach(x=>{total+=progressExerciseVolume(x);workSets+=(x.sets||[]).length});
+ let lib=window.progressExerciseLibrary||window.exerciseLibrary||null;
+ let muscles=[];
+ if(lib&&Array.isArray(lib.exercises)&&Array.isArray(lib.muscles)){
+   let muscleNames=new Map(lib.muscles.map(m=>[+m.id,m.name||'М’яз'])),byName=new Map();
+   lib.exercises.forEach(x=>byName.set(String(x.name||'').trim().toLocaleLowerCase('uk-UA'),x));
+   let totals=new Map();
+   exercises.forEach(x=>{
+     let volume=progressExerciseVolume(x);if(!(volume>0))return;
+     let found=byName.get(String(x.name||'').trim().toLocaleLowerCase('uk-UA'))||byName.get(String(x.planned||'').trim().toLocaleLowerCase('uk-UA'));
+     let ids=[...new Set((found?.primary_muscle_ids||[]).map(Number).filter(Boolean))];
+     if(ids.length){
+       let share=volume/ids.length;
+       ids.forEach(id=>totals.set(muscleNames.get(id)||'Без групи',(totals.get(muscleNames.get(id)||'Без групи')||0)+share));
+     }else{
+       totals.set('Без групи',(totals.get('Без групи')||0)+volume);
+     }
+   });
+   muscles=[...totals.entries()].map(([name,volume])=>({name,volume})).sort((a,b)=>b.volume-a.volume||a.name.localeCompare(b.name,'uk'));
+ }
+ return {total,workSets,muscles,hasMuscleData:!!lib};
+}
+
+function progressWorkoutStatsHTML(data){
+ let stats=progressWorkoutStats(data);
+ let maxMuscle=Math.max(0,...stats.muscles.map(x=>x.volume));
+ let musclesHTML='';
+ if(stats.hasMuscleData){
+   musclesHTML=stats.muscles.length?stats.muscles.map(x=>{
+     let pct=maxMuscle>0?Math.max(4,Math.min(100,(x.volume/maxMuscle)*100)):0;
+     return '<div class="progress-workout-muscle-row"><div><span>'+esc(x.name)+'</span><strong>'+progressVolumeNumber(x.volume)+' кг</strong></div><i><b style="width:'+pct.toFixed(1)+'%"></b></i></div>';
+   }).join(''):'<div class="progress-workout-muscle-empty">Для цієї тренування немає даних про м’язові групи.</div>';
+ }else{
+   musclesHTML='<div class="progress-workout-muscle-empty">Не вдалося завантажити м’язові групи.</div>';
+ }
+ return '<div class="progress-workout-stats">'
+   +'<div class="progress-workout-stat primary"><small>Загальний обсяг</small><strong>'+progressVolumeNumber(stats.total)+' кг</strong></div>'
+   +'<div class="progress-workout-stat"><small>Робочих підходів</small><strong>'+stats.workSets+'</strong></div>'
+  +'</div>'
+  +'<div class="progress-workout-muscles"><div class="progress-workout-muscles-head"><span>Обсяг за м’язами</span><small>основні м’язи</small></div>'+musclesHTML+'</div>';
+}
+
+async function ensureProgressExerciseLibrary(){
+ if(window.progressExerciseLibrary)return window.progressExerciseLibrary;
+ if(window.exerciseLibrary){window.progressExerciseLibrary=window.exerciseLibrary;return window.progressExerciseLibrary}
+ try{
+   window.progressExerciseLibrary=await api('/exercise-library');
+   return window.progressExerciseLibrary;
+ }catch(e){
+   return null;
+ }
+}
+
 function progressWorkoutDetailHTML(d,sid){
  let data=progressWorkoutData(d,sid);
  if(!data)return '<div class="redesign-empty-panel"><strong>Тренування не знайдено</strong><span>Повернись до списку тренувань і спробуй ще раз.</span></div>';
@@ -150,12 +221,13 @@ function progressWorkoutDetailHTML(d,sid){
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
    return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+x.sets.map(set=>'<div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(set.reps)+'</strong><em>RIR '+esc(set.rir)+'</em></div>').join('')+'</div></div>';
  }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
- return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+review+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
+ return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
 }
 
-function openProgressWorkout(sid,pushHistory=true){
+async function openProgressWorkout(sid,pushHistory=true){
  let d=window.currentClientData||{},data=progressWorkoutData(d,sid);
  if(!data){window.clientProgressView='training';showClientSection('progress');return}
+ await ensureProgressExerciseLibrary();
  window.clientProgressView='training';
  window.progressHistoryReturn=false;
  currentClientView='progress';
