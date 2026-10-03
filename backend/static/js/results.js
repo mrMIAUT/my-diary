@@ -423,7 +423,7 @@ function trainerProgressHTML(d){
    +'</div>'
    +trainerProgressSummaryHTML(d)
    +'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'
-   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
+   +'<section id="trainerProgressActivity" class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
    +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Особисті рекорди</h3><p>Найбільша робоча вага по вправах.</p></div></div>'+trainerProgressPRHTML(d)+'</section>'
 
   +'</div>';
