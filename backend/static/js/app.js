@@ -95,6 +95,10 @@ window.addEventListener('popstate',async e=>{
  if(!session)return;
  document.querySelectorAll('.modal').forEach(x=>x.remove());
  let st=e.state||{};
+ if(st.eplanPage==='clientProgressWorkout'&&st.eplanWorkoutId&&session.role==='client'&&session.client_id){
+   window.currentClientData=await loadClientData(session.client_id);
+   openProgressWorkout(st.eplanWorkoutId,false);return;
+ }
  if(st.eplanPage==='calendarDay'&&st.eplanDay){
    if(session.role==='trainer'&&st.eplanClient){selected=st.eplanClient;window.currentClientData=await loadClientData(st.eplanClient)}
    else if(session.role==='client'&&session.client_id){window.currentClientData=await loadClientData(session.client_id)}
@@ -103,7 +107,11 @@ window.addEventListener('popstate',async e=>{
  if(session.role==='trainer'){
    if(st.eplanPage==='client'&&st.eplanClient){await openClient(st.eplanClient,st.eplanTab||'profile')}
    else{selected=null;window.currentClientData=null;await trainerHome()}
- }else if(session.role==='client'){await clientCabinet(session.client_id);if(st.eplanSection==='history')showClientSection('history')}
+ }else if(session.role==='client'){
+   await clientCabinet(session.client_id);
+   if(st.eplanSection==='history')showClientSection('history');
+   else if(st.eplanSection==='progress'){window.clientProgressView='training';showClientSection('progress')}
+ }
 });
 
 
