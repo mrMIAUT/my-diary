@@ -43,28 +43,6 @@ function programDayTitle(d,day){
  return String(x?.title||'').trim();
 }
 
-function trainerProgramExerciseRow(x,num,extraActions=''){
- let rest=restLabel(x),rir=rirPlan(x).join(' / '),alts=exerciseAlternatives(x),tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
- return '<div class="redesign-training-exercise trainer-program-client-row">'
-   +'<span>'+num+'</span>'
-   +'<div class="redesign-training-exercise-copy">'
-     +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong>'
-       +(tech?techniqueLinkHTML(tech,'Техніка',true,'redesign-training-tech-link'):'')
-     +'</div>'
-     +'<small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small>'
-     +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){
-       let altTech=exerciseTechniqueUrl(v);
-       return '<span class="redesign-training-alt-chip"><i>'+esc(v)+'</i>'+(altTech?techniqueLinkHTML(altTech,'Техніка',true,'redesign-training-alt-tech'):'')+'</span>';
-     }).join('')+'</div>':'')
-     +'<div class="trainer-program-inline-actions">'
-       +'<button type="button" class="trainer-program-edit" onclick="event.stopPropagation();editExercise('+x.id+')">Редагувати</button>'
-       +'<button type="button" class="trainer-program-delete" onclick="event.stopPropagation();deleteExercise('+x.id+')">Видалити</button>'
-     +'</div>'
-   +'</div>'
-   +'<div class="trainer-program-row-side"><b>RIR '+esc(rir)+'</b>'+extraActions+'</div>'
- +'</div>';
-}
-
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
  let form=`<div class="card trainer-program-editor">
@@ -94,23 +72,8 @@ function programHTML(d){
    });
    let rows=blocks.map((b,bi)=>{
      let first=b.items[0],isSuper=!!b.group;
-     let moveActions='<div class="trainer-program-move-actions">'
-       +(bi>0?'<button type="button" data-day="'+esc(day)+'" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,'+bi+',\'up\')" aria-label="Перемістити вище">↑</button>':'')
-       +(bi<blocks.length-1?'<button type="button" data-day="'+esc(day)+'" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,'+bi+',\'down\')" aria-label="Перемістити нижче">↓</button>':'')
-       +(!isSuper?'<button type="button" data-day="'+esc(first.day_name)+'" onclick="event.stopPropagation();addSupersetExercise('+first.id+',this.dataset.day)" aria-label="Додати в суперсет">＋</button>':'')
-     +'</div>';
-     if(isSuper){
-       return '<div class="redesign-training-superset trainer-program-client-superset">'
-         +'<div class="redesign-training-superset-label"><span>Суперсет</span><small>виконати вправи по черзі</small></div>'
-         +'<div class="trainer-program-superset-body">'
-           +b.items.map((x,xi)=>trainerProgramExerciseRow(x,xs.indexOf(x)+1)).join('')
-         +'</div>'
-         +'<div class="trainer-program-block-footer">'+moveActions+'</div>'
-       +'</div>';
-     }
-     return '<div class="trainer-program-client-single">'
-       +trainerProgramExerciseRow(first,xs.indexOf(first)+1,moveActions)
-     +'</div>';
+     let info=(isSuper?`<div class="trainer-superset-head">Суперсет</div>`:'')+b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?techniqueLinkHTML(x.technique_url,'Техніка',true):''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
+     return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)">＋</button>`:''}</div></div>`;
    }).join('');
    return `<div class="card program-day-card">
      <div class="program-day-header-row">
