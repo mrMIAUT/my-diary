@@ -62,10 +62,6 @@ function socialContactsHTML(c){
 
 function contactLinkHTML(v){if(!v)return '<strong>—</strong>';let href=contactHref(v);return href?`<a class="contact-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(v)}</a>`:`<strong>${esc(v)}</strong>`}
 
-function clientProfileHTML(c){
- return `<div class="card"><div class="between"><div><h2>Мій кабінет</h2></div><button class="dark" onclick="editClientProfile(${c.id})">Редагувати</button></div><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Моя ціль</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.goal||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання та травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(combinedHealth||'Не вказано')}</div></div></div>`
-}
-
 function clientProfileAvatarHTML(c,cid){
  let photo=String(c.avatar||'').trim(),state=photo?'has-photo':'is-placeholder';
  let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span class="avatar-initials avatar-initials-large">'+esc(clientInitials(c))+'</span>';
@@ -93,19 +89,3 @@ function editClientProfile(cid){
 async function saveClientProfile(cid){
  try{await api('/client/'+cid+'/profile',{method:'PATCH',body:JSON.stringify({first_name:pfFirst.value,last_name:pfLast.value,age:+pfAge.value||0,sex:pfSex.value,goal:pfGoal.value,contraindications:pfHealth.value,injuries:'',contact:'',instagram:pfInstagram.value,telegram:pfTelegram.value,tiktok:pfTikTok.value})});profileModal.remove();let d=await loadClientData(cid);window.currentClientData=d;showClientProfile(cid)}catch(e){profileErr.textContent=e.message}
 }
-
-
-function onboardingKey(){return 'eplanClientOnboardingV1_'+(session?.client_id||'client')}
-
-function maybeShowClientOnboarding(){document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
-
-function showClientOnboarding(step=0){
- const steps=[
- {title:'Сьогодні — твій план на день',text:'Тут ти побачиш тренування, активність, БЖВ та все, що потрібно виконати сьогодні.'},
- {title:'Записуй результати під час тренування',text:'Внось вагу, повтори та RIR після підходів. Дані збережуться в історії та допоможуть відстежувати прогрес.'},
- {title:'Прогрес — тут побачиш зміни',text:'У розділі «Прогрес» зберігаються силові показники, вага та зміни тіла за вибраний період.'}];
- step=Math.max(0,Math.min(step,steps.length-1));let s=steps[step];document.getElementById('clientOnboarding')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div id="clientOnboarding" class="onboarding-overlay"><div class="onboarding-card"><div class="onboarding-step">Крок ${step+1} з ${steps.length}</div><h2>${s.title}</h2><p>${s.text}</p><div class="onboarding-dots">${steps.map((_,i)=>`<span class="${i===step?'active':''}"></span>`).join('')}</div><div class="onboarding-actions">${step<steps.length-1?`<button class="onboarding-skip" onclick="finishClientOnboarding()">Пропустити</button><button onclick="showClientOnboarding(${step+1})">Далі</button>`:`<button onclick="finishClientOnboarding()">Почати користуватися</button>`}</div></div></div>`);syncOverlayLock()
-}
-
-function finishClientOnboarding(){try{localStorage.setItem(onboardingKey(),'done')}catch(e){}document.getElementById('clientOnboarding')?.remove();syncOverlayLock()}
