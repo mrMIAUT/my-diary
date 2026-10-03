@@ -1,4 +1,4 @@
-const VERSION='eplan-v89';
+const VERSION='eplan-v90';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -6,33 +6,33 @@ const APP_SHELL_URLS=[
   '/static/icons/apple-touch-icon.png?v=66',
   '/static/icons/icon-192.png?v=65',
   '/static/icons/icon-512.png?v=65',
-  '/static/css/base.css?v=157',
-  '/static/css/components.css?v=157',
-  '/static/css/refinements.css?v=157',
-  '/static/css/redesign.css?v=157',
-  '/static/js/core.js?v=157',
-  '/static/js/auth.js?v=157',
-  '/static/js/trainer.js?v=157',
-  '/static/js/client.js?v=157',
-  '/static/js/home-redesign.js?v=157',
-  '/static/js/activity.js?v=157',
-  '/static/js/program.js?v=157',
-  '/static/js/library.js?v=157',
-  '/static/js/calendar.js?v=157',
-  '/static/js/results.js?v=157',
-  '/static/js/progress-redesign.js?v=157',
-  '/static/js/nutrition.js?v=157',
-  '/static/js/nutrition-redesign.js?v=157',
-  '/static/js/more-redesign.js?v=157',
-  '/static/js/measurements.js?v=157',
-  '/static/js/workout.js?v=157',
-  '/static/js/training-redesign.js?v=157',
-  '/static/js/timer.js?v=157',
-  '/static/js/workout-lyfta.js?v=157',
-  '/static/js/notifications.js?v=157',
-  '/static/js/app.js?v=157',
-  '/static/js/pwa.js?v=157',
-  '/static/js/startup-ui.js?v=157'
+  '/static/css/base.css?v=158',
+  '/static/css/components.css?v=158',
+  '/static/css/refinements.css?v=158',
+  '/static/css/redesign.css?v=158',
+  '/static/js/core.js?v=158',
+  '/static/js/auth.js?v=158',
+  '/static/js/trainer.js?v=158',
+  '/static/js/client.js?v=158',
+  '/static/js/home-redesign.js?v=158',
+  '/static/js/activity.js?v=158',
+  '/static/js/program.js?v=158',
+  '/static/js/library.js?v=158',
+  '/static/js/calendar.js?v=158',
+  '/static/js/results.js?v=158',
+  '/static/js/progress-redesign.js?v=158',
+  '/static/js/nutrition.js?v=158',
+  '/static/js/nutrition-redesign.js?v=158',
+  '/static/js/more-redesign.js?v=158',
+  '/static/js/measurements.js?v=158',
+  '/static/js/workout.js?v=158',
+  '/static/js/training-redesign.js?v=158',
+  '/static/js/timer.js?v=158',
+  '/static/js/workout-lyfta.js?v=158',
+  '/static/js/notifications.js?v=158',
+  '/static/js/app.js?v=158',
+  '/static/js/pwa.js?v=158',
+  '/static/js/startup-ui.js?v=158'
 ];
 let restTimerHandle=null;
 
@@ -95,7 +95,7 @@ self.addEventListener('fetch',event=>{
         if(response&&response.ok)await cache.put(req,response.clone());
         return response;
       }catch(_){
-        return (await cache.match(req))||(await cache.match(req,{ignoreSearch:true}))||Response.error();
+        return (await cache.match(req))||Response.error();
       }
     })());
     return;
