@@ -90,6 +90,7 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
 }
 
 function trainerPendingReviewsHTML(d){
+ if(!clientAccess(d.client).features?.trainer_review)return '';
  let pending=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&!x.trainer_reviewed)
    .slice().sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||''))||(+b.id||0)-(+a.id||0));
  if(!pending.length)return '';
@@ -131,6 +132,7 @@ function trainerWorkoutCalendarState(d){
 
 function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
  if(!day)return '<div class="trainer-workout-calendar-empty">Обери дату з позначкою, щоб переглянути тренування.</div>';
+ let canReview=!!clientAccess(d.client).features?.trainer_review;
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&sessionDay(x)===day).slice().sort((a,b)=>(+b.id||0)-(+a.id||0));
  if(targetSid)sessions.sort((a,b)=>(+b.id===+targetSid)-(+a.id===+targetSid));
  if(!sessions.length){
@@ -147,12 +149,12 @@ function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
           +'<div><strong>'+esc(s.day_name||'Тренування')+'</strong><span>'+esc(day)+(previousDay?' · попереднє '+esc(formatProgressDate(previousDay)):'')+'</span></div>'
           +'<div class="trainer-workout-calendar-session-meta">'
             +(s.duration_seconds!==undefined&&s.duration_seconds!==null?workoutDurationBadgeHTML(s,'trainer-calendar-duration'):'')
-            +'<span class="trainer-workout-calendar-status '+(reviewed?'reviewed':'pending')+'">'+(reviewed?'Перевірено ✓':'До перевірки')+'</span>'
+            +'<span class="trainer-workout-calendar-status '+(reviewed||!canReview?'reviewed':'pending')+'">'+(reviewed?'Перевірено ✓':canReview?'До перевірки':'Завершено')+'</span>'
           +'</div>'
         +'</div>'
         +'<div class="trainer-workout-calendar-exercises">'+trainerReviewExerciseRowsHTML(d,s,previousDay)+'</div>'
         +(reviewed&&s.trainer_comment?'<div class="trainer-workout-calendar-comment"><small>Коментар тренера</small><p>'+esc(s.trainer_comment)+'</p></div>':'')
-        +(!reviewed&&sid?'<button class="trainer-workout-calendar-review-link" onclick="focusTrainerPendingSession('+sid+')">Перейти до перевірки →</button>':'')
+        +(canReview&&!reviewed&&sid?'<button class="trainer-workout-calendar-review-link" onclick="focusTrainerPendingSession('+sid+')">Перейти до перевірки →</button>':'')
       +'</article>';
    }).join('')+'</div>';
 }
