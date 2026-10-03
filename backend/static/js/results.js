@@ -93,11 +93,11 @@ function trainerWorkoutCalendarDates(d){
 }
 
 function trainerWorkoutCalendarState(d){
- let cid=+d?.client?.id||0,st=window.trainerWorkoutCalendarState;
+ let cid=+d?.client?.id||0,st=window.trainerWorkoutCalendarViewState;
  if(!st||+st.cid!==cid){
    let dates=trainerWorkoutCalendarDates(d),latest=dates[0]||isoToday();
    st={cid,month:String(latest).slice(0,7),day:'',sid:0};
-   window.trainerWorkoutCalendarState=st;
+   window.trainerWorkoutCalendarViewState=st;
  }
  return st;
 }
