@@ -380,9 +380,10 @@ function openTrainerPendingReviews(autoOpen=true){
 }
 
 function trainerCheckinDetailsHTML(x,cid){
+ let canReview=!!clientAccess((window.currentClientData||{}).client||{}).features?.checkin;
  return '<div class="trainer-checkin-grid"><span>Самопочуття <b>'+x.mood+'/5</b></span><span>Сон <b>'+x.sleep+'/5</b></span><span>Енергія <b>'+x.energy+'/5</b></span><span>Голод <b>'+x.hunger+'/5</b></span><span>Складність <b>'+x.difficulty+'/5</b></span></div>'
    +(x.comment?'<p>'+esc(x.comment)+'</p>':'')
-   +(!x.reviewed?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>');
+   +(!x.reviewed&&canReview?'<button onclick="reviewTrainerCheckin('+cid+','+x.id+')">Позначити переглянутим</button>':x.reviewed?'<span class="trainer-checkin-reviewed">Переглянуто ✓</span>':'<span class="trainer-checkin-reviewed">Лише перегляд</span>');
 }
 function trainerCheckinCard(x,cid){
  return '<div class="card trainer-checkin-card"><div class="between"><div><small>ЩОТИЖНЕВИЙ ЗВІТ</small><h2>'+esc(String(x.week_start||''))+'</h2></div><span class="trainer-checkin-score">'+(x.reviewed?'✓':'Новий')+'</span></div>'
