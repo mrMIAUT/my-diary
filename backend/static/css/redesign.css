@@ -11599,3 +11599,20 @@ body.eplan-redesign.trainer-ui .trainer-progress-pr-card>span{
 body.eplan-redesign.trainer-ui .trainer-progress-pr-card>b{
   color:#0a1738!important;
 }
+
+
+/* Previous workout deltas v31 */
+body.eplan-redesign.trainer-ui .trainer-review-set-deltas{
+  display:inline-flex!important;align-items:center!important;gap:5px!important;margin-left:auto!important;flex:0 0 auto!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-deltas>i{
+  display:inline-flex!important;align-items:center!important;min-height:20px!important;padding:2px 6px!important;border-radius:999px!important;
+  font-size:8.5px!important;font-style:normal!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-deltas>.delta-up{background:#edf8f1!important;color:#278156!important}
+body.eplan-redesign.trainer-ui .trainer-review-set-deltas>.delta-down{background:#fff0f1!important;color:#c44c57!important}
+body.eplan-redesign.trainer-ui .trainer-review-set-deltas>.delta-same{background:#f0f3f7!important;color:#7f8c9f!important}
+@media(max-width:390px){
+  body.eplan-redesign.trainer-ui .trainer-review-set-previous{flex-wrap:wrap!important}
+  body.eplan-redesign.trainer-ui .trainer-review-set-deltas{margin-left:0!important}
+}
