@@ -45,7 +45,22 @@ function programDayTitle(d,day){
 
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
- let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="dntitle" placeholder="Назва дня, напр. Плечі + руки"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"><input id="alternatives" list="exerciseLibraryNames" placeholder="Альтернативи через кому, напр. Гак-присідання, Сміт"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><br><button onclick="addExercise(event.currentTarget)">+ Додати вправу</button></div>`;
+ let form=`<div class="card trainer-program-editor">
+   <div class="trainer-program-editor-head"><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div>
+   <div class="trainer-program-editor-grid">
+     <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
+     <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
+     <label class="wide"><span>Вправа</span><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Оберіть або введіть вправу"></label>
+     <label class="wide"><span>Техніка</span><input id="tech" placeholder="https://..."></label>
+     <label><span>Підходи</span><input id="st" type="number" value="3" placeholder="3"></label>
+     <label><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
+     <label><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
+     <label><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
+     <label class="wide"><span>Альтернативи</span><input id="alternatives" list="exerciseLibraryNames" placeholder="Напр. Гак-присідання, Сміт"></label>
+   </div>
+   <datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
+   <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">＋ Додати вправу</button>
+ </div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
    let bodyId='programDay_'+di,title=programDayTitle(d,day),blocks=[];
