@@ -9909,3 +9909,281 @@ body.eplan-redesign.trainer-ui .measurement-calendar-selected{
 body.eplan-redesign.trainer-ui .measurement-calendar-selected .measurement-history-card{
   margin:0!important;
 }
+
+
+/* Trainer nutrition redesign v18 */
+body.eplan-redesign.trainer-ui .trainer-nutrition-page{
+  display:grid!important;
+  gap:12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-card{
+  margin:0!important;
+  padding:18px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  box-shadow:0 7px 22px rgba(32,67,107,.045)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:20px!important;
+  line-height:1.15!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-head p{
+  margin:5px 0 0!important;
+  color:#7b899d!important;
+  font-size:12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-edit{
+  flex:0 0 auto!important;
+  min-height:38px!important;
+  padding:0 11px!important;
+  border:1px solid #d8e4f2!important;
+  border-radius:12px!important;
+  background:#f3f7fc!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-edit .ui-icon{
+  width:15px!important;
+  height:15px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin-top:14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary>div{
+  min-width:0!important;
+  padding:10px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:13px!important;
+  background:#f8faff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary span{
+  display:block!important;
+  margin-bottom:4px!important;
+  color:#7e8b9f!important;
+  font-size:9.5px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary strong{
+  color:#183153!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary small{
+  color:#718097!important;
+  font-size:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary .kcal{border-top:3px solid #7f9fc8!important}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary .protein{border-top:3px solid #6ba6ff!important}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary .fat{border-top:3px solid #efb24b!important}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary .carbs{border-top:3px solid #65b987!important}
+
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-fields{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin-top:15px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-fields label{
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-fields label>span{
+  display:block!important;
+  margin-bottom:6px!important;
+  color:#72819a!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-fields input{
+  width:100%!important;
+  min-width:0!important;
+  height:48px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:13px!important;
+  background:#f7f9fc!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-actions{
+  display:flex!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+  margin-top:14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-actions button{
+  min-height:42px!important;
+  padding:0 13px!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-actions button:not(.dark){
+  border:1px solid #cfe0fb!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-actions button.dark{
+  border:1px solid #dce5f1!important;
+  background:#f3f6fa!important;
+  color:#53647d!important;
+}
+
+/* Nutrition plan — remove legacy dark cards */
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-card{
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  box-shadow:0 7px 22px rgba(32,67,107,.045)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-head{
+  width:100%!important;
+  min-height:72px!important;
+  padding:15px 18px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-head strong{
+  color:#0a1738!important;
+  font-size:17px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-head .muted{
+  color:#8491a5!important;
+  font-size:11px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-head .arrow{
+  color:#8a98ab!important;
+  font-size:22px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-plan-body{
+  padding:0 14px 14px!important;
+  border-top:1px solid #edf1f6!important;
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-view{
+  margin-top:10px!important;
+  padding:14px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:16px!important;
+  background:#f8faff!important;
+  color:#183153!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-view>strong{
+  display:block!important;
+  color:#0a1738!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-view>.muted{
+  margin-top:7px!important;
+  color:#8a96a8!important;
+  font-size:11px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-option{
+  margin-top:10px!important;
+  padding:10px 0 0!important;
+  border-top:1px solid #e5ebf3!important;
+  color:#43516a!important;
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-option:first-of-type{
+  border-top:0!important;
+  padding-top:6px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .variant-pill{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:25px!important;
+  margin:0 0 5px!important;
+  padding:0 8px!important;
+  border:1px solid #d9e5f4!important;
+  border-radius:999px!important;
+  background:#eef4fb!important;
+  color:#61718a!important;
+  font-size:9.5px!important;
+  font-weight:800!important;
+}
+
+/* Nutrition plan editor */
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-editor{
+  margin-top:10px!important;
+  padding:14px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:16px!important;
+  background:#f8faff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-editor-head strong{
+  color:#0a1738!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-variant{
+  margin-top:12px!important;
+  padding-top:12px!important;
+  border-top:1px solid #e5ebf3!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-variant textarea{
+  width:100%!important;
+  min-height:100px!important;
+  margin-top:8px!important;
+  padding:12px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:13px!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-actions{
+  display:flex!important;
+  gap:7px!important;
+  flex-wrap:wrap!important;
+  margin-top:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-actions button,
+body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-editor .icon-btn{
+  min-height:36px!important;
+  padding:0 10px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:11px!important;
+  background:#f3f6fa!important;
+  color:#53647d!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+@media(max-width:430px){
+  body.eplan-redesign.trainer-ui .trainer-nutrition-target-summary{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
