@@ -8840,3 +8840,115 @@ body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-move butto
   margin:0!important;
   padding:0!important;
 }
+
+
+/* Unified trainer exercise headers v9 */
+/* Normal exercise cards now use the same two-part structure throughout */
+body.eplan-redesign.trainer-ui .trainer-client-page .program-block.trainer-exercise-card{
+  display:block!important;
+  position:relative!important;
+  min-height:0!important;
+  margin:8px 0 0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid #dfe7f1!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .program-block.trainer-exercise-card:first-child{
+  margin-top:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-card>.program-block-info{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:visible!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-shell{
+  width:100%!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-height:48px!important;
+  box-sizing:border-box!important;
+  padding:9px 10px 9px 14px!important;
+  border-bottom:1px solid #e5ebf3!important;
+  background:#f7f9fc!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .trainer-program-title-line{
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .trainer-program-title-line>strong{
+  color:#0a1738!important;
+  font-size:15px!important;
+  line-height:1.25!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head .alternative-tech-link{
+  margin-left:5px!important;
+  color:#1677ff!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  flex:0 0 auto!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #d7e1ee!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#53647d!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-body{
+  padding:12px 14px 14px!important;
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-body>.muted{
+  margin:0!important;
+  color:#7b899d!important;
+  font-size:12px!important;
+}
+
+/* Superset keeps the shared blue group header, while each exercise gets its own separated title strip */
+body.eplan-redesign.trainer-ui .trainer-client-page .program-block.trainer-exercise-card.superset-block{
+  border-color:#bcd6fb!important;
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner{
+  margin:0!important;
+  padding:0!important;
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner+.superset-inner{
+  margin-top:0!important;
+  padding-top:0!important;
+  border-top:1px solid #dfe7f1!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner>.trainer-exercise-head{
+  min-height:46px!important;
+  padding:9px 14px!important;
+  background:#fbfcfe!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner>.trainer-exercise-body{
+  padding:11px 14px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner:last-child{
+  padding-bottom:0!important;
+}
