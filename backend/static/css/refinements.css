@@ -214,10 +214,6 @@ button[data-action-loading="1"]{background:#29292e!important;color:#b8b8b8!impor
 .empty-state{padding:18px;border:1px dashed var(--line);border-radius:16px;background:var(--card2);color:var(--muted);line-height:1.45}
 .empty-state strong{display:block;color:var(--text);margin-bottom:5px}
 
-.onboarding-overlay{position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;justify-content:center;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
-.onboarding-card{width:min(100%,520px);background:#19191c;border:1px solid #34343a;border-radius:26px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
-.onboarding-step{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#ffd400;margin-bottom:14px}.onboarding-card h2{font-size:28px;margin:0 0 10px}.onboarding-card p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 24px}
-.onboarding-dots{display:flex;gap:7px;margin-bottom:20px}.onboarding-dots span{width:7px;height:7px;border-radius:99px;background:#444}.onboarding-dots span.active{width:24px;background:#ffd400}.onboarding-actions{display:flex;gap:10px}.onboarding-actions button{flex:1}.onboarding-skip{background:#29292e!important;color:#ddd!important}
 
 .password-field-wrap{position:relative}
 .password-field-wrap input{padding-right:52px!important}
