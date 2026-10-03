@@ -2217,11 +2217,26 @@ def get_all_trainer_notifications(user:AuthUser=Depends(require_trainer)):
                  SELECT 1 FROM clients c WHERE c.id=n.client_id AND c.status<>'Видалений'
              ))""")
 
-    xs=rows("""SELECT n.*,c.name AS client_name FROM notifications n
+    xs=rows("""SELECT n.*,c.name AS client_name,c.status AS client_status,
+                      c.plan_code AS client_plan_code,c.access_until AS client_access_until
+               FROM notifications n
                JOIN clients c ON c.id=n.client_id
                WHERE n.recipient='trainer' AND COALESCE(n.client_id,0)>0 AND c.status<>'Видалений'
                ORDER BY n.created_at DESC,n.id DESC LIMIT 200""")
-    return xs[:200]
+    visible=[]
+    for item in xs:
+        access=access_info({
+            "status":item.pop("client_status",None),
+            "plan_code":item.pop("client_plan_code",None),
+            "access_until":item.pop("client_access_until",None),
+        })
+        kind=str(item.get("kind") or "")
+        if kind in {"workout_finished","cardio","comment"} and not access["features"].get("trainer_review",False):
+            continue
+        if kind=="checkin" and not access["features"].get("checkin",False):
+            continue
+        visible.append(item)
+    return visible[:200]
 
 @app.get("/api/notifications/{cid}")
 def get_notifications(cid:int,recipient:str=Query(max_length=16),user:AuthUser=Depends(current_user)):
