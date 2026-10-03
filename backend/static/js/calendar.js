@@ -140,4 +140,4 @@ async function reviewWorkoutFromCalendar(sid,cid,day,useComment=true,button=null
  }catch(e){restore();alert(e.message||'Не вдалося позначити тренування перевіреним. Спробуй ще раз.')}
 }
 
-async function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'calendar');return}if(session&&session.role==='client'&&session.client_id){await clientCabinet(session.client_id);showClientSection('history');return}route()}
+async function returnFromCalendarDay(){if(history.state?.eplanPage==='calendarDay'){history.back();return}if(session&&session.role==='trainer'&&selected){openClient(selected,'program');return}if(session&&session.role==='client'&&session.client_id){await clientCabinet(session.client_id);showClientSection('history');return}route()}
