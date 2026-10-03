@@ -539,4 +539,12 @@ function clientAccess(c=(window.currentClientData||{}).client||{}){return c.acce
 
 function hasFeature(name,c){return !!clientAccess(c).features?.[name]}
 
+function accessBannerHTML(c){
+ let a=clientAccess(c);
+ if(a.expired||a.manually_frozen)return `<div class="card client-access-banner expired"><strong>${a.expired?'Термін доступу закінчився':'Доступ призупинено'}</strong><p class="muted" style="margin-bottom:0">Твої результати та історія збережені. Звернись до тренера, щоб продовжити доступ.</p></div>`;
+ if(a.days_left!==null&&a.days_left<=7)return `<div class="card client-access-banner"><strong>До завершення доступу: ${Math.max(0,a.days_left)} дн.</strong><p class="muted" style="margin-bottom:0">Тариф: ${esc(a.plan_name)} · до ${esc(a.access_until)}</p></div>`;
+ return '';
+}
+
+
 function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal')||!!document.querySelector('.side-drawer.open'))}
