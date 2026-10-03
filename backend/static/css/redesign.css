@@ -352,6 +352,9 @@ body.eplan-redesign.client-ui .client-home-today-grid{
   gap:12px;
   margin-bottom:25px;
 }
+body.eplan-redesign.client-ui .client-home-today-grid.single{
+  grid-template-columns:1fr;
+}
 body.eplan-redesign.client-ui .client-home-today-card{
   min-width:0;
   position:relative;
