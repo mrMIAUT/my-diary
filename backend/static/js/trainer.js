@@ -108,25 +108,42 @@ async function showTrainerCheckins(){
 
 
 async function showTrainerPrograms(tab='templates'){
- currentTrainerMainView='programs';selected=null;window.currentClientData=null;
- window.trainerProgramsTab=tab;
- let assignedHTML='';
- if(tab==='assigned'){
-   let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
-   let rows=await Promise.all(cs.map(async c=>{
-     try{
-       let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
-       let label=days.length?days.join(' · '):'Програму ще не призначено';
-       return '<button class="trainer-assigned-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc((String(c.name||'К').trim().split(/\\s+/).slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase())+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span><b>›</b></button>';
-     }catch(e){return ''}
-   }));
-   assignedHTML='<div class="trainer-assigned-list">'+rows.join('')+'</div>';
- }
- app.innerHTML=shell(`<div class="trainer-programs-page">
-   <div class="trainer-page-title"><h1>Програми</h1><button class="trainer-round-add" onclick="alert('Конструктор шаблонів програм додамо наступним етапом.')">＋</button></div>
-   <div class="trainer-segmented"><button class="${tab==='templates'?'active':''}" onclick="showTrainerPrograms('templates')">Шаблони</button><button class="${tab==='assigned'?'active':''}" onclick="showTrainerPrograms('assigned')">Призначені</button></div>
-   ${tab==='templates'?'<div class="trainer-program-empty"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблони програм</h2><p>Тут буде бібліотека готових програм, які можна призначати клієнтам.</p><button onclick="alert(\'Конструктор шаблонів програм додамо наступним етапом.\')">＋ Створити шаблон</button></div>':assignedHTML}
- </div>`);
+  currentTrainerMainView='programs';selected=null;window.currentClientData=null;
+  window.trainerProgramsTab=tab;
+  let assignedHTML='';
+  if(tab==='assigned'){
+    let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+    let rows=await Promise.all(cs.map(async c=>{
+      try{
+        let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
+        let hasProgram=days.length>0;
+        let label=hasProgram?days.join(' · '):'Програму ще не призначено';
+        let countLabel=days.length===1?'1 день':days.length>1?days.length+' дні':'Без програми';
+        return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
+          +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
+          +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
+          +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(countLabel)+'</span>'
+          +'<span class="trainer-assigned-chevron">›</span>'
+        +'</button>';
+      }catch(e){return ''}
+    }));
+    assignedHTML=rows.filter(Boolean).length
+      ?'<div class="trainer-assigned-list modern">'+rows.join('')+'</div>'
+      :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Коли ти призначиш клієнту програму, вона з’явиться тут.</p></div>';
+  }
+  app.innerHTML=shell(`<div class="trainer-programs-page modern">
+    <div class="trainer-page-title trainer-programs-title">
+      <div><h1>Програми</h1><p class="trainer-page-sub">Шаблони та програми, призначені клієнтам</p></div>
+      <button class="trainer-round-add" onclick="alert('Конструктор шаблонів програм додамо наступним етапом.')" aria-label="Створити шаблон">＋</button>
+    </div>
+    <div class="trainer-segmented trainer-programs-segmented">
+      <button class="${tab==='templates'?'active':''}" onclick="showTrainerPrograms('templates')">Шаблони</button>
+      <button class="${tab==='assigned'?'active':''}" onclick="showTrainerPrograms('assigned')">Призначені</button>
+    </div>
+    ${tab==='templates'
+      ?'<div class="trainer-program-empty modern"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблони програм</h2><p>Створюй готові програми один раз і швидко призначай їх клієнтам.</p><button class="trainer-program-create" onclick="alert(\'Конструктор шаблонів програм додамо наступним етапом.\')">＋ Створити шаблон</button></div>'
+      :assignedHTML}
+  </div>`);
 }
 
 async function showTrainerNutrition(){
