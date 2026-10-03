@@ -11616,3 +11616,39 @@ body.eplan-redesign.trainer-ui .trainer-review-set-deltas>.delta-same{background
   body.eplan-redesign.trainer-ui .trainer-review-set-previous{flex-wrap:wrap!important}
   body.eplan-redesign.trainer-ui .trainer-review-set-deltas{margin-left:0!important}
 }
+
+
+/* Trainer activity readability v32 */
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div{
+  align-items:center!important;
+  min-height:62px!important;
+  padding:11px 12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div>span{
+  display:block!important;
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div>span>strong{
+  font-size:10.8px!important;
+  line-height:1.2!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div>span>small{
+  display:block!important;
+  margin-top:5px!important;
+  color:#687790!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  line-height:1.45!important;
+  white-space:normal!important;
+}
+body.eplan-redesign.trainer-ui .trainer-progress-activity-list>div>b{
+  align-self:center!important;
+  margin:0!important;
+  color:#53647d!important;
+  font-size:10.2px!important;
+  font-weight:850!important;
+  line-height:1.2!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+}
