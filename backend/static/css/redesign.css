@@ -8716,3 +8716,249 @@ body.eplan-redesign.trainer-ui .trainer-client-page #program a{color:#1677ff!imp
   body.eplan-redesign.trainer-ui .trainer-program-editor-grid{grid-template-columns:1fr!important}
   body.eplan-redesign.trainer-ui .trainer-program-editor-grid label.wide{grid-column:auto!important}
 }
+
+
+/* Trainer workout cards mirror client program UI v5 */
+body.eplan-redesign.trainer-ui .trainer-client-page .program-day-card>div[id^="programDay_"]{
+  padding:0 14px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-single{
+  border-bottom:1px solid #edf1f6;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-single:last-child{
+  border-bottom:0;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .redesign-training-exercise.trainer-program-client-row{
+  display:grid!important;
+  grid-template-columns:25px minmax(0,1fr) auto!important;
+  gap:10px!important;
+  align-items:start!important;
+  margin:0!important;
+  padding:13px 2px!important;
+  border:0!important;
+  border-bottom:1px solid #edf1f6!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  color:#10213f!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-single>.trainer-program-client-row{
+  border-bottom:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row>span{
+  width:24px!important;
+  height:24px!important;
+  display:grid!important;
+  place-items:center!important;
+  margin-top:1px!important;
+  border-radius:8px!important;
+  background:#f0f4f9!important;
+  color:#6d7c93!important;
+  font-size:11px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row>.redesign-training-exercise-copy{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-main-title-row{
+  min-width:0!important;
+  display:flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+  gap:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-main-title-row>strong{
+  min-width:0!important;
+  color:#10213f!important;
+  font-size:13px!important;
+  line-height:1.3!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-tech-link{
+  flex:0 0 auto!important;
+  margin-left:8px!important;
+  padding-left:8px!important;
+  border-left:1px solid #d3deeb!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  text-decoration:none!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row small{
+  color:#7b899e!important;
+  font-size:10.5px!important;
+  line-height:1.35!important;
+  font-weight:650!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-row-side{
+  min-width:62px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:8px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-row-side>b{
+  color:#64758d!important;
+  font-size:10px!important;
+  line-height:24px!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-inline-actions{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  margin-top:8px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-inline-actions button{
+  width:auto!important;
+  min-height:30px!important;
+  padding:0 9px!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-inline-actions .trainer-program-edit{
+  border:1px solid #dce5f1!important;
+  background:#f3f6fa!important;
+  color:#53647d!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-inline-actions .trainer-program-delete{
+  border:1px solid #f0d7da!important;
+  background:#fff7f7!important;
+  color:#c6535f!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-move-actions{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-move-actions button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  padding:0!important;
+  border:1px solid #dce5f1!important;
+  border-radius:9px!important;
+  background:#f3f6fa!important;
+  color:#64758d!important;
+  box-shadow:none!important;
+  font-size:15px!important;
+  font-weight:800!important;
+}
+
+/* same superset language as client */
+body.eplan-redesign.trainer-ui .trainer-client-page .redesign-training-superset.trainer-program-client-superset{
+  margin:8px 0!important;
+  padding:0 10px!important;
+  overflow:hidden!important;
+  border:1px solid #dbe7f5!important;
+  border-radius:14px!important;
+  background:#f8fbff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-superset .redesign-training-superset-label{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin:0 -10px!important;
+  padding:9px 10px!important;
+  border-bottom:1px solid #e3ebf5!important;
+  background:#eef5ff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-superset .redesign-training-superset-label span{
+  color:#1677ff!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+  letter-spacing:.04em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-superset .redesign-training-superset-label small{
+  color:#7b899e!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-superset-body{
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-superset .trainer-program-client-row{
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-superset .trainer-program-client-row:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-block-footer{
+  display:flex!important;
+  justify-content:flex-end!important;
+  margin:0 -10px!important;
+  padding:8px 10px!important;
+  border-top:1px solid #e3ebf5!important;
+  background:#f5f9fe!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-block-footer .trainer-program-move-actions{
+  flex-direction:row!important;
+}
+
+/* alternatives copied from client preview */
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-alternatives{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin-top:7px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-alternatives>em{
+  flex:0 0 100%!important;
+  margin-bottom:1px!important;
+  color:#7b899e!important;
+  font-size:9.5px!important;
+  font-style:normal!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-alt-chip{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-height:24px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-alt-chip>i{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:24px!important;
+  padding:4px 9px!important;
+  border-radius:999px!important;
+  background:#eef3f8!important;
+  color:#43546d!important;
+  font-size:9.5px!important;
+  font-style:normal!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-client-row .redesign-training-alt-tech{
+  padding-left:6px!important;
+  border-left:1px solid #d3deeb!important;
+  color:#d66a20!important;
+  text-decoration:none!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  font-weight:850!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.trainer-ui .trainer-client-page .redesign-training-exercise.trainer-program-client-row{
+    grid-template-columns:24px minmax(0,1fr) auto!important;
+    gap:8px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-inline-actions{
+    gap:5px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-inline-actions button{
+    padding:0 8px!important;
+  }
+}
