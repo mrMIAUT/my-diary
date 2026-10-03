@@ -74,10 +74,26 @@ function programHTML(d){
      let first=b.items[0],isSuper=!!b.group;
      let moveUp=bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')" aria-label="Перемістити вище">↑</button>`:'';
      let moveDown=bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')" aria-label="Перемістити нижче">↓</button>`:'';
+     let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
+     let blockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
      let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span><span class="trainer-superset-move">${moveUp}${moveDown}</span></div>`:'';
-     let info=superHead+b.items.map((x,xi)=>{let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);return `<div class="${isSuper?'superset-inner':''}"><div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?' · '+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`}).join('');
-     let normalActions=!isSuper?`<div class="program-block-actions">${moveUp}${moveDown}<button class="dark" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)">＋</button></div>`:'';
-     return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div>${normalActions}</div>`;
+     let info=superHead+b.items.map((x,xi)=>{
+       let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
+       let itemActions=!isSuper&&xi===0?blockActions:'';
+       return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
+         <div class="trainer-exercise-head">
+           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?' · '+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
+           ${itemActions}
+         </div>
+         <div class="trainer-exercise-body">
+           <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
+           ${programExtraHTML(x)}
+           ${alternativesTrainerHTML(x)}
+           <div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div>
+         </div>
+       </div>`;
+     }).join('');
+     return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
    }).join('');
    return `<div class="card program-day-card">
      <div class="program-day-header-row">
