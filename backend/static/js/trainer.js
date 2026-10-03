@@ -305,16 +305,14 @@ async function openClient(id,activeTab=null){
  let smart=trainerAttention(localMetrics),comp=trainerCompliance(localMetrics);
  let weight=lastM.weight?lastM.weight+' кг':'—';
  let lastDay=lastWorkout?sessionDay(lastWorkout):'—';
- let latestCheck=(d.checkins||[])[0]||null;
+ let latestCheck=(d.checkins||[]).slice().sort((a,b)=>String(b.week_start||'').localeCompare(String(a.week_start||''))||(+b.id||0)-(+a.id||0))[0]||null;
  let profile=`
    <div class="trainer-client-kpis">
     <div><strong>${comp===null?'—':comp+'%'}</strong><small>Дотримання плану</small></div>
     <div><strong>${weight}</strong><small>Поточна вага</small></div>
     <div><strong>${lastDay}</strong><small>Останнє тренування</small></div>
    </div>
-   <div class="trainer-smart-summary ${smart.level}">
-     <strong>${esc(smart.label)}</strong><span>${esc(smart.reason)}</span>
-   </div>
+   ${localMetrics.needs_review_count>0?`<button type="button" class="trainer-smart-summary ${smart.level} is-action" onclick="openTrainerPendingReviews(true)"><strong>${esc(smart.label)}</strong><span>${esc(smart.reason)}</span><b aria-hidden="true">›</b></button>`:`<div class="trainer-smart-summary ${smart.level}"><strong>${esc(smart.label)}</strong><span>${esc(smart.reason)}</span></div>`}
    ${latestCheck?trainerCheckinCard(latestCheck,c.id):'<div class="card trainer-checkin-empty"><strong>Щотижневих звітів ще немає</strong><span>Перший щотижневий звіт клієнта з’явиться тут.</span></div>'}
    ${trainerProfileHTML(c)}
    ${trainerAccessHTML(c)}
@@ -341,7 +339,7 @@ async function openClient(id,activeTab=null){
      <button data-tab="notes" onclick="showTrainerClientTab('notes',this)">Нотатки</button>
    </div>
    <div id="profile" class="tab">${profile}</div>
-   <div id="program" class="tab hidden">${trainerSafePane(()=>programHTML(d),'program')}</div>
+   <div id="program" class="tab hidden">${trainerSafePane(()=>trainerTrainingTabHTML(d),'program')}</div>
    <div id="results" class="tab hidden">${trainerSafePane(()=>trainerMeasurementsResultsHTML(d),'measurements')}</div>
    <div id="nutrition" class="tab hidden">${trainerSafePane(()=>nutritionHTML(d),'nutrition')}</div>
    <div id="notes" class="tab hidden">${notes}</div>
@@ -350,6 +348,16 @@ async function openClient(id,activeTab=null){
  refreshTrainerGlobalBadge();
  currentTrainerTab=activeTab||'profile';
  showTrainerClientTab(currentTrainerTab,document.querySelector('.trainer-client-tabs [data-tab="'+currentTrainerTab+'"]'),false);
+}
+
+function openTrainerPendingReviews(autoOpen=true){
+ let btn=document.querySelector('.trainer-client-tabs [data-tab="program"]');
+ showTrainerClientTab('program',btn);
+ setTimeout(()=>{
+   let queue=document.getElementById('trainerPendingReviewQueue');
+   if(queue)queue.scrollIntoView({behavior:'smooth',block:'start'});
+   if(autoOpen&&typeof openFirstPendingWorkout==='function')openFirstPendingWorkout();
+ },60);
 }
 
 function trainerCheckinDetailsHTML(x,cid){
