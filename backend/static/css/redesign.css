@@ -10266,3 +10266,157 @@ body.eplan-redesign.trainer-ui .trainer-checkin-history-more span{color:#8a98aa!
 body.eplan-redesign.trainer-ui .trainer-checkin-history-empty{
   padding:14px!important;border-radius:13px!important;background:#f7f9fc!important;color:#7c899d!important;text-align:center!important;font-size:11px!important;font-weight:700!important;
 }
+
+
+/* New client modal redesign v20 */
+body.eplan-redesign.trainer-ui .trainer-new-client-modal{
+  padding:18px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(9,20,39,.68)!important;
+  backdrop-filter:blur(4px)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-card{
+  width:min(100%,520px)!important;
+  max-height:min(88dvh,760px)!important;
+  overflow:auto!important;
+  margin:0!important;
+  padding:20px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:24px!important;
+  background:#fff!important;
+  box-shadow:0 24px 70px rgba(10,23,56,.18)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-head small{
+  display:block!important;
+  margin-bottom:4px!important;
+  color:#8a98aa!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-close{
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  padding:0!important;
+  border:1px solid #d8e3f0!important;
+  border-radius:13px!important;
+  background:#f1f6fc!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:18px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-copy{
+  margin:14px 0 0!important;
+  color:#7b899d!important;
+  font-size:12.5px!important;
+  line-height:1.5!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-main-fields{
+  display:grid!important;
+  gap:10px!important;
+  margin-top:16px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-main-fields label,
+body.eplan-redesign.trainer-ui .trainer-new-client-macros label{
+  display:block!important;
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-main-fields label>span,
+body.eplan-redesign.trainer-ui .trainer-new-client-macros label>span{
+  display:block!important;
+  margin-bottom:6px!important;
+  color:#71809a!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-card input{
+  width:100%!important;
+  height:48px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:13px!important;
+  background:#f7f9fc!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-card input:focus{
+  border-color:#9bc6ff!important;
+  box-shadow:0 0 0 3px rgba(22,119,255,.08)!important;
+  outline:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-section{
+  margin-top:14px!important;
+  padding:14px!important;
+  border:1px solid #e2e9f2!important;
+  border-radius:16px!important;
+  background:#f9fbfd!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-section-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-section-head strong{
+  color:#183153!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-section-head span{
+  color:#8a98aa!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-macros{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-error{
+  min-height:18px!important;
+  margin:10px 0 0!important;
+  color:#c6535f!important;
+  font-size:11px!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-submit{
+  width:100%!important;
+  min-height:46px!important;
+  margin-top:4px!important;
+  padding:0 14px!important;
+  border:1px solid #cfe0fb!important;
+  border-radius:13px!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-new-client-submit:active{
+  transform:translateY(1px)!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.trainer-ui .trainer-new-client-card{padding:17px!important}
+  body.eplan-redesign.trainer-ui .trainer-new-client-head h2{font-size:22px!important}
+}
