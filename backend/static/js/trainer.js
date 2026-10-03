@@ -182,11 +182,6 @@ function showTrainerMore(){
  app.innerHTML=shell(`<div class="trainer-more-page modern">
    <div class="trainer-page-title trainer-more-title"><h1>Більше</h1></div>
    <div class="trainer-more-list modern">
-     <button class="trainer-more-item" onclick="showTrainerNotifications()">
-       <span class="trainer-more-icon">${uiIcon('bell')}</span>
-       <span class="trainer-more-copy"><strong>Сповіщення</strong><small>Нові події клієнтів</small></span>
-       <span class="trainer-more-chevron">›</span>
-     </button>
      <button class="trainer-more-item" onclick="showExerciseLibrary()">
        <span class="trainer-more-icon">${uiIcon('dumbbell')}</span>
        <span class="trainer-more-copy"><strong>Бібліотека вправ</strong><small>Вправи, м’язи та техніка</small></span>
