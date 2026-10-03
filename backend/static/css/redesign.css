@@ -8716,3 +8716,61 @@ body.eplan-redesign.trainer-ui .trainer-client-page #program a{color:#1677ff!imp
   body.eplan-redesign.trainer-ui .trainer-program-editor-grid{grid-template-columns:1fr!important}
   body.eplan-redesign.trainer-ui .trainer-program-editor-grid label.wide{grid-column:auto!important}
 }
+
+
+/* Trainer program title technique + compact superset controls v6 */
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line{
+  display:flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+  gap:0!important;
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>strong{
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>.alternative-tech-link{
+  flex:0 0 auto!important;
+  margin-left:5px!important;
+  color:#1677ff!important;
+  text-decoration:underline!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+
+/* Move superset order controls into the header, removing the empty bottom area */
+body.eplan-redesign.trainer-ui .trainer-client-page .program-block.superset-block{
+  position:relative!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .trainer-superset-head{
+  padding-right:86px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .program-block-actions{
+  position:absolute!important;
+  top:6px!important;
+  right:8px!important;
+  z-index:2!important;
+  display:flex!important;
+  flex-direction:row!important;
+  gap:5px!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .program-block-actions button{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  padding:0!important;
+  border:1px solid #cddcf0!important;
+  border-radius:9px!important;
+  background:#f8fbff!important;
+  color:#53647d!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .program-block-info{
+  width:100%!important;
+}
