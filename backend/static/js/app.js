@@ -47,7 +47,6 @@ window.addEventListener('offline',()=>offlineStatus('● Офлайн · дан�
 
 setTimeout(async()=>{await authReady;if(navigator.onLine)syncOfflineQueue();else offlineStatus('● Офлайн · дані зберігаються на телефоні');await offPrune();if(window.eplanOfflineMigrationDropped)offlineStatus('● Старі несинхронізовані офлайн-дані очищено після оновлення безпеки')},800);
 
-const TRAINER_SOCIALS={instagram:'https://www.instagram.com/mhiliuk/',tiktok:'https://www.tiktok.com/@michael_hilyk',telegram:'https://t.me/mrMiaut'};
 
 
 let appLanguage=localStorage.getItem('eplanLanguage')||'uk';
