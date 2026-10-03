@@ -26,7 +26,7 @@ function alternativesInputValue(x){return exerciseAlternatives(x).join(', ')}
 
 function parseAlternatives(v,main=''){let seen=new Set(),m=String(main||'').trim().toLowerCase();return String(v||'').split(',').map(x=>x.trim()).filter(x=>x&&x.toLowerCase()!==m&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase()))}
 
-function alternativesTrainerHTML(x){let a=exerciseAlternatives(x);return a.length?`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>${a.map(v=>{let tech=exerciseTechniqueUrl(v);return `<span class="alternative-chip"><span class="alternative-name">${esc(v)}</span>${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</span>`}).join('')}</div></div>`:''}
+function alternativesTrainerHTML(x){let a=exerciseAlternatives(x);return a.length?`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>${a.map(v=>{let tech=exerciseTechniqueUrl(v);return `<span class="alternative-chip"><span class="alternative-name">${esc(v)}</span>${tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</span>`}).join('')}</div></div>`:''}
 
 function programExtraHTML(x){
  let rest=restLabel(x),rp=rirPlan(x);
