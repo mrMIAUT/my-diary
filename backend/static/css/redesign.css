@@ -9033,3 +9033,28 @@ body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternati
   transform:translateY(-50%)!important;
   border-radius:1px!important;
 }
+
+
+/* Explicit alternative divider v12 */
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip{
+  display:inline-flex!important;
+  align-items:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-divider{
+  display:block!important;
+  flex:0 0 1px!important;
+  width:1px!important;
+  height:14px!important;
+  margin:0 8px!important;
+  background:#cfd9e6!important;
+  border-radius:1px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-tech-link{
+  position:static!important;
+  margin-left:0!important;
+  padding-left:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-tech-link::before{
+  content:none!important;
+  display:none!important;
+}
