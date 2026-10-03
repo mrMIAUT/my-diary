@@ -54,20 +54,6 @@ function toggleResultExercise(id,btn){
  let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
 
-
-function resultDelta(v){
- let n=+v||0;
- if(n>0)return `<span class="delta-up">+${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
- if(n<0)return `<span class="delta-down">${Number.isInteger(n)?n:n.toFixed(1)}</span>`;
- return `<span class="muted">0</span>`;
-}
-
-function toggleResultExercise(id,btn){
- let el=document.getElementById(id);if(!el)return;
- el.classList.toggle('hidden');
- let a=btn.querySelector('.arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
-}
-
 function trainerResultDates(d,dayName){
  let program=(d.program||[]).filter(x=>x.day_name===dayName),pids=new Set(program.map(x=>x.id));
  let ss=(d.workout_sessions||[]).filter(s=>s.day_name===dayName);
