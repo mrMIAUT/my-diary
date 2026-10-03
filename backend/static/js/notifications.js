@@ -230,12 +230,22 @@ async function openTrainerNotification(nid,cid){
      return;
    }
 
+   if(note.kind==='cardio'){
+     await openClient(cid,'progress');
+     refreshTrainerGlobalBadge();
+     setTimeout(()=>{
+       let block=document.getElementById('trainerProgressActivity');
+       if(block)block.scrollIntoView({behavior:'smooth',block:'start'});
+     },120);
+     return;
+   }
+
    let tab='profile';
    if(note.target_tab==='program')tab='program';
    else if(note.target_tab==='nutrition')tab='nutrition';
    else if(note.target_tab==='notes')tab='notes';
    else if(note.target_tab==='calendar')tab='calendar';
-   else if(note.target_tab==='profile'||note.kind==='checkin'||note.kind==='cardio')tab='profile';
+   else if(note.target_tab==='profile'||note.kind==='checkin')tab='profile';
 
    await openClient(cid,tab);
    refreshTrainerGlobalBadge();
