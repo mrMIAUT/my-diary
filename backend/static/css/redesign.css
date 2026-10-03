@@ -9008,3 +9008,28 @@ body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>
   transform:translateY(-50%)!important;
   border-radius:1px!important;
 }
+
+
+/* Alternative technique divider v11 */
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip{
+  align-items:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-name{
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-tech-link{
+  position:relative!important;
+  margin-left:8px!important;
+  padding-left:9px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternative-tech-link::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:50%!important;
+  width:1px!important;
+  height:13px!important;
+  background:#cfd9e6!important;
+  transform:translateY(-50%)!important;
+  border-radius:1px!important;
+}
