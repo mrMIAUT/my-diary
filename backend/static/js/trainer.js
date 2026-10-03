@@ -293,10 +293,13 @@ async function openClient(id,activeTab=null){
  `;
  let notes=trainerNotesHTML(d,c.id);
  app.innerHTML=shell(`<div class="trainer-client-page">
-   <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="document.getElementById('trainerClientActions')?.classList.toggle('hidden')">•••</button></div>
-   <div id="trainerClientActions" class="trainer-client-actions-pop hidden">
-     ${c.status==='Заморожений'?'<button onclick="setClientStatus('+c.id+',\'Активний\')">Розморозити</button>':'<button onclick="setClientStatus('+c.id+',\'Заморожений\')">Заморозити</button>'}
-     <button class="danger" onclick="deleteClientAccount(${c.id})">Видалити</button>
+   <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="toggleTrainerClientActions(event)" aria-label="Дії з клієнтом">•••</button></div>
+   <div id="trainerClientActionsLayer" class="trainer-client-actions-layer hidden" onclick="closeTrainerClientActions()">
+     <div id="trainerClientActions" class="trainer-client-actions-pop" onclick="event.stopPropagation()">
+       <div class="trainer-client-actions-head"><strong>Дії з клієнтом</strong><button type="button" onclick="closeTrainerClientActions()" aria-label="Закрити">✕</button></div>
+       ${c.status==='Заморожений'?'<button type="button" class="trainer-client-action neutral" onclick="closeTrainerClientActions();setClientStatus('+c.id+',\'Активний\')">Розморозити клієнта</button>':'<button type="button" class="trainer-client-action neutral" onclick="closeTrainerClientActions();setClientStatus('+c.id+',\'Заморожений\')">Заморозити клієнта</button>'}
+       <button type="button" class="trainer-client-action danger" onclick="closeTrainerClientActions();deleteClientAccount(${c.id})">Видалити клієнта</button>
+     </div>
    </div>
    <div class="trainer-client-identity">
      <span class="trainer-client-avatar large">${esc(initials)}</span>
@@ -344,7 +347,16 @@ async function saveTrainerPrivateNote(cid,btn){
  if(btn){let old=btn.textContent;btn.textContent='Збережено ✓';setTimeout(()=>btn.textContent=old,1200)}
 }
 
+function toggleTrainerClientActions(event){
+ event?.stopPropagation?.();
+ document.getElementById('trainerClientActionsLayer')?.classList.toggle('hidden');
+}
+function closeTrainerClientActions(){
+ document.getElementById('trainerClientActionsLayer')?.classList.add('hidden');
+}
+
 function showTrainerClientTab(id,btn,push=true){
+ closeTrainerClientActions();
  document.querySelectorAll('.trainer-client-page .tab').forEach(x=>x.classList.add('hidden'));
  document.getElementById(id)?.classList.remove('hidden');
  document.querySelectorAll('.trainer-client-tabs button').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));
