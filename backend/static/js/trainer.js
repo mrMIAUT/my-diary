@@ -103,7 +103,7 @@ async function showTrainerCheckins(){
  let cs=(await loadClients()).filter(c=>(+c.checkin_pending_count||0)>0);
  if(!cs.length){alert('Нових щотижневих звітів поки немає.');return trainerHome()}
  await navigateToClient(cs[0].id);
- setTimeout(()=>document.querySelector('.trainer-client-tabs [data-tab="notes"]')?.click(),0);
+ setTimeout(()=>document.querySelector('.trainer-checkin-history')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 
 
