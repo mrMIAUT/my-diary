@@ -218,7 +218,7 @@ async function openTrainerNotification(nid,cid){
    if(note.kind==='workout_finished'||note.target_tab==='results'){
      await openClient(cid,'program');
      refreshTrainerGlobalBadge();
-     setTimeout(()=>focusTrainerPendingWorkoutNotification(note),100);
+     setTimeout(()=>openTrainerWorkoutCalendar(note.target_day||'',+note.target_session_id||0),100);
      return;
    }
 
