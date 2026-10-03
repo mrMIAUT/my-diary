@@ -76,14 +76,6 @@ function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
 }
 
 
-function previousSets(d,pid){
- let all=(d.result_sets||[]).filter(x=>x.program_id===pid);
- if(!all.length)return '';
- let latest=all.map(x=>x.day).sort().reverse()[0];
- let xs=all.filter(x=>x.day===latest).sort((a,b)=>a.set_number-b.set_number);
- return `<div class="exercise workout-previous" style="margin-top:12px"><div class="muted">Попереднє тренування · ${esc(latest)}</div>${xs.map(s=>`<div style="margin-top:6px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`).join('')}</div>`;
-}
-
 function formatWorkoutDuration(seconds){
  let sec=Math.max(0,Math.floor(+seconds||0)),min=Math.floor(sec/60),h=Math.floor(min/60),m=min%60;
  if(h>0)return m?String(h)+' год '+String(m)+' хв':String(h)+' год';
@@ -117,12 +109,6 @@ function saveWorkoutDraft(sid,pid,n,field,value){if(!sid)return;let k=workoutDra
 function clearWorkoutDraft(sid,pid){if(!sid)return;try{let k=workoutDraftKey(sid,pid);if(k)localStorage.removeItem(k)}catch(e){}}
 
 function clearWorkoutDraftsForSession(sid){if(!sid)return;try{let scope=offlineLocalScopeKey(),prefix=scope?`eplanWorkoutDraftV2_${scope}_${sid}_`:'';for(let i=localStorage.length-1;i>=0;i--){let k=localStorage.key(i);if(k&&prefix&&k.startsWith(prefix))localStorage.removeItem(k)}}catch(e){}}
-
-function setRows(x,d){
- let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div><div></div></div>`,rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id);
- for(let n=1;n<=x.sets;n++){let q=draft[n]||{},wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${x.id}_${n}" type="number" step="0.5" value="${esc(String(wv))}" placeholder="кг" oninput="saveWorkoutDraft(${sid},${x.id},${n},'weight',this.value)"><input id="r${x.id}_${n}" type="number" value="${esc(String(rv))}" placeholder="${esc(x.reps)}" oninput="saveWorkoutDraft(${sid},${x.id},${n},'reps',this.value)"><input id="i${x.id}_${n}" type="number" value="${esc(String(iv))}" placeholder="${esc(String(rirHint))}" min="0" max="10" oninput="saveWorkoutDraft(${sid},${x.id},${n},'rir',this.value)"><button type="button" class="workout-set-check" onclick="completeWorkoutSetAndStartTimer(${x.id},${n},${x.sets},this)" aria-label="Завершити підхід ${n}">✓</button></div>`}
- return previousSets(d,x.id)+h
-}
 
 function previewWorkout(day,cid){
  previewWorkoutDay=previewWorkoutDay===day?null:day;
