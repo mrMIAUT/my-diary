@@ -80,7 +80,7 @@ async function refreshServerSession({suppressLoginRender=false}={}){
 async function bootstrapAuthentication(){
  // Server identity is resolved asynchronously; keep the existing shell visible
  // while it loads instead of leaving an empty PWA screen on a slow connection.
- app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">${appLanguage==='en'?'Loading…':'Завантаження…'}</p></div></div>`;
+ app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">Завантаження…</p></div></div>`;
  if(logoutPending){clearLocalSession({suppressLoginRender:!!startupResetToken});await finishPendingLogout()}
  else await refreshServerSession({suppressLoginRender:!!startupResetToken});
  if(startupResetToken)return renderResetPassword(startupResetToken);
