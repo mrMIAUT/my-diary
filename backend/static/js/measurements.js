@@ -126,7 +126,7 @@ function measurementFormHTML(cid,early=false,existing=null){
 }
 
 function measurementHistoryCard(x,prev,cid=null){
- let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canEdit=ownerId>0&&session&&session.role==='client'&&x.id;
+ let ownerId=+(cid||((session&&session.role==='client')?session.client_id:0)||0),canEdit=ownerId>0&&session&&session.role==='client'&&x.id&&hasFeature('measurements');
  let basics=[['weight','Вага','кг'],['shoulders','Плечі','см'],['neck','Шия','см'],['chest','Груди','см'],['waist','Талія','см'],['hips','Стегна','см']];
  let basicHtml=basics.filter(([k])=>+x[k]>0).map(([k,n,u])=>{
   return '<div class="measurement-history-metric"><span>'+n+'</span><strong>'+fmtProgress(x[k])+' '+u+'</strong></div>';
@@ -217,15 +217,16 @@ function selectMeasurementHistoryDay(day){
 function clientMeasurementsHTML(d,cid){
  let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)),last=xs[xs.length-1],prev=xs[xs.length-2],left=last?measurementDaysLeft(last.day):0,due=!last||left<=0;
  let nextDate=last?(()=>{let z=new Date(last.day+'T12:00:00');z.setDate(z.getDate()+30);return z.toISOString().slice(0,10)})():isoToday();
+ let canWrite=!!hasFeature('measurements',d.client);
  return `<div class="measurements-page">
   <div class="card measurement-next ${due?'due':''}">
-   <div><span class="measurement-kicker">${due?'Час зробити заміри':'Наступні заміри'}</span><h2>${due?'Можна оновити дані':`Через ${left} ${ukDays(left)}`}</h2><p class="muted">${last?`Орієнтовна дата: ${formatProgressDate(nextDate)}`:'Додай перші заміри, щоб почати відстежувати зміни.'}</p></div>
-   ${due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
+   <div><span class="measurement-kicker">${canWrite?(due?'Час зробити заміри':'Наступні заміри'):'Історія замірів'}</span><h2>${canWrite?(due?'Можна оновити дані':`Через ${left} ${ukDays(left)}`):'Режим перегляду'}</h2><p class="muted">${last?`Останній замір: ${formatProgressDate(last.day)}`:(canWrite?'Додай перші заміри, щоб почати відстежувати зміни.':'Збережених замірів ще немає.')}</p></div>
+   ${canWrite&&due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
   </div>
-  ${due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
+  ${canWrite&&due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
   ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev,d)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev,d)}</div>`:''}
   ${xs.length>1?measurementComparisonHTML(xs):''}
-  <div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById('earlyMeasurementForm').classList.toggle('hidden')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">${measurementFormHTML(cid,true)}</div></div>
+  ${canWrite?'<div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById(\'earlyMeasurementForm\').classList.toggle(\'hidden\')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">'+measurementFormHTML(cid,true)+'</div></div>':''}
   ${xs.length?`<div id="measurementHistoryCalendar">${measurementHistoryCalendarHTML(xs,cid)}</div>`:''}
  </div>`;
 }
