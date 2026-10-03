@@ -59,7 +59,7 @@ function socialContactsHTML(c){
 }
 
 function clientProfileAvatarHTML(c,cid){
- let photo=String(c.avatar||'').trim(),state=photo?'has-photo':'is-placeholder';
+ let photo=String(c.avatar||'').trim();
  let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span class="avatar-initials avatar-initials-large">'+esc(clientInitials(c))+'</span>';
  let name=[c.first_name||'',c.last_name||''].filter(Boolean).join(' ').trim()||c.name||'Мій профіль';
  return '<div class="client-profile-hero">'
@@ -71,7 +71,6 @@ function clientProfileAvatarHTML(c,cid){
 
 function showClientProfile(cid){
  let c=(window.currentClientData||{}).client||{};currentClientView='profile';
- let combinedHealth=[c.contraindications,c.injuries].map(x=>String(x||'').trim()).filter(Boolean).join('\n');
  app.innerHTML=shell(`<div class="client-section-page client-profile-page">${clientProfileAvatarHTML(c,cid)}<div class="card client-profile-details"><div class="grid" style="margin-top:14px"><div><div class="muted">Ім’я</div><strong>${profileVal(c.first_name||c.name||'—')}</strong></div><div><div class="muted">Прізвище</div><strong>${profileVal(c.last_name||'—')}</strong></div><div><div class="muted">Вік</div><strong>${c.age?profileVal(c.age):'—'}</strong></div><div><div class="muted">Стать</div><strong>${profileVal(c.sex||'—')}</strong></div><div><div class="muted">Зв’язок</div>${socialContactsHTML(c)}</div></div><div style="margin-top:16px"><div class="muted">Протипоказання</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.contraindications||'Не вказано')}</div></div><div style="margin-top:16px"><div class="muted">Травми</div><div style="white-space:pre-wrap;margin-top:5px">${profileVal(c.injuries||'Не вказано')}</div></div></div></div>`);
  history.pushState({eplanPage:'clientProfile',cid},'',location.href);
 }
