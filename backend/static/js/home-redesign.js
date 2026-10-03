@@ -92,6 +92,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
   let trainSub=active?'Продовжити '+nextDay:todayFinished?(todayFinished.day_name||'Тренування'):nextTitle;
   let foodMain=(kcalNow||kcalTarget)?kcalNow.toLocaleString('uk-UA')+(kcalTarget?' / '+kcalTarget.toLocaleString('uk-UA'):'')+' ккал':'БЖВ за сьогодні';
   let foodSub=todayNutrition?'Дані збережено':'Заповнити сьогодні';
+  let features=clientAccess(c).features||{},nutritionEnabled=!!features.nutrition,checkinEnabled=!!features.checkin;
 
   return '<section class="client-home">'
     +'<button class="client-program-hero '+(active?'is-active':'')+'" onclick="showClientTraining('+cid+')">'
@@ -107,7 +108,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
     +'</button>'
 
     +'<div class="client-home-section-head"><h2>Сьогодні</h2></div>'
-    +'<div class="client-home-today-grid">'
+    +'<div class="client-home-today-grid '+(nutritionEnabled?'':'single')+'">'
       +'<button class="client-home-today-card" onclick="showClientTraining('+cid+')">'
         +'<span class="client-home-today-icon">'+uiIcon('dumbbell')+'</span>'
         +'<small>Тренування</small>'
@@ -115,19 +116,19 @@ function redesignClientHomeHTML(d,c,cid,groups){
         +'<em>'+esc(trainSub)+'</em>'
         +'<span class="home-chevron">›</span>'
       +'</button>'
-      +'<button class="client-home-today-card" onclick="showClientNutrition('+cid+')">'
+      +(nutritionEnabled?'<button class="client-home-today-card" onclick="showClientNutrition('+cid+')">'
         +'<span class="client-home-today-icon">'+uiIcon('food')+'</span>'
         +'<small>Харчування</small>'
         +'<strong>'+esc(foodMain)+'</strong>'
         +'<div class="home-mini-progress"><i style="width:'+kcalPct+'%"></i></div>'
         +'<em>'+esc(foodSub)+'</em>'
         +'<span class="home-chevron">›</span>'
-      +'</button>'
+      +'</button>':'')
     +'</div>'
 
-    +(redesignCurrentWeekCheckin(d)
+    +(checkinEnabled?(redesignCurrentWeekCheckin(d)
       ?'<button class="client-weekly-checkin done" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий звіт</span><strong>Заповнено ✓</strong><em>Можна оновити до кінця тижня</em><b>›</b></button>'
-      :'<button class="client-weekly-checkin" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий звіт</span><strong>Як минув твій тиждень?</strong><em>Займе близько хвилини</em><b>›</b></button>')
+      :'<button class="client-weekly-checkin" onclick="openWeeklyCheckin('+cid+')"><span>Щотижневий звіт</span><strong>Як минув твій тиждень?</strong><em>Займе близько хвилини</em><b>›</b></button>'):'')
 
     +'<div class="client-home-section-head">'
       +'<h2>Мій прогрес</h2>'
