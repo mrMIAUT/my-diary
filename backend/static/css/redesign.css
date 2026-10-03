@@ -12192,3 +12192,34 @@ body.eplan-redesign.trainer-ui .trainer-client-page .access-editor-note p{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* Trainer access date alignment v34 */
+body.eplan-redesign.trainer-ui .trainer-client-page #accessUntil{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  line-height:normal!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #accessUntil::-webkit-date-and-time-value{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:1.2!important;
+  text-align:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #accessUntil::-webkit-calendar-picker-indicator{
+  align-self:center!important;
+  margin-top:0!important;
+  margin-bottom:0!important;
+}
