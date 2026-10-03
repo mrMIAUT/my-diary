@@ -10861,3 +10861,292 @@ body.eplan-redesign.trainer-ui .trainer-more-item:active,
 body.eplan-redesign.trainer-ui .trainer-more-logout:active{
   transform:translateY(1px)!important;
 }
+
+
+/* Shared notification center redesign v25 */
+body.eplan-redesign.client-ui .notification-modal,
+body.eplan-redesign.trainer-ui .notification-modal{
+  padding:18px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(9,20,39,.66)!important;
+  -webkit-backdrop-filter:blur(4px)!important;
+  backdrop-filter:blur(4px)!important;
+}
+body.eplan-redesign.client-ui .notification-modal-card,
+body.eplan-redesign.trainer-ui .notification-modal-card{
+  width:min(100%,430px)!important;
+  max-height:min(84dvh,760px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  margin:0!important;
+  padding:18px!important;
+  overflow:hidden!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:23px!important;
+  background:#fff!important;
+  box-shadow:0 24px 70px rgba(10,23,56,.18)!important;
+}
+body.eplan-redesign.client-ui .notification-modal-head,
+body.eplan-redesign.trainer-ui .notification-modal-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 0 12px!important;
+}
+body.eplan-redesign.client-ui .notification-modal-head small,
+body.eplan-redesign.trainer-ui .notification-modal-head small{
+  display:block!important;
+  margin-bottom:3px!important;
+  color:#8a98aa!important;
+  font-size:9.5px!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+}
+body.eplan-redesign.client-ui .notification-modal-head h2,
+body.eplan-redesign.trainer-ui .notification-modal-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .notification-modal-actions,
+body.eplan-redesign.trainer-ui .notification-modal-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+body.eplan-redesign.client-ui .notification-close,
+body.eplan-redesign.trainer-ui .notification-close{
+  display:grid!important;
+  place-items:center!important;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  padding:0!important;
+  border:1px solid #d8e3f0!important;
+  border-radius:12px!important;
+  background:#f1f6fc!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:17px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.client-ui .notification-clear-all,
+body.eplan-redesign.trainer-ui .notification-clear-all{
+  min-height:36px!important;
+  padding:0 10px!important;
+  border:1px solid #ffdadd!important;
+  border-radius:11px!important;
+  background:#fff5f5!important;
+  color:#c64a55!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .notification-phone-toggle,
+body.eplan-redesign.trainer-ui .notification-phone-toggle{
+  width:100%!important;
+  min-height:42px!important;
+  margin:0 0 12px!important;
+  padding:0 12px!important;
+  border:1px solid #d7e7fb!important;
+  border-radius:12px!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .notification-phone-toggle.push-enabled,
+body.eplan-redesign.trainer-ui .notification-phone-toggle.push-enabled{
+  border-color:#d2eadb!important;
+  background:#eef8f1!important;
+  color:#2b8053!important;
+}
+body.eplan-redesign.client-ui .notification-list,
+body.eplan-redesign.trainer-ui .notification-list{
+  min-height:0!important;
+  overflow:auto!important;
+  display:grid!important;
+  gap:8px!important;
+  padding-right:1px!important;
+}
+body.eplan-redesign.client-ui .notification-swipe,
+body.eplan-redesign.trainer-ui .notification-swipe{
+  position:relative!important;
+  overflow:hidden!important;
+  border-radius:15px!important;
+}
+body.eplan-redesign.client-ui .notification-item,
+body.eplan-redesign.trainer-ui .notification-item{
+  position:relative!important;
+  z-index:2!important;
+  min-height:82px!important;
+  padding:12px 13px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:15px!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  transition:transform .18s ease!important;
+}
+body.eplan-redesign.client-ui .notification-item.unread,
+body.eplan-redesign.trainer-ui .notification-item.unread{
+  border-color:#cfe0fb!important;
+  background:#f6f9ff!important;
+}
+body.eplan-redesign.client-ui .notification-item-top,
+body.eplan-redesign.trainer-ui .notification-item-top{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding-left:12px!important;
+}
+body.eplan-redesign.client-ui .notification-item-top strong,
+body.eplan-redesign.trainer-ui .notification-item-top strong{
+  overflow:hidden!important;
+  color:#183153!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui .notification-item-top time,
+body.eplan-redesign.trainer-ui .notification-item-top time{
+  flex:0 0 auto!important;
+  color:#93a0b2!important;
+  font-size:9px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.client-ui .notification-item p,
+body.eplan-redesign.trainer-ui .notification-item p{
+  margin:7px 0 0 12px!important;
+  color:#0a1738!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .notification-dot,
+body.eplan-redesign.trainer-ui .notification-dot{
+  position:absolute!important;
+  left:12px!important;
+  top:15px!important;
+  width:7px!important;
+  height:7px!important;
+  border-radius:50%!important;
+  background:#1677ff!important;
+  box-shadow:0 0 0 3px #e6f0ff!important;
+}
+body.eplan-redesign.client-ui .notification-delete-bg.notification-delete,
+body.eplan-redesign.trainer-ui .notification-delete-bg.notification-delete{
+  position:absolute!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:72px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid #ffd2d6!important;
+  border-radius:15px!important;
+  background:#fff0f1!important;
+  color:#c64a55!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .notification-delete-bg.notification-delete svg,
+body.eplan-redesign.trainer-ui .notification-delete-bg.notification-delete svg{
+  width:21px!important;
+  height:21px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.9!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body.eplan-redesign.client-ui .notification-swipe.reveal .notification-item,
+body.eplan-redesign.trainer-ui .notification-swipe.reveal .notification-item{
+  transform:translateX(-84px)!important;
+}
+body.eplan-redesign.client-ui .notification-empty,
+body.eplan-redesign.trainer-ui .notification-empty{
+  min-height:180px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  padding:22px!important;
+  border:1px dashed #dbe4ef!important;
+  border-radius:16px!important;
+  background:#f9fbfd!important;
+  text-align:center!important;
+}
+body.eplan-redesign.client-ui .notification-empty .ui-icon,
+body.eplan-redesign.trainer-ui .notification-empty .ui-icon{
+  width:24px!important;
+  height:24px!important;
+  color:#7e8da2!important;
+}
+body.eplan-redesign.client-ui .notification-empty strong,
+body.eplan-redesign.trainer-ui .notification-empty strong{
+  color:#183153!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .notification-empty span,
+body.eplan-redesign.trainer-ui .notification-empty span{
+  color:#8a97aa!important;
+  font-size:10.5px!important;
+}
+body.eplan-redesign.client-ui .notification-detail-card,
+body.eplan-redesign.trainer-ui .notification-detail-card{
+  max-height:none!important;
+}
+body.eplan-redesign.client-ui .notification-detail-message,
+body.eplan-redesign.trainer-ui .notification-detail-message{
+  padding:14px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:15px!important;
+  background:#f8faff!important;
+}
+body.eplan-redesign.client-ui .notification-detail-message p,
+body.eplan-redesign.trainer-ui .notification-detail-message p{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:13px!important;
+  line-height:1.5!important;
+  font-weight:750!important;
+  white-space:pre-wrap!important;
+}
+body.eplan-redesign.client-ui .notification-detail-message time,
+body.eplan-redesign.trainer-ui .notification-detail-message time{
+  display:block!important;
+  margin-top:10px!important;
+  color:#8d9aad!important;
+  font-size:9.5px!important;
+}
+body.eplan-redesign.client-ui .notification-detail-back,
+body.eplan-redesign.trainer-ui .notification-detail-back{
+  width:100%!important;
+  min-height:40px!important;
+  margin-top:10px!important;
+  border:1px solid #dce5f0!important;
+  border-radius:11px!important;
+  background:#eef3f8!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .notification-modal,
+  body.eplan-redesign.trainer-ui .notification-modal{padding:12px!important}
+  body.eplan-redesign.client-ui .notification-modal-card,
+  body.eplan-redesign.trainer-ui .notification-modal-card{padding:15px!important}
+  body.eplan-redesign.client-ui .notification-clear-all,
+  body.eplan-redesign.trainer-ui .notification-clear-all{padding:0 8px!important;font-size:10px!important}
+}
