@@ -162,9 +162,12 @@ function changeTrainerWorkoutCalendarMonth(delta){
 
 function selectTrainerWorkoutCalendarDay(day,sid=0){
  let d=window.currentClientData||{},st=trainerWorkoutCalendarState(d);
- st.day=day||'';st.sid=+sid||0;if(day)st.month=String(day).slice(0,7);
+ let same=st.day===day&&(!sid||+st.sid===+sid);
+ st.day=same?'':(day||'');
+ st.sid=same?0:(+sid||0);
+ if(day)st.month=String(day).slice(0,7);
  renderTrainerWorkoutCalendar();
- requestAnimationFrame(()=>document.getElementById('trainerWorkoutCalendarDetails')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+ if(!same)requestAnimationFrame(()=>document.getElementById('trainerWorkoutCalendarDetails')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
 
 function openTrainerWorkoutCalendar(day,sid=0){
@@ -183,7 +186,117 @@ function focusTrainerPendingSession(sid){
 }
 
 function trainerTrainingTabHTML(d){
- return trainerPendingReviewsHTML(d)+'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'+programHTML(d);
+ return trainerPendingReviewsHTML(d)+programHTML(d);
+}
+
+function trainerProgressPeriodDays(){
+ let p=window.trainerProgressPeriod||'90';
+ return p==='30'?30:p==='180'?180:p==='all'?0:90;
+}
+
+function trainerProgressPeriodStart(){
+ let days=trainerProgressPeriodDays();
+ if(!days)return '';
+ let d=new Date();
+ d.setDate(d.getDate()-days);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function trainerProgressInPeriod(day){
+ let from=trainerProgressPeriodStart();
+ return !from||!day||day>=from;
+}
+
+function trainerProgressSets(d){
+ return uniqueResultSets((d.result_sets||[]).filter(x=>x.day&&trainerProgressInPeriod(x.day)));
+}
+
+function trainerProgressVolume(sets){
+ // Project rule: training volume is summed working-set weight, without reps.
+ return Math.round((sets||[]).reduce((sum,x)=>sum+(+x.weight||0),0));
+}
+
+function trainerProgressExerciseStats(d){
+ let sets=trainerProgressSets(d),groups={};
+ sets.forEach(x=>{
+   let name=String(x.exercise||'Вправа').trim()||'Вправа';
+   (groups[name]||(groups[name]=[])).push(x);
+ });
+ return Object.entries(groups).map(([name,xs])=>{
+   xs.sort((a,b)=>String(a.day||'').localeCompare(String(b.day||''))||(+a.set_number||0)-(+b.set_number||0));
+   let best=xs.slice().sort((a,b)=>(+b.weight||0)-(+a.weight||0)||(+b.reps||0)-(+a.reps||0))[0]||{};
+   let dates=[...new Set(xs.map(x=>x.day).filter(Boolean))].sort();
+   let firstDay=dates[0]||'',lastDay=dates[dates.length-1]||'';
+   let first=xs.filter(x=>x.day===firstDay).slice().sort((a,b)=>(+b.weight||0)-(+a.weight||0)||(+b.reps||0)-(+a.reps||0))[0]||{};
+   let last=xs.filter(x=>x.day===lastDay).slice().sort((a,b)=>(+b.weight||0)-(+a.weight||0)||(+b.reps||0)-(+a.reps||0))[0]||{};
+   return {
+     name, bestWeight:+best.weight||0,bestReps:+best.reps||0,bestDay:best.day||'',
+     firstWeight:+first.weight||0,lastWeight:+last.weight||0,
+     delta:(+last.weight||0)-(+first.weight||0),sessions:dates.length,lastDay
+   };
+ }).sort((a,b)=>b.bestWeight-a.bestWeight||b.sessions-a.sessions);
+}
+
+function trainerProgressActivityHTML(d){
+ let xs=(d.cardio||[]).filter(x=>x.day&&trainerProgressInPeriod(x.day)).slice().sort((a,b)=>String(b.day).localeCompare(String(a.day)));
+ if(!xs.length)return '<div class="trainer-progress-empty">Клієнт ще не додавав активність за цей період.</div>';
+ let totalSteps=xs.reduce((s,x)=>s+(+x.steps||0),0);
+ let cardio=xs.filter(x=>x.cardio_type);
+ let totalMinutes=cardio.reduce((s,x)=>s+(+x.minutes||0),0);
+ let avgSteps=Math.round(totalSteps/Math.max(1,xs.length));
+ let latest=xs[0]||{};
+ return '<div class="trainer-progress-activity-stats">'
+   +'<div><span>Середні кроки</span><strong>'+avgSteps.toLocaleString('uk-UA')+'</strong><small>'+xs.length+' дн. з даними</small></div>'
+   +'<div><span>Кардіо</span><strong>'+totalMinutes+' хв</strong><small>'+cardio.length+' записів</small></div>'
+   +'<div><span>Остання активність</span><strong>'+esc(formatProgressDate(latest.day))+'</strong><small>'+(latest.cardio_type?esc(cardioDisplayType(latest.cardio_type)):((+latest.steps||0).toLocaleString('uk-UA')+' кроків'))+'</small></div>'
+  +'</div>'
+  +'<div class="trainer-progress-activity-list">'+xs.slice(0,5).map(x=>'<div><span><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+(x.cardio_type?esc(cardioDisplayType(x.cardio_type)):'Кроки')+'</small></span><b>'+((+x.steps||0)?Number(x.steps).toLocaleString('uk-UA')+' кроків':(+x.minutes||0)+' хв')+'</b></div>').join('')+'</div>';
+}
+
+function trainerProgressPRHTML(d){
+ let stats=trainerProgressExerciseStats(d).filter(x=>x.bestWeight>0);
+ if(!stats.length)return '<div class="trainer-progress-empty">PR з’являться після перших тренувань із записаною вагою.</div>';
+ return '<div class="trainer-progress-pr-grid">'+stats.slice(0,6).map(x=>'<div class="trainer-progress-pr-card"><span>PR</span><strong>'+esc(x.name)+'</strong><b>'+fmtProgress(x.bestWeight)+' кг'+(x.bestReps?' × '+x.bestReps:'')+'</b><small>'+esc(formatProgressDate(x.bestDay))+'</small></div>').join('')+'</div>';
+}
+
+function trainerProgressCompareHTML(d){
+ let stats=trainerProgressExerciseStats(d).filter(x=>x.sessions>=2);
+ if(!stats.length)return '<div class="trainer-progress-empty">Потрібно щонайменше два тренування вправи для порівняння.</div>';
+ return '<div class="trainer-progress-compare-list">'+stats.slice(0,8).map(x=>{
+   let cls=x.delta>0?'up':x.delta<0?'down':'same',sign=x.delta>0?'+':'';
+   return '<div><span><strong>'+esc(x.name)+'</strong><small>'+x.sessions+' тренувань · останнє '+esc(formatProgressDate(x.lastDay))+'</small></span><b class="'+cls+'">'+fmtProgress(x.firstWeight)+' → '+fmtProgress(x.lastWeight)+' кг <em>'+sign+fmtProgress(x.delta)+'</em></b></div>';
+ }).join('')+'</div>';
+}
+
+function trainerProgressSummaryHTML(d){
+ let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerProgressInPeriod(sessionDay(x)));
+ let sets=trainerProgressSets(d),volume=trainerProgressVolume(sets),prs=trainerProgressExerciseStats(d).filter(x=>x.bestWeight>0).length;
+ return '<div class="trainer-progress-summary">'
+   +'<div><span>Тренувань</span><strong>'+sessions.length+'</strong><small>за період</small></div>'
+   +'<div><span>Робочий обсяг</span><strong>'+volume.toLocaleString('uk-UA')+' кг</strong><small>без повторень</small></div>'
+   +'<div><span>PR вправ</span><strong>'+prs+'</strong><small>особисті максимуми</small></div>'
+  +'</div>';
+}
+
+function trainerProgressHTML(d){
+ let period=window.trainerProgressPeriod||'90';
+ let labels=[['30','1 міс.'],['90','3 міс.'],['180','6 міс.'],['all','Увесь час']];
+ return '<div class="trainer-progress-page">'
+   +'<div class="trainer-progress-hero"><div><small>ДИНАМІКА КЛІЄНТА</small><h2>Прогрес</h2><p>Тренування, активність, PR та порівняння результатів.</p></div>'
+     +'<div class="trainer-progress-periods">'+labels.map(([v,label])=>'<button class="'+(period===v?'active':'')+'" onclick="setTrainerProgressPeriod(\''+v+'\')">'+label+'</button>').join('')+'</div>'
+   +'</div>'
+   +trainerProgressSummaryHTML(d)
+   +'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'
+   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
+   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Особисті рекорди</h3><p>Найбільша робоча вага по вправах.</p></div></div>'+trainerProgressPRHTML(d)+'</section>'
+   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Порівняння тренувань</h3><p>Перше та останнє виконання вправи за вибраний період.</p></div></div>'+trainerProgressCompareHTML(d)+'</section>'
+  +'</div>';
+}
+
+function setTrainerProgressPeriod(period){
+ window.trainerProgressPeriod=period||'90';
+ let box=document.getElementById('progress');
+ if(box)box.innerHTML=trainerProgressHTML(window.currentClientData||{});
 }
 
 function toggleTrainerPendingReview(btn){
