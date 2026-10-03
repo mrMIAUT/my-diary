@@ -214,14 +214,19 @@ function resultsHTML(d){
 
 function trainerMeasurementsResultsHTML(d){
  let cid=d?.client?.id||0;
- let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day));
+ let xs=(d.measurements||[]).filter(x=>x.day).slice().sort((a,b)=>a.day.localeCompare(b.day)||(+a.id||0)-(+b.id||0));
  let last=xs[xs.length-1],prev=xs[xs.length-2];
- if(!last)return `<div class="card trainer-measure-results"><button class="exercise-toggle trainer-measure-summary-toggle" onclick="toggleCalendar('trainerMeasureSummary',this)"><span><strong>Заміри тіла</strong><span class="muted" style="display:block;margin-top:5px">Клієнт ще не додав заміри</span></span><span class="arrow">⌄</span></button><div id="trainerMeasureSummary" class="hidden" style="margin-top:16px"><p class="muted">Після першого заміру тут з’являться актуальні показники та історія змін.</p></div></div>`;
- return `<div class="card trainer-measure-results">
-  <div class="results-measure-head"><div><h2>Заміри тіла</h2><p class="muted">Останній замір · ${formatProgressDate(last.day)}</p></div><span class="trainer-meta-chip ok">${xs.length} ${xs.length===1?'запис':'записів'}</span></div>
-  ${measurementMetricCards(last,prev)}
-  ${prev?`<div class="trainer-measure-change-title">Зміни з минулого разу <span>· ${formatProgressDate(prev.day)}</span></div>${measurementChangesHTML(last,prev)}`:''}
-  <button class="exercise-toggle trainer-measure-history-toggle" onclick="toggleCalendar('trainerMeasurementHistory',this)"><span><strong>Історія замірів</strong><span class="muted" style="display:block;margin-top:5px">Переглянути всі контрольні точки</span></span><span class="arrow">⌄</span></button>
-  <div id="trainerMeasurementHistory" class="hidden measurement-history">${xs.slice().reverse().map((x,i,rev)=>measurementHistoryCard(x,rev[i+1],cid)).join('')}</div>
- </div>`;
+ if(!last){
+   return '<div class="measurements-page trainer-measurements-page"><div class="card trainer-measure-empty"><strong>Заміри ще не додані</strong><p class="muted">Коли клієнт внесе перші заміри, вони з’являться тут.</p></div></div>';
+ }
+ return '<div class="measurements-page trainer-measurements-page">'
+   +'<div class="measurement-visual-overview">'
+     +'<div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">'+esc(formatProgressDate(last.day))+'</p></div><span class="trainer-measure-count">'+xs.length+' '+(xs.length===1?'запис':'записів')+'</span></div>'
+     +measurementWeightVisual(last,prev,d)
+     +'<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>'
+     +measurementVisualCards(last,prev,d)
+   +'</div>'
+   +(xs.length>1?measurementComparisonHTML(xs):'')
+   +(xs.length?'<div id="measurementHistoryCalendar">'+measurementHistoryCalendarHTML(xs,cid)+'</div>':'')
+ +'</div>';
 }
