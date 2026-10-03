@@ -9898,3 +9898,14 @@ body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top
     min-height:164px!important;
   }
 }
+
+
+/* Trainer measurement selected-date spacing v17 */
+body.eplan-redesign.trainer-ui .measurement-calendar-selected{
+  margin-top:18px!important;
+  padding-top:18px!important;
+  border-top:1px solid #edf1f6!important;
+}
+body.eplan-redesign.trainer-ui .measurement-calendar-selected .measurement-history-card{
+  margin:0!important;
+}
