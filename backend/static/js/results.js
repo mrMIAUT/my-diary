@@ -4,7 +4,7 @@
 
 function fmtProgress(v){return Number(v).toFixed(1).replace('.0','')}
 
-function formatProgressDate(s){try{return new Date(s+'T12:00:00').toLocaleDateString(appLanguage==='en'?'en-GB':'uk-UA',{day:'numeric',month:'short'})}catch(e){return s}}
+function formatProgressDate(s){try{return new Date(s+'T12:00:00').toLocaleDateString('uk-UA',{day:'numeric',month:'short'})}catch(e){return s}}
 
 function sessionProgramForDate(d,dayName,day){
  let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&sessionDay(s)===day).sort((a,b)=>b.id-a.id);
