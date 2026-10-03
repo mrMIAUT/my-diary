@@ -92,7 +92,7 @@ async function showTrainerClientsView(){
    </div>
    <div class="trainer-client-list">${shown.map(c=>{
      let st=trainerAttention(c),comp=trainerCompliance(c),goal=c.goal||'Без цілі';
-     return '<button class="trainer-client-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(comp!==null?' · '+comp+'% дотримання':'')+'</small><span class="trainer-smart-status '+st.level+'">'+esc(st.label)+'</span><em>'+esc(st.reason)+'</em></span><span class="more-chevron">›</span></button>'
+     return '<button type="button" class="trainer-client-row" data-client="'+(+c.id||0)+'" onclick="navigateToClient(+this.dataset.client)"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(comp!==null?' · '+comp+'% дотримання':'')+'</small><span class="trainer-smart-status '+st.level+'">'+esc(st.label)+'</span><em>'+esc(st.reason)+'</em></span><span class="more-chevron">›</span></button>'
    }).join('')||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div>
  </div>`);
  refreshTrainerGlobalBadge()
@@ -210,8 +210,15 @@ async function createClient(){
 
 async function navigateToClient(id){
  // Only real screen changes belong to browser history. Inner tabs do not.
+ let previousState=history.state,previousUrl=location.href;
  history.pushState({eplanPage:'client',eplanClient:id},'',location.pathname+location.search+'#client-'+id);
- await openClient(id,'profile');
+ try{
+   await openClient(id,'profile');
+ }catch(e){
+   console.error('Є ПЛАН: failed to open trainer client card',e);
+   history.replaceState(previousState||{},'',previousUrl);
+   alert('Не вдалося відкрити клієнта. Онови сторінку та спробуй ще раз.');
+ }
 }
 
 
@@ -238,9 +245,21 @@ async function saveClientAccess(cid,btn){
 }
 
 
+function trainerSafePane(render,label){
+ try{return render()}catch(e){
+   console.error('Є ПЛАН: trainer pane render failed:',label,e);
+   return '<div class="card trainer-pane-error"><strong>Розділ тимчасово недоступний</strong><span>Спробуй відкрити його ще раз після оновлення сторінки.</span></div>';
+ }
+}
+
 async function openClient(id,activeTab=null){
  selected=id;currentTrainerMainView='clients';
- let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]),c=d.client;window.currentClientData=d;
+ let [d]=await Promise.all([loadClientData(id),loadExerciseLibrary()]);
+ d=d||{};
+ ['program','program_days','results','result_sets','nutrition','nutrition_plan','measurements','workout_sessions','comments','cardio','checkins'].forEach(key=>{if(!Array.isArray(d[key]))d[key]=[]});
+ let c=d.client;
+ if(!c)throw new Error('client data missing');
+ window.currentClientData=d;
  let initials=trainerClientInitials(c);
  let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
  let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
@@ -291,11 +310,11 @@ async function openClient(id,activeTab=null){
      <button data-tab="notes" onclick="showTrainerClientTab('notes',this)">Нотатки</button>
    </div>
    <div id="profile" class="tab">${profile}</div>
-   <div id="program" class="tab hidden">${programHTML(d)}</div>
-   <div id="results" class="tab hidden">${resultsHTML(d)}</div>
-   <div id="nutrition" class="tab hidden">${nutritionHTML(d)}</div>
+   <div id="program" class="tab hidden">${trainerSafePane(()=>programHTML(d),'program')}</div>
+   <div id="results" class="tab hidden">${trainerSafePane(()=>resultsHTML(d),'results')}</div>
+   <div id="nutrition" class="tab hidden">${trainerSafePane(()=>nutritionHTML(d),'nutrition')}</div>
    <div id="notes" class="tab hidden">${notes}</div>
-   <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${calendarHTML(d,'trainer')}</div></div></div>
+   <div id="calendar" class="tab hidden"><div class="card"><div id="trainerCalendarBody">${trainerSafePane(()=>calendarHTML(d,'trainer'),'calendar')}</div></div></div>
  </div>`);
  refreshTrainerGlobalBadge();
  currentTrainerTab=activeTab||'profile';
