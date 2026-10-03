@@ -195,13 +195,7 @@ function showTrainerMore(){
 
 async function openPendingWorkoutForClient(cid){
  await openClient(cid,'program');
- let d=window.currentClientData||{};
- let pending=(d.workout_sessions||[])
-   .filter(s=>s.status==='finished'&&!s.trainer_reviewed)
-   .sort((a,b)=>(+b.id||0)-(+a.id||0))[0];
- if(!pending)return;
- let day=sessionDay(pending);
- if(day)openTrainerWorkoutCalendar(day,pending.id);
+ setTimeout(()=>{if(typeof openFirstPendingWorkout==='function')openFirstPendingWorkout()},100);
 }
 
 async function quickExtendFromCard(cid,months){
