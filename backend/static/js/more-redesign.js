@@ -175,7 +175,6 @@ window.showClientMore = function(cid){
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
       +redesignMoreItem('message','Допомога','Відповіді на часті питання','showClientHelp('+cid+')')
     +'</div>'
-    +'<div class="redesign-more-settings-card"><div><strong>Мова</strong><small>Мова інтерфейсу</small></div><div class="redesign-language-switch"><button class="'+(appLanguage==='uk'?'active':'')+'" onclick="setLanguage(\'uk\')">UA</button><button class="'+(appLanguage==='en'?'active':'')+'" onclick="setLanguage(\'en\')">EN</button></div></div>'
     +'<button class="redesign-more-logout" onclick="logout()">'+uiIcon('logout')+' Вийти з акаунта</button>'
   +'</div>';
   app.innerHTML=shell(body);
