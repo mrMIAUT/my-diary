@@ -179,13 +179,21 @@ async function showTrainerNutrition(){
 
 function showTrainerMore(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
- app.innerHTML=shell(`<div class="trainer-more-page">
-   <div class="trainer-page-title"><h1>Більше</h1></div>
-   <div class="trainer-more-list">
-    <button onclick="showTrainerNotifications()">${uiIcon('bell')}<span><strong>Сповіщення</strong><small>Нові події клієнтів</small></span><b>›</b></button>
-    <button onclick="showExerciseLibrary()">${uiIcon('dumbbell')}<span><strong>Бібліотека вправ</strong><small>Вправи, м’язи та техніка</small></span><b>›</b></button>
-    <button onclick="logout()">${uiIcon('logout')}<span><strong>Вийти з акаунта</strong><small>Завершити сеанс тренера</small></span><b>›</b></button>
+ app.innerHTML=shell(`<div class="trainer-more-page modern">
+   <div class="trainer-page-title trainer-more-title"><h1>Більше</h1></div>
+   <div class="trainer-more-list modern">
+     <button class="trainer-more-item" onclick="showTrainerNotifications()">
+       <span class="trainer-more-icon">${uiIcon('bell')}</span>
+       <span class="trainer-more-copy"><strong>Сповіщення</strong><small>Нові події клієнтів</small></span>
+       <span class="trainer-more-chevron">›</span>
+     </button>
+     <button class="trainer-more-item" onclick="showExerciseLibrary()">
+       <span class="trainer-more-icon">${uiIcon('dumbbell')}</span>
+       <span class="trainer-more-copy"><strong>Бібліотека вправ</strong><small>Вправи, м’язи та техніка</small></span>
+       <span class="trainer-more-chevron">›</span>
+     </button>
    </div>
+   <button class="trainer-more-logout" onclick="logout()">${uiIcon('logout')}<span>Вийти з акаунта</span></button>
  </div>`);
 }
 
