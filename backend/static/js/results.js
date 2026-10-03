@@ -73,9 +73,16 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
    return '<div class="trainer-review-exercise">'
      +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
      +'<div class="trainer-review-sets">'+cur.map(s=>{
-       let p=prev.find(z=>+z.set_number===+s.set_number);
+       let p=prev.find(z=>+z.set_number===+s.set_number),deltaHTML='';
+       if(p){
+         let dw=(+s.weight||0)-(+p.weight||0),dr=(+s.reps||0)-(+p.reps||0),deltas=[];
+         if(dw!==0)deltas.push('<i class="'+(dw>0?'delta-up':'delta-down')+'">'+(dw>0?'+':'')+fmtProgress(dw)+' кг</i>');
+         if(dr!==0)deltas.push('<i class="'+(dr>0?'delta-up':'delta-down')+'">'+(dr>0?'+':'')+fmtProgress(dr)+' повт.</i>');
+         if(!deltas.length)deltas.push('<i class="delta-same">без змін</i>');
+         deltaHTML='<span class="trainer-review-set-deltas">'+deltas.join('')+'</span>';
+       }
        return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b><em>RIR '+esc(String(s.rir??'—'))+'</em></div>'
-         +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+' · RIR '+esc(String(p.rir??'—'))+'</strong></div>':'')
+         +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+' · RIR '+esc(String(p.rir??'—'))+'</strong>'+deltaHTML+'</div>':'')
        +'</section>';
      }).join('')+'</div>'
    +'</div>';
