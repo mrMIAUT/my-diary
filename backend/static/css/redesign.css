@@ -1213,6 +1213,38 @@ body.eplan-redesign.client-ui .redesign-progress-training-row strong{font-size:1
 body.eplan-redesign.client-ui .redesign-progress-training-row small{font-size:10.5px;color:#7b899d}
 body.eplan-redesign.client-ui .redesign-progress-training-row>b{color:#8a98ab;font-size:18px}
 
+body.eplan-redesign.client-ui .redesign-progress-workout-detail>.unified-back-button{margin:4px 0 14px}
+body.eplan-redesign.client-ui .progress-workout-detail-hero{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  padding:20px;border:1px solid #e1e8f2;border-radius:22px;background:#fff;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);margin-bottom:12px;
+}
+body.eplan-redesign.client-ui .progress-workout-detail-hero>div:first-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+body.eplan-redesign.client-ui .progress-workout-detail-hero span{font-size:11px;font-weight:800;color:#74839c;text-transform:uppercase;letter-spacing:.04em}
+body.eplan-redesign.client-ui .progress-workout-detail-hero h1{margin:0;font-size:24px;line-height:1.1;color:#0a1738}
+body.eplan-redesign.client-ui .progress-workout-detail-hero small{font-size:13px;font-weight:700;color:#74839c}
+body.eplan-redesign.client-ui .progress-workout-detail-duration{flex:0 0 auto;text-align:right}
+body.eplan-redesign.client-ui .progress-workout-detail-duration strong{display:block;margin-top:4px;font-size:18px;color:#0a1738}
+body.eplan-redesign.client-ui .progress-workout-detail-section{
+  margin-top:12px;padding:18px;border:1px solid #e1e8f2;border-radius:22px;background:#fff;
+  box-shadow:0 8px 24px rgba(35,70,108,.05)
+}
+body.eplan-redesign.client-ui .progress-workout-detail-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+body.eplan-redesign.client-ui .progress-workout-detail-section-head span{font-size:18px;font-weight:850;color:#0a1738}
+body.eplan-redesign.client-ui .progress-workout-detail-section-head strong{min-width:30px;height:30px;padding:0 9px;display:grid;place-items:center;border-radius:10px;background:#edf4ff;color:#1677ff;font-size:13px}
+body.eplan-redesign.client-ui .progress-workout-exercise{padding:14px 0;border-top:1px solid #edf1f6}
+body.eplan-redesign.client-ui .progress-workout-exercise:first-of-type{border-top:0;padding-top:6px}
+body.eplan-redesign.client-ui .progress-workout-exercise-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+body.eplan-redesign.client-ui .progress-workout-exercise-head>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+body.eplan-redesign.client-ui .progress-workout-exercise-head strong{font-size:15px;color:#0a1738}
+body.eplan-redesign.client-ui .progress-workout-exercise-head>span{flex:0 0 auto;font-size:11px;font-weight:800;color:#7b899d}
+body.eplan-redesign.client-ui .progress-workout-sets{display:grid;gap:7px}
+body.eplan-redesign.client-ui .progress-workout-sets .calendar-workout-set{margin:0}
+@media(max-width:430px){
+ body.eplan-redesign.client-ui .progress-workout-detail-hero{align-items:flex-start}
+ body.eplan-redesign.client-ui .progress-workout-detail-duration strong{font-size:16px}
+}
+
 @media(max-width:370px){
   body.eplan-redesign.client-ui .redesign-progress-tabs button{font-size:11px}
   body.eplan-redesign.client-ui .redesign-progress-achievements{gap:6px}
