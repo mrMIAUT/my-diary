@@ -107,42 +107,34 @@ async function showTrainerCheckins(){
 }
 
 
-async function showTrainerPrograms(tab='templates'){
+async function showTrainerPrograms(){
   currentTrainerMainView='programs';selected=null;window.currentClientData=null;
-  window.trainerProgramsTab=tab;
-  let assignedHTML='';
-  if(tab==='assigned'){
-    let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
-    let rows=await Promise.all(cs.map(async c=>{
-      try{
-        let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
-        let hasProgram=days.length>0;
-        let label=hasProgram?days.join(' · '):'Програму ще не призначено';
-        let countLabel=days.length===1?'1 день':days.length>1?days.length+' дні':'Без програми';
-        return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
-          +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
-          +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
-          +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(countLabel)+'</span>'
-          +'<span class="trainer-assigned-chevron">›</span>'
-        +'</button>';
-      }catch(e){return ''}
-    }));
-    assignedHTML=rows.filter(Boolean).length
-      ?'<div class="trainer-assigned-list modern">'+rows.join('')+'</div>'
-      :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Коли ти призначиш клієнту програму, вона з’явиться тут.</p></div>';
-  }
+  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+  let rows=await Promise.all(cs.map(async c=>{
+    try{
+      let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
+      let hasProgram=days.length>0;
+      let label=hasProgram?days.join(' · '):'Програму ще не призначено';
+      let countLabel=days.length===1?'1 день':days.length>1?days.length+' дні':'Без програми';
+      return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
+        +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
+        +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
+        +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(countLabel)+'</span>'
+        +'<span class="trainer-assigned-chevron">›</span>'
+      +'</button>';
+    }catch(e){
+      console.error('Є ПЛАН: failed to load assigned program',e);
+      return '';
+    }
+  }));
+  let assigned=rows.filter(Boolean).join('');
   app.innerHTML=shell(`<div class="trainer-programs-page modern">
     <div class="trainer-page-title trainer-programs-title">
-      <div><h1>Програми</h1><p class="trainer-page-sub">Шаблони та програми, призначені клієнтам</p></div>
-      <button class="trainer-round-add" onclick="alert('Конструктор шаблонів програм додамо наступним етапом.')" aria-label="Створити шаблон">＋</button>
+      <div><h1>Програми</h1><p class="trainer-page-sub">Програми, призначені клієнтам</p></div>
     </div>
-    <div class="trainer-segmented trainer-programs-segmented">
-      <button class="${tab==='templates'?'active':''}" onclick="showTrainerPrograms('templates')">Шаблони</button>
-      <button class="${tab==='assigned'?'active':''}" onclick="showTrainerPrograms('assigned')">Призначені</button>
-    </div>
-    ${tab==='templates'
-      ?'<div class="trainer-program-empty modern"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблони програм</h2><p>Створюй готові програми один раз і швидко призначай їх клієнтам.</p><button class="trainer-program-create" onclick="alert(\'Конструктор шаблонів програм додамо наступним етапом.\')">＋ Створити шаблон</button></div>'
-      :assignedHTML}
+    ${assigned
+      ?'<div class="trainer-assigned-list modern">'+assigned+'</div>'
+      :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Відкрий клієнта, щоб створити або призначити йому програму.</p></div>'}
   </div>`);
 }
 
