@@ -460,15 +460,16 @@ function clientNavGroup(view=currentClientView){
 
 function clientBottomNavHTML(){
  if(!session||session.role!=='client'||!session.client_id)return '';
- let cid=session.client_id,active=clientNavGroup();
+ let cid=session.client_id,active=clientNavGroup(),features=clientAccess().features||{};
  let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
- return `<nav class="client-bottom-nav" aria-label="Основна навігація">
-   ${item('home','Головна','home',`clientCabinet(${cid})`)}
-   ${item('training','Тренування','dumbbell',`showClientTraining(${cid})`)}
-   ${item('progress','Прогрес','chart',`showClientSection('progress')`)}
-   ${item('nutrition','Харчування','food',`showClientNutrition(${cid})`)}
-   ${item('more','Більше','menu',`showClientMore(${cid})`)}
- </nav>`;
+ let items=[
+   item('home','Головна','home',`clientCabinet(${cid})`),
+   features.workouts?item('training','Тренування','dumbbell',`showClientTraining(${cid})`):'',
+   item('progress','Прогрес','chart',`showClientSection('progress')`),
+   features.nutrition?item('nutrition','Харчування','food',`showClientNutrition(${cid})`):'',
+   item('more','Більше','menu',`showClientMore(${cid})`)
+ ].filter(Boolean);
+ return `<nav class="client-bottom-nav" aria-label="Основна навігація" style="grid-template-columns:repeat(${items.length},1fr)">${items.join('')}</nav>`;
 }
 
 function trainerBottomNavHTML(){
@@ -502,7 +503,7 @@ function shell(content){
  return `<div class="wrap">${content}</div>`
 }
 
-function clientAccess(c=(window.currentClientData||{}).client||{}){return c.access||{plan_code:'coaching',plan_name:'Онлайн-ведення',effective_plan:'coaching',features:{workouts:true,nutrition:true,measurements:true,cardio:true,trainer_review:true,meal_plan:true},expired:false,manually_frozen:false,days_left:null,access_until:''}}
+function clientAccess(c=(window.currentClientData||{}).client||{}){return c.access||{plan_code:'coaching',plan_name:'Онлайн-ведення',effective_plan:'coaching',features:{workouts:true,nutrition:true,measurements:true,cardio:true,trainer_review:true,meal_plan:true,checkin:true},expired:false,manually_frozen:false,days_left:null,access_until:''}}
 
 function hasFeature(name,c){return !!clientAccess(c).features?.[name]}
 
