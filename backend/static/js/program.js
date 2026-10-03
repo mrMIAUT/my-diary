@@ -75,14 +75,15 @@ function programHTML(d){
      let moveUp=bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')" aria-label="Перемістити вище">↑</button>`:'';
      let moveDown=bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')" aria-label="Перемістити нижче">↓</button>`:'';
      let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
-     let blockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
-     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span><span class="trainer-superset-move">${moveUp}${moveDown}</span></div>`:'';
+     let normalBlockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
+     let supersetMoveActions=isSuper?`<span class="trainer-exercise-head-actions trainer-superset-inline-move">${moveUp}${moveDown}</span>`:'';
+     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span></div>`:'';
      let info=superHead+b.items.map((x,xi)=>{
        let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
-       let itemActions=!isSuper&&xi===0?blockActions:'';
+       let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
        return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
          <div class="trainer-exercise-head">
-           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?' · '+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
+           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
            ${itemActions}
          </div>
          <div class="trainer-exercise-body">
