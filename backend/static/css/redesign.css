@@ -9058,3 +9058,46 @@ body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip>.alternati
   content:none!important;
   display:none!important;
 }
+
+
+/* Equal trainer exercise header heights + baseline v13 */
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head,
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-block .superset-inner>.trainer-exercise-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  width:100%!important;
+  min-height:58px!important;
+  height:58px!important;
+  box-sizing:border-box!important;
+  padding:0 10px 0 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line,
+body.eplan-redesign.trainer-ui .trainer-client-page .superset-title-line{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  min-height:30px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>strong{
+  display:inline-flex!important;
+  align-items:center!important;
+  margin:0!important;
+  line-height:1.15!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-title-line>.alternative-tech-link{
+  display:inline-flex!important;
+  align-items:center!important;
+  align-self:center!important;
+  line-height:1.15!important;
+  top:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions,
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move{
+  align-self:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-exercise-head-actions button,
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-superset-inline-move button{
+  align-self:center!important;
+}
