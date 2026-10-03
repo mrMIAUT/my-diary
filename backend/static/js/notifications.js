@@ -209,23 +209,73 @@ async function deleteTrainerNotification(nid,btn){
  }catch(e){alert(e?.message||'Не вдалося видалити сповіщення.')}
 }
 async function openTrainerNotification(nid,cid){
- let xs=await api('/notifications/trainer/all'),n=xs.find(x=>x.id===nid);if(!n)return;
- try{await api('/clients/'+cid)}catch(e){if(nid>0)try{await api('/notifications/item/'+nid,{method:'DELETE'})}catch(_e){};$('#notificationModal')?.remove();refreshTrainerGlobalBadge();await trainerHome();return;}
- if(!n.is_read&&nid>0)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
- $('#notificationModal')?.remove();
- if(n.kind==='workout_finished'||n.target_tab==='results'){
-   await openClient(cid,'calendar');refreshTrainerGlobalBadge();
-   let day=n.target_day||'';
-   if(!day&&n.target_session_id){
-     let ws=(window.currentClientData?.workout_sessions||[]).find(s=>+s.id===+n.target_session_id);
-     day=sessionDay(ws);
+ let xs=await api('/notifications/trainer/all'),note=xs.find(x=>+x.id===+nid);
+ if(!note)return;
+ try{
+   if(!note.is_read&&nid>0)await api('/notifications/item/'+nid+'/read',{method:'PATCH'});
+   $('#notificationModal')?.remove();
+
+   if(note.kind==='workout_finished'||note.target_tab==='results'){
+     await openClient(cid,'program');
+     refreshTrainerGlobalBadge();
+     setTimeout(()=>focusTrainerPendingWorkoutNotification(note),100);
+     return;
    }
-   if(day)showCalendarDay(day,null,true,+n.target_session_id||0);
+
+   if(note.kind==='comment'&&note.target_day){
+     await openClient(cid,'calendar');
+     refreshTrainerGlobalBadge();
+     let day=note.target_day||'';
+     if(day)setTimeout(()=>showCalendarDay(day,null,true,+note.target_session_id||0),80);
+     return;
+   }
+
+   let tab='profile';
+   if(note.target_tab==='program')tab='program';
+   else if(note.target_tab==='nutrition')tab='nutrition';
+   else if(note.target_tab==='notes')tab='notes';
+   else if(note.target_tab==='calendar')tab='calendar';
+   else if(note.target_tab==='profile'||note.kind==='checkin'||note.kind==='cardio')tab='profile';
+
+   await openClient(cid,tab);
+   refreshTrainerGlobalBadge();
+
+   if(note.kind==='checkin'){
+     setTimeout(()=>document.querySelector('.trainer-checkin-card')?.scrollIntoView({behavior:'smooth',block:'center'}),100);
+   }else if(note.kind==='cardio'){
+     setTimeout(()=>document.querySelector('.trainer-overview-card')?.scrollIntoView({behavior:'smooth',block:'start'}),100);
+   }
+ }catch(e){
+   console.error('Є ПЛАН: notification navigation failed',e);
+   refreshTrainerGlobalBadge();
+   alert('Не вдалося відкрити це сповіщення. Спробуй ще раз.');
+ }
+}
+
+function focusTrainerPendingWorkoutNotification(n){
+ let sid=+n?.target_session_id||0,day=n?.target_day||'';
+ let card=sid?document.querySelector('#trainerPendingReviewQueue .trainer-review-card[data-session="'+sid+'"]'):null;
+ if(!card&&day){
+   card=[...document.querySelectorAll('#trainerPendingReviewQueue .trainer-review-card')].find(x=>{
+     let small=x.querySelector('.trainer-review-main small');
+     return small&&String(small.textContent||'').trim()===String(day);
+   })||null;
+ }
+ if(card){
+   let btn=card.querySelector('.trainer-review-toggle'),body=card.querySelector('.trainer-review-detail');
+   if(body?.classList.contains('hidden')&&btn)toggleTrainerPendingReview(btn);
+   card.classList.add('notification-focus');
+   card.scrollIntoView({behavior:'smooth',block:'center'});
+   setTimeout(()=>card.classList.remove('notification-focus'),3000);
    return;
  }
- let tab=n.target_tab||(n.kind==='cardio'?'cardio':'profile');
- await openClient(cid,tab);refreshTrainerGlobalBadge();
- setTimeout(()=>{let pane=$('#'+tab);if(pane)pane.scrollIntoView({behavior:'smooth',block:'start'})},120);
+ // If this workout has already been reviewed, fall back to its calendar record
+ // instead of throwing the trainer back to Home.
+ if(day){
+   let calendarBtn=document.querySelector('.trainer-client-tabs [data-tab="calendar"]');
+   showTrainerClientTab('calendar',calendarBtn,false);
+   setTimeout(()=>showCalendarDay(day,null,true,sid),60);
+ }
 }
 
 function focusTrainerWorkoutNotification(n){
