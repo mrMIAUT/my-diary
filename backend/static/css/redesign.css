@@ -10187,3 +10187,81 @@ body.eplan-redesign.trainer-ui .trainer-nutrition-page .meal-editor .icon-btn{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* Trainer notes + scalable checkin history v19 */
+body.eplan-redesign.trainer-ui .trainer-client-page #notes{display:grid!important;gap:12px!important}
+body.eplan-redesign.trainer-ui .trainer-private-note,
+body.eplan-redesign.trainer-ui .trainer-checkin-history{
+  margin:0!important;padding:18px!important;border:1px solid #dfe7f2!important;border-radius:20px!important;
+  background:#fff!important;box-shadow:0 7px 22px rgba(32,67,107,.045)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note-head small{
+  display:block!important;margin-bottom:4px!important;color:#8a98aa!important;font-size:10px!important;font-weight:900!important;letter-spacing:.05em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note-head h2,
+body.eplan-redesign.trainer-ui .trainer-checkin-history-head h2{
+  margin:0!important;color:#0a1738!important;font-size:20px!important;line-height:1.15!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note-head p,
+body.eplan-redesign.trainer-ui .trainer-checkin-history-head p{
+  margin:5px 0 0!important;color:#8290a4!important;font-size:11px!important;line-height:1.35!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note textarea{
+  width:100%!important;min-height:130px!important;margin-top:14px!important;padding:13px!important;
+  border:1px solid #dce5f1!important;border-radius:14px!important;background:#f7f9fc!important;color:#0a1738!important;
+  box-shadow:none!important;font-size:14px!important;line-height:1.5!important;resize:vertical!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note textarea:focus{
+  border-color:#9bc6ff!important;box-shadow:0 0 0 3px rgba(22,119,255,.08)!important;outline:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-private-note-save{
+  width:100%!important;min-height:44px!important;margin-top:12px!important;padding:0 14px!important;
+  border:1px solid #cfe0fb!important;border-radius:13px!important;background:#edf4ff!important;color:#176fe5!important;
+  box-shadow:none!important;font-size:13px!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-head{
+  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important;margin-bottom:14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-head>span{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:32px!important;height:32px!important;padding:0 9px!important;
+  border-radius:999px!important;background:#edf4ff!important;color:#176fe5!important;font-size:11px!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-list{display:grid!important;gap:8px!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-item{
+  overflow:hidden!important;border:1px solid #e1e8f2!important;border-radius:15px!important;background:#f9fbfd!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-toggle{
+  width:100%!important;min-height:60px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto 24px!important;align-items:center!important;gap:9px!important;
+  padding:10px 12px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#0a1738!important;box-shadow:none!important;text-align:left!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-toggle>span:first-child{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-toggle small{color:#8a98aa!important;font-size:9px!important;font-weight:850!important;letter-spacing:.04em!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-toggle strong{color:#0a1738!important;font-size:14px!important;font-weight:900!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-status{
+  padding:5px 8px!important;border-radius:999px!important;font-size:9.5px!important;font-weight:850!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-status.reviewed{background:#eef8f1!important;color:#278156!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-status.new{background:#edf4ff!important;color:#176fe5!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-arrow{
+  color:#8290a4!important;font-size:19px!important;font-weight:600!important;line-height:1!important;transition:transform .18s ease!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-item.is-open .trainer-checkin-history-arrow{transform:rotate(180deg)!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-detail{
+  padding:0 12px 12px!important;border-top:1px solid #edf1f6!important;background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-detail.hidden{display:none!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-detail .trainer-checkin-grid{margin:12px 0 10px!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-detail p{margin:8px 0 10px!important;color:#43516a!important;font-size:12px!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-detail>button{
+  width:100%!important;min-height:38px!important;border:1px solid #cfe0fb!important;border-radius:11px!important;background:#edf4ff!important;
+  color:#176fe5!important;box-shadow:none!important;font-size:11px!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-more{
+  width:100%!important;min-height:40px!important;margin-top:10px!important;border:1px solid #dce5f1!important;border-radius:12px!important;
+  background:#f3f6fa!important;color:#53647d!important;box-shadow:none!important;font-size:11.5px!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-more span{color:#8a98aa!important}
+body.eplan-redesign.trainer-ui .trainer-checkin-history-empty{
+  padding:14px!important;border-radius:13px!important;background:#f7f9fc!important;color:#7c899d!important;text-align:center!important;font-size:11px!important;font-weight:700!important;
+}
