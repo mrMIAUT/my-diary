@@ -216,7 +216,7 @@ async function openTrainerNotification(nid,cid){
    $('#notificationModal')?.remove();
 
    if(note.kind==='workout_finished'||note.target_tab==='results'){
-     await openClient(cid,'program');
+     await openClient(cid,'progress');
      refreshTrainerGlobalBadge();
      setTimeout(()=>openTrainerWorkoutCalendar(note.target_day||'',+note.target_session_id||0),100);
      return;
