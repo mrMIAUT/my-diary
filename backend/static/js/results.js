@@ -74,9 +74,9 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
      +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
      +'<div class="trainer-review-sets">'+cur.map(s=>{
        let p=prev.find(z=>+z.set_number===+s.set_number);
-       return '<div class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b><em>RIR '+esc(String(s.rir??'—'))+'</em></div>'
-         +(p?'<div class="trainer-review-set-previous"><span>Минулого</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+'</strong><small>RIR '+esc(String(p.rir??'—'))+'</small></div>':'')
-       +'</div>';
+       return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b><em>RIR '+esc(String(s.rir??'—'))+'</em></div>'
+         +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+' · RIR '+esc(String(p.rir??'—'))+'</strong></div>':'')
+       +'</section>';
      }).join('')+'</div>'
    +'</div>';
  }).join('');
@@ -418,7 +418,7 @@ function trainerProgressHTML(d){
    +'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'
    +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
    +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Особисті рекорди</h3><p>Найбільша робоча вага по вправах.</p></div></div>'+trainerProgressPRHTML(d)+'</section>'
-   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Порівняння тренувань</h3><p>Перше та останнє виконання вправи за вибраний період.</p></div></div>'+trainerProgressCompareHTML(d)+'</section>'
+
   +'</div>';
 }
 
