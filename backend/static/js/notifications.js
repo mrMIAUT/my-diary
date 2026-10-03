@@ -140,19 +140,74 @@ async function refreshTrainerGlobalBadge(){
  try{let xs=await api('/notifications/trainer/all'),n=xs.filter(x=>!x.is_read).length,b=$('#trainerGlobalNotifyBtn');if(!b)return;b.querySelector('.notify-badge')?.remove();if(n)b.insertAdjacentHTML('beforeend',`<span class="notify-badge">${n>99?'99+':n}</span>`)}catch(e){}
 }
 
+function notificationTrashIcon(){
+ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>';
+}
+function notificationEmptyHTML(){
+ return '<div class="notification-empty">'+uiIcon('bell')+'<strong>Сповіщень немає</strong><span>Нові події з’являться тут.</span></div>';
+}
+function syncNotificationModalEmpty(){
+ let list=document.getElementById('notificationList');if(!list)return;
+ if(list.querySelector('.notification-swipe'))return;
+ list.innerHTML=notificationEmptyHTML();
+ document.getElementById('notificationClearAllBtn')?.remove();
+}
 async function showTrainerNotifications(){
  let xs=(await api('/notifications/trainer/all')).filter(x=>x.client_name&&x.client_name!=='Незнакомец'&&+x.client_id>0);
  refreshTrainerGlobalBadge();
- let body=xs.length?xs.map(x=>`<div class="notification-swipe"><button class="notification-delete-bg" onclick="event.stopPropagation();deleteTrainerNotification(${x.id},this)">×</button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="openTrainerNotification(${x.id},${x.client_id})">${x.is_read?'':'<span class="notification-dot"></span>'}<div class="muted" style="margin-bottom:5px">${esc(x.client_name||'Клієнт')}</div><strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal" onclick="if(event.target===this)this.remove()"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);initNotificationSwipes();refreshPhoneNotificationButton($('#phoneNotifyEnableBtn'));
+ let body=xs.length?xs.map(x=>`<div class="notification-swipe" data-notification-id="${x.id}">
+   <button class="notification-delete-bg notification-delete" aria-label="Видалити сповіщення" onclick="event.stopPropagation();deleteTrainerNotification(${x.id},this)">${notificationTrashIcon()}</button>
+   <div class="notification-item ${x.is_read?'':'unread'}" onclick="openTrainerNotification(${x.id},${x.client_id})">
+     ${x.is_read?'':'<span class="notification-dot"></span>'}
+     <div class="notification-item-top"><strong>${esc(x.client_name||'Клієнт')}</strong><time>${String(x.created_at||'').replace('T',' ').slice(0,16)}</time></div>
+     <p>${esc(x.message)}</p>
+   </div>
+ </div>`).join(''):notificationEmptyHTML();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal notification-modal" id="notificationModal" onclick="if(event.target===this)this.remove()">
+   <div class="card notification-modal-card">
+     <div class="notification-modal-head">
+       <div><small>ЦЕНТР ПОДІЙ</small><h2>Сповіщення</h2></div>
+       <div class="notification-modal-actions">
+         ${xs.length?'<button id="notificationClearAllBtn" class="notification-clear-all" onclick="clearTrainerNotifications(this)">Очистити все</button>':''}
+         <button class="notification-close" onclick="notificationModal.remove()" aria-label="Закрити">✕</button>
+       </div>
+     </div>
+     <button id="phoneNotifyEnableBtn" class="phone-notify-enable notification-phone-toggle" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>
+     <div id="notificationList" class="notification-list">${body}</div>
+   </div>
+ </div>`);
+ initNotificationSwipes();
+ refreshPhoneNotificationButton($('#phoneNotifyEnableBtn'));
 }
-
+async function clearTrainerNotifications(btn){
+ if(!confirm('Очистити всі сповіщення?'))return;
+ let prev=btn.textContent;btn.disabled=true;btn.textContent='Очищення…';
+ try{
+   await api('/notifications/trainer/all',{method:'DELETE'});
+   let list=document.getElementById('notificationList');if(list)list.innerHTML=notificationEmptyHTML();
+   btn.remove();
+   refreshTrainerGlobalBadge();
+ }catch(e){
+   btn.disabled=false;btn.textContent=prev;
+   alert(e?.message||'Не вдалося очистити сповіщення.');
+ }
+}
 function initNotificationSwipes(){
- document.querySelectorAll('.notification-swipe').forEach(row=>{let item=row.querySelector('.notification-item'),sx=0,dx=0;item.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0},{passive:true});item.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-sx;if(dx<0)item.style.transform=`translateX(${Math.max(-84,dx)}px)`},{passive:true});item.addEventListener('touchend',()=>{row.classList.toggle('reveal',dx<-34);item.style.transform=''})})
+ document.querySelectorAll('.notification-swipe').forEach(row=>{
+   let item=row.querySelector('.notification-item'),sx=0,dx=0;if(!item)return;
+   item.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0},{passive:true});
+   item.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-sx;if(dx<0)item.style.transform=`translateX(${Math.max(-84,dx)}px)`},{passive:true});
+   item.addEventListener('touchend',()=>{row.classList.toggle('reveal',dx<-34);item.style.transform=''});
+ });
 }
-
-async function deleteTrainerNotification(nid,btn){await api('/notifications/item/'+nid,{method:'DELETE'});btn.closest('.notification-swipe')?.remove();refreshTrainerGlobalBadge()}
-
+async function deleteTrainerNotification(nid,btn){
+ try{
+   await api('/notifications/item/'+nid,{method:'DELETE'});
+   btn.closest('.notification-swipe')?.remove();
+   syncNotificationModalEmpty();
+   refreshTrainerGlobalBadge();
+ }catch(e){alert(e?.message||'Не вдалося видалити сповіщення.')}
+}
 async function openTrainerNotification(nid,cid){
  let xs=await api('/notifications/trainer/all'),n=xs.find(x=>x.id===nid);if(!n)return;
  try{await api('/clients/'+cid)}catch(e){if(nid>0)try{await api('/notifications/item/'+nid,{method:'DELETE'})}catch(_e){};$('#notificationModal')?.remove();refreshTrainerGlobalBadge();await trainerHome();return;}
@@ -194,19 +249,51 @@ async function notificationBadge(cid,recipient){
 
 async function showNotifications(cid,recipient){
  let xs=await api('/notifications/'+cid+'?recipient='+recipient);
- let body=xs.length?xs.map(x=>`<div class="notification-swipe" data-notification-id="${x.id}"><button class="notification-delete-bg client-notification-delete" aria-label="Видалити сповіщення" onclick="event.stopPropagation();deleteClientNotification(${x.id},${cid},'${recipient}',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><div class="exercise notification-item ${x.is_read?'':'unread'}" onclick="if(this.closest('.notification-swipe')?.classList.contains('reveal')){event.stopPropagation();this.closest('.notification-swipe').classList.remove('reveal');return}openNotification(${x.id},${cid},'${recipient}')">${x.is_read?'':'<span class="notification-dot"></span>'}<strong>${esc(x.message)}</strong><div class="muted" style="margin-top:5px">${String(x.created_at||'').replace('T',' ').slice(0,16)}</div></div></div>`).join(''):'<p class="muted">Сповіщень немає.</p>';
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationModal"><div class="card"><div class="notification-modal-head"><h2>Сповіщення</h2><button class="dark notification-close" onclick="notificationModal.remove()">✕</button></div><button id="phoneNotifyEnableBtn" class="dark phone-notify-enable" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>${body}</div></div>`);
+ let body=xs.length?xs.map(x=>`<div class="notification-swipe" data-notification-id="${x.id}">
+   <button class="notification-delete-bg notification-delete client-notification-delete" aria-label="Видалити сповіщення" onclick="event.stopPropagation();deleteClientNotification(${x.id},${cid},'${recipient}',this)">${notificationTrashIcon()}</button>
+   <div class="notification-item ${x.is_read?'':'unread'}" onclick="if(this.closest('.notification-swipe')?.classList.contains('reveal')){event.stopPropagation();this.closest('.notification-swipe').classList.remove('reveal');return}openNotification(${x.id},${cid},'${recipient}')">
+     ${x.is_read?'':'<span class="notification-dot"></span>'}
+     <div class="notification-item-top"><strong>Повідомлення</strong><time>${String(x.created_at||'').replace('T',' ').slice(0,16)}</time></div>
+     <p>${esc(x.message)}</p>
+   </div>
+ </div>`).join(''):notificationEmptyHTML();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal notification-modal" id="notificationModal" onclick="if(event.target===this)this.remove()">
+   <div class="card notification-modal-card">
+     <div class="notification-modal-head">
+       <div><small>ЦЕНТР ПОДІЙ</small><h2>Сповіщення</h2></div>
+       <div class="notification-modal-actions">
+         ${xs.length?'<button id="notificationClearAllBtn" class="notification-clear-all" onclick="clearClientNotifications('+cid+',\''+recipient+'\',this)">Очистити все</button>':''}
+         <button class="notification-close" onclick="notificationModal.remove()" aria-label="Закрити">✕</button>
+       </div>
+     </div>
+     <button id="phoneNotifyEnableBtn" class="phone-notify-enable notification-phone-toggle" onclick="enablePhoneNotifications(this)">🔔 Увімкнути сповіщення на телефоні</button>
+     <div id="notificationList" class="notification-list">${body}</div>
+   </div>
+ </div>`);
  initNotificationSwipes();
  setTimeout(()=>refreshPhoneNotificationButton(document.getElementById('phoneNotifyEnableBtn')),0);
 }
-
 async function deleteClientNotification(nid,cid,recipient,btn){
  try{
-  await api('/notifications/item/'+nid,{method:'DELETE'});
-  btn.closest('.notification-swipe')?.remove();
-  refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
+   await api('/notifications/item/'+nid,{method:'DELETE'});
+   btn.closest('.notification-swipe')?.remove();
+   syncNotificationModalEmpty();
+   refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
  }catch(e){
-  alert(e?.message||'Не вдалося видалити сповіщення.');
+   alert(e?.message||'Не вдалося видалити сповіщення.');
+ }
+}
+async function clearClientNotifications(cid,recipient,btn){
+ if(!confirm('Очистити всі сповіщення?'))return;
+ let prev=btn.textContent;btn.disabled=true;btn.textContent='Очищення…';
+ try{
+   await api('/notifications/'+cid+'/all?recipient='+encodeURIComponent(recipient),{method:'DELETE'});
+   let list=document.getElementById('notificationList');if(list)list.innerHTML=notificationEmptyHTML();
+   btn.remove();
+   refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
+ }catch(e){
+   btn.disabled=false;btn.textContent=prev;
+   alert(e?.message||'Не вдалося очистити сповіщення.');
  }
 }
 
@@ -227,7 +314,7 @@ async function openNotification(nid,cid,recipient){
  row?.querySelector('.notification-item')?.classList.remove('unread');
  row?.querySelector('.notification-dot')?.remove();
  listModal?.classList.add('notification-list-hidden');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="notificationDetailModal" onclick="if(event.target===this)closeNotificationDetail()"><div class="card"><div class="between"><h2>Сповіщення</h2><button class="dark notification-close" onclick="closeNotificationDetail()">✕</button></div><div class="exercise"><div class="muted" style="margin-bottom:7px">Повідомлення</div><strong style="white-space:pre-wrap;line-height:1.5">${esc(n.message)}</strong><div class="muted" style="margin-top:10px">${String(n.created_at||'').replace('T',' ').slice(0,16)}</div></div><button class="dark notification-detail-back" onclick="returnFromNotificationDetail()">Назад</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal notification-modal" id="notificationDetailModal" onclick="if(event.target===this)closeNotificationDetail()"><div class="card notification-modal-card notification-detail-card"><div class="notification-modal-head"><div><small>СПОВІЩЕННЯ</small><h2>Повідомлення</h2></div><button class="notification-close" onclick="closeNotificationDetail()">✕</button></div><div class="notification-detail-message"><p>${esc(n.message)}</p><time>${String(n.created_at||'').replace('T',' ').slice(0,16)}</time></div><button class="notification-detail-back" onclick="returnFromNotificationDetail()">← Назад</button></div></div>`);
  refreshNotificationBadge(cid,recipient,recipient==='trainer'?'trainerNotifyBtn':'clientNotifyBtn');
 }
 
