@@ -32,9 +32,52 @@ function addMealVariant(n){let xs=nutritionPlanDraft.filter(x=>x.meal_number===n
 
 function removeMealVariant(n,v){nutritionPlanDraft=nutritionPlanDraft.filter(x=>!(x.meal_number===n&&x.variant_number===v));let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);xs.forEach((x,i)=>x.variant_number=i+1);rerenderNutritionPlan(true)}
 
-function nutritionHTML(d){let c=d.client;nutritionPlanDraft=planFromData(d);let locked=!!(c.kcal||c.protein||c.fat||c.carbs||(d.nutrition_plan||[]).length||c.meal_plan);let dis=locked?' disabled':'';return `<div class="card"><h2>Цільове харчування</h2><p class="muted">Вкажи калорійність та БЖВ клієнта.</p><div class="grid"><div><div class="muted">Ккал</div><input id="nkcal" type="number" value="${c.kcal||0}"${dis}></div><div><div class="muted">Білки, г</div><input id="nprotein" type="number" value="${c.protein||0}"${dis}></div><div><div class="muted">Жири, г</div><input id="nfat" type="number" value="${c.fat||0}"${dis}></div><div><div class="muted">Вуглеводи, г</div><input id="ncarbs" type="number" value="${c.carbs||0}"${dis}></div></div><br><div id="nutritionActions">${locked?`<button class="dark icon-btn" onclick="editNutritionTargets()">${uiIcon('edit')} Редагувати</button><span class="muted" style="margin-left:12px">Збережено ✓</span>`:`<button onclick="saveNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>`}</div></div><div id="nutritionPlanHost">${mealPlanEditorHTML(d,false)}</div>`}
+function nutritionTargetSummaryHTML(c){
+ return `<div class="card trainer-nutrition-target-card is-saved">
+   <div class="trainer-nutrition-target-head">
+     <div><h2>Цільове харчування</h2><p class="muted">Збережені цільові калорії та БЖВ клієнта.</p></div>
+     <button type="button" class="trainer-nutrition-edit icon-btn" onclick="editNutritionTargets()">${uiIcon('edit')} Редагувати</button>
+   </div>
+   <div class="trainer-nutrition-target-summary">
+     <div class="kcal"><span>Ккал</span><strong>${c.kcal||0}</strong></div>
+     <div class="protein"><span>Білки</span><strong>${c.protein||0} <small>г</small></strong></div>
+     <div class="fat"><span>Жири</span><strong>${c.fat||0} <small>г</small></strong></div>
+     <div class="carbs"><span>Вуглеводи</span><strong>${c.carbs||0} <small>г</small></strong></div>
+   </div>
+ </div>`;
+}
 
-function editNutritionTargets(){['nkcal','nprotein','nfat','ncarbs'].forEach(id=>{let el=$('#'+id);if(el)el.disabled=false});nutritionPlanDraft=planFromData(window.currentClientData);let a=$('#nutritionActions');if(a)a.innerHTML=`<button onclick="saveNutritionTargets(${window.currentClientData.client.id},event.currentTarget)">Зберегти харчування</button><button class="dark" style="margin-left:8px" onclick="document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData)">Скасувати</button>`;let host=$('#nutritionPlanHost');if(host)host.innerHTML=mealPlanEditorHTML(window.currentClientData,true)}
+function nutritionTargetEditorHTML(c,editing=false){
+ return `<div class="card trainer-nutrition-target-card is-editing">
+   <div class="trainer-nutrition-target-head">
+     <div><h2>Цільове харчування</h2><p class="muted">Вкажи калорійність та БЖВ клієнта.</p></div>
+   </div>
+   <div class="trainer-nutrition-target-fields">
+     <label><span>Ккал</span><input id="nkcal" type="number" value="${c.kcal||0}"></label>
+     <label><span>Білки, г</span><input id="nprotein" type="number" value="${c.protein||0}"></label>
+     <label><span>Жири, г</span><input id="nfat" type="number" value="${c.fat||0}"></label>
+     <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" value="${c.carbs||0}"></label>
+   </div>
+   <div id="nutritionActions" class="trainer-nutrition-target-actions">
+     <button onclick="saveNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>
+     ${editing?`<button class="dark" onclick="document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData)">Скасувати</button>`:''}
+   </div>
+ </div>`;
+}
+
+function nutritionHTML(d,editing=false){
+ let c=d.client;
+ nutritionPlanDraft=planFromData(d);
+ let locked=!!(c.kcal||c.protein||c.fat||c.carbs||(d.nutrition_plan||[]).length||c.meal_plan);
+ let target=(locked&&!editing)?nutritionTargetSummaryHTML(c):nutritionTargetEditorHTML(c,editing);
+ return `<div class="trainer-nutrition-page">${target}<div id="nutritionPlanHost">${mealPlanEditorHTML(d,editing)}</div></div>`;
+}
+
+function editNutritionTargets(){
+ nutritionPlanDraft=planFromData(window.currentClientData);
+ let box=document.querySelector('#nutrition');
+ if(box)box.innerHTML=nutritionHTML(window.currentClientData,true);
+}
 
 async function saveNutritionTargets(cid,button=null){
  let restore=setActionLoading(button,'Зберігаємо…');
