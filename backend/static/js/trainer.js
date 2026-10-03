@@ -194,14 +194,42 @@ async function quickExtendFromCard(cid,months){
 }
 
 
-function newClient(){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="card"><div class="between"><h2>Новий клієнт</h2><button class="dark" onclick="modal.remove()">✕</button></div><p class="muted">Вкажи справжню пошту клієнта. Після створення він отримає посилання та сам встановить пароль.</p><div class="grid"><input id="n" placeholder="Ім'я"><input id="e" type="email" autocomplete="email" placeholder="Email клієнта"><input id="g" placeholder="Ціль"><input id="k" type="number" placeholder="Ккал"><input id="pr" type="number" placeholder="Білки"><input id="f" type="number" placeholder="Жири"><input id="ca" type="number" placeholder="Вуглеводи"></div><p id="me" class="muted"></p><button onclick="createClient()">Створити та надіслати запрошення</button></div></div>`)}
+function newClient(){
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-new-client-modal" id="modal" onclick="if(event.target===this)this.remove()">
+   <div class="card trainer-new-client-card">
+     <div class="trainer-new-client-head">
+       <div><small>НОВИЙ КЛІЄНТ</small><h2>Додати клієнта</h2></div>
+       <button type="button" class="trainer-new-client-close" onclick="modal.remove()" aria-label="Закрити">✕</button>
+     </div>
+     <p class="trainer-new-client-copy">Вкажи ім’я та справжню пошту клієнта. Після створення він отримає посилання та сам встановить пароль.</p>
+
+     <div class="trainer-new-client-main-fields">
+       <label><span>Ім’я</span><input id="n" autocomplete="name" placeholder="Ім’я клієнта"></label>
+       <label><span>Email</span><input id="e" type="email" autocomplete="email" placeholder="client@example.com"></label>
+     </div>
+
+     <div class="trainer-new-client-section">
+       <div class="trainer-new-client-section-head"><strong>Цільове харчування</strong><span>Необов’язково</span></div>
+       <div class="trainer-new-client-macros">
+         <label><span>Ккал</span><input id="k" type="number" inputmode="numeric" placeholder="2000"></label>
+         <label><span>Білки, г</span><input id="pr" type="number" inputmode="numeric" placeholder="160"></label>
+         <label><span>Жири, г</span><input id="f" type="number" inputmode="numeric" placeholder="55"></label>
+         <label><span>Вуглеводи, г</span><input id="ca" type="number" inputmode="numeric" placeholder="250"></label>
+       </div>
+     </div>
+
+     <p id="me" class="trainer-new-client-error"></p>
+     <button type="button" class="trainer-new-client-submit" onclick="createClient()">Створити та надіслати запрошення</button>
+   </div>
+ </div>`)
+}
 
 async function createClient(){
  let mail=(e.value||'').trim();
  if(!n.value.trim())return me.textContent="Вкажи ім'я клієнта";
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail))return me.textContent='Вкажи коректний email';
  try{
-   let r=await api('/clients',{method:'POST',body:JSON.stringify({name:n.value,email:mail,password:'',goal:g.value,weight:0,kcal:+k.value||0,protein:+pr.value||0,fat:+f.value||0,carbs:+ca.value||0})});
+   let r=await api('/clients',{method:'POST',body:JSON.stringify({name:n.value,email:mail,password:'',goal:'',weight:0,kcal:+k.value||0,protein:+pr.value||0,fat:+f.value||0,carbs:+ca.value||0})});
    modal.remove();
    alert(r.invite_sent?'Клієнта створено. Запрошення надіслано на email.':'Клієнта створено, але лист не надіслано. Перевір налаштування пошти на Render.');
    trainerHome()
