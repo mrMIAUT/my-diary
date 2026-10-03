@@ -21,14 +21,71 @@ function syncLibraryMuscleRoles(prefix,changed){
 function bindLibraryMuscleRoleGuards(){document.querySelectorAll('.library-muscle-picker input[type="checkbox"]').forEach(x=>x.onchange=()=>syncLibraryMuscleRoles(x.dataset.prefix,x))}
 
 async function showExerciseLibrary(){
- currentTrainerMainView='library';selected=null;window.currentClientData=null;await loadExerciseLibrary();
- let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]},groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0);
+ currentTrainerMainView='more';selected=null;window.currentClientData=null;await loadExerciseLibrary();
+ let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]};
+ let groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0),q=String(window.librarySearch||'').trim().toLowerCase();
  let groups=groupFilter?L.groups.filter(g=>+g.id===groupFilter):L.groups;
- let exerciseVisible=x=>!muscleFilter||libraryExerciseMuscleIds(x).includes(muscleFilter);
- let filterCard=`<div class="card library-filter-card"><h2>Фільтр вправ</h2><div class="grid"><select id="libraryGroupFilter" onchange="setLibraryFilters()"><option value="0">Усі групи</option>${L.groups.map(g=>`<option value="${g.id}" ${groupFilter===+g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select><select id="libraryMuscleFilter" onchange="setLibraryFilters()"><option value="0">Усі м’язи</option>${L.muscles.map(m=>`<option value="${m.id}" ${muscleFilter===+m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></div></div>`;
- let muscleCard=`<div class="card"><button class="exercise-toggle" onclick="toggleExercise('libraryMusclesBody',this)"><span><strong>Довідник м’язів</strong><span class="muted" style="display:block;margin-top:5px">${L.muscles.length} м’язів · використовуються як основні або додаткові</span></span><span class="arrow">⌄</span></button><div id="libraryMusclesBody" class="hidden library-muscles-admin"><div class="grid"><input id="newLibraryMuscle" placeholder="Напр. Квадрицепс"><button onclick="addLibraryMuscle()">+ Додати м’яз</button></div><div class="library-muscle-admin-list">${L.muscles.map(m=>`<div><span>${esc(m.name)}</span><button class="library-icon-btn library-delete-btn" title="Видалити м’яз" onclick="deleteLibraryMuscle(${m.id})">×</button></div>`).join('')||'<p class="muted">М’язів ще немає.</p>'}</div></div></div>`;
- let groupCards=groups.map(g=>{let all=L.exercises.filter(x=>+x.group_id===+g.id),xs=all.filter(exerciseVisible);return `<div class="card library-group"><button class="exercise-toggle" onclick="toggleExercise('libGroup${g.id}',this)"><span><strong>${esc(g.name)}</strong><span class="muted" style="display:block;margin-top:5px">${muscleFilter?`${xs.length} з ${all.length}`:`${all.length}`} вправ</span></span><span class="arrow">⌄</span></button><div id="libGroup${g.id}" class="library-group-body hidden">${xs.map(x=>`<div class="library-exercise"><div class="library-exercise-main"><strong>${esc(x.name)}</strong>${libraryMuscleBadges(x)}${x.technique_url?`<div>${techniqueLinkHTML(x.technique_url,'▶ Відео',false,'')}</div>`:''}</div><div class="library-exercise-actions"><button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit(${x.id})">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise(${x.id})">×</button></div></div>`).join('')||(muscleFilter?'<p class="muted">У цій групі немає вправ для вибраного м’яза.</p>':'<p class="muted">Вправ ще немає.</p>')}<div class="library-add-exercise"><div class="grid"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div>${libraryMuscleChecks('add'+g.id)}<button style="margin-top:10px" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" style="margin-top:10px;margin-left:8px" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div></div></div>`}).join('');
- app.innerHTML=shell(`<h1>Бібліотека вправ</h1><div class="card"><h2>Групи вправ</h2><p class="muted">Група — верхній рівень каталогу, наприклад Ноги, Спина або Груди.</p><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Ноги"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>${muscleCard}${filterCard}${groupCards||'<div class="card"><p class="muted">Додайте першу групу вправ.</p></div>'}`);
+ let exerciseVisible=x=>{
+   if(muscleFilter&&!libraryExerciseMuscleIds(x).includes(muscleFilter))return false;
+   if(q&&!String(x.name||'').toLowerCase().includes(q))return false;
+   return true;
+ };
+ let visibleCount=L.exercises.filter(exerciseVisible).length;
+ let filterCard=`<div class="trainer-library-tools">
+   <label class="trainer-search trainer-library-search">${uiIcon('menu')}<input value="${esc(window.librarySearch||'')}" placeholder="Пошук вправи..." oninput="window.librarySearch=this.value;showExerciseLibrary()"></label>
+   <div class="trainer-library-filters">
+     <select id="libraryGroupFilter" onchange="setLibraryFilters()"><option value="0">Усі групи</option>${L.groups.map(g=>`<option value="${g.id}" ${groupFilter===+g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
+     <select id="libraryMuscleFilter" onchange="setLibraryFilters()"><option value="0">Усі м’язи</option>${L.muscles.map(m=>`<option value="${m.id}" ${muscleFilter===+m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+   </div>
+ </div>`;
+
+ let adminCard=`<div class="card trainer-library-admin">
+   <button class="exercise-toggle trainer-library-admin-toggle" onclick="toggleExercise('libraryAdminBody',this)">
+     <span><strong>Керування бібліотекою</strong><small>Групи вправ і довідник м’язів</small></span><span class="arrow">⌄</span>
+   </button>
+   <div id="libraryAdminBody" class="hidden trainer-library-admin-body">
+     <div class="trainer-library-admin-section"><h3>Групи вправ</h3><div class="grid"><input id="newLibraryGroup" placeholder="Напр. Ноги"><button onclick="addLibraryGroup()">+ Додати групу</button></div></div>
+     <div class="trainer-library-admin-section"><h3>Довідник м’язів</h3><div class="grid"><input id="newLibraryMuscle" placeholder="Напр. Квадрицепс"><button onclick="addLibraryMuscle()">+ Додати м’яз</button></div><div class="library-muscle-admin-list">${L.muscles.map(m=>`<div><span>${esc(m.name)}</span><button class="library-icon-btn library-delete-btn" title="Видалити м’яз" onclick="deleteLibraryMuscle(${m.id})">×</button></div>`).join('')||'<p class="muted">М’язів ще немає.</p>'}</div></div>
+   </div>
+ </div>`;
+
+ let groupCards=groups.map(g=>{
+   let all=L.exercises.filter(x=>+x.group_id===+g.id),xs=all.filter(exerciseVisible);
+   if((q||muscleFilter)&&!xs.length)return '';
+   return `<div class="card trainer-library-group">
+     <button class="exercise-toggle trainer-library-group-toggle" onclick="toggleExercise('libGroup${g.id}',this)">
+       <span><strong>${esc(g.name)}</strong><small>${xs.length} ${xs.length===1?'вправа':'вправ'}</small></span><span class="arrow">⌄</span>
+     </button>
+     <div id="libGroup${g.id}" class="library-group-body hidden">
+       <div class="trainer-library-exercise-list">
+         ${xs.map(x=>`<div class="library-exercise trainer-library-exercise">
+           <div class="library-exercise-main"><strong>${esc(x.name)}</strong>${libraryMuscleBadges(x)}${x.technique_url?`<div class="trainer-library-video">${techniqueLinkHTML(x.technique_url,'▶ Відео',false,'')}</div>`:''}</div>
+           <div class="library-exercise-actions"><button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit(${x.id})">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise(${x.id})">×</button></div>
+         </div>`).join('')||'<p class="muted">Вправ ще немає.</p>'}
+       </div>
+       <div class="library-add-exercise trainer-library-add">
+         <h3>Додати вправу</h3>
+         <div class="grid"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div>
+         ${libraryMuscleChecks('add'+g.id)}
+         <div class="trainer-library-add-actions"><button onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="danger" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div>
+       </div>
+     </div>
+   </div>`;
+ }).join('');
+
+ app.innerHTML=shell(`<div class="trainer-library-page">
+   <div class="trainer-client-navline"><button onclick="showTrainerMore()" aria-label="Назад">‹</button></div>
+   <div class="trainer-page-title"><div><h1>Бібліотека вправ</h1><p class="trainer-page-sub">Вправи, м’язи та техніка виконання</p></div></div>
+   <div class="trainer-library-summary">
+     <div><strong>${L.exercises.length}</strong><small>вправ</small></div>
+     <div><strong>${L.groups.length}</strong><small>груп</small></div>
+     <div><strong>${L.muscles.length}</strong><small>м’язів</small></div>
+   </div>
+   ${filterCard}
+   <div class="trainer-library-result-line"><span>Знайдено</span><strong>${visibleCount}</strong></div>
+   ${groupCards||'<div class="trainer-empty card">За вибраними фільтрами вправ не знайдено.</div>'}
+   ${adminCard}
+ </div>`);
  bindLibraryMuscleRoleGuards();
 }
 

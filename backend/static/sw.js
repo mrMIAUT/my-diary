@@ -1,28 +1,112 @@
-const VERSION='eplan-v57';
+const VERSION='eplan-v100';
+const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
+const APP_SHELL_URLS=[
+  '/',
+  '/manifest.webmanifest?v=66',
+  '/static/icons/apple-touch-icon.png?v=66',
+  '/static/icons/icon-192.png?v=65',
+  '/static/icons/icon-512.png?v=65',
+  '/static/css/base.css?v=159',
+  '/static/css/components.css?v=159',
+  '/static/css/refinements.css?v=159',
+  '/static/css/redesign.css?v=171',
+  '/static/js/core.js?v=159',
+  '/static/js/auth.js?v=159',
+  '/static/js/trainer.js?v=161',
+  '/static/js/client.js?v=159',
+  '/static/js/home-redesign.js?v=159',
+  '/static/js/activity.js?v=159',
+  '/static/js/program.js?v=168',
+  '/static/js/library.js?v=159',
+  '/static/js/calendar.js?v=159',
+  '/static/js/results.js?v=159',
+  '/static/js/progress-redesign.js?v=159',
+  '/static/js/nutrition.js?v=159',
+  '/static/js/nutrition-redesign.js?v=159',
+  '/static/js/more-redesign.js?v=159',
+  '/static/js/measurements.js?v=159',
+  '/static/js/workout.js?v=159',
+  '/static/js/training-redesign.js?v=159',
+  '/static/js/timer.js?v=159',
+  '/static/js/workout-lyfta.js?v=159',
+  '/static/js/notifications.js?v=159',
+  '/static/js/app.js?v=159',
+  '/static/js/pwa.js?v=159',
+  '/static/js/startup-ui.js?v=159'
+];
 let restTimerHandle=null;
 
+async function cacheAppShell(){
+  const cache=await caches.open(APP_SHELL_CACHE);
+  await Promise.all(APP_SHELL_URLS.map(async url=>{
+    try{
+      const response=await fetch(url,{cache:'no-store'});
+      if(response&&response.ok)await cache.put(url,response.clone());
+    }catch(_){}
+  }));
+}
+
 self.addEventListener('install',event=>{
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil((async()=>{
+    await cacheAppShell();
+    await self.skipWaiting();
+  })());
 });
+
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
-    await Promise.all(keys.map(k=>caches.delete(k)));
+    await Promise.all(keys.filter(k=>k.startsWith('eplan-app-shell-')&&k!==APP_SHELL_CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
   })());
 });
+
 self.addEventListener('fetch',event=>{
   const req=event.request;
-  if(req.method!=='GET') return;
+  if(req.method!=='GET')return;
+  const url=new URL(req.url);
+  if(url.origin!==self.location.origin)return;
+
   if(req.mode==='navigate'){
-    event.respondWith(fetch(req,{cache:'no-store'}).catch(()=>new Response(
-      `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080909"></head><body style="margin:0;background:#080909;color:#f4f4f5;font-family:system-ui;padding:32px"><h2 style="color:#ffd000">Є ПЛАН</h2><p>Не вдалося підключитися до сервера. Перевір інтернет і відкрий застосунок ще раз.</p></body></html>`,
-      {headers:{'Content-Type':'text/html; charset=utf-8'}}
-    )));
+    event.respondWith((async()=>{
+      const cache=await caches.open(APP_SHELL_CACHE);
+      try{
+        const response=await fetch(req,{cache:'no-store'});
+        if(response&&response.ok)await cache.put('/',response.clone());
+        return response;
+      }catch(_){
+        const cached=await cache.match('/');
+        if(cached)return cached;
+        return new Response(
+          '<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080909"></head><body style="margin:0;background:#080909;color:#f4f4f5;font-family:system-ui;padding:32px"><h2 style="color:#ffd000">Є ПЛАН</h2><p>Не вдалося відкрити збережену версію застосунку. Підключи інтернет і відкрий застосунок ще раз.</p></body></html>',
+          {headers:{'Content-Type':'text/html; charset=utf-8'}}
+        );
+      }
+    })());
     return;
   }
-  event.respondWith(fetch(req,{cache:'no-store'}).catch(()=>caches.match(req)));
+
+  const isShellAsset=url.pathname.startsWith('/static/')||url.pathname==='/manifest.webmanifest'||url.pathname==='/apple-touch-icon.png';
+  if(isShellAsset){
+    event.respondWith((async()=>{
+      const cache=await caches.open(APP_SHELL_CACHE);
+      try{
+        const response=await fetch(req,{cache:'no-store'});
+        if(response&&response.ok)await cache.put(req,response.clone());
+        return response;
+      }catch(_){
+        return (await cache.match(req))||Response.error();
+      }
+    })());
+    return;
+  }
+
+  // API/private GETs deliberately stay network-only here. The app's scoped
+  // IndexedDB cache handles authenticated offline data without putting it into
+  // shared Cache Storage.
+  event.respondWith(fetch(req,{cache:'no-store'}));
 });
+
 self.addEventListener('message',event=>{
   const d=event.data||{};
   if(d.type==='CANCEL_REST_TIMER'){
@@ -35,8 +119,8 @@ self.addEventListener('message',event=>{
     restTimerHandle=setTimeout(()=>{
       self.registration.showNotification('Є ПЛАН · Відпочинок завершено',{
         body:'Час починати наступний підхід.',
-        icon:'/static/icons/icon-192.png',
-        badge:'/static/icons/icon-192.png',
+        icon:'/static/icons/icon-192.png?v=65',
+        badge:'/static/icons/icon-192.png?v=65',
         tag:'eplan-rest-finished',
         renotify:true
       });
@@ -48,8 +132,8 @@ self.addEventListener('push',event=>{
   try{data=event.data?event.data.json():{}}catch(e){data={body:event.data?.text()||''}}
   event.waitUntil(self.registration.showNotification(data.title||'Є ПЛАН',{
     body:data.body||'',
-    icon:'/static/icons/icon-192.png',
-    badge:'/static/icons/icon-192.png',
+    icon:'/static/icons/icon-192.png?v=65',
+    badge:'/static/icons/icon-192.png?v=65',
     data:{url:data.url||'/'}
   }));
 });

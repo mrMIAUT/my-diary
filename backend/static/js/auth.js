@@ -80,7 +80,7 @@ async function refreshServerSession({suppressLoginRender=false}={}){
 async function bootstrapAuthentication(){
  // Server identity is resolved asynchronously; keep the existing shell visible
  // while it loads instead of leaving an empty PWA screen on a slow connection.
- app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">${appLanguage==='en'?'Loading…':'Завантаження…'}</p></div></div>`;
+ app.innerHTML=`<div class="wrap login"><div class="card"><p class="muted">Завантаження…</p></div></div>`;
  if(logoutPending){clearLocalSession({suppressLoginRender:!!startupResetToken});await finishPendingLogout()}
  else await refreshServerSession({suppressLoginRender:!!startupResetToken});
  if(startupResetToken)return renderResetPassword(startupResetToken);
@@ -89,10 +89,12 @@ async function bootstrapAuthentication(){
 }
 
 function renderLogin(){
+ document.body.classList.remove('client-ui');
+ document.body.classList.add('eplan-redesign','eplan-auth-page');
  let token=new URLSearchParams(location.search).get('reset');
  if(token)return renderResetPassword(token);
  let rememberedEmail=localStorage.getItem('rememberedEmail')||'';
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><form class="card" onsubmit="event.preventDefault();login()" autocomplete="on"><h1>Вхід</h1><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="Email"><div class="password-field-wrap"><input id="pass" name="password" type="password" data-password-field="1" autocomplete="current-password" placeholder="Пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'pass')">${passwordEyeSVG(true)}</button></div><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати email на цьому пристрої</span></label><p id="err" class="muted"></p><button type="submit">Увійти</button><button type="button" class="dark" style="margin-left:8px" onclick="renderForgotPassword()">Забули пароль?</button><p class="muted" style="font-size:13px;margin-top:16px">Пароль може зберегти браузер або менеджер паролів. Сам сайт не зберігає пароль у відкритому вигляді.</p></form></div>`
+ app.innerHTML=`<main class="auth-shell"><div class="auth-logo"><img src="/static/icons/apple-touch-icon.png?v=67" alt="Є ПЛАН"><div class="auth-logo-name">Є план</div></div><form class="auth-card" onsubmit="event.preventDefault();login()" autocomplete="on"><div class="auth-heading"><h1>Вхід</h1><p>Увійди, щоб продовжити тренування.</p></div><label class="auth-field"><span>Email</span><input id="email" name="email" type="email" autocomplete="username" value="${esc(rememberedEmail)}" placeholder="name@email.com"></label><label class="auth-field"><span>Пароль</span><div class="password-field-wrap"><input id="pass" name="password" type="password" data-password-field="1" autocomplete="current-password" placeholder="Введи пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'pass')">${passwordEyeSVG(true)}</button></div></label><div class="auth-options"><label class="remember-row"><input id="rememberLogin" type="checkbox" ${rememberedEmail?'checked':''}><span>Запам’ятати мене</span></label><button type="button" class="auth-forgot" onclick="renderForgotPassword()">Забули пароль?</button></div><p id="err" class="auth-error"></p><button class="auth-submit" type="submit">Увійти</button></form></main>`
 }
 
 function renderForgotPassword(){
@@ -118,7 +120,7 @@ async function confirmPasswordReset(token){
 
 function passwordEyeSVG(hidden){
  return hidden
-  ? `<svg class="password-eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.7a2 2 0 0 0 2.7 2.7"/><path d="M9.9 4.2A10.7 10.7 0 0 1 12 4c5.5 0 9 5 9 5s-1.3 1.9-3.5 3.4"/><path d="M6.6 6.6C4.3 8 3 10 3 10s3.5 5 9 5c1 0 2-.2 2.8-.5"/></svg>`
+  ? `<svg class="password-eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.6-5 9.2-5 9.2 5 9.2 5-3.6 5-9.2 5-9.2-5-9.2-5z"/><circle cx="12" cy="12" r="2.5"/><path class="password-eye-slash" d="M4 4l16 16"/></svg>`
   : `<svg class="password-eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5z"/><circle cx="12" cy="12" r="2.4"/></svg>`;
 }
 

@@ -12,11 +12,21 @@ function restLabel(x){let t=String(x.rest_text||'').trim();if(t)return t.replace
 
 function exerciseAlternatives(x){try{let a=JSON.parse(x?.alternatives_json||'[]');return Array.isArray(a)?a.filter(Boolean):[]}catch(e){return []}}
 
+function libraryExerciseByName(name){
+ let q=String(name||'').trim().toLowerCase();
+ return (window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===q)||null;
+}
+
+function exerciseTechniqueUrl(name,fallback=''){
+ let lib=libraryExerciseByName(name);
+ return safeTechniqueUrl(lib?.technique_url||fallback||'');
+}
+
 function alternativesInputValue(x){return exerciseAlternatives(x).join(', ')}
 
 function parseAlternatives(v,main=''){let seen=new Set(),m=String(main||'').trim().toLowerCase();return String(v||'').split(',').map(x=>x.trim()).filter(x=>x&&x.toLowerCase()!==m&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase()))}
 
-function alternativesTrainerHTML(x){let a=exerciseAlternatives(x);return a.length?`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>${a.map(v=>`<span class="alternative-chip">${esc(v)}</span>`).join('')}</div></div>`:''}
+function alternativesTrainerHTML(x){let a=exerciseAlternatives(x);return a.length?`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>${a.map(v=>{let tech=exerciseTechniqueUrl(v);return `<span class="alternative-chip"><span class="alternative-name">${esc(v)}</span>${tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</span>`}).join('')}</div></div>`:''}
 
 function programExtraHTML(x){
  let rest=restLabel(x),rp=rirPlan(x);
@@ -35,7 +45,22 @@ function programDayTitle(d,day){
 
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
- let form=`<div class="card"><h2>Програма тренувань</h2><div class="grid"><input id="dn" placeholder="День, напр. День 1"><input id="dntitle" placeholder="Назва дня, напр. Плечі + руки"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Вправа"><input id="tech" placeholder="Посилання на техніку"><input id="st" type="number" value="3" placeholder="Підходи"><input id="rp" value="8-12" placeholder="Повтори"><input id="rirset" value="2,2,2" placeholder="RIR по підходах: 2,2,1"><input id="resttext" value="2" placeholder="Відпочинок, хв (напр. 2-3)"><input id="alternatives" list="exerciseLibraryNames" placeholder="Альтернативи через кому, напр. Гак-присідання, Сміт"></div><datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist><br><button onclick="addExercise(event.currentTarget)">+ Додати вправу</button></div>`;
+ let form=`<div class="card trainer-program-editor">
+   <div class="trainer-program-editor-head"><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div>
+   <div class="trainer-program-editor-grid">
+     <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
+     <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
+     <label class="wide"><span>Вправа</span><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Оберіть або введіть вправу"></label>
+     <label class="wide"><span>Техніка</span><input id="tech" placeholder="https://..."></label>
+     <label><span>Підходи</span><input id="st" type="number" value="3" placeholder="3"></label>
+     <label><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
+     <label><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
+     <label><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
+     <label class="wide"><span>Альтернативи</span><input id="alternatives" list="exerciseLibraryNames" placeholder="Напр. Гак-присідання, Сміт"></label>
+   </div>
+   <datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
+   <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">＋ Додати вправу</button>
+ </div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
    let bodyId='programDay_'+di,title=programDayTitle(d,day),blocks=[];
@@ -47,8 +72,29 @@ function programHTML(d){
    });
    let rows=blocks.map((b,bi)=>{
      let first=b.items[0],isSuper=!!b.group;
-     let info=(isSuper?`<div class="trainer-superset-head">Суперсет</div>`:'')+b.items.map((x,xi)=>`<div class="${isSuper?'superset-inner':''}"><div class="${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>${programExtraHTML(x)}${alternativesTrainerHTML(x)}${x.technique_url?techniqueLinkHTML(x.technique_url,'Техніка',true):''}<div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div></div>`).join('');
-     return `<div class="exercise program-block ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div><div class="program-block-actions">${bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')">↑</button>`:''}${bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')">↓</button>`:''}${!isSuper?`<button class="dark" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)">＋</button>`:''}</div></div>`;
+     let moveUp=bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')" aria-label="Перемістити вище">↑</button>`:'';
+     let moveDown=bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')" aria-label="Перемістити нижче">↓</button>`:'';
+     let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
+     let normalBlockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
+     let supersetMoveActions=isSuper?`<span class="trainer-exercise-head-actions trainer-superset-inline-move">${moveUp}${moveDown}</span>`:'';
+     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span></div>`:'';
+     let info=superHead+b.items.map((x,xi)=>{
+       let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
+       let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
+       return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
+         <div class="trainer-exercise-head">
+           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
+           ${itemActions}
+         </div>
+         <div class="trainer-exercise-body">
+           <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
+           ${programExtraHTML(x)}
+           ${alternativesTrainerHTML(x)}
+           <div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div>
+         </div>
+       </div>`;
+     }).join('');
+     return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
    }).join('');
    return `<div class="card program-day-card">
      <div class="program-day-header-row">

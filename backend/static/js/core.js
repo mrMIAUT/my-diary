@@ -436,96 +436,82 @@ function techniqueLinkHTML(value,label='Техніка',stop=false,className='te
  return `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer"${stop?' onclick="event.stopPropagation()"':''}${className?` class="${esc(className)}"`:''}>${esc(label)}</a>`;
 }
 
-function enText(s){
- let lead=s.match(/^\s*/)?.[0]||'', trail=s.match(/\s*$/)?.[0]||'', t=s.trim();
- if(!t)return s;
- if(EN_MAP[t])return lead+EN_MAP[t]+trail;
- const months={Січень:'January',Лютий:'February',Березень:'March',Квітень:'April',Травень:'May',Червень:'June',Липень:'July',Серпень:'August',Вересень:'September',Жовтень:'October',Листопад:'November',Грудень:'December'};
- let mm=t.match(/^(Січень|Лютий|Березень|Квітень|Травень|Червень|Липень|Серпень|Вересень|Жовтень|Листопад|Грудень)(\s+\d{4})$/);
- if(mm)return lead+months[mm[1]]+mm[2]+trail;
- // Dynamic labels
- let m=t.match(/^День\s+(\d+)$/); if(m)return lead+'Day '+m[1]+trail;
- m=t.match(/^(\d+)\s+кроків$/); if(m)return lead+m[1]+' steps'+trail;
- m=t.match(/^(\d+)\s+хв$/); if(m)return lead+m[1]+' min'+trail;
- let out=t;
- EN_PARTS.forEach(([a,b])=>{out=out.split(a).join(b)});
- return lead+out+trail;
+function uiIcon(name){const p={menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',user:'<circle cx="12" cy="8" r="3"/><path d="M5 20c.7-4 3.1-6 7-6s6.3 2 7 6"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c.6-4 2.7-6 6-6s5.4 2 6 6"/><path d="M16 6.5a2.5 2.5 0 0 1 0 5M17 14c2.2.6 3.5 2.5 4 5"/>',home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M9 20v-6h6v6"/>',dumbbell:'<path d="M6 8v8M3 9v6M18 8v8M21 9v6M6 12h12"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',food:'<path d="M7 3v7M4 3v4c0 2 1 3 3 3s3-1 3-3V3M7 10v11M16 3c3 2 4 5 4 9h-4V3Zm0 9v9"/>',scale:'<rect x="4" y="4.5" width="16" height="15.5" rx="3"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="m12 10 2.2-2.2"/><path d="M8 16.5h8"/>',ruler:'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7v4M10 7v2.5M13 7v4M16 7v2.5M19 7v4"/>',measure:'<path d="M4 8h16v8H4z"/><path d="M7 8v4M10 8v2M13 8v4M16 8v2"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',message:'<path d="M4 5h16v12H9l-5 4V5Z"/>',run:'<circle cx="14" cy="4" r="2"/><path d="m10 21 2-7-3-3 3-4 4 3 4 1M12 14l4 3 1 4M9 11l-4 3"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',edit:'<path d="m4 20 4.5-1L19 8.5 15.5 5 5 15.5 4 20Z"/><path d="m13.5 7 3.5 3.5"/>',trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',plus:'<path d="M12 5v14M5 12h14"/>',logout:'<path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">${p[name]||''}</svg>`}
+
+function clientInitials(c=(window.currentClientData||{}).client||{}){
+ let first=String(c.first_name||'').trim(),last=String(c.last_name||'').trim(),fallback=String(c.name||'').trim();
+ let parts=(first||last)?[first,last].filter(Boolean):fallback.split(/\s+/).filter(Boolean);
+ let initials=parts.slice(0,2).map(x=>x.charAt(0)).join('').toUpperCase();
+ return initials||'ЄП';
+}
+function clientAvatarHTML(cid,compact=false){
+ let c=(window.currentClientData||{}).client||{};
+ let inner='<span class="avatar-initials">'+esc(clientInitials(c))+'</span>';
+ return '<button class="client-avatar is-placeholder '+(compact?'compact':'')+'" onclick="showClientProfile('+cid+')" aria-label="Мій профіль">'+inner+'</button>';
 }
 
-function translateTree(root=document.body){
- if(appLanguage!=='en'||!root)return;
- let walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let nodes=[];
- while(walker.nextNode())nodes.push(walker.currentNode);
- nodes.forEach(n=>{n.nodeValue=enText(n.nodeValue)});
- root.querySelectorAll?.('input,textarea,select,button').forEach(el=>{
-   if(el.placeholder)el.placeholder=enText(el.placeholder);
-   if(el.title)el.title=enText(el.title);
-   if(el.getAttribute('aria-label'))el.setAttribute('aria-label',enText(el.getAttribute('aria-label')));
- });
- document.documentElement.lang='en';
+function clientNavGroup(view=currentClientView){
+ if(view==='training')return 'training';
+ if(view==='progress')return 'progress';
+ if(view==='nutrition'||view==='mealplan')return 'nutrition';
+ if(['more','profile','history','measurements'].includes(view))return 'more';
+ return 'home';
 }
 
-function setLanguage(lang){appLanguage=lang;localStorage.setItem('eplanLanguage',lang);location.reload()}
+function clientBottomNavHTML(){
+ if(!session||session.role!=='client'||!session.client_id)return '';
+ let cid=session.client_id,active=clientNavGroup();
+ let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ return `<nav class="client-bottom-nav" aria-label="Основна навігація">
+   ${item('home','Головна','home',`clientCabinet(${cid})`)}
+   ${item('training','Тренування','dumbbell',`showClientTraining(${cid})`)}
+   ${item('progress','Прогрес','chart',`showClientSection('progress')`)}
+   ${item('nutrition','Харчування','food',`showClientNutrition(${cid})`)}
+   ${item('more','Більше','menu',`showClientMore(${cid})`)}
+ </nav>`;
+}
 
-function uiIcon(name){const p={menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',user:'<circle cx="12" cy="8" r="3"/><path d="M5 20c.7-4 3.1-6 7-6s6.3 2 7 6"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c.6-4 2.7-6 6-6s5.4 2 6 6"/><path d="M16 6.5a2.5 2.5 0 0 1 0 5M17 14c2.2.6 3.5 2.5 4 5"/>',home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M9 20v-6h6v6"/>',dumbbell:'<path d="M6 8v8M3 9v6M18 8v8M21 9v6M6 12h12"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',food:'<path d="M7 3v7M4 3v4c0 2 1 3 3 3s3-1 3-3V3M7 10v11M16 3c3 2 4 5 4 9h-4V3Zm0 9v9"/>',measure:'<path d="M4 8h16v8H4z"/><path d="M7 8v4M10 8v2M13 8v4M16 8v2"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',message:'<path d="M4 5h16v12H9l-5 4V5Z"/>',run:'<circle cx="14" cy="4" r="2"/><path d="m10 21 2-7-3-3 3-4 4 3 4 1M12 14l4 3 1 4M9 11l-4 3"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',edit:'<path d="m4 20 4.5-1L19 8.5 15.5 5 5 15.5 4 20Z"/><path d="m13.5 7 3.5 3.5"/>',trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',plus:'<path d="M12 5v14M5 12h14"/>',logout:'<path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">${p[name]||''}</svg>`}
-
-function socialLinksHTML(){let links=[];const ig=`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" style="fill:currentColor;stroke:none"></circle></svg>`;const tg=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4 9.7 14.3"></path><path d="m21 4-7.2 16-4.1-5.7L3 11.8 21 4Z"></path></svg>`;const tt=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.4 3h3c.3 2.1 1.5 3.6 3.6 4.2v3a8.2 8.2 0 0 1-3.6-1.1v6.1a6.2 6.2 0 1 1-5.3-6.1v3.1a3.2 3.2 0 1 0 2.3 3V3Z"></path></svg>`;if(TRAINER_SOCIALS.instagram)links.push(`<a class="social-link instagram" href="${TRAINER_SOCIALS.instagram}" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">${ig}</a>`);if(TRAINER_SOCIALS.telegram)links.push(`<a class="social-link telegram" href="${TRAINER_SOCIALS.telegram}" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">${tg}</a>`);if(TRAINER_SOCIALS.tiktok)links.push(`<a class="social-link tiktok" href="${TRAINER_SOCIALS.tiktok}" target="_blank" rel="noopener" aria-label="TikTok" title="TikTok">${tt}</a>`);return `<div class="social-links">${links.join('')}</div>`}
+function trainerBottomNavHTML(){
+ if(!session||session.role!=='trainer')return '';
+ let active=currentTrainerMainView||'home';
+ let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ return `<nav class="trainer-bottom-nav" aria-label="Навігація тренера">
+   ${item('home','Головна','home','trainerHome()')}
+   ${item('clients','Клієнти','users','showTrainerClientsView()')}
+   ${item('programs','Програми','chart','showTrainerPrograms()')}
+   ${item('nutrition','Харчування','food','showTrainerNutrition()')}
+   ${item('more','Більше','menu','showTrainerMore()')}
+ </nav>`;
+}
 
 function shell(content){
- let right='';
- if(session&&session.role==='client'&&session.client_id){right=`${socialLinksHTML()}<button id="clientNotifyBtn" class="dark notify-btn" onclick="showNotifications(${session.client_id},'client')">${uiIcon('bell')} <span class="notify-label">Сповіщення</span></button>`}
- if(session&&session.role==='trainer'){right=`<button id="trainerGlobalNotifyBtn" class="dark notify-btn" onclick="showTrainerNotifications()">${uiIcon('bell')} <span class="notify-label">Сповіщення</span></button>`}
- return `<div class="wrap"><div class="top"><div class="top-left"><button class="side-menu-btn" onclick="openSideMenu()" aria-label="Меню">${uiIcon('menu')}</button><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div></div><div class="top-right">${right}</div></div>${content}</div>`
+ if(session&&session.role==='client'&&session.client_id){
+   document.body.classList.add('eplan-redesign','client-ui');
+   let isHome=clientNavGroup()==='home';
+   let top=isHome
+    ?`<div class="client-top"><div class="client-greeting"><strong>Вітаємо! 👋</strong><span>${esc(kyivTodayLong())}</span></div><div class="client-top-actions">${clientAvatarHTML(session.client_id)}<button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`
+    :`<div class="client-top client-top-compact"><div></div><div class="client-top-actions">${clientAvatarHTML(session.client_id,true)}<button id="clientNotifyBtn" class="notify-btn" onclick="showNotifications(${session.client_id},'client')" aria-label="Сповіщення">${uiIcon('bell')}<span class="notify-label">Сповіщення</span></button></div></div>`;
+   return `<div class="wrap client-shell">${top}${content}${clientBottomNavHTML()}</div>`;
+ }
+ if(session&&session.role==='trainer'){
+   document.body.classList.add('eplan-redesign','trainer-ui');
+   document.body.classList.remove('client-ui');
+   return `<div class="wrap trainer-shell"><div class="trainer-top"><div><strong>Вітаємо, Тренере! 👋</strong><span>${esc(kyivTodayLong())}</span></div><button id="trainerGlobalNotifyBtn" class="notify-btn" onclick="showTrainerNotifications()" aria-label="Сповіщення">${uiIcon('bell')}</button></div>${content}${trainerBottomNavHTML()}</div>`;
+ }
+ document.body.classList.remove('eplan-redesign','client-ui','trainer-ui');
+ return `<div class="wrap">${content}</div>`
 }
 
 function clientAccess(c=(window.currentClientData||{}).client||{}){return c.access||{plan_code:'coaching',plan_name:'Онлайн-ведення',effective_plan:'coaching',features:{workouts:true,nutrition:true,measurements:true,cardio:true,trainer_review:true,meal_plan:true},expired:false,manually_frozen:false,days_left:null,access_until:''}}
 
 function hasFeature(name,c){return !!clientAccess(c).features?.[name]}
 
-function lockedNav(label,icon,plan='Онлайн-ведення'){return `<button class="side-nav-item locked-feature" onclick="closeSideMenu();alert('Функція «${label}» доступна в тарифі «${plan}».')"><span class="side-nav-icon">${uiIcon(icon)}</span>${label}<span style="margin-left:auto">🔒</span></button>`}
-
-function accessBannerHTML(c){let a=clientAccess(c);if(a.expired||a.manually_frozen)return `<div class="card client-access-banner expired"><strong>${a.expired?'Термін доступу закінчився':'Доступ призупинено'}</strong><p class="muted" style="margin-bottom:0">Твої результати та історія збережені. Звернись до тренера, щоб продовжити доступ.</p></div>`;if(a.days_left!==null&&a.days_left<=7)return `<div class="card client-access-banner"><strong>До завершення доступу: ${Math.max(0,a.days_left)} дн.</strong><p class="muted" style="margin-bottom:0">Тариф: ${esc(a.plan_name)} · до ${esc(a.access_until)}</p></div>`;return ''}
-
-
-function sideMenuHTML(){
- if(!session)return '';
- if(session.role==='trainer'){
-   let client=selected&&window.currentClientData?.client;
-   if(!client)return `<button class="side-nav-item ${currentTrainerMainView==='clients'?'active':''}" onclick="closeSideMenu();goToTrainerHome()"><span class="side-nav-icon">${uiIcon('users')}</span>Клієнти</button><button class="side-nav-item ${currentTrainerMainView==='library'?'active':''}" onclick="closeSideMenu();showExerciseLibrary()"><span class="side-nav-icon">${uiIcon('dumbbell')}</span>Бібліотека вправ</button>`;
-   let a=clientAccess(client);
-   return `<button class="side-nav-item" onclick="closeSideMenu();goToTrainerHome()"><span class="side-nav-icon">${uiIcon('users')}</span>Усі клієнти</button>
-   <div class="side-client-context"><strong>${esc(client.name)}</strong><span>${esc(a.plan_name)}${a.access_until?' · до '+esc(a.access_until):''}</span></div>
-   <button class="side-nav-item ${currentTrainerTab==='profile'?'active':''}" onclick="sideTrainerTab('profile')"><span class="side-nav-icon">${uiIcon('home')}</span>Огляд</button>
-   <button class="side-nav-item ${currentTrainerTab==='program'?'active':''}" onclick="sideTrainerTab('program')"><span class="side-nav-icon">${uiIcon('dumbbell')}</span>Програма</button>
-   <button class="side-nav-item ${currentTrainerTab==='results'?'active':''}" onclick="sideTrainerTab('results')"><span class="side-nav-icon">${uiIcon('chart')}</span>Результати</button>
-   <button class="side-nav-item ${currentTrainerTab==='nutrition'?'active':''}" onclick="sideTrainerTab('nutrition')"><span class="side-nav-icon">${uiIcon('food')}</span>Харчування</button>
-   <button class="side-nav-item ${currentTrainerTab==='calendar'?'active':''}" onclick="sideTrainerTab('calendar')"><span class="side-nav-icon">${uiIcon('calendar')}</span>Історія</button>`;
- }
- let cid=session.client_id,c=(window.currentClientData||{}).client||{},a=clientAccess(c);
- return `<button class="side-nav-item ${currentClientView==='home'?'active':''}" onclick="closeSideMenu();clientCabinet(${cid})"><span class="side-nav-icon">${uiIcon('home')}</span>Сьогодні</button>
- <button class="side-nav-item ${currentClientView==='progress'?'active':''}" onclick="closeSideMenu();showClientSection('progress')"><span class="side-nav-icon">${uiIcon('chart')}</span>Прогрес</button>
- <button class="side-nav-item ${currentClientView==='history'?'active':''}" onclick="closeSideMenu();showClientSection('history')"><span class="side-nav-icon">${uiIcon('calendar')}</span>Історія</button>
- ${a.features?.meal_plan?`<button class="side-nav-item ${currentClientView==='mealplan'?'active':''}" onclick="closeSideMenu();showClientSection('mealplan')"><span class="side-nav-icon">${uiIcon('food')}</span>План харчування</button>`:lockedNav('План харчування','food')}
- ${a.features?.measurements?`<button class="side-nav-item ${currentClientView==='measurements'?'active':''}" onclick="closeSideMenu();showClientSection('measurements')"><span class="side-nav-icon">${uiIcon('measure')}</span>Заміри</button>`:lockedNav('Заміри','measure','Самостійно')}
- <button class="side-nav-item ${currentClientView==='profile'?'active':''}" onclick="closeSideMenu();showClientProfile(${cid})"><span class="side-nav-icon">${uiIcon('user')}</span>Профіль</button>`;
-}
-
-function openSideMenu(){
- document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div id="sideOverlay" class="side-overlay" onclick="closeSideMenu()"></div><aside id="sideDrawer" class="side-drawer"><div class="side-drawer-head"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><button class="side-close" onclick="closeSideMenu()">×</button></div><div class="side-menu-body">${sideMenuHTML()}</div><div class="side-menu-footer"><div class="lang-switch"><button class="${appLanguage==='uk'?'':'dark'}" onclick="setLanguage('uk')">UA</button><button class="${appLanguage==='en'?'':'dark'}" onclick="setLanguage('en')">EN</button></div><button class="logout-link" onclick="closeSideMenu();logout()"><span class="side-nav-icon">${uiIcon('logout')}</span>Вийти</button></div></aside>`);
- requestAnimationFrame(()=>{document.querySelector('#sideOverlay')?.classList.add('open');document.querySelector('#sideDrawer')?.classList.add('open')});syncOverlayLock();
-}
-
-function closeSideMenu(){document.querySelector('#sideOverlay')?.classList.remove('open');document.querySelector('#sideDrawer')?.classList.remove('open');setTimeout(()=>{document.querySelector('#sideOverlay')?.remove();document.querySelector('#sideDrawer')?.remove()},230)}
-
-function sideTrainerTab(id){
- closeSideMenu();
- if(session?.role==='trainer'&&selected&&(history.state?.eplanPage==='calendarDay'||!document.getElementById(id))){
-   openClient(selected,id);return;
- }
- showTab(id,null,false)
+function accessBannerHTML(c){
+ let a=clientAccess(c);
+ if(a.expired||a.manually_frozen)return `<div class="card client-access-banner expired"><strong>${a.expired?'Термін доступу закінчився':'Доступ призупинено'}</strong><p class="muted" style="margin-bottom:0">Твої результати та історія збережені. Звернись до тренера, щоб продовжити доступ.</p></div>`;
+ if(a.days_left!==null&&a.days_left<=7)return `<div class="card client-access-banner"><strong>До завершення доступу: ${Math.max(0,a.days_left)} дн.</strong><p class="muted" style="margin-bottom:0">Тариф: ${esc(a.plan_name)} · до ${esc(a.access_until)}</p></div>`;
+ return '';
 }
 
 
-
-function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal')||!!document.querySelector('.side-drawer.open'))}
+function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal'))}
