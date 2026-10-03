@@ -96,15 +96,15 @@ function programHTML(d){
      }).join('');
      return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
    }).join('');
-   return `<div class="card program-day-card">
+   return `<div class="card program-day-card" data-program-day="${esc(day)}">
      <div class="program-day-header-row">
-       <button class="program-day-head" onclick="toggleProgramDay('${bodyId}',this)">
+       <button class="program-day-head" data-day="${esc(day)}" onclick="toggleProgramDay('${bodyId}',this)">
          <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
          <span class="program-day-arrow">⌄</span>
        </button>
        <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
      </div>
-     <div id="${bodyId}" class="hidden" style="margin-top:18px">${rows}</div>
+     <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${rows}</div>
    </div>`;
  }).join(''):'<div class="card muted">Програма ще порожня.</div>';
  return form+list;
@@ -113,6 +113,18 @@ function programHTML(d){
 function toggleProgramDay(id,btn){
  let el=$('#'+id);if(!el)return;el.classList.toggle('hidden');
  let a=btn.querySelector('.program-day-arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
+}
+
+function reopenTrainerProgramDay(dayName){
+ let pane=document.getElementById('program');if(!pane)return;
+ let cards=[...pane.querySelectorAll('.program-day-card')];
+ let card=cards.find(x=>x.dataset.programDay===String(dayName||''));
+ if(!card)return;
+ let body=card.querySelector('[data-program-day-body]');
+ let btn=card.querySelector('.program-day-head');
+ if(body)body.classList.remove('hidden');
+ let arrow=btn?.querySelector('.program-day-arrow');
+ if(arrow)arrow.textContent='⌃';
 }
 
 function editProgramDayTitle(day){
@@ -151,7 +163,11 @@ async function moveProgramBlock(dayName,blockIndex,direction){
    let daySet=new Set(ordered_ids), reordered=ordered_ids.map(id=>byId.get(id)).filter(Boolean), pos=0;
    d.program=(d.program||[]).map(x=>x.day_name===dayName?reordered[pos++]:x);
    window.currentClientData=d;
-   let programPane=$('#program');if(programPane)programPane.innerHTML=programHTML(d);
+   let programPane=$('#program');
+   if(programPane){
+     programPane.innerHTML=programHTML(d);
+     reopenTrainerProgramDay(dayName);
+   }
  }catch(e){alert(e.message||'Не вдалося змінити порядок вправ')}
 }
 
