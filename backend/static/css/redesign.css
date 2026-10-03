@@ -136,29 +136,6 @@ body.eplan-redesign.client-ui .client-section-page>h1{
   letter-spacing:-.025em;
 }
 
-body.eplan-redesign.client-ui .client-page-tabs{
-  display:flex;
-  gap:8px;
-  margin-bottom:14px;
-  overflow:auto;
-  scrollbar-width:none;
-}
-body.eplan-redesign.client-ui .client-page-tabs::-webkit-scrollbar{display:none}
-body.eplan-redesign.client-ui .client-page-tabs button{
-  flex:0 0 auto;
-  padding:10px 14px;
-  border-radius:13px;
-  background:#eef3fb;
-  color:#526580;
-  border:1px solid transparent;
-  font-weight:750;
-}
-body.eplan-redesign.client-ui .client-page-tabs button.active{
-  background:#1677ff;
-  color:#fff;
-}
-
-
 body.eplan-redesign.client-ui .client-bottom-nav{
   position:fixed;
   left:50%;
