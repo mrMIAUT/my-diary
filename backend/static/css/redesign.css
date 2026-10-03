@@ -9839,3 +9839,62 @@ body.eplan-redesign.trainer-ui .trainer-measure-empty strong{
 body.eplan-redesign.trainer-ui .trainer-measure-empty p{
   margin:6px 0 0!important;
 }
+
+
+/* Trainer measurement artwork + calendar hint v16 */
+/* Reuse the exact same male/female measurement artwork as client UI */
+body.eplan-redesign.trainer-ui .measurement-generated-art{
+  display:block!important;
+  flex:0 0 auto!important;
+  width:74px!important;
+  height:78px!important;
+  border-radius:14px!important;
+  background-repeat:no-repeat!important;
+  background-size:500% 200%!important;
+  background-position:var(--mx) var(--my)!important;
+  background-color:#fff!important;
+  box-shadow:0 4px 14px rgba(44,67,99,.05)!important;
+}
+body.eplan-redesign.trainer-ui .measurement-generated-art.sex-male{
+  background-image:url('/static/img/measurements/male-sprite.webp')!important;
+}
+body.eplan-redesign.trainer-ui .measurement-generated-art.sex-female{
+  background-image:url('/static/img/measurements/female-sprite.webp')!important;
+}
+body.eplan-redesign.trainer-ui .measurement-weight-visual .measurement-generated-art{
+  width:82px!important;
+  height:82px!important;
+}
+
+/* Match the client's compact hint below the history calendar */
+body.eplan-redesign.trainer-ui .measurement-calendar-hint{
+  margin-top:14px!important;
+  padding:12px 14px!important;
+  border-radius:12px!important;
+  background:#f7f9fc!important;
+  color:#7a899f!important;
+  text-align:center!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+}
+
+/* Keep artwork cards balanced now that the images are visible */
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-card{
+  min-height:176px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top{
+  align-items:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top>span{
+  font-size:13px!important;
+}
+@media(max-width:370px){
+  body.eplan-redesign.trainer-ui .measurement-generated-art{
+    width:66px!important;
+    height:70px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-card{
+    min-height:164px!important;
+  }
+}
