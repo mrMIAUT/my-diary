@@ -142,12 +142,17 @@ function redesignClientHomeHTML(d,c,cid,groups){
   +'</section>';
 }
 
-function redesignPausedClientHomeHTML(c,id){
+function redesignPausedClientHomeHTML(c,id,access=clientAccess(c)){
+  let isFree=access.plan_code==='free'&&!access.expired&&!access.manually_frozen;
+  let title=isFree?'Безкоштовний режим':access.expired?'Термін доступу завершено':'Доступ призупинено';
+  let text=isFree
+    ?'Ти можеш переглядати свою історію та прогрес. Запис нових тренувань, харчування, активності й замірів недоступний у цьому тарифі.'
+    :'Ти можеш переглядати попередні тренування, прогрес та історію. Нові записи недоступні.';
   return '<section class="client-paused-home">'
     +'<div class="card client-paused-view-card">'
       +'<span class="client-paused-kicker">Режим перегляду</span>'
-      +'<h2>Доступ призупинено</h2>'
-      +'<p>Ти можеш переглядати попередні тренування, прогрес та історію. Нові записи недоступні.</p>'
+      +'<h2>'+esc(title)+'</h2>'
+      +'<p>'+esc(text)+'</p>'
     +'</div>'
     +'<button class="client-paused-history-card" onclick="showClientSection(\'history\')">'
       +'<span class="client-paused-history-icon">'+uiIcon('calendar')+'</span>'
@@ -166,7 +171,7 @@ window.clientCabinet = async function(id){
   let access=clientAccess(c);
   if(access.expired||access.manually_frozen||access.effective_plan==='free'){
     currentClientView='home';
-    app.innerHTML=shell(accessBannerHTML(c)+redesignPausedClientHomeHTML(c,id));
+    app.innerHTML=shell(accessBannerHTML(c)+redesignPausedClientHomeHTML(c,id,access));
     refreshNotificationBadge(id,'client','clientNotifyBtn');
     return;
   }
