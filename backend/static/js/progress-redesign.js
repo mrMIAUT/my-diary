@@ -114,13 +114,63 @@ function redesignProgressTrainingHTML(d){
   if(!sessions.length)return '<div class="redesign-empty-panel"><strong>Ще немає завершених тренувань</strong><span>Після першого тренування тут з’явиться історія.</span></div>';
   return '<div class="redesign-progress-training-list">'+sessions.slice(0,12).map(function(s){
     let day=sessionDay(s),title=s.day_name||'Тренування';
-    return '<button onclick="openProgressTrainingHistory()" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
+    return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
   }).join('')+'</div>';
 }
 
-function openProgressTrainingHistory(){
- window.progressHistoryReturn=true;
- showClientSection('history');
+function progressWorkoutData(d,sid){
+ let workout=(d.workout_sessions||[]).find(x=>+x.id===+sid&&x.status==='finished');
+ if(!workout)return null;
+ let day=sessionDay(workout),plan=[];
+ if(workout.program_snapshot){
+   try{let snap=JSON.parse(workout.program_snapshot);if(Array.isArray(snap))plan=snap}catch(e){}
+ }
+ if(!plan.length)plan=(d.program||[]).filter(x=>x.day_name===workout.day_name);
+ let all=uniqueResultSets((d.result_sets||[]).filter(x=>x.day===day));
+ let ids=new Set(plan.map(x=>+x.id).filter(Boolean));
+ let sets=ids.size?all.filter(x=>ids.has(+x.program_id)):all;
+ if(!sets.length)sets=all;
+ let order=new Map(plan.map((x,i)=>[+x.id,i])),planned=new Map(plan.map(x=>[+x.id,x.exercise||'']));
+ let groups={};
+ sets.forEach(x=>{let key=String(+x.program_id||0)+'::'+String(x.exercise||'');(groups[key]||(groups[key]=[])).push(x)});
+ let exercises=Object.values(groups).map(xs=>{
+   xs=xs.slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   let pid=+xs[0].program_id||0;
+   return {pid,name:xs[0].exercise||planned.get(pid)||'Вправа',planned:planned.get(pid)||'',sets:xs,order:order.has(pid)?order.get(pid):999};
+ }).sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name,'uk'));
+ return {workout,day,exercises};
+}
+
+function progressWorkoutDetailHTML(d,sid){
+ let data=progressWorkoutData(d,sid);
+ if(!data)return '<div class="redesign-empty-panel"><strong>Тренування не знайдено</strong><span>Повернись до списку тренувань і спробуй ще раз.</span></div>';
+ let s=data.workout,duration=(+s.duration_seconds||0)>0?formatWorkoutDuration(+s.duration_seconds||0):'—';
+ let review=s.trainer_reviewed?'<div class="calendar-review-done"><strong>Перевірено тренером ✓</strong>'+(s.trainer_comment?'<div>'+esc(s.trainer_comment)+'</div>':'')+'</div>':'';
+ let exercises=data.exercises.length?data.exercises.map(x=>{
+   let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
+   return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+x.sets.map(set=>'<div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(set.reps)+'</strong><em>RIR '+esc(set.rir)+'</em></div>').join('')+'</div></div>';
+ }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
+ return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+review+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
+}
+
+function openProgressWorkout(sid,pushHistory=true){
+ let d=window.currentClientData||{},data=progressWorkoutData(d,sid);
+ if(!data){window.clientProgressView='training';showClientSection('progress');return}
+ window.clientProgressView='training';
+ window.progressHistoryReturn=false;
+ currentClientView='progress';
+ if(pushHistory){
+   history.replaceState({eplanPage:'clientHome',eplanClient:session?.client_id,eplanSection:'progress'},'',location.href);
+   history.pushState({eplanPage:'clientProgressWorkout',eplanClient:session?.client_id,eplanWorkoutId:+sid},'',location.pathname+location.search+'#workout-'+sid);
+ }
+ app.innerHTML=shell('<div class="client-section-page redesign-progress-workout-detail"><button class="unified-back-button" onclick="returnFromProgressWorkout()" aria-label="Назад до тренувань">‹</button>'+progressWorkoutDetailHTML(d,sid)+'</div>');
+ refreshNotificationBadge(session?.client_id,'client','clientNotifyBtn');
+}
+
+function returnFromProgressWorkout(){
+ window.clientProgressView='training';
+ if(history.state?.eplanPage==='clientProgressWorkout'){history.back();return}
+ showClientSection('progress');
 }
 
 function returnFromProgressHistory(){
