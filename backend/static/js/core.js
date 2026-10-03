@@ -547,4 +547,4 @@ function accessBannerHTML(c){
 }
 
 
-function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal')||!!document.querySelector('.side-drawer.open'))}
+function syncOverlayLock(){document.body.classList.toggle('overlay-open',!!document.querySelector('.modal'))}
