@@ -17,20 +17,95 @@ function sessionProgramForDate(d,dayName,day){
 async function reviewWorkout(sid,cid,useComment=true,button=null){
  let restore=setActionLoading(button,'Перевіряємо…');
  try{
- let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
- await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
- let clients=await loadClients(),remaining=clients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
- await openClient(cid,'results');
- if(remaining>0)setTimeout(()=>{document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="nextReviewModal"><div class="card"><h2>Тренування перевірено ✓</h2><p class="muted">Ще очікують перевірки: ${remaining}</p><button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступне →</button><button class="dark" style="width:100%;margin-top:8px" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div>`)},120);
+   let t=$('#reviewComment'+sid),comment=useComment&&t?t.value.trim():'';
+   await api('/workout/'+sid+'/review',{method:'PATCH',body:JSON.stringify({comment})});
+   let clients=await loadClients();
+   let current=clients.find(c=>+c.id===+cid),currentRemaining=+current?.needs_review_count||0;
+   let remaining=clients.reduce((s,c)=>s+(+c.needs_review_count||0),0);
+   await openClient(cid,'program');
+   if(currentRemaining>0){
+     setTimeout(openFirstPendingWorkout,160);
+   }else if(remaining>0){
+     setTimeout(()=>{document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="nextReviewModal"><div class="card"><h2>Тренування перевірено ✓</h2><p class="muted">У цього клієнта все перевірено. Ще очікують перевірки: ${remaining}</p><button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступний клієнт →</button><button class="dark" style="width:100%;margin-top:8px" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div>`)},120);
+   }
  }catch(e){restore();alert(e.message||'Не вдалося позначити тренування перевіреним. Спробуй ще раз.')}
 }
 
 async function openNextPendingClient(currentCid){
  let cs=await loadClients(),next=cs.find(c=>c.id!==currentCid&&(+c.needs_review_count||0)>0)||cs.find(c=>(+c.needs_review_count||0)>0);
  if(!next)return trainerHome();
- await openClient(next.id,'results');setTimeout(openFirstPendingWorkout,180);
+ await openClient(next.id,'program');
+ setTimeout(openFirstPendingWorkout,180);
 }
 
+
+function trainerReviewExerciseRowsHTML(d,session){
+ let day=sessionDay(session),dayName=session.day_name||'Тренування';
+ let snap=sessionProgramForDate(d,dayName,day);
+ let sets=(d.result_sets||[]).filter(x=>x.day===day);
+ let exercises=(snap||[]).filter(x=>sets.some(s=>+s.program_id===+x.id));
+ if(!exercises.length){
+   let grouped={};
+   sets.forEach(s=>{
+     let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
+     if(!grouped[key])grouped[key]={id:+s.program_id||0,exercise:s.exercise||'Вправа'};
+   });
+   exercises=Object.values(grouped);
+ }
+ if(!exercises.length)return '<div class="trainer-review-empty-detail">Немає збережених підходів для цього тренування.</div>';
+ return exercises.map(x=>{
+   let cur=uniqueResultSets(sets.filter(s=>+s.program_id===+x.id)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   return '<div class="trainer-review-exercise">'
+     +'<div class="trainer-review-exercise-head"><strong>'+esc(x.exercise||'Вправа')+'</strong><span>'+cur.length+' підходи</span></div>'
+     +'<div class="trainer-review-sets">'+cur.map(s=>'<div><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b><em>RIR '+esc(String(s.rir??'—'))+'</em></div>').join('')+'</div>'
+   +'</div>';
+ }).join('');
+}
+
+function trainerPendingReviewsHTML(d){
+ let pending=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&!x.trainer_reviewed)
+   .slice().sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||''))||(+b.id||0)-(+a.id||0));
+ if(!pending.length)return '';
+ return '<section id="trainerPendingReviewQueue" class="trainer-review-queue">'
+   +'<div class="trainer-review-queue-head"><div><small>ПОТРЕБУЄ УВАГИ</small><h2>Тренування до перевірки</h2><p>Перевір завершені тренування клієнта й за потреби залиш коментар.</p></div><span>'+pending.length+'</span></div>'
+   +'<div class="trainer-review-list">'+pending.map((s,i)=>{
+     let day=sessionDay(s)||'—',name=s.day_name||'Тренування',bodyId='trainerPendingReview_'+s.id;
+     return '<div class="trainer-review-card" data-pending="1" data-session="'+(+s.id||0)+'">'
+       +'<button type="button" class="trainer-review-toggle" data-target="'+bodyId+'" onclick="toggleTrainerPendingReview(this)">'
+         +'<span class="trainer-review-main"><small>'+esc(day)+'</small><strong>'+esc(name)+'</strong></span>'
+         +(s.duration_seconds!==undefined?workoutDurationBadgeHTML(s,'trainer-review-duration'):'')
+         +'<span class="trainer-review-badge">До перевірки</span><b class="trainer-review-arrow">⌄</b>'
+       +'</button>'
+       +'<div id="'+bodyId+'" class="trainer-review-detail hidden">'
+         +trainerReviewExerciseRowsHTML(d,s)
+         +'<label class="trainer-review-comment"><span>Коментар клієнту <small>необов’язково</small></span><textarea id="reviewComment'+s.id+'" placeholder="Наприклад: у жимі ногами наступного разу залиш 1–2 повтори в запасі..."></textarea></label>'
+         +'<div class="trainer-review-actions"><button onclick="reviewWorkout('+s.id+','+d.client.id+',true,event.currentTarget)">Надіслати та перевірити</button><button class="dark" onclick="reviewWorkout('+s.id+','+d.client.id+',false,event.currentTarget)">Без коментаря</button></div>'
+       +'</div>'
+     +'</div>';
+   }).join('')+'</div>'
+ +'</section>';
+}
+
+function trainerTrainingTabHTML(d){
+ return trainerPendingReviewsHTML(d)+programHTML(d);
+}
+
+function toggleTrainerPendingReview(btn){
+ let id=btn?.dataset?.target,body=id?document.getElementById(id):null,card=btn?.closest('.trainer-review-card');
+ if(!body)return;
+ let open=body.classList.contains('hidden');
+ body.classList.toggle('hidden',!open);
+ card?.classList.toggle('is-open',open);
+ let arrow=btn.querySelector('.trainer-review-arrow');if(arrow)arrow.textContent=open?'⌃':'⌄';
+}
+
+function openFirstPendingWorkout(){
+ let card=document.querySelector('#trainerPendingReviewQueue .trainer-review-card[data-pending="1"]');
+ if(!card)return;
+ let btn=card.querySelector('.trainer-review-toggle'),body=card.querySelector('.trainer-review-detail');
+ if(body?.classList.contains('hidden'))toggleTrainerPendingReview(btn);
+ setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'center'}),40);
+}
 
 function uniqueResultSets(xs){
  let seen=new Set();
