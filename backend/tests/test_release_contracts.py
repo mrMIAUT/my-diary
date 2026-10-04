@@ -89,6 +89,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("require_active_client(s[\"client_id\"],'trainer_review')", APP)
         self.assertIn("require_active_client(x.client_id,'trainer_review')", APP)
         self.assertIn("require_active_client(rec[\"client_id\"],'nutrition')", APP)
+        self.assertIn("require_active_client(cid,'meal_plan')", APP)
 
     def test_access_downgrade_preserves_manual_status_and_closes_live_workout(self):
         block = APP.split('@app.patch("/api/clients/{cid}/access")', 1)[1].split("\n@app.", 1)[0]
@@ -112,6 +113,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("checkinEnabled=!!features.checkin", HOME)
         self.assertIn("nutritionEnabled=!!features.nutrition", HOME)
         self.assertIn("features?.meal_plan", NUTRITION)
+        self.assertIn("openNutritionTargetsModal", NUTRITION)
+        self.assertIn("ЄПЛАН Самостійно", TRAINER)
         measurements = (ROOT / "backend" / "static" / "js" / "measurements.js").read_text(encoding="utf-8")
         trainer = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
         self.assertIn("hasFeature('measurements'", measurements)
@@ -125,6 +128,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn('@app.get("/api/trainer/profile")', APP)
         self.assertIn('@app.post("/api/trainers/{trainer_id}/request")', APP)
         self.assertIn('"trainer_id"', APP)
+        self.assertIn('@app.patch("/api/client/{cid}/nutrition-targets")', APP)
+        self.assertIn('if access["features"].get("meal_plan",False):', APP)
         more = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
         trainer = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
         self.assertIn("showClientTrainers", more)
