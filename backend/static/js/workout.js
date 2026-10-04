@@ -60,7 +60,7 @@ function todaySets(d,pid){
 
 function completedExerciseHTML(x,d,cid){
  let done=todaySets(d,x.id),total=workoutExerciseSetCount(x,d);
- if(!done.length)return setRows(x,d)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
+ if(!done.length)return setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
  let performed=done[0]?.exercise||x.exercise;
  return `<div class="workout-completed-summary">
    <div class="workout-completed-summary-head">
