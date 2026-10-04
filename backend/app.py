@@ -983,6 +983,29 @@ def init():
             body TEXT NOT NULL DEFAULT '',
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        # Production compatibility: preserve an incompatible legacy table
+        # instead of dropping or rewriting unknown historical data.
+        c.execute("""DO $
+        BEGIN
+            IF to_regclass('public.weekly_checkins') IS NOT NULL
+               AND (
+                   SELECT COUNT(*)
+                   FROM information_schema.columns
+                   WHERE table_schema='public'
+                     AND table_name='weekly_checkins'
+                     AND column_name IN (
+                         'id','client_id','week_start','mood','sleep','hunger',
+                         'energy','difficulty','comment','reviewed','created_at'
+                     )
+               ) < 11
+            THEN
+                IF to_regclass('public.weekly_checkins_legacy_pre_redesign') IS NOT NULL THEN
+                    RAISE EXCEPTION 'weekly_checkins legacy backup already exists';
+                END IF;
+                ALTER TABLE public.weekly_checkins
+                    RENAME TO weekly_checkins_legacy_pre_redesign;
+            END IF;
+        END $;""")
         c.execute("""CREATE TABLE IF NOT EXISTS weekly_checkins(
             id BIGSERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL REFERENCES clients(id),
@@ -997,6 +1020,7 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(client_id,week_start)
         )""")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_weekly_checkins_client_week ON weekly_checkins(client_id,week_start)")
         c.execute("CREATE INDEX IF NOT EXISTS ix_weekly_checkins_client_week ON weekly_checkins(client_id,week_start DESC)")
 
         # M03A additive migration: business tables and H05 migration are unchanged.
