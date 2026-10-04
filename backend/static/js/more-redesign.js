@@ -204,15 +204,18 @@ function trainerMarketplaceRating(p){
 
 function trainerMarketplaceCardHTML(p,cid){
   let specs=trainerMarketplaceSpecialties(p.specialties),status=trainerMarketplaceAvailability(p);
-  let statusClass=p.is_current_trainer?'current':p.accepting_clients?'open':'closed';
-  return '<button class="trainer-market-card premium" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+  let rating=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★':'Новий';
+  let visibleSpecs=specs.slice(0,2),extra=Math.max(0,specs.length-visibleSpecs.length);
+  let exp=(+p.experience_years||0)>0?' · '+(+p.experience_years)+' р. досвіду':'';
+  return '<button class="trainer-market-card trainer-card-v3 marketplace" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
     +trainerMarketplaceAvatarHTML(p)
-    +'<span class="trainer-market-card-copy"><span class="trainer-market-name-line"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><b>'+esc(trainerMarketplaceRating(p))+'</b></span><small>'+esc(p.headline||'Персональний тренер')+'</small>'
-      +(specs.length?'<span class="trainer-market-tags">'+specs.slice(0,3).map(x=>'<i>'+esc(x)+'</i>').join('')+'</span>':'')
-      +'<span class="trainer-market-card-stats"><i><b>'+esc(String(+p.active_clients||0))+'</b> зараз</i><i><b>'+esc(String(+p.total_clients||0))+'</b> клієнтів</i></span>'
+    +'<span class="trainer-card-v3-body">'
+      +'<span class="trainer-card-v3-head"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><b>'+esc(rating)+'</b></span>'
+      +'<small class="trainer-card-v3-subtitle">'+esc(p.headline||'Персональний тренер')+'</small>'
+      +(visibleSpecs.length?'<span class="trainer-card-v3-tags">'+visibleSpecs.map(x=>'<i>'+esc(x)+'</i>').join('')+(extra?'<i>+'+extra+'</i>':'')+'</span>':'')
+      +'<span class="trainer-card-v3-meta">'+esc(String(+p.active_clients||0))+' зараз · '+esc(String(+p.total_clients||0))+' всього'+esc(exp)+'</span>'
+      +'<span class="trainer-card-v3-footer"><i class="'+(p.is_current_trainer?'current':p.accepting_clients?'open':'closed')+'">'+esc(status)+'</i><em>Профіль ›</em></span>'
     +'</span>'
-    +'<span class="trainer-market-status '+statusClass+'">'+esc(status)+'</span>'
-    +'<span class="trainer-market-arrow">›</span>'
   +'</button>';
 }
 
