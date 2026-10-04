@@ -785,9 +785,6 @@ def init():
             content TEXT DEFAULT '', sort INTEGER DEFAULT 0
         )""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS trainer_id INTEGER")
-        c.execute("""UPDATE clients SET trainer_id=1
-                     WHERE trainer_id IS NULL
-                       AND COALESCE(plan_code,'coaching') IN ('coaching','workout_plan','workout_nutrition')""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 0")
@@ -802,6 +799,9 @@ def init():
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS plan_code TEXT DEFAULT 'coaching'")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS access_until DATE")
         c.execute("UPDATE clients SET plan_code='coaching' WHERE plan_code IS NULL OR plan_code=''")
+        c.execute("""UPDATE clients SET trainer_id=1
+                     WHERE trainer_id IS NULL
+                       AND plan_code IN ('coaching','workout_plan','workout_nutrition')""")
 
         c.execute("""CREATE TABLE IF NOT EXISTS measurements(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,weight DOUBLE PRECISION,waist DOUBLE PRECISION,chest DOUBLE PRECISION,hips DOUBLE PRECISION)""")
         c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS thighs DOUBLE PRECISION DEFAULT 0")
