@@ -598,7 +598,7 @@ def migrate_credentials(c):
 
 PLAN_FEATURES={
  "coaching":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":True,"meal_plan":True,"checkin":True},
- "workout_plan":{"workouts":True,"nutrition":False,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False,"checkin":False},
+ "workout_plan":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False,"checkin":False},
  "workout_nutrition":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":True,"checkin":False},
  "self":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False,"checkin":False},
  "free":{"workouts":False,"nutrition":False,"measurements":False,"cardio":False,"trainer_review":False,"meal_plan":False,"checkin":False}}
@@ -855,6 +855,34 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS trainer_auth(
             id INTEGER PRIMARY KEY, password TEXT NOT NULL
         )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_profiles(
+            trainer_id INTEGER PRIMARY KEY,
+            display_name TEXT NOT NULL DEFAULT '',
+            headline TEXT NOT NULL DEFAULT '',
+            bio TEXT NOT NULL DEFAULT '',
+            experience_years INTEGER NOT NULL DEFAULT 0 CHECK(experience_years>=0 AND experience_years<=100),
+            specialties TEXT NOT NULL DEFAULT '',
+            instagram TEXT NOT NULL DEFAULT '',
+            telegram TEXT NOT NULL DEFAULT '',
+            tiktok TEXT NOT NULL DEFAULT '',
+            accepting_clients BOOLEAN NOT NULL DEFAULT TRUE,
+            is_published BOOLEAN NOT NULL DEFAULT TRUE,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_requests(
+            id BIGSERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL REFERENCES clients(id),
+            trainer_id INTEGER NOT NULL,
+            message TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','declined')),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_trainer_requests_pending
+                     ON trainer_requests(client_id,trainer_id) WHERE status='pending'""")
+        c.execute("""INSERT INTO trainer_profiles(trainer_id,display_name,headline)
+                     VALUES(1,'Михайло','Тренер ЄПЛАН')
+                     ON CONFLICT(trainer_id) DO NOTHING""")
         # Additive C01 migration. No V92 account/data tables are rewritten.
         c.execute("""CREATE TABLE IF NOT EXISTS auth_sessions(
             id BIGSERIAL PRIMARY KEY,
@@ -931,6 +959,21 @@ class Login(BaseModel):
 class ClientStatusIn(BaseModel): status:str=Field(max_length=32)
 class ClientAccessIn(BaseModel):
     plan_code:str=Field(default="coaching",max_length=64); access_until:str=Field(default="",max_length=32)
+class TrainerProfileIn(BaseModel):
+    display_name:str=Field(default="",max_length=120)
+    headline:str=Field(default="",max_length=240)
+    bio:str=Field(default="",max_length=5000)
+    experience_years:int=Field(default=0,ge=0,le=100)
+    specialties:str=Field(default="",max_length=1000)
+    instagram:str=Field(default="",max_length=512)
+    telegram:str=Field(default="",max_length=512)
+    tiktok:str=Field(default="",max_length=512)
+    accepting_clients:bool=True
+    is_published:bool=True
+class TrainerRequestIn(BaseModel):
+    message:str=Field(default="",max_length=1500)
+class TrainerRequestStatusIn(BaseModel):
+    status:str=Field(max_length=16)
 class ResetRequestIn(BaseModel): email:str=Field(max_length=254)
 class ResetConfirmIn(BaseModel):
     token:str=Field(max_length=128); password:str=Field(max_length=256)
@@ -1479,6 +1522,98 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
                           WHERE client_id=%s AND status='training'""",(cid,))
         db.commit()
     return {"ok":True,"access":access}
+
+def trainer_profile_response(row:dict|None,request_status:str=""):
+    if not row:return None
+    return {
+        "trainer_id":row["trainer_id"],
+        "display_name":row.get("display_name") or "Тренер ЄПЛАН",
+        "headline":row.get("headline") or "",
+        "bio":row.get("bio") or "",
+        "experience_years":int(row.get("experience_years") or 0),
+        "specialties":row.get("specialties") or "",
+        "instagram":row.get("instagram") or "",
+        "telegram":row.get("telegram") or "",
+        "tiktok":row.get("tiktok") or "",
+        "accepting_clients":bool(row.get("accepting_clients")),
+        "is_published":bool(row.get("is_published")),
+        "request_status":request_status or "",
+    }
+
+@app.get("/api/trainers")
+def list_trainers(user:AuthUser=Depends(current_user)):
+    profiles=rows("""SELECT * FROM trainer_profiles
+                     WHERE is_published=TRUE
+                     ORDER BY accepting_clients DESC,trainer_id""")
+    request_map={}
+    if user.role=="client":
+        reqs=rows("""SELECT DISTINCT ON (trainer_id) trainer_id,status
+                     FROM trainer_requests WHERE client_id=?
+                     ORDER BY trainer_id,created_at DESC,id DESC""",(user.client_id,))
+        request_map={int(x["trainer_id"]):str(x["status"]) for x in reqs}
+    return [trainer_profile_response(x,request_map.get(int(x["trainer_id"]),"")) for x in profiles]
+
+@app.get("/api/trainers/{trainer_id}")
+def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
+    row=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    if not row or (not row["is_published"] and user.role!="trainer"):
+        raise HTTPException(404,"Тренера не знайдено")
+    request_status=""
+    if user.role=="client":
+        req=one("""SELECT status FROM trainer_requests
+                   WHERE client_id=? AND trainer_id=?
+                   ORDER BY created_at DESC,id DESC LIMIT 1""",(user.client_id,trainer_id))
+        request_status=str(req["status"]) if req else ""
+    return trainer_profile_response(row,request_status)
+
+@app.patch("/api/trainer/profile")
+def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trainer)):
+    name=x.display_name.strip() or user.name or "Тренер ЄПЛАН"
+    run("""INSERT INTO trainer_profiles(
+              trainer_id,display_name,headline,bio,experience_years,specialties,
+              instagram,telegram,tiktok,accepting_clients,is_published,updated_at)
+           VALUES(?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+           ON CONFLICT(trainer_id) DO UPDATE SET
+              display_name=EXCLUDED.display_name,headline=EXCLUDED.headline,bio=EXCLUDED.bio,
+              experience_years=EXCLUDED.experience_years,specialties=EXCLUDED.specialties,
+              instagram=EXCLUDED.instagram,telegram=EXCLUDED.telegram,tiktok=EXCLUDED.tiktok,
+              accepting_clients=EXCLUDED.accepting_clients,is_published=EXCLUDED.is_published,
+              updated_at=CURRENT_TIMESTAMP""",
+        (user.user_id,name,x.headline.strip(),x.bio.strip(),x.experience_years,x.specialties.strip(),
+         x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),x.accepting_clients,x.is_published))
+    return trainer_profile_response(one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(user.user_id,)))
+
+@app.post("/api/trainers/{trainer_id}/request")
+def request_trainer(trainer_id:int,x:TrainerRequestIn,user:AuthUser=Depends(require_client)):
+    profile=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    if not profile or not profile["is_published"]: raise HTTPException(404,"Тренера не знайдено")
+    if not profile["accepting_clients"]: raise HTTPException(409,"Тренер зараз не набирає нових клієнтів")
+    pending=one("""SELECT id,status FROM trainer_requests
+                   WHERE client_id=? AND trainer_id=? AND status='pending'
+                   ORDER BY id DESC LIMIT 1""",(user.client_id,trainer_id))
+    if pending:return {"ok":True,"request_id":pending["id"],"status":"pending"}
+    i=run("""INSERT INTO trainer_requests(client_id,trainer_id,message)
+             VALUES(?,?,?)""",(user.client_id,trainer_id,x.message.strip()))
+    return {"ok":True,"request_id":i,"status":"pending"}
+
+@app.get("/api/trainer/requests")
+def trainer_requests(user:AuthUser=Depends(require_trainer)):
+    return rows("""SELECT r.id,r.client_id,r.trainer_id,r.message,r.status,r.created_at,r.updated_at,
+                         c.name AS client_name,c.email AS client_email,c.plan_code
+                  FROM trainer_requests r
+                  JOIN clients c ON c.id=r.client_id
+                  WHERE r.trainer_id=?
+                  ORDER BY CASE r.status WHEN 'pending' THEN 0 WHEN 'accepted' THEN 1 ELSE 2 END,
+                           r.created_at DESC,r.id DESC
+                  LIMIT 200""",(user.user_id,))
+
+@app.patch("/api/trainer/requests/{request_id}")
+def update_trainer_request(request_id:int,x:TrainerRequestStatusIn,user:AuthUser=Depends(require_trainer)):
+    if x.status not in ("accepted","declined"): raise HTTPException(400,"Невірний статус запиту")
+    row=one("SELECT id FROM trainer_requests WHERE id=? AND trainer_id=?",(request_id,user.user_id))
+    if not row: raise HTTPException(404,"Запит не знайдено")
+    run("UPDATE trainer_requests SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(x.status,request_id))
+    return {"ok":True,"status":x.status}
 
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int,user:AuthUser=Depends(require_trainer)):
