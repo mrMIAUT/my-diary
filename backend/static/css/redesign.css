@@ -13948,3 +13948,58 @@ body.eplan-redesign.trainer-ui .trainer-template-primary{
   border:1px solid #1677ff!important;
   box-shadow:none!important;
 }
+
+
+/* Trainer clients — separate cards */
+body.eplan-redesign.trainer-ui .trainer-client-list{
+  display:grid;
+  gap:10px;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+body.eplan-redesign.trainer-ui .trainer-client-row{
+  width:100%;
+  min-height:82px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:15px 16px;
+  border:1px solid #dce5f1;
+  border-radius:16px;
+  background:#fff;
+  color:#081633;
+  text-align:left;
+  box-shadow:0 5px 16px rgba(31,64,104,.035);
+}
+body.eplan-redesign.trainer-ui .trainer-client-row:last-child{
+  border-bottom:1px solid #dce5f1;
+}
+body.eplan-redesign.trainer-ui .trainer-client-row:active{
+  background:#f8fbff;
+  transform:translateY(1px);
+}
+body.eplan-redesign.trainer-ui .trainer-client-copy{
+  min-width:0;
+  padding:1px 0;
+}
+body.eplan-redesign.trainer-ui .trainer-client-row .more-chevron{
+  width:28px;
+  min-width:28px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  color:#8593a8;
+  font-size:27px;
+  font-weight:500;
+  line-height:1;
+}
+body.eplan-redesign.trainer-ui .trainer-client-list>.trainer-empty{
+  padding:22px 16px;
+  border:1px solid #dce5f1;
+  border-radius:16px;
+  background:#fff;
+  text-align:center;
+}
