@@ -2293,7 +2293,8 @@ def edit_nutrition(nid:int,x:NutIn,user:AuthUser=Depends(require_client)):
 
 @app.patch("/api/nutrition/{nid}/check")
 def check_nutrition(nid:int,user:AuthUser=Depends(require_trainer)):
-    owned_record(user,"nutrition",nid)
+    rec=owned_record(user,"nutrition",nid)
+    require_active_client(rec["client_id"],'trainer_review')
     run("UPDATE nutrition SET checked=1 WHERE id=?",(nid,)); return {"ok":True}
 @app.post("/api/nutrition/{nid}/screenshot")
 def screenshot(nid:int,file:UploadFile=File(...),user:AuthUser=Depends(require_client)):
