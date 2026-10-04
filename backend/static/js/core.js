@@ -466,7 +466,7 @@ function clientBottomNavHTML(){
    item('home','Головна','home',`clientCabinet(${cid})`),
    features.workouts?item('training','Тренування','dumbbell',`showClientTraining(${cid})`):'',
    item('progress','Прогрес','chart',`showClientSection('progress')`),
-   features.nutrition?item('nutrition','Харчування','food',`showClientNutrition(${cid})`):'',
+   item('nutrition','Харчування','food',`showClientNutrition(${cid})`),
    item('more','Більше','menu',`showClientMore(${cid})`)
  ].filter(Boolean);
  return `<nav class="client-bottom-nav" aria-label="Основна навігація" style="grid-template-columns:repeat(${items.length},1fr)">${items.join('')}</nav>`;
