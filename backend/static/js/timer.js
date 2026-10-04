@@ -95,7 +95,10 @@ async function startRestTimer(seconds,sourceBtn=null,tracking=null){
  await ensureTimerNotifications();
  clearRestTimerPaused();
  let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
- if(tracking)beginTrackedRest(tracking,end);else updateTrackedRestEnd(end);
+ if(tracking===false){
+   let existing=readTrackedRest();
+   if(existing)finalizeTrackedRest(existing.end_at&&Date.now()>=+existing.end_at?'finish':'cancel');
+ }else if(tracking)beginTrackedRest(tracking,end);else updateTrackedRestEnd(end);
  $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
