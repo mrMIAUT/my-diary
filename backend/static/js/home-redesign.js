@@ -91,16 +91,17 @@ function redesignHomeTrainersHTML(trainers,cid){
     +'</div>'
     +'<div class="client-home-trainers-row">'
       +xs.map(p=>{
-        let cls=p.is_current_trainer?' current':p.accepting_clients?' open':'';
-        let capacity=(+p.max_active_clients||0)>0?Math.min(100,Math.round((+p.active_clients||0)/(+p.max_active_clients||1)*100)):0;
-        return '<button class="client-home-trainer-card premium'+cls+'" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+        let availability=trainerAvailabilityText(p);
+        let rating=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★':'Новий';
+        let exp=(+p.experience_years||0)>0?' · '+(+p.experience_years)+' р. досвіду':'';
+        return '<button class="client-home-trainer-card trainer-card-v3 '+(p.is_current_trainer?'current':'')+'" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
           +trainerCardAvatarHTML(p)
-          +'<span class="client-home-trainer-copy"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><small>'+esc(p.headline||'Персональний тренер')+'</small></span>'
-          +'<span class="client-home-trainer-rating">'+esc(trainerRatingText(p))+'</span>'
-          +'<span class="client-home-trainer-meta"><b>'+esc(String(+p.active_clients||0))+'</b> зараз · <b>'+esc(String(+p.total_clients||0))+'</b> всього</span>'
-          +'<span class="client-home-trainer-status">'+esc(trainerAvailabilityText(p))+'</span>'
-          +((+p.max_active_clients||0)>0?'<span class="client-home-trainer-capacity"><i style="width:'+capacity+'%"></i></span>':'')
-          +'<span class="client-home-trainer-arrow">›</span>'
+          +'<span class="trainer-card-v3-body">'
+            +'<span class="trainer-card-v3-head"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><b>'+esc(rating)+'</b></span>'
+            +'<small class="trainer-card-v3-subtitle">'+esc(p.headline||'Персональний тренер')+'</small>'
+            +'<span class="trainer-card-v3-meta">'+esc(String(+p.active_clients||0))+' зараз · '+esc(String(+p.total_clients||0))+' всього'+esc(exp)+'</span>'
+            +'<span class="trainer-card-v3-footer"><i class="'+(p.is_current_trainer?'current':p.accepting_clients?'open':'closed')+'">'+esc(availability)+'</i><em>Профіль ›</em></span>'
+          +'</span>'
         +'</button>';
       }).join('')
     +'</div>'
