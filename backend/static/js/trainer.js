@@ -192,9 +192,7 @@ async function openPendingWorkoutForClient(cid){
 
 async function quickExtendFromCard(cid,months){
  let clients=await loadClients(),c=clients.find(x=>x.id===cid);if(!c)return;
- let base=c.access?.access_until&&c.access.access_until>=isoToday()?new Date(c.access.access_until+'T12:00:00'):new Date();
- base.setMonth(base.getMonth()+months);
- let until=`${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}`;
+ let until=isoAddMonthsFrom(c.access?.access_until||'',months);
  await api('/clients/'+cid+'/access',{method:'PATCH',body:JSON.stringify({plan_code:c.access?.plan_code||'coaching',access_until:until})});
  trainerHome();
 }
