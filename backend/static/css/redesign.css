@@ -14200,3 +14200,113 @@ body.eplan-redesign.trainer-ui #editExerciseModal .trainer-edit-exercise-primary
     border-radius:20px!important;
   }
 }
+
+
+/* Trainer superset add modal — current redesign */
+body.eplan-redesign.trainer-ui #supersetModal{
+  background:rgba(12,22,39,.72)!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal>.trainer-superset-modal{
+  width:min(460px,calc(100% - 28px))!important;
+  max-height:calc(100dvh - 28px)!important;
+  overflow:auto!important;
+  padding:20px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:22px!important;
+  background:#fff!important;
+  color:#0a1738!important;
+  box-shadow:0 24px 70px rgba(16,34,58,.20)!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .edit-exercise-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:10px!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .edit-exercise-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  letter-spacing:-.02em!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .edit-exercise-close{
+  flex:0 0 44px!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+  border:1px solid #dce5f0!important;
+  border-radius:13px!important;
+  background:#eef3f8!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:20px!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-copy{
+  margin:0 0 14px!important;
+  color:#74829a!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid label{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid label.wide{
+  grid-column:1/-1;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid label>span{
+  color:#65748c!important;
+  font-size:11px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal input{
+  width:100%!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:12px 13px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:14px!important;
+  background:#f7f9fc!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-primary{
+  width:100%!important;
+  min-height:48px!important;
+  margin-top:16px!important;
+  padding:12px 16px!important;
+  border:1px solid #1677ff!important;
+  border-radius:14px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-primary:active{
+  transform:translateY(1px);
+}
+@media(max-width:430px){
+  body.eplan-redesign.trainer-ui #supersetModal>.trainer-superset-modal{
+    width:calc(100% - 20px)!important;
+    padding:18px!important;
+    border-radius:20px!important;
+  }
+}
+@media(max-width:360px){
+  body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid{
+    grid-template-columns:1fr;
+  }
+  body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-modal-grid label.wide{
+    grid-column:auto;
+  }
+}
