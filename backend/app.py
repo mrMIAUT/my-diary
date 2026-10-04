@@ -1024,7 +1024,36 @@ def init():
         c.execute("DELETE FROM security_admin_audit WHERE created_at<%s",(datetime.now(timezone.utc)-timedelta(days=180),))
         migrate_credentials(c)
         c.commit()
+
 init()
+
+# TEMP_STAGING_PROFILE_SNAPSHOT
+def _log_staging_profile_snapshot():
+    if "staging" not in str(DATABASE_URL).lower():
+        return
+    logger=logging.getLogger("eplan.staging.profile_restore")
+    try:
+        with con() as db:
+            profile=db.execute("""SELECT trainer_id,display_name,headline,bio,experience_years,
+                                         specialties,instagram,telegram,tiktok,accepting_clients,
+                                         is_published,max_active_clients,avatar,updated_at
+                                  FROM trainer_profiles WHERE trainer_id=%s""",(1,)).fetchone()
+            media=db.execute("""SELECT avatar_media_type,
+                                       octet_length(avatar_data) AS avatar_bytes,
+                                       updated_at
+                                FROM trainer_profile_media WHERE trainer_id=%s""",(1,)).fetchone()
+        payload={"profile":dict(profile) if profile else None,"media":dict(media) if media else None}
+        for section in ("profile","media"):
+            if payload.get(section):
+                for key,value in list(payload[section].items()):
+                    if isinstance(value,(datetime,date)):
+                        payload[section][key]=value.isoformat()
+        logger.info("STAGING_PROFILE_SNAPSHOT "+json.dumps(payload,ensure_ascii=False,separators=(",",":")))
+    except Exception as exc:
+        logger.warning("STAGING_PROFILE_SNAPSHOT_ERROR %s",type(exc).__name__)
+
+_log_staging_profile_snapshot()
+
 
 def password_input_schema(schema:dict):
     # Compatibility-only input: add_client() uses its own random initial secret.
