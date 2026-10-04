@@ -90,12 +90,30 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("require_active_client(x.client_id,'trainer_review')", APP)
         self.assertIn("require_active_client(rec[\"client_id\"],'nutrition')", APP)
 
+    def test_access_downgrade_preserves_manual_status_and_closes_live_workout(self):
+        block = APP.split('@app.patch("/api/clients/{cid}/access")', 1)[1].split("\n@app.", 1)[0]
+        self.assertNotIn("status=CASE WHEN", block)
+        self.assertNotIn("status='Активний'", block)
+        self.assertIn("FOR UPDATE", block)
+        self.assertIn('if not access["features"].get("workouts",False):', block)
+        self.assertIn("status='training'", block)
+
+    def test_review_side_effects_are_coaching_only(self):
+        self.assertIn("require_active_client(rec[\"client_id\"],'trainer_review')", APP)
+        self.assertIn('if access["features"].get("trainer_review",False):', APP)
+        self.assertIn('kind in {"workout_finished","cardio","comment"}', APP)
+
     def test_frontend_respects_tariff_contract(self):
         self.assertIn("features.workouts?item('training'", CORE)
         self.assertIn("features.nutrition?item('nutrition'", CORE)
         self.assertIn("checkinEnabled=!!features.checkin", HOME)
         self.assertIn("nutritionEnabled=!!features.nutrition", HOME)
         self.assertIn("features?.meal_plan?", NUTRITION)
+        measurements = (ROOT / "backend" / "static" / "js" / "measurements.js").read_text(encoding="utf-8")
+        trainer = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
+        self.assertIn("hasFeature('measurements'", measurements)
+        self.assertIn("isoAddMonthsFrom", trainer)
+        self.assertIn("trainerAccessIsActive", trainer)
 
     def test_no_unfinished_program_template_placeholder(self):
         self.assertNotIn("Конструктор шаблонів програм додамо наступним етапом", TRAINER)
