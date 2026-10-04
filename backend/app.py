@@ -1565,7 +1565,10 @@ def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
     # Trainer creates the client by real email. The client sets their own password from the invitation.
     initial_password=secrets.token_urlsafe(32)
     try:
-        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs) VALUES(?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs))
+        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs,trainer_id) VALUES(?,?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs,user.user_id))
+        run("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
+               VALUES(?,?,CURRENT_TIMESTAMP,NULL)
+               ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,i))
         if x.weight: run("INSERT INTO measurements(client_id,day,weight) VALUES(?,?,?)",(i,str(kyiv_today()),x.weight))
         token=issue_password_reset_token(i,timedelta(hours=24))
         base=os.getenv("APP_BASE_URL","").rstrip("/")
@@ -1947,6 +1950,8 @@ def update_trainer_request(request_id:int,x:TrainerRequestStatusIn,user:AuthUser
         if not req: raise HTTPException(404,"Запит не знайдено")
         db.execute("UPDATE trainer_requests SET status=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",(x.status,request_id))
         if x.status=="accepted":
+            db.execute("""UPDATE trainer_client_history SET ended_at=CURRENT_TIMESTAMP
+                          WHERE client_id=%s AND trainer_id<>%s AND ended_at IS NULL""",(req["client_id"],user.user_id))
             db.execute("UPDATE clients SET trainer_id=%s WHERE id=%s",(user.user_id,req["client_id"]))
             db.execute("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
                           VALUES(%s,%s,CURRENT_TIMESTAMP,NULL)
