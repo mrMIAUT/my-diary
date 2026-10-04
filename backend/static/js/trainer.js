@@ -26,9 +26,12 @@ function trainerAccessIsActive(c){
 }
 function trainerAttention(c){
  let a=clientAccess(c);
+ if(c.live_status==='Тренується')return {level:'training',label:'Тренується зараз',reason:'Активне тренування'};
  if(!trainerAccessIsActive(c))return {level:'paused',label:'На паузі',reason:a.plan_code==='free'?'Безкоштовний режим':'Доступ неактивний'};
  if(!a.features?.trainer_review)return {level:'paused',label:'Без супроводу',reason:a.plan_name||'Самостійний тариф'};
  let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0,comp=trainerCompliance(c),days=trainerDaysSince(c.last_finished_at);
+ let createdDays=trainerDaysSince(c.created_at),finished=+c.finished_workout_count||0;
+ if(finished===0&&createdDays!==null&&createdDays<7)return {level:'new',label:'Новий клієнт',reason:'Початок роботи'};
  let reasons=[];
  if(review)reasons.push('Тренування до перевірки: '+review);
  if(check)reasons.push('Щотижневі звіти: '+check);
@@ -36,7 +39,7 @@ function trainerAttention(c){
  if(days===null&&(+c.finished_workout_count||0)===0)reasons.push('Ще немає завершених тренувань');
  if(comp!==null&&comp<60)reasons.push('Дотримання плану '+comp+'%');
  if((+c.kcal||0)>0&&(+c.nutrition_days_7d||0)<3)reasons.push('Харчування заповнюється рідко');
- if((days!==null&&days>=14)||(comp!==null&&comp<40))return {level:'risk',label:'Ризик',reason:reasons[0]||'Потрібна увага'};
+ if((days!==null&&days>=14)||(finished>0&&comp!==null&&comp<40))return {level:'risk',label:'Ризик',reason:reasons[0]||'Потрібна увага'};
  if(reasons.length)return {level:'attention',label:'Потребує уваги',reason:reasons[0]};
  return {level:'ok',label:'Все добре',reason:'План виконується стабільно'};
 }
@@ -56,7 +59,7 @@ async function trainerHome(){
  let avgComp=comps.length?Math.round(comps.reduce((a,b)=>a+b,0)/comps.length):0;
  let avatars=cs.slice(0,4).map(c=>'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>').join('');
  let recent=states.slice().sort((a,b)=>{
-   let rank={risk:0,attention:1,ok:2,paused:3};return rank[a.state.level]-rank[b.state.level];
+   let rank={training:0,risk:1,attention:2,new:3,ok:4,paused:5};return rank[a.state.level]-rank[b.state.level];
  }).slice(0,5).map(({c,state})=>{
    return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(state.reason)+'</small></span><span class="trainer-smart-status '+state.level+'">'+esc(state.label)+'</span><span class="more-chevron">›</span></button>'
  }).join('');
@@ -75,7 +78,7 @@ async function trainerHome(){
      <button onclick="newClient()"><span class="trainer-stat-icon blue">${uiIcon('plus')}</span><strong>＋</strong><small>Новий клієнт</small><em>Додати ›</em></button>
    </div>
 
-   <div class="trainer-home-section-head"><h2>Потребує уваги</h2><button onclick="window.trainerHomeFilter='review';showTrainerClientsView()">Усі ›</button></div>
+   <div class="trainer-home-section-head"><h2>Статус клієнтів</h2><button onclick="window.trainerHomeFilter=\'all\';showTrainerClientsView()">Усі ›</button></div>
    <div class="trainer-activity-card">${recent||'<div class="trainer-empty">Клієнтів ще немає.</div>'}</div>
  </div>`);
  refreshTrainerGlobalBadge()
