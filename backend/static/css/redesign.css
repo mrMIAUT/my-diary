@@ -13318,3 +13318,161 @@ body.eplan-redesign.trainer-ui .trainer-avatar-crop-save{
 body.eplan-redesign.trainer-ui .trainer-avatar-crop-save:disabled{
   opacity:.62;
 }
+
+
+/* Collapsible trainer profile editor v1 */
+body.eplan-redesign.trainer-ui .trainer-public-profile-editor.is-collapsed{
+  padding-bottom:18px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed{
+  padding:16px;
+  border:1px solid #dfe7f2;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 96% 0%,rgba(22,119,255,.08),transparent 32%),
+    #fff;
+  box-shadow:0 8px 24px rgba(35,70,108,.05);
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-top{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed .trainer-profile-editor-avatar{
+  width:72px;
+  height:72px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-copy{
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-copy h2{
+  margin:5px 0 3px;
+  color:#0a1738;
+  font-size:20px;
+  line-height:1.05;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-copy p{
+  margin:0;
+  color:#6f7f95;
+  font-size:11px;
+  line-height:1.35;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-copy small{
+  display:block;
+  margin-top:6px;
+  color:#f0a000;
+  font-size:10px;
+  font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-status{
+  display:inline-flex;
+  padding:5px 8px;
+  border-radius:999px;
+  background:#eef3f8;
+  color:#6d7c91;
+  font-size:9px;
+  font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-status.open{
+  background:#e9f8ef;
+  color:#188553;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-stats{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-stats>div{
+  padding:11px 8px;
+  text-align:center;
+  border:1px solid #e3eaf3;
+  border-radius:14px;
+  background:#f8fafc;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-stats strong{
+  display:block;
+  color:#0b1838;
+  font-size:14px;
+  line-height:1.1;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-stats span{
+  display:block;
+  margin-top:4px;
+  color:#7d899a;
+  font-size:8.5px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-tags span{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#eef5ff;
+  color:#35648f;
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapsed-bio{
+  margin:12px 0 0;
+  color:#68798f;
+  font-size:11px;
+  line-height:1.45;
+  white-space:pre-wrap;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-edit-toggle{
+  width:100%;
+  min-height:44px;
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border-radius:13px!important;
+  background:#eef5ff!important;
+  color:#1677ff!important;
+  border:1px solid #d9e8fb!important;
+  box-shadow:none!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-edit-toggle .ui-icon{
+  width:16px;
+  height:16px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-form-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:2px;
+  padding-bottom:10px;
+  border-bottom:1px solid #edf1f6;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-form-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-form-head strong{
+  color:#0b1838;
+  font-size:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-form-head span{
+  color:#7b8799!important;
+  font-size:9.5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-profile-collapse-btn{
+  flex:0 0 auto;
+  padding:7px 9px!important;
+  border-radius:10px!important;
+  background:#eef3f8!important;
+  color:#64758c!important;
+  border:1px solid #dbe4ee!important;
+  box-shadow:none!important;
+  font-size:9.5px!important;
+}
