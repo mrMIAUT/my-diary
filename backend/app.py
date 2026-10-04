@@ -884,6 +884,12 @@ def init():
         )""")
         c.execute("ALTER TABLE trainer_profiles ADD COLUMN IF NOT EXISTS max_active_clients INTEGER NOT NULL DEFAULT 0")
         c.execute("ALTER TABLE trainer_profiles ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL DEFAULT ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_profile_media(
+            trainer_id INTEGER PRIMARY KEY REFERENCES trainer_profiles(trainer_id) ON DELETE CASCADE,
+            avatar_data BYTEA NOT NULL,
+            avatar_media_type TEXT NOT NULL DEFAULT 'image/jpeg',
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
         c.execute("""CREATE TABLE IF NOT EXISTS trainer_client_history(
             id BIGSERIAL PRIMARY KEY,
             trainer_id INTEGER NOT NULL,
@@ -1620,11 +1626,14 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
 
 def trainer_profile_stats_row(trainer_id:int):
     return one("""SELECT p.*,
+      (m.trainer_id IS NOT NULL) AS has_avatar,
+      m.updated_at AS avatar_updated_at,
       COALESCE(a.active_clients,0) AS active_clients,
       COALESCE(h.total_clients,0) AS total_clients,
       COALESCE(r.rating_avg,0) AS rating_avg,
       COALESCE(r.rating_count,0) AS rating_count
     FROM trainer_profiles p
+    LEFT JOIN trainer_profile_media m ON m.trainer_id=p.trainer_id
     LEFT JOIN (
       SELECT trainer_id,COUNT(*) AS active_clients
       FROM clients
@@ -1649,7 +1658,13 @@ def trainer_profile_response(row:dict|None,request_status:str=""):
     active=int(row.get("active_clients") or 0)
     capacity=max(0,int(row.get("max_active_clients") or 0))
     spots_left=max(0,capacity-active) if capacity else None
-    avatar=str(row.get("avatar") or "")
+    legacy_avatar=str(row.get("avatar") or "")
+    legacy_avatar_ok=False
+    if legacy_avatar and Path(legacy_avatar).name==legacy_avatar and legacy_avatar.startswith("trainer_avatar_"):
+        try: legacy_avatar_ok=(UPLOADS/legacy_avatar).is_file()
+        except OSError: legacy_avatar_ok=False
+    has_avatar=bool(row.get("has_avatar")) or legacy_avatar_ok
+    avatar_version=row.get("avatar_updated_at") or row.get("updated_at")
     return {
         "trainer_id":row["trainer_id"],
         "display_name":row.get("display_name") or "Тренер ЄПЛАН",
@@ -1666,7 +1681,7 @@ def trainer_profile_response(row:dict|None,request_status:str=""):
         "rating_avg":float(row.get("rating_avg") or 0),
         "rating_count":int(row.get("rating_count") or 0),
         "spots_left":spots_left,
-        "avatar_url":("/api/trainers/"+str(row["trainer_id"])+"/avatar?v="+str(int(row["updated_at"].timestamp()))) if avatar and row.get("updated_at") else ("/api/trainers/"+str(row["trainer_id"])+"/avatar" if avatar else ""),
+        "avatar_url":("/api/trainers/"+str(row["trainer_id"])+"/avatar?v="+str(int(avatar_version.timestamp()))) if has_avatar and avatar_version else ("/api/trainers/"+str(row["trainer_id"])+"/avatar" if has_avatar else ""),
         "accepting_clients":bool(row.get("accepting_clients")) and (spots_left is None or spots_left>0),
         "is_published":bool(row.get("is_published")),
         "request_status":request_status or "",
@@ -1675,11 +1690,14 @@ def trainer_profile_response(row:dict|None,request_status:str=""):
 @app.get("/api/trainers")
 def list_trainers(user:AuthUser=Depends(current_user)):
     profiles=rows("""SELECT p.*,
+      (m.trainer_id IS NOT NULL) AS has_avatar,
+      m.updated_at AS avatar_updated_at,
       COALESCE(a.active_clients,0) AS active_clients,
       COALESCE(h.total_clients,0) AS total_clients,
       COALESCE(r.rating_avg,0) AS rating_avg,
       COALESCE(r.rating_count,0) AS rating_count
     FROM trainer_profiles p
+    LEFT JOIN trainer_profile_media m ON m.trainer_id=p.trainer_id
     LEFT JOIN (
       SELECT trainer_id,COUNT(*) AS active_clients
       FROM clients
@@ -1780,33 +1798,43 @@ def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trai
 def upload_trainer_avatar(file:UploadFile=File(...),user:AuthUser=Depends(require_trainer)):
     consume_rate_limit("upload.actor",f"{user.role}:{user.user_id}")
     content_type=(file.content_type or "").split(";",1)[0].strip().lower()
-    data,_,extension=normalize_avatar(read_screenshot_bytes(file.file),content_type)
-    name="trainer_avatar_"+str(user.user_id)+"_"+secrets.token_hex(16)+extension
-    target=UPLOADS/name
+    data,media_type,_=normalize_avatar(read_screenshot_bytes(file.file),content_type)
     old=one("SELECT avatar FROM trainer_profiles WHERE trainer_id=?",(user.user_id,))
-    try:
-        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-        with os.fdopen(fd,"wb") as f:
-            if f.write(data)!=len(data):raise OSError("Incomplete avatar write")
-            f.flush();os.fsync(f.fileno())
-        run("UPDATE trainer_profiles SET avatar=?,updated_at=CURRENT_TIMESTAMP WHERE trainer_id=?",(name,user.user_id))
-    except Exception:
-        try:target.unlink(missing_ok=True)
-        except OSError:pass
-        raise HTTPException(500,"Не вдалося зберегти фото") from None
+    with con() as db:
+        profile=db.execute("SELECT trainer_id FROM trainer_profiles WHERE trainer_id=%s FOR UPDATE",(user.user_id,)).fetchone()
+        if not profile: raise HTTPException(404,"Профіль тренера не знайдено")
+        db.execute("""INSERT INTO trainer_profile_media(trainer_id,avatar_data,avatar_media_type,updated_at)
+                      VALUES(%s,%s,%s,CURRENT_TIMESTAMP)
+                      ON CONFLICT(trainer_id) DO UPDATE SET
+                        avatar_data=EXCLUDED.avatar_data,
+                        avatar_media_type=EXCLUDED.avatar_media_type,
+                        updated_at=CURRENT_TIMESTAMP""",
+                   (user.user_id,data,media_type))
+        db.execute("UPDATE trainer_profiles SET avatar='',updated_at=CURRENT_TIMESTAMP WHERE trainer_id=%s",(user.user_id,))
+        db.commit()
     old_name=str((old or {}).get("avatar") or "")
-    if old_name and old_name!=name:
+    if old_name and Path(old_name).name==old_name and old_name.startswith("trainer_avatar_"):
         try:(UPLOADS/old_name).unlink(missing_ok=True)
         except OSError:pass
     return {"avatar_url":"/api/trainers/"+str(user.user_id)+"/avatar"}
 
 @app.get("/api/trainers/{trainer_id}/avatar")
 def trainer_avatar(trainer_id:int,user:AuthUser=Depends(current_user)):
-    row=one("SELECT avatar,is_published FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
-    if not row or not row["avatar"] or (not row["is_published"] and user.role!="trainer"):
+    profile=one("SELECT avatar,is_published FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    if not profile or (not profile["is_published"] and user.role!="trainer"):
         raise HTTPException(404,"Фото не знайдено")
-    name=str(row["avatar"])
-    if Path(name).name!=name or not name.startswith("trainer_avatar_"):raise HTTPException(404,"Фото не знайдено")
+    media=one("""SELECT avatar_data,avatar_media_type
+                 FROM trainer_profile_media WHERE trainer_id=?""",(trainer_id,))
+    if media and media.get("avatar_data"):
+        data=bytes(media["avatar_data"])
+        # Defense in depth: stored bytes are revalidated before response.
+        clean,media_type,_=normalize_avatar(data,str(media.get("avatar_media_type") or "image/jpeg"))
+        return Response(content=clean,media_type=media_type,
+                        headers={"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"})
+    # One-release compatibility fallback for avatars uploaded before durable DB storage.
+    name=str(profile.get("avatar") or "")
+    if not name or Path(name).name!=name or not name.startswith("trainer_avatar_"):
+        raise HTTPException(404,"Фото не знайдено")
     file=UPLOADS/name
     try:
         if file.is_symlink():raise HTTPException(404,"Фото не знайдено")
@@ -1814,7 +1842,8 @@ def trainer_avatar(trainer_id:int,user:AuthUser=Depends(current_user)):
         clean,media_type,_=normalize_avatar(data)
     except (OSError,HTTPException):
         raise HTTPException(404,"Фото не знайдено") from None
-    return Response(content=clean,media_type=media_type,headers={"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"})
+    return Response(content=clean,media_type=media_type,
+                    headers={"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"})
 
 @app.get("/api/trainers/{trainer_id}/reviews")
 def trainer_reviews(trainer_id:int,limit:int=Query(8,ge=1,le=30),user:AuthUser=Depends(current_user)):
