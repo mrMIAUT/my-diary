@@ -209,15 +209,28 @@ async function addExercise(button=null){
 
 
 function addSupersetExercise(sourceId,dayName){
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal"><div class="card"><div class="between"><div><h2>Додати суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark" onclick="supersetModal.remove()">✕</button></div><p class="muted">Нова вправа буде автоматично об'єднана з вибраною вправою в один суперсет.</p><div class="grid"><input id="ssex" placeholder="Друга вправа"><input id="sssets" type="number" value="3" placeholder="Підходи"><input id="ssreps" value="8-12" placeholder="Повтори"><input id="ssrir" type="number" value="2" placeholder="RIR"><input id="ssrirset" value="2,2,2" placeholder="RIR по підходах"><input id="ssrest" value="2" placeholder="Відпочинок, хв (напр. 2-3)"></div><br><button data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day)">+ Додати в суперсет</button></div></div>`)
+ document.getElementById('supersetModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">＋ Додати в суперсет</button></div></div>`);
+ setTimeout(()=>document.getElementById('ssex')?.focus(),30);
 }
 
-async function saveSupersetExercise(sourceId,dayName){
- if(!ssex.value)return alert('Вкажи вправу');
- let group='SS'+sourceId;
- await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
- await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise:ssex.value,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:'',rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
- supersetModal.remove();openClient(selected)
+async function saveSupersetExercise(sourceId,dayName,button=null){
+ let exercise=(document.getElementById('ssex')?.value||'').trim();
+ if(!exercise)return alert('Вкажи вправу');
+ let technique=(document.getElementById('sstech')?.value||'').trim();
+ if(technique&&!safeTechniqueUrl(technique))return alert('Посилання на техніку має починатися з https://');
+ technique=safeTechniqueUrl(technique);
+ let restore=setActionLoading(button,'Додаємо…');
+ try{
+   let group='SS'+sourceId;
+   await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
+   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
+   supersetModal.remove();
+   await openClient(selected);
+ }catch(e){
+   restore();
+   alert(e.message||'Не вдалося додати вправу в суперсет');
+ }
 }
 
 
