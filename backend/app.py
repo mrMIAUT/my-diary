@@ -997,6 +997,53 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(client_id,week_start)
         )""")
+        # Production may contain a legacy/partial weekly_checkins table from an
+        # older release. CREATE TABLE IF NOT EXISTS does not upgrade its shape,
+        # so repair the additive columns before creating indexes or serving API.
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS week_start DATE")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS mood INTEGER")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS sleep INTEGER")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS hunger INTEGER")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS energy INTEGER")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS difficulty INTEGER")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS comment TEXT")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS reviewed BOOLEAN")
+        c.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ")
+        c.execute("""UPDATE weekly_checkins
+                     SET created_at=COALESCE(created_at,CURRENT_TIMESTAMP),
+                         week_start=COALESCE(
+                           week_start,
+                           (COALESCE(created_at,CURRENT_TIMESTAMP)::date
+                            - (EXTRACT(ISODOW FROM COALESCE(created_at,CURRENT_TIMESTAMP)::date)::int - 1))
+                         ),
+                         mood=COALESCE(mood,3),
+                         sleep=COALESCE(sleep,3),
+                         hunger=COALESCE(hunger,3),
+                         energy=COALESCE(energy,3),
+                         difficulty=COALESCE(difficulty,3),
+                         comment=COALESCE(comment,''),
+                         reviewed=COALESCE(reviewed,FALSE)
+                     WHERE created_at IS NULL OR week_start IS NULL OR mood IS NULL
+                        OR sleep IS NULL OR hunger IS NULL OR energy IS NULL
+                        OR difficulty IS NULL OR comment IS NULL OR reviewed IS NULL""")
+        c.execute("""DELETE FROM weekly_checkins a
+                     USING weekly_checkins b
+                     WHERE a.client_id=b.client_id
+                       AND a.week_start=b.week_start
+                       AND a.id<b.id""")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN week_start SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN mood SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN sleep SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN hunger SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN energy SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN difficulty SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN comment SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN comment SET DEFAULT ''")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN reviewed SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN reviewed SET DEFAULT FALSE")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN created_at SET NOT NULL")
+        c.execute("ALTER TABLE weekly_checkins ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_weekly_checkins_client_week ON weekly_checkins(client_id,week_start)")
         c.execute("CREATE INDEX IF NOT EXISTS ix_weekly_checkins_client_week ON weekly_checkins(client_id,week_start DESC)")
 
         # M03A additive migration: business tables and H05 migration are unchanged.
