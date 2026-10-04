@@ -59,8 +59,8 @@ function todaySets(d,pid){
 
 
 function completedExerciseHTML(x,d,cid){
- let done=todaySets(d,x.id);
- if(!done.length)return setRows(x,d)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${x.sets})">Закінчити вправу</button>`;
+ let done=todaySets(d,x.id),total=workoutExerciseSetCount(x,d);
+ if(!done.length)return setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
  let performed=done[0]?.exercise||x.exercise;
  return `<div class="workout-completed-summary">
    <div class="workout-completed-summary-head">
@@ -71,7 +71,7 @@ function completedExerciseHTML(x,d,cid){
    <div class="workout-completed-sets">
      ${done.map(s=>`<div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>`).join('')}
    </div>
-   <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${x.sets},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
+   <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0))},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
 }
 
@@ -113,6 +113,47 @@ function workoutDraftKey(sid,pid){let scope=offlineLocalScopeKey();return scope?
 function readWorkoutDraft(sid,pid){try{let k=workoutDraftKey(sid,pid);return k?(JSON.parse(localStorage.getItem(k)||'{}')||{}):{}}catch(e){return {}}}
 
 function saveWorkoutDraft(sid,pid,n,field,value){if(!sid)return;let k=workoutDraftKey(sid,pid);if(!k)return;let d=readWorkoutDraft(sid,pid);d[n]=d[n]||{};d[n][field]=value;try{localStorage.setItem(k,JSON.stringify(d))}catch(e){}}
+
+function saveWorkoutDraftSetCount(sid,pid,count){
+ if(!sid)return;
+ let k=workoutDraftKey(sid,pid);if(!k)return;
+ let d=readWorkoutDraft(sid,pid);d.__set_count=Math.max(1,Math.min(100,+count||1));
+ try{localStorage.setItem(k,JSON.stringify(d))}catch(e){}
+}
+function workoutExerciseSetCount(x,d){
+ let planned=Math.max(1,+x?.sets||1),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x?.id),draftCount=+draft.__set_count||0;
+ let actual=Math.max(0,...todaySets(d,x?.id).map(s=>+s.set_number||0));
+ return Math.max(planned,draftCount,actual);
+}
+function addWorkoutExtraSet(cid,pid){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
+ if(!x||!sid)return;
+ let count=workoutExerciseSetCount(x,d);
+ if(count>=100)return alert('Досягнуто максимальну кількість підходів.');
+ saveWorkoutDraftSetCount(sid,pid,count+1);
+ let body=document.getElementById('exerciseBody'+pid);
+ if(body){
+   body.innerHTML=completedExerciseHTML(x,d,cid);
+   body.classList.remove('hidden');
+ }
+}
+function removeWorkoutExtraSet(cid,pid){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
+ if(!x||!sid)return;
+ let planned=Math.max(1,+x.sets||1),count=workoutExerciseSetCount(x,d);
+ if(count<=planned)return;
+ let draft=readWorkoutDraft(sid,pid),row=draft[count]||{};
+ if(row.done)return alert('Завершений додатковий підхід спочатку потрібно відредагувати.');
+ let hasValues=['weight','reps','rir'].some(k=>row[k]!==undefined&&row[k]!==null&&String(row[k]).trim()!=='');
+ if(hasValues&&!confirm('Прибрати додатковий підхід разом із введеними даними?'))return;
+ delete draft[count];draft.__set_count=count-1;
+ try{let k=workoutDraftKey(sid,pid);if(k)localStorage.setItem(k,JSON.stringify(draft))}catch(e){}
+ let body=document.getElementById('exerciseBody'+pid);
+ if(body){
+   body.innerHTML=completedExerciseHTML(x,d,cid);
+   body.classList.remove('hidden');
+ }
+}
 
 function clearWorkoutDraft(sid,pid){if(!sid)return;try{let k=workoutDraftKey(sid,pid);if(k)localStorage.removeItem(k)}catch(e){}}
 

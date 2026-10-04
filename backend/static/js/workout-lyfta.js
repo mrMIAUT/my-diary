@@ -107,27 +107,31 @@ function showExerciseProgressHistory(pid){
   document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(exerciseName||x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
 }
 
-function setRows(x,d){
+function setRows(x,d,cid){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
-  let hasPrev=prev.length>0;
+  let hasPrev=prev.length>0,total=workoutExerciseSetCount(x,d),planned=Math.max(1,+x.sets||1);
   let h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span></div>';
-  for(let n=1;n<=x.sets;n++){
-    let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done;
-    let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';
-    h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+'">'
-      +'<div class="lyfta-prev-line"><span>Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
-      +'<div class="lyfta-set-row'+(done?' is-complete':'')+'"><div class="setnum">'+n+'</div>'
+  for(let n=1;n<=total;n++){
+    let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned;
+    let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??rp[rp.length-1]??'';
+    h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'">'
+      +'<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
+      +'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
         +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
-        +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+x.sets+','+restAfterSet+',this)">✓</button>'
+        +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+total+','+restAfterSet+',this)">✓</button>'
       +'</div>'
     +'</div>';
   }
+  let extras=Math.max(0,total-planned);
+  let extraActions='<div class="lyfta-extra-set-actions"><button type="button" class="lyfta-add-set" onclick="addWorkoutExtraSet('+cid+','+x.id+')">＋ Додати підхід</button>'
+    +(extras?'<button type="button" class="lyfta-remove-set" onclick="removeWorkoutExtraSet('+cid+','+x.id+')">− Прибрати останній</button>':'')
+    +'</div>';
   return '<div class="lyfta-workout-tools">'
     +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
     +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
-    +'</div>'+h;
+    +'</div>'+h+extraActions;
 }
