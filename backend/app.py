@@ -2788,7 +2788,7 @@ def cancel_workout(sid:int,user:AuthUser=Depends(require_client)):
         if not c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone():
             raise HTTPException(404,"Клієнта не знайдено")
         row=c.execute("""SELECT *,
-                               GREATEST(0,EXTRACT(EPOCH FROM (clock_timestamp()::timestamp-started_at))) AS age_seconds
+                               COALESCE(GREATEST(0,EXTRACT(EPOCH FROM (clock_timestamp()::timestamp-started_at))),999999) AS age_seconds
                         FROM workout_sessions
                         WHERE id=%s FOR UPDATE""",(sid,)).fetchone()
         if not row:
