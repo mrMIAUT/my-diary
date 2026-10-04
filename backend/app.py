@@ -750,6 +750,11 @@ def init():
         c.execute("ALTER TABLE exercise_library ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'platform'")
         c.execute("UPDATE exercise_library SET visibility='platform' WHERE visibility IS NULL OR visibility=''")
         c.execute("CREATE INDEX IF NOT EXISTS ix_exercise_library_owner ON exercise_library(owner_trainer_id,visibility)")
+        c.execute("ALTER TABLE exercise_library DROP CONSTRAINT IF EXISTS exercise_library_group_id_name_key")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_exercise_library_platform_name
+                     ON exercise_library(group_id,lower(name)) WHERE owner_trainer_id IS NULL""")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_exercise_library_trainer_name
+                     ON exercise_library(owner_trainer_id,group_id,lower(name)) WHERE owner_trainer_id IS NOT NULL""")
         c.execute("""CREATE TABLE IF NOT EXISTS muscles(
             id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, sort INTEGER DEFAULT 0
         )""")
@@ -2187,7 +2192,9 @@ def add_library_exercise(x:ExerciseLibraryIn,user:AuthUser=Depends(require_train
     technique_url=require_technique_url(x.technique_url)
     with con() as c:
         if not c.execute("SELECT id FROM exercise_groups WHERE id=%s FOR UPDATE",(x.group_id,)).fetchone(): raise HTTPException(404,"Групу не знайдено")
-        old=c.execute("SELECT id FROM exercise_library WHERE group_id=%s AND lower(name)=lower(%s) FOR UPDATE",(x.group_id,name)).fetchone()
+        old=c.execute("""SELECT id FROM exercise_library
+                         WHERE group_id=%s AND lower(name)=lower(%s) AND owner_trainer_id=%s
+                         FOR UPDATE""",(x.group_id,name,user.user_id)).fetchone()
         if old:
             eid=old["id"]
             c.execute("UPDATE exercise_library SET technique_url=%s WHERE id=%s",(technique_url,eid))
@@ -2212,8 +2219,17 @@ def edit_library_exercise(eid:int,x:ExerciseLibraryIn,user:AuthUser=Depends(requ
         elif int(exercise["owner_trainer_id"])!=user.user_id:
             raise HTTPException(403,"Це вправа іншого тренера")
         if not c.execute("SELECT id FROM exercise_groups WHERE id=%s FOR UPDATE",(x.group_id,)).fetchone(): raise HTTPException(404,"Групу не знайдено")
-        duplicate=c.execute("SELECT id FROM exercise_library WHERE group_id=%s AND lower(name)=lower(%s) AND id<>%s",(x.group_id,name,eid)).fetchone()
-        if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є в цій групі")
+        if exercise["owner_trainer_id"] is None:
+            duplicate=c.execute("""SELECT id FROM exercise_library
+                                   WHERE group_id=%s AND lower(name)=lower(%s)
+                                     AND id<>%s AND owner_trainer_id IS NULL""",
+                                (x.group_id,name,eid)).fetchone()
+        else:
+            duplicate=c.execute("""SELECT id FROM exercise_library
+                                   WHERE group_id=%s AND lower(name)=lower(%s)
+                                     AND id<>%s AND owner_trainer_id=%s""",
+                                (x.group_id,name,eid,user.user_id)).fetchone()
+        if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є у цій бібліотеці")
         c.execute("UPDATE exercise_library SET group_id=%s,name=%s,technique_url=%s WHERE id=%s",(x.group_id,name,technique_url,eid))
         save_exercise_muscles(c,eid,x)
         c.commit()
