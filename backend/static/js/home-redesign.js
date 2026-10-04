@@ -59,8 +59,30 @@ function homeTrainerInitials(name){
   return (parts.slice(0,2).map(x=>x[0]).join('')||'ТР').toUpperCase();
 }
 
+function trainerCardAvatarHTML(p,cls=''){
+  return p.avatar_url
+    ?'<span class="client-home-trainer-avatar '+cls+' has-photo"><img src="'+esc(p.avatar_url)+'" alt="'+esc(p.display_name||'Тренер ЄПЛАН')+'"></span>'
+    :'<span class="client-home-trainer-avatar '+cls+'">'+esc(homeTrainerInitials(p.display_name))+'</span>';
+}
+
+function trainerAvailabilityText(p){
+  if(p.is_current_trainer)return 'Твій тренер';
+  if(p.request_status==='pending')return 'Запит надіслано';
+  if(!p.accepting_clients)return 'Набір закрито';
+  if(Number.isFinite(+p.spots_left)&&+p.spots_left>0)return 'Вільних місць: '+p.spots_left;
+  return 'Набирає клієнтів';
+}
+
+function trainerRatingText(p){
+  return +p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★ · '+p.rating_count+' відгук'+(+p.rating_count===1?'':'ів'):'Новий тренер';
+}
+
 function redesignHomeTrainersHTML(trainers,cid){
-  let xs=(trainers||[]).slice().sort((a,b)=>(b.is_current_trainer?1:0)-(a.is_current_trainer?1:0)).slice(0,4);
+  let xs=(trainers||[]).slice().sort((a,b)=>{
+    if(!!a.is_current_trainer!==!!b.is_current_trainer)return a.is_current_trainer?-1:1;
+    if((+b.rating_count||0)!=(+a.rating_count||0))return (+b.rating_count||0)-(+a.rating_count||0);
+    return (+b.rating_avg||0)-(+a.rating_avg||0);
+  }).slice(0,4);
   if(!xs.length)return '';
   return '<div class="client-home-trainers">'
     +'<div class="client-home-section-head client-home-trainers-head">'
@@ -69,12 +91,15 @@ function redesignHomeTrainersHTML(trainers,cid){
     +'</div>'
     +'<div class="client-home-trainers-row">'
       +xs.map(p=>{
-        let status=p.is_current_trainer?'Твій тренер':p.request_status==='pending'?'Запит надіслано':p.accepting_clients?'Набирає клієнтів':'Набір закрито';
         let cls=p.is_current_trainer?' current':p.accepting_clients?' open':'';
-        return '<button class="client-home-trainer-card'+cls+'" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
-          +'<span class="client-home-trainer-avatar">'+esc(homeTrainerInitials(p.display_name))+'</span>'
+        let capacity=(+p.max_active_clients||0)>0?Math.min(100,Math.round((+p.active_clients||0)/(+p.max_active_clients||1)*100)):0;
+        return '<button class="client-home-trainer-card premium'+cls+'" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+          +trainerCardAvatarHTML(p)
           +'<span class="client-home-trainer-copy"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><small>'+esc(p.headline||'Персональний тренер')+'</small></span>'
-          +'<span class="client-home-trainer-status">'+esc(status)+'</span>'
+          +'<span class="client-home-trainer-rating">'+esc(trainerRatingText(p))+'</span>'
+          +'<span class="client-home-trainer-meta"><b>'+esc(String(+p.active_clients||0))+'</b> зараз · <b>'+esc(String(+p.total_clients||0))+'</b> всього</span>'
+          +'<span class="client-home-trainer-status">'+esc(trainerAvailabilityText(p))+'</span>'
+          +((+p.max_active_clients||0)>0?'<span class="client-home-trainer-capacity"><i style="width:'+capacity+'%"></i></span>':'')
           +'<span class="client-home-trainer-arrow">›</span>'
         +'</button>';
       }).join('')
