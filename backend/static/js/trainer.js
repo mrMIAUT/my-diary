@@ -356,9 +356,9 @@ async function saveTrainerAvatarCrop(btn){
   let s=trainerAvatarCropState;if(!s)return;
   if(btn){btn.disabled=true;btn.textContent='Обробляємо…'}
   try{
-    let scale=s.baseScale*s.zoom;
+    let scale=s.baseScale*s.zoom,ringInset=12,cropSize=s.size-ringInset*2;
     clampTrainerAvatarCrop();
-    let sx=Math.max(0,-s.x/scale),sy=Math.max(0,-s.y/scale),sw=s.size/scale,sh=s.size/scale;
+    let sx=Math.max(0,(ringInset-s.x)/scale),sy=Math.max(0,(ringInset-s.y)/scale),sw=cropSize/scale,sh=cropSize/scale;
     let source=document.getElementById('trainerAvatarCropImage');
     let canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
     let ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('Не вдалося обробити фото');
