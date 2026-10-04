@@ -1048,7 +1048,7 @@ def _log_staging_profile_snapshot():
                 for key,value in list(payload[section].items()):
                     if isinstance(value,(datetime,date)):
                         payload[section][key]=value.isoformat()
-        logger.info("STAGING_PROFILE_SNAPSHOT "+json.dumps(payload,ensure_ascii=False,separators=(",",":")))
+        logger.warning("STAGING_PROFILE_SNAPSHOT "+json.dumps(payload,ensure_ascii=False,separators=(",",":")))
     except Exception as exc:
         logger.warning("STAGING_PROFILE_SNAPSHOT_ERROR %s",type(exc).__name__)
 
