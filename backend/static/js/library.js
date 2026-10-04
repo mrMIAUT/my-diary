@@ -25,6 +25,9 @@ async function showExerciseLibrary(){
  let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]};
  let groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0),scopeFilter=String(window.libraryScopeFilter||'all'),q=String(window.librarySearch||'').trim().toLowerCase();
  let groups=groupFilter?L.groups.filter(g=>+g.id===groupFilter):L.groups;
+ let groupLabel=groupFilter?(L.groups.find(g=>+g.id===groupFilter)?.name||'Усі'):'Усі';
+ let muscleLabel=muscleFilter?(L.muscles.find(m=>+m.id===muscleFilter)?.name||'Усі'):'Усі';
+ let scopeLabel=scopeFilter==='platform'?'ЄПЛАН':scopeFilter==='trainer'?'Мої вправи':'Усі';
  let exerciseVisible=x=>{
    if(scopeFilter!=='all'&&String(x.scope||'platform')!==scopeFilter)return false;
    if(muscleFilter&&!libraryExerciseMuscleIds(x).includes(muscleFilter))return false;
@@ -34,10 +37,19 @@ async function showExerciseLibrary(){
  let visibleCount=L.exercises.filter(exerciseVisible).length;
  let filterCard=`<div class="trainer-library-tools">
    <label class="trainer-search trainer-library-search">${uiIcon('menu')}<input value="${esc(window.librarySearch||'')}" placeholder="Пошук вправи..." oninput="window.librarySearch=this.value;showExerciseLibrary()"></label>
-   <div class="trainer-library-filters">
-     <select id="libraryGroupFilter" onchange="setLibraryFilters()"><option value="0">Усі групи</option>${L.groups.map(g=>`<option value="${g.id}" ${groupFilter===+g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
-     <select id="libraryMuscleFilter" onchange="setLibraryFilters()"><option value="0">Усі м’язи</option>${L.muscles.map(m=>`<option value="${m.id}" ${muscleFilter===+m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
-     <select id="libraryScopeFilter" onchange="setLibraryFilters()"><option value="all" ${scopeFilter==='all'?'selected':''}>Усі бібліотеки</option><option value="platform" ${scopeFilter==='platform'?'selected':''}>ЄПЛАН</option><option value="trainer" ${scopeFilter==='trainer'?'selected':''}>Мої вправи</option></select>
+   <div class="trainer-library-filter-strip" aria-label="Фільтри бібліотеки">
+     <label class="trainer-library-filter-chip">
+       <span>Групи</span><strong>${esc(groupLabel)}</strong><i>⌄</i>
+       <select id="libraryGroupFilter" aria-label="Групи" onchange="setLibraryFilters()"><option value="0">Усі</option>${L.groups.map(g=>`<option value="${g.id}" ${groupFilter===+g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
+     </label>
+     <label class="trainer-library-filter-chip">
+       <span>М’язи</span><strong>${esc(muscleLabel)}</strong><i>⌄</i>
+       <select id="libraryMuscleFilter" aria-label="М’язи" onchange="setLibraryFilters()"><option value="0">Усі</option>${L.muscles.map(m=>`<option value="${m.id}" ${muscleFilter===+m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+     </label>
+     <label class="trainer-library-filter-chip">
+       <span>Бібліотека</span><strong>${esc(scopeLabel)}</strong><i>⌄</i>
+       <select id="libraryScopeFilter" aria-label="Бібліотека" onchange="setLibraryFilters()"><option value="all" ${scopeFilter==='all'?'selected':''}>Усі</option><option value="platform" ${scopeFilter==='platform'?'selected':''}>ЄПЛАН</option><option value="trainer" ${scopeFilter==='trainer'?'selected':''}>Мої вправи</option></select>
+     </label>
    </div>
  </div>`;
 
@@ -96,7 +108,7 @@ async function showExerciseLibrary(){
      <div><strong>${L.groups.length}</strong><small>груп</small></div>
    </div>
    ${filterCard}
-   <div class="trainer-library-result-line"><span>Знайдено</span><strong>${visibleCount}</strong></div>
+   <div class="trainer-library-result-line"><span>Знайдено <strong>${visibleCount}</strong></span></div>
    ${groupCards||'<div class="trainer-empty card">За вибраними фільтрами вправ не знайдено.</div>'}
    ${session?.user_id===1?adminCard:''}
  </div>`);
