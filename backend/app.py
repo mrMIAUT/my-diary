@@ -1666,7 +1666,7 @@ def trainer_profile_response(row:dict|None,request_status:str=""):
         "rating_avg":float(row.get("rating_avg") or 0),
         "rating_count":int(row.get("rating_count") or 0),
         "spots_left":spots_left,
-        "avatar_url":("/api/trainers/"+str(row["trainer_id"])+"/avatar") if avatar else "",
+        "avatar_url":("/api/trainers/"+str(row["trainer_id"])+"/avatar?v="+str(int(row["updated_at"].timestamp()))) if avatar and row.get("updated_at") else ("/api/trainers/"+str(row["trainer_id"])+"/avatar" if avatar else ""),
         "accepting_clients":bool(row.get("accepting_clients")) and (spots_left is None or spots_left>0),
         "is_published":bool(row.get("is_published")),
         "request_status":request_status or "",
@@ -1817,7 +1817,7 @@ def trainer_reviews(trainer_id:int,limit:int=Query(8,ge=1,le=30),user:AuthUser=D
     if not one("SELECT trainer_id FROM trainer_profiles WHERE trainer_id=? AND is_published=TRUE",(trainer_id,)) and user.role!="trainer":
         raise HTTPException(404,"Тренера не знайдено")
     return rows("""SELECT r.rating,r.comment,r.created_at,
-                         COALESCE(NULLIF(TRIM(c.first_name||' '||c.last_name),''),c.name) AS client_name
+                         COALESCE(NULLIF(TRIM(c.first_name),''),NULLIF(split_part(c.name,' ',1),''),'Клієнт') AS client_name
                   FROM trainer_reviews r JOIN clients c ON c.id=r.client_id
                   WHERE r.trainer_id=? ORDER BY r.updated_at DESC,r.id DESC LIMIT ?""",(trainer_id,limit))
 
@@ -1973,9 +1973,13 @@ def update_trainer_request(request_id:int,x:TrainerRequestStatusIn,user:AuthUser
             db.execute("""UPDATE trainer_client_history SET ended_at=CURRENT_TIMESTAMP
                           WHERE client_id=%s AND trainer_id<>%s AND ended_at IS NULL""",(req["client_id"],user.user_id))
             db.execute("UPDATE clients SET trainer_id=%s WHERE id=%s",(user.user_id,req["client_id"]))
-            db.execute("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
-                          VALUES(%s,%s,CURRENT_TIMESTAMP,NULL)
-                          ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,req["client_id"]))
+            client_row=db.execute("SELECT * FROM clients WHERE id=%s",(req["client_id"],)).fetchone()
+            if client_row:
+                state=dict(client_row);access=access_info(state)
+                if state.get("plan_code") in ("coaching","workout_plan","workout_nutrition") and state.get("status")=="Активний" and not access["expired"]:
+                    db.execute("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
+                                  VALUES(%s,%s,CURRENT_TIMESTAMP,NULL)
+                                  ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,req["client_id"]))
         db.commit()
     return {"ok":True,"status":x.status}
 
