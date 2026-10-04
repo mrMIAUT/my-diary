@@ -23,9 +23,10 @@ function bindLibraryMuscleRoleGuards(){document.querySelectorAll('.library-muscl
 async function showExerciseLibrary(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;await loadExerciseLibrary();
  let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]};
- let groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0),q=String(window.librarySearch||'').trim().toLowerCase();
+ let groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0),scopeFilter=String(window.libraryScopeFilter||'all'),q=String(window.librarySearch||'').trim().toLowerCase();
  let groups=groupFilter?L.groups.filter(g=>+g.id===groupFilter):L.groups;
  let exerciseVisible=x=>{
+   if(scopeFilter!=='all'&&String(x.scope||'platform')!==scopeFilter)return false;
    if(muscleFilter&&!libraryExerciseMuscleIds(x).includes(muscleFilter))return false;
    if(q&&!String(x.name||'').toLowerCase().includes(q))return false;
    return true;
@@ -36,6 +37,7 @@ async function showExerciseLibrary(){
    <div class="trainer-library-filters">
      <select id="libraryGroupFilter" onchange="setLibraryFilters()"><option value="0">Усі групи</option>${L.groups.map(g=>`<option value="${g.id}" ${groupFilter===+g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
      <select id="libraryMuscleFilter" onchange="setLibraryFilters()"><option value="0">Усі м’язи</option>${L.muscles.map(m=>`<option value="${m.id}" ${muscleFilter===+m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+     <select id="libraryScopeFilter" onchange="setLibraryFilters()"><option value="all" ${scopeFilter==='all'?'selected':''}>Усі бібліотеки</option><option value="platform" ${scopeFilter==='platform'?'selected':''}>ЄПЛАН</option><option value="trainer" ${scopeFilter==='trainer'?'selected':''}>Мої вправи</option></select>
    </div>
  </div>`;
 
@@ -68,17 +70,17 @@ async function showExerciseLibrary(){
      <div id="libGroup${g.id}" class="library-group-body hidden">
        <div class="trainer-library-exercise-list">
          ${xs.map(x=>`<div class="library-exercise trainer-library-exercise redesign-library-row">
-           <div class="library-exercise-main"><strong>${esc(x.name)}</strong>${libraryMuscleBadges(x)}${x.technique_url?`<div class="trainer-library-video">${techniqueLinkHTML(x.technique_url,'Відео',false,'redesign-library-video')}</div>`:''}</div>
-           <div class="library-exercise-actions"><button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit(${x.id})">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise(${x.id})">×</button></div>
+           <div class="library-exercise-main"><div class="library-exercise-name-line"><strong>${esc(x.name)}</strong><span class="library-scope-badge ${x.scope==='trainer'?'mine':'platform'}">${x.scope==='trainer'?'Моя вправа':'ЄПЛАН'}</span></div>${libraryMuscleBadges(x)}${x.technique_url?`<div class="trainer-library-video">${techniqueLinkHTML(x.technique_url,'Відео',false,'redesign-library-video')}</div>`:''}</div>
+           <div class="library-exercise-actions">${x.editable?'<button class="library-icon-btn library-edit-btn" aria-label="Редагувати вправу" title="Редагувати" onclick="openLibraryExerciseEdit('+x.id+')">✎</button><button class="library-icon-btn library-delete-btn" aria-label="Видалити вправу" title="Видалити" onclick="deleteLibraryExercise('+x.id+')">×</button>':''}</div>
          </div>`).join('')||'<p class="muted trainer-library-empty-row">Вправ ще немає.</p>'}
        </div>
        <div class="trainer-library-group-footer">
          <button class="trainer-library-add-toggle" type="button" onclick="toggleExercise('libAdd${g.id}',this)"><span>+ Додати вправу</span><span class="arrow">⌄</span></button>
          <div id="libAdd${g.id}" class="library-add-exercise trainer-library-add hidden">
-           <div class="trainer-library-add-head"><strong>Нова вправа</strong><small>Назва, техніка та цільові м’язи</small></div>
+           <div class="trainer-library-add-head"><strong>Нова вправа</strong><small>Буде збережена у «Мої вправи» і доступна тільки тобі та призначеним програмам.</small></div>
            <div class="trainer-library-input-stack"><input id="libName${g.id}" placeholder="Назва вправи"><input id="libUrl${g.id}" placeholder="Посилання на відео"></div>
            ${libraryMuscleChecks('add'+g.id)}
-           <div class="trainer-library-add-actions"><button class="trainer-library-primary-btn" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button><button class="trainer-library-danger-btn" onclick="deleteLibraryGroup(${g.id})">Видалити групу</button></div>
+           <div class="trainer-library-add-actions"><button class="trainer-library-primary-btn" onclick="addLibraryExercise(${g.id})">+ Додати вправу</button>${session?.user_id===1?'<button class="trainer-library-danger-btn" onclick="deleteLibraryGroup('+g.id+')">Видалити групу</button>':''}</div>
          </div>
        </div>
      </div>
@@ -89,19 +91,19 @@ async function showExerciseLibrary(){
    <div class="trainer-client-navline"><button onclick="showTrainerMore()" aria-label="Назад">‹</button></div>
    <div class="trainer-page-title"><div><h1>Бібліотека вправ</h1><p class="trainer-page-sub">Вправи, м’язи та техніка виконання</p></div></div>
    <div class="trainer-library-summary">
-     <div><strong>${L.exercises.length}</strong><small>вправ</small></div>
+     <div><strong>${L.exercises.filter(x=>x.scope==='platform').length}</strong><small>ЄПЛАН</small></div>
+     <div><strong>${L.exercises.filter(x=>x.scope==='trainer').length}</strong><small>моїх вправ</small></div>
      <div><strong>${L.groups.length}</strong><small>груп</small></div>
-     <div><strong>${L.muscles.length}</strong><small>м’язів</small></div>
    </div>
    ${filterCard}
    <div class="trainer-library-result-line"><span>Знайдено</span><strong>${visibleCount}</strong></div>
    ${groupCards||'<div class="trainer-empty card">За вибраними фільтрами вправ не знайдено.</div>'}
-   ${adminCard}
+   ${session?.user_id===1?adminCard:''}
  </div>`);
  bindLibraryMuscleRoleGuards();
 }
 
-function setLibraryFilters(){window.libraryGroupFilter=+($('#libraryGroupFilter')?.value||0);window.libraryMuscleFilter=+($('#libraryMuscleFilter')?.value||0);showExerciseLibrary()}
+function setLibraryFilters(){window.libraryGroupFilter=+($('#libraryGroupFilter')?.value||0);window.libraryMuscleFilter=+($('#libraryMuscleFilter')?.value||0);window.libraryScopeFilter=$('#libraryScopeFilter')?.value||'all';showExerciseLibrary()}
 async function addLibraryGroup(){let n=$('#newLibraryGroup').value.trim();if(!n)return;await api('/exercise-library/groups',{method:'POST',body:JSON.stringify({name:n})});showExerciseLibrary()}
 async function deleteLibraryGroup(id){if(!confirm('Видалити групу та всі вправи в ній?'))return;await api('/exercise-library/groups/'+id,{method:'DELETE'});if(+window.libraryGroupFilter===+id)window.libraryGroupFilter=0;showExerciseLibrary()}
 async function addLibraryMuscle(){let n=$('#newLibraryMuscle')?.value.trim();if(!n)return;await api('/exercise-library/muscles',{method:'POST',body:JSON.stringify({name:n})});showExerciseLibrary()}
@@ -117,6 +119,7 @@ async function addLibraryExercise(gid){
 
 function openLibraryExerciseEdit(id){
  let L=window.exerciseLibrary||{},x=(L.exercises||[]).find(v=>+v.id===+id);if(!x)return;
+ if(!x.editable)return alert('Це загальна вправа ЄПЛАН. Її не можна змінювати у твоїй особистій бібліотеці.');
  document.getElementById('libraryExerciseEditModal')?.remove();let prefix='edit'+id;
  document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="libraryExerciseEditModal" onclick="if(event.target===this)this.remove()"><div class="card library-edit-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="libraryExerciseEditModal.remove()">✕</button></div><div class="grid"><input id="libraryEditName" value="${esc(x.name)}" placeholder="Назва вправи"><input id="libraryEditUrl" value="${esc(x.technique_url||'')}" placeholder="Посилання на відео"><select id="libraryEditGroup">${(L.groups||[]).map(g=>`<option value="${g.id}" ${+g.id===+x.group_id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></div>${libraryMuscleChecks(prefix,x.primary_muscle_ids||[],x.secondary_muscle_ids||[])}<br><button onclick="saveLibraryExerciseEdit(${x.id},event.currentTarget)">Зберегти зміни</button></div></div>`);bindLibraryMuscleRoleGuards()
 }
@@ -131,5 +134,5 @@ async function saveLibraryExerciseEdit(id,btn){
  catch(e){if(btn){btn.disabled=false;btn.textContent='Зберегти зміни'}throw e}
 }
 
-async function deleteLibraryExercise(id){await api('/exercise-library/exercises/'+id,{method:'DELETE'});showExerciseLibrary()}
+async function deleteLibraryExercise(id){let x=(window.exerciseLibrary?.exercises||[]).find(v=>+v.id===+id);if(!x?.editable)return;if(!confirm('Видалити цю вправу з твоєї бібліотеки?'))return;await api('/exercise-library/exercises/'+id,{method:'DELETE'});showExerciseLibrary()}
 async function loadExerciseLibrary(){try{window.exerciseLibrary=await api('/exercise-library')}catch(e){window.exerciseLibrary={groups:[],muscles:[],exercises:[]}}}
