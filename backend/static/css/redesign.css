@@ -11951,7 +11951,15 @@ body.eplan-redesign.trainer-ui .library-muscle-admin-list>div>span{
 body.eplan-redesign.trainer-ui .library-muscle-picker{
   margin-top:12px!important;
   display:grid!important;
-  gap:12px!important;
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+}
+body.eplan-redesign.trainer-ui .library-muscle-picker>div{
+  padding:12px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  box-shadow:none!important;
 }
 body.eplan-redesign.trainer-ui .library-muscle-picker>div>strong{
   display:block!important;
@@ -11964,6 +11972,9 @@ body.eplan-redesign.trainer-ui .library-check-grid{
   display:flex!important;
   flex-wrap:wrap!important;
   gap:6px!important;
+  margin-top:0!important;
+  max-height:none!important;
+  overflow:visible!important;
 }
 body.eplan-redesign.trainer-ui .library-check-grid label{
   margin:0!important;
@@ -11984,6 +11995,11 @@ body.eplan-redesign.trainer-ui .library-check-grid input{
   min-height:0!important;
   margin:0!important;
   accent-color:#1677ff!important;
+}
+body.eplan-redesign.trainer-ui .library-check-grid label:has(input:checked){
+  border-color:#c8dcff!important;
+  background:#eef5ff!important;
+  color:#1677ff!important;
 }
 body.eplan-redesign.trainer-ui .trainer-library-empty-row{
   margin:0!important;
