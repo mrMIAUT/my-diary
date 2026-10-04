@@ -211,6 +211,7 @@ window.showClientTrainers = async function(cid){
 window.showClientTrainerProfile = async function(cid,trainerId){
   currentClientView='more';
   let p=await api('/trainers/'+trainerId),specs=trainerMarketplaceSpecialties(p.specialties);
+  window.currentTrainerMarketplaceProfile=p;
   let requestButton='';
   if(p.is_current_trainer){
     requestButton='<button class="trainer-market-primary current" disabled>Твій тренер ✓</button>';
@@ -219,7 +220,7 @@ window.showClientTrainerProfile = async function(cid,trainerId){
   }else if(p.request_status==='accepted'){
     requestButton='<button class="trainer-market-primary current" disabled>Тренер прийняв запит ✓</button>';
   }else if(p.accepting_clients){
-    requestButton='<button class="trainer-market-primary" onclick="openTrainerRequestModal('+cid+','+trainerId+',\''+esc(String(p.display_name||'Тренер ЄПЛАН')).replace(/'/g,"\\'")+'\')">Обрати тренера</button>';
+    requestButton='<button class="trainer-market-primary" onclick="openTrainerRequestModal('+cid+','+trainerId+')">Обрати тренера</button>';
   }else{
     requestButton='<button class="trainer-market-primary" disabled>Набір клієнтів закрито</button>';
   }
@@ -237,7 +238,8 @@ window.showClientTrainerProfile = async function(cid,trainerId){
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
 
-window.openTrainerRequestModal = function(cid,trainerId,name){
+window.openTrainerRequestModal = function(cid,trainerId){
+  let name=window.currentTrainerMarketplaceProfile?.display_name||'Тренер ЄПЛАН';
   document.getElementById('trainerRequestModal')?.remove();
   document.body.insertAdjacentHTML('beforeend','<div class="modal" id="trainerRequestModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-request-modal"><div class="between"><div><h2>Обрати тренера</h2><p class="muted">Запит для '+esc(name)+'</p></div><button class="dark" onclick="trainerRequestModal.remove()">✕</button></div><label><span>Повідомлення <small>необов’язково</small></span><textarea id="trainerRequestMessage" placeholder="Наприклад: хочу набрати м’язову масу та тренуватися 3 рази на тиждень"></textarea></label><button class="trainer-market-primary" onclick="submitTrainerRequest('+cid+','+trainerId+',this)">Надіслати запит</button></div></div>');
 };
