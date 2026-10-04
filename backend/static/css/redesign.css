@@ -12226,3 +12226,306 @@ body.eplan-redesign.trainer-ui .trainer-client-page #accessUntil::-webkit-calend
   margin-top:0!important;
   margin-bottom:0!important;
 }
+
+
+/* Trainer marketplace foundation v1 */
+body.eplan-redesign.client-ui .nutrition-coaching-upsell{
+  margin-top:14px;
+  padding:16px;
+  border-radius:18px;
+}
+body.eplan-redesign.client-ui .nutrition-coaching-upsell>strong{
+  display:block;
+  margin:4px 0 6px;
+  font-size:16px;
+}
+body.eplan-redesign.client-ui .nutrition-coaching-upsell p{
+  margin:0 0 12px;
+  color:#718099;
+  font-size:12px;
+  line-height:1.45;
+}
+body.eplan-redesign.client-ui .nutrition-coaching-upsell button{
+  width:100%;
+  background:#eef5ff!important;
+  color:#1677ff!important;
+  border:1px solid #d8e8fb!important;
+}
+
+body.eplan-redesign.client-ui .trainer-market-page .redesign-back-title{
+  align-items:flex-start;
+}
+body.eplan-redesign.client-ui .trainer-market-page .redesign-back-title h1{
+  margin:0;
+}
+body.eplan-redesign.client-ui .trainer-market-page .redesign-back-title p{
+  margin:4px 0 0;
+  color:#7a8799;
+  font-size:11px;
+}
+body.eplan-redesign.client-ui .trainer-market-list{
+  display:grid;
+  gap:10px;
+}
+body.eplan-redesign.client-ui .trainer-market-card{
+  width:100%;
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  position:relative;
+  padding:14px 38px 14px 14px;
+  text-align:left;
+  background:#fff!important;
+  color:#091735!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:19px!important;
+  box-shadow:0 8px 24px rgba(31,64,104,.05)!important;
+}
+body.eplan-redesign.client-ui .trainer-market-avatar{
+  width:48px;height:48px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:#edf1f6;
+  color:#66758b;
+  font-weight:900;
+  font-size:14px;
+  letter-spacing:.02em;
+}
+body.eplan-redesign.client-ui .trainer-market-avatar.large{
+  width:72px;height:72px;
+  min-width:72px;
+  font-size:20px;
+}
+body.eplan-redesign.client-ui .trainer-market-card-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+body.eplan-redesign.client-ui .trainer-market-card-copy strong{
+  font-size:15px;
+}
+body.eplan-redesign.client-ui .trainer-market-card-copy>small{
+  color:#75839a;
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.eplan-redesign.client-ui .trainer-market-tags,
+body.eplan-redesign.client-ui .trainer-profile-tags{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+body.eplan-redesign.client-ui .trainer-market-tags i,
+body.eplan-redesign.client-ui .trainer-profile-tags span{
+  padding:4px 7px;
+  border-radius:999px;
+  background:#eef5ff;
+  color:#35648f;
+  font-size:9px;
+  font-style:normal;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .trainer-market-status{
+  font-size:9px;
+  font-weight:900;
+  color:#718099;
+}
+body.eplan-redesign.client-ui .trainer-market-status.open{color:#198754}
+body.eplan-redesign.client-ui .trainer-market-status.current{color:#1677ff}
+body.eplan-redesign.client-ui .trainer-market-arrow{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#92a0b2;
+  font-size:22px;
+}
+body.eplan-redesign.client-ui .trainer-profile-hero-public{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:18px;
+  border-radius:20px;
+}
+body.eplan-redesign.client-ui .trainer-profile-hero-public h2{
+  margin:0 0 4px;
+  font-size:21px;
+}
+body.eplan-redesign.client-ui .trainer-profile-hero-public p{
+  margin:0;
+  color:#718099;
+  font-size:12px;
+}
+body.eplan-redesign.client-ui .trainer-profile-section,
+body.eplan-redesign.client-ui .trainer-profile-service-note{
+  margin-top:12px;
+  padding:15px 16px;
+  border:1px solid #dfe7f2;
+  border-radius:18px;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .trainer-profile-section h3,
+body.eplan-redesign.client-ui .trainer-profile-service-note strong{
+  display:block;
+  margin:0 0 7px;
+  font-size:14px;
+}
+body.eplan-redesign.client-ui .trainer-profile-section p,
+body.eplan-redesign.client-ui .trainer-profile-service-note p{
+  margin:0;
+  color:#718099;
+  font-size:12px;
+  line-height:1.5;
+}
+body.eplan-redesign.client-ui .trainer-profile-bio{
+  white-space:pre-wrap;
+}
+body.eplan-redesign.client-ui .trainer-market-socials{
+  display:flex;
+  gap:9px;
+  margin-top:12px;
+}
+body.eplan-redesign.client-ui .trainer-market-socials a{
+  width:42px;height:42px;
+  display:grid;place-items:center;
+  border:1px solid #dfe7f2;
+  border-radius:13px;
+  background:#fff;
+  color:#1a3659;
+}
+body.eplan-redesign.client-ui .trainer-market-socials svg{
+  width:19px;height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+}
+body.eplan-redesign.client-ui .trainer-market-primary{
+  width:100%;
+  margin-top:14px;
+  min-height:48px;
+  border-radius:15px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .trainer-market-primary.current,
+body.eplan-redesign.client-ui .trainer-market-primary:disabled{
+  background:#edf2f8!important;
+  color:#6f7f98!important;
+  border:1px solid #dbe4ef!important;
+}
+body.eplan-redesign.client-ui .trainer-request-modal{
+  width:min(92vw,420px);
+}
+body.eplan-redesign.client-ui .trainer-request-modal label{
+  display:block;
+  margin-top:14px;
+}
+body.eplan-redesign.client-ui .trainer-request-modal label>span{
+  display:block;
+  margin-bottom:6px;
+  color:#586b86;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .trainer-request-modal textarea{
+  width:100%;
+  min-height:110px;
+  box-sizing:border-box;
+  resize:vertical;
+}
+
+/* Trainer-side public profile and request inbox */
+body.eplan-redesign.trainer-ui .trainer-public-profile-card{
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border-radius:20px;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-card label>span{
+  display:block;
+  margin-bottom:6px;
+  color:#5e708b;
+  font-size:11px;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-card input,
+body.eplan-redesign.trainer-ui .trainer-public-profile-card textarea{
+  width:100%;
+  box-sizing:border-box;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-card textarea{
+  min-height:130px;
+  resize:vertical;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-social-grid{
+  display:grid;
+  gap:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-check{
+  display:flex!important;
+  align-items:center;
+  gap:9px;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-check input{
+  width:18px!important;height:18px;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-check span{
+  margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-public-profile-save{
+  width:100%;
+  min-height:48px;
+  margin-top:4px;
+  border-radius:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-requests-page{
+  display:grid;
+  gap:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request{
+  padding:15px;
+  border-radius:18px;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-head small{
+  color:#7a8799;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-status{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#eef3f8;
+  color:#6f7f98;
+  font-size:9px;
+  font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-status.pending{background:#fff3df;color:#b36a00}
+body.eplan-redesign.trainer-ui .trainer-coach-request-status.accepted{background:#eaf8ef;color:#198754}
+body.eplan-redesign.trainer-ui .trainer-coach-request p{
+  margin:11px 0 0;
+  color:#5f6f86;
+  font-size:12px;
+  line-height:1.45;
+}
+body.eplan-redesign.trainer-ui .trainer-coach-request-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
