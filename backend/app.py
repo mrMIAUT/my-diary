@@ -2141,10 +2141,21 @@ def get_exercise_library(user:AuthUser=Depends(current_user)):
                           WHERE e.owner_trainer_id IS NULL OR e.owner_trainer_id=?
                           ORDER BY g.sort,g.id,e.name""",(user.user_id,))
     else:
-        exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
-                          JOIN exercise_groups g ON g.id=e.group_id
-                          WHERE e.owner_trainer_id IS NULL AND e.visibility='platform'
-                          ORDER BY g.sort,g.id,e.name""")
+        client=one("SELECT trainer_id,plan_code,status,access_until FROM clients WHERE id=?",(user.client_id,))
+        trainer_id=int((client or {}).get("trainer_id") or 0)
+        has_trainer_library=bool(client and trainer_id and client.get("plan_code") in ("coaching","workout_plan","workout_nutrition")
+                                 and client.get("status")=="Активний" and not access_info(client)["expired"])
+        if has_trainer_library:
+            exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                              JOIN exercise_groups g ON g.id=e.group_id
+                              WHERE (e.owner_trainer_id IS NULL AND e.visibility='platform')
+                                 OR e.owner_trainer_id=?
+                              ORDER BY g.sort,g.id,e.name""",(trainer_id,))
+        else:
+            exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                              JOIN exercise_groups g ON g.id=e.group_id
+                              WHERE e.owner_trainer_id IS NULL AND e.visibility='platform'
+                              ORDER BY g.sort,g.id,e.name""")
     links=rows("SELECT exercise_id,muscle_id,role FROM exercise_muscles ORDER BY exercise_id,muscle_id")
     by_exercise={}
     for link in links:
