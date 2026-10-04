@@ -13787,3 +13787,31 @@ body.eplan-redesign.client-ui .trainer-card-v3 .trainer-market-arrow{
     min-width:50px!important;
   }
 }
+
+
+/* iOS library select containment v3 */
+body.eplan-redesign.trainer-ui .trainer-library-page .trainer-library-filter-chip{
+  position:relative!important;
+  isolation:isolate;
+  color-scheme:light;
+}
+body.eplan-redesign.trainer-ui .trainer-library-page .trainer-library-filter-chip>select{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  opacity:0!important;
+  background:transparent!important;
+  color:transparent!important;
+  box-shadow:none!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  z-index:5!important;
+}
