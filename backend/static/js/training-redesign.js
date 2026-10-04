@@ -17,9 +17,8 @@ function redesignTrainingExerciseRow(x,num,inSuperset=false){
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
     +'<span>'+num+'</span>'
     +'<div class="redesign-training-exercise-copy">'
-      +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong>'
-        +(mainTech?techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link'):'')
-      +'</div>'
+      +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong></div>'
+      +(mainTech?'<div class="redesign-training-technique">'+techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link')+'</div>':'')
       +'<small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small>'
       +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){
         let tech=exerciseTechniqueUrl(v);
