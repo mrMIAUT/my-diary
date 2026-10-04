@@ -752,9 +752,9 @@ def init():
         c.execute("CREATE INDEX IF NOT EXISTS ix_exercise_library_owner ON exercise_library(owner_trainer_id,visibility)")
         c.execute("ALTER TABLE exercise_library DROP CONSTRAINT IF EXISTS exercise_library_group_id_name_key")
         c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_exercise_library_platform_name
-                     ON exercise_library(group_id,lower(name)) WHERE owner_trainer_id IS NULL""")
+                     ON exercise_library(group_id,name) WHERE owner_trainer_id IS NULL""")
         c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_exercise_library_trainer_name
-                     ON exercise_library(owner_trainer_id,group_id,lower(name)) WHERE owner_trainer_id IS NOT NULL""")
+                     ON exercise_library(owner_trainer_id,group_id,name) WHERE owner_trainer_id IS NOT NULL""")
         c.execute("""CREATE TABLE IF NOT EXISTS muscles(
             id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, sort INTEGER DEFAULT 0
         )""")
@@ -1830,7 +1830,7 @@ def save_trainer_review(trainer_id:int,x:TrainerReviewIn,user:AuthUser=Depends(r
 @app.get("/api/trainer/program-templates")
 def list_program_templates(user:AuthUser=Depends(require_trainer)):
     return rows("""SELECT t.id,t.name,t.description,t.created_at,t.updated_at,
-                      COUNT(DISTINCT d.id) AS days_count,COUNT(i.id) AS exercises_count
+                      COUNT(DISTINCT d.id) AS days_count,COUNT(DISTINCT i.id) AS exercises_count
                    FROM program_templates t
                    LEFT JOIN program_template_days d ON d.template_id=t.id
                    LEFT JOIN program_template_items i ON i.template_id=t.id
