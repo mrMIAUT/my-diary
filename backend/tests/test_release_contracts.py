@@ -167,6 +167,12 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("canvas.toBlob", TRAINER)
         self.assertIn("canvas.width=512", TRAINER)
         self.assertNotIn("file.size>10*1024*1024", TRAINER)
+        self.assertIn("CREATE TABLE IF NOT EXISTS trainer_profile_media", APP)
+        self.assertIn("avatar_data BYTEA", APP)
+        avatar_block = APP.split('@app.post("/api/trainer/profile/avatar")', 1)[1].split('@app.get("/api/trainers/{trainer_id}/reviews")', 1)[0]
+        self.assertIn("INSERT INTO trainer_profile_media", avatar_block)
+        self.assertIn("SELECT avatar_data,avatar_media_type", avatar_block)
+        self.assertNotIn("os.open(target", avatar_block)
 
     def test_exercise_library_has_platform_and_trainer_scopes(self):
         self.assertIn("owner_trainer_id", APP)
