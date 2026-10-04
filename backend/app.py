@@ -1731,10 +1731,19 @@ def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
     item["can_review"]=False
     item["my_review"]=None
     if user.role=="client":
-        owner=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
-        item["is_current_trainer"]=bool(owner and int(owner["trainer_id"] or 0)==trainer_id)
-        finished=one("SELECT COUNT(*) AS n FROM workout_sessions WHERE client_id=? AND status='finished'",(user.client_id,))
-        item["can_review"]=item["is_current_trainer"] and int((finished or {}).get("n") or 0)>0
+        owner=one("SELECT * FROM clients WHERE id=?",(user.client_id,))
+        item["is_current_trainer"]=bool(owner and int(owner.get("trainer_id") or 0)==trainer_id)
+        relation=one("""SELECT started_at FROM trainer_client_history
+                        WHERE trainer_id=? AND client_id=? AND ended_at IS NULL""",(trainer_id,user.client_id))
+        finished=None
+        if relation:
+            finished=one("""SELECT COUNT(*) AS n FROM workout_sessions
+                            WHERE client_id=? AND status='finished'
+                              AND COALESCE(finished_at,started_at)>=?""",
+                         (user.client_id,relation["started_at"]))
+        paid_service=bool(owner and owner.get("plan_code") in ("coaching","workout_plan","workout_nutrition")
+                          and not access_info(owner)["expired"] and owner.get("status")=="Активний")
+        item["can_review"]=item["is_current_trainer"] and paid_service and int((finished or {}).get("n") or 0)>0
         mine=one("SELECT rating,comment FROM trainer_reviews WHERE trainer_id=? AND client_id=?",(trainer_id,user.client_id))
         item["my_review"]=mine
     return item
@@ -1814,12 +1823,19 @@ def trainer_reviews(trainer_id:int,limit:int=Query(8,ge=1,le=30),user:AuthUser=D
 
 @app.put("/api/trainers/{trainer_id}/review")
 def save_trainer_review(trainer_id:int,x:TrainerReviewIn,user:AuthUser=Depends(require_client)):
-    client=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
+    client=one("SELECT * FROM clients WHERE id=?",(user.client_id,))
     if not client or int(client.get("trainer_id") or 0)!=trainer_id:
         raise HTTPException(403,"Оцінити можна лише свого тренера")
-    finished=one("SELECT COUNT(*) AS n FROM workout_sessions WHERE client_id=? AND status='finished'",(user.client_id,))
+    if client.get("plan_code") not in ("coaching","workout_plan","workout_nutrition") or access_info(client)["expired"] or client.get("status")!="Активний":
+        raise HTTPException(403,"Оцінка доступна клієнтам з активною послугою тренера")
+    relation=one("""SELECT started_at FROM trainer_client_history
+                    WHERE trainer_id=? AND client_id=? AND ended_at IS NULL""",(trainer_id,user.client_id))
+    finished=one("""SELECT COUNT(*) AS n FROM workout_sessions
+                    WHERE client_id=? AND status='finished'
+                      AND COALESCE(finished_at,started_at)>=?""",
+                 (user.client_id,relation["started_at"])) if relation else None
     if int((finished or {}).get("n") or 0)<1:
-        raise HTTPException(403,"Оцінка доступна після першого завершеного тренування")
+        raise HTTPException(403,"Оцінка доступна після завершеного тренування з цим тренером")
     run("""INSERT INTO trainer_reviews(trainer_id,client_id,rating,comment,updated_at)
            VALUES(?,?,?,?,CURRENT_TIMESTAMP)
            ON CONFLICT(trainer_id,client_id) DO UPDATE SET
