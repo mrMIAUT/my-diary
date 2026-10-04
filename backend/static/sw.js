@@ -1,4 +1,4 @@
-const VERSION='eplan-v142';
+const VERSION='eplan-v143';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -9,7 +9,7 @@ const APP_SHELL_URLS=[
   '/static/css/base.css?v=159',
   '/static/css/components.css?v=159',
   '/static/css/refinements.css?v=159',
-  '/static/css/redesign.css?v=201',
+  '/static/css/redesign.css?v=202',
   '/static/js/core.js?v=161',
   '/static/js/auth.js?v=159',
   '/static/js/trainer.js?v=181',
@@ -17,7 +17,7 @@ const APP_SHELL_URLS=[
   '/static/js/home-redesign.js?v=163',
   '/static/js/activity.js?v=159',
   '/static/js/program.js?v=170',
-  '/static/js/library.js?v=161',
+  '/static/js/library.js?v=162',
   '/static/js/calendar.js?v=161',
   '/static/js/results.js?v=169',
   '/static/js/progress-redesign.js?v=159',
