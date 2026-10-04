@@ -784,6 +784,10 @@ def init():
             id SERIAL PRIMARY KEY, client_id INTEGER, meal_number INTEGER, variant_number INTEGER,
             content TEXT DEFAULT '', sort INTEGER DEFAULT 0
         )""")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS trainer_id INTEGER")
+        c.execute("""UPDATE clients SET trainer_id=1
+                     WHERE trainer_id IS NULL
+                       AND COALESCE(plan_code,'coaching') IN ('coaching','workout_plan','workout_nutrition')""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 0")
@@ -1390,7 +1394,7 @@ def password_reset_confirm(x:ResetConfirmIn,request:Request,response:Response):
 CLIENT_RESPONSE_FIELDS=(
     "id","name","email","goal","weight","kcal","protein","fat","carbs",
     "meal_plan","status","first_name","last_name","age","sex",
-    "contraindications","injuries","contact","instagram","telegram","tiktok","avatar",
+    "contraindications","injuries","contact","instagram","telegram","tiktok","avatar","trainer_id",
     "plan_code","access_until","access","live_status","needs_review_count",
     "finished_workout_count","last_finished_at","review_state",
     "workouts_28d","program_days_count","nutrition_days_7d","checkin_pending_count","last_checkin_at",
@@ -1514,6 +1518,8 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
         row=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone()
         if not row: raise HTTPException(404,"Клієнта не знайдено")
         db.execute("UPDATE clients SET plan_code=%s,access_until=%s WHERE id=%s",(x.plan_code,until,cid))
+        if x.plan_code in ("coaching","workout_plan","workout_nutrition"):
+            db.execute("UPDATE clients SET trainer_id=COALESCE(trainer_id,%s) WHERE id=%s",(user.user_id,cid))
         client_row=db.execute("SELECT * FROM clients WHERE id=%s",(cid,)).fetchone()
         access=access_info(dict(client_row))
         if not access["features"].get("workouts",False):
@@ -1551,7 +1557,16 @@ def list_trainers(user:AuthUser=Depends(current_user)):
                      FROM trainer_requests WHERE client_id=?
                      ORDER BY trainer_id,created_at DESC,id DESC""",(user.client_id,))
         request_map={int(x["trainer_id"]):str(x["status"]) for x in reqs}
-    return [trainer_profile_response(x,request_map.get(int(x["trainer_id"]),"")) for x in profiles]
+    current_trainer_id=0
+    if user.role=="client":
+        owner=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
+        current_trainer_id=int(owner["trainer_id"] or 0) if owner else 0
+    result=[]
+    for x in profiles:
+        item=trainer_profile_response(x,request_map.get(int(x["trainer_id"]),""))
+        item["is_current_trainer"]=int(x["trainer_id"])==current_trainer_id
+        result.append(item)
+    return result
 
 @app.get("/api/trainers/{trainer_id}")
 def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
@@ -1564,7 +1579,12 @@ def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
                    WHERE client_id=? AND trainer_id=?
                    ORDER BY created_at DESC,id DESC LIMIT 1""",(user.client_id,trainer_id))
         request_status=str(req["status"]) if req else ""
-    return trainer_profile_response(row,request_status)
+    item=trainer_profile_response(row,request_status)
+    item["is_current_trainer"]=False
+    if user.role=="client":
+        owner=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
+        item["is_current_trainer"]=bool(owner and int(owner["trainer_id"] or 0)==trainer_id)
+    return item
 
 @app.patch("/api/trainer/profile")
 def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trainer)):
@@ -1612,7 +1632,13 @@ def update_trainer_request(request_id:int,x:TrainerRequestStatusIn,user:AuthUser
     if x.status not in ("accepted","declined"): raise HTTPException(400,"Невірний статус запиту")
     row=one("SELECT id FROM trainer_requests WHERE id=? AND trainer_id=?",(request_id,user.user_id))
     if not row: raise HTTPException(404,"Запит не знайдено")
-    run("UPDATE trainer_requests SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(x.status,request_id))
+    with con() as db:
+        req=db.execute("SELECT client_id FROM trainer_requests WHERE id=%s AND trainer_id=%s FOR UPDATE",(request_id,user.user_id)).fetchone()
+        if not req: raise HTTPException(404,"Запит не знайдено")
+        db.execute("UPDATE trainer_requests SET status=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",(x.status,request_id))
+        if x.status=="accepted":
+            db.execute("UPDATE clients SET trainer_id=%s WHERE id=%s",(user.user_id,req["client_id"]))
+        db.commit()
     return {"ok":True,"status":x.status}
 
 @app.delete("/api/clients/{cid}")
