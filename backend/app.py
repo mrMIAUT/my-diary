@@ -746,6 +746,10 @@ def init():
             technique_url TEXT DEFAULT '', UNIQUE(group_id,name),
             CONSTRAINT fk_exercise_library_group FOREIGN KEY(group_id) REFERENCES exercise_groups(id) ON DELETE CASCADE
         )""")
+        c.execute("ALTER TABLE exercise_library ADD COLUMN IF NOT EXISTS owner_trainer_id INTEGER")
+        c.execute("ALTER TABLE exercise_library ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'platform'")
+        c.execute("UPDATE exercise_library SET visibility='platform' WHERE visibility IS NULL OR visibility=''")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_exercise_library_owner ON exercise_library(owner_trainer_id,visibility)")
         c.execute("""CREATE TABLE IF NOT EXISTS muscles(
             id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE, sort INTEGER DEFAULT 0
         )""")
@@ -873,6 +877,65 @@ def init():
             is_published BOOLEAN NOT NULL DEFAULT TRUE,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        c.execute("ALTER TABLE trainer_profiles ADD COLUMN IF NOT EXISTS max_active_clients INTEGER NOT NULL DEFAULT 0")
+        c.execute("ALTER TABLE trainer_profiles ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL DEFAULT ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_client_history(
+            id BIGSERIAL PRIMARY KEY,
+            trainer_id INTEGER NOT NULL,
+            client_id INTEGER NOT NULL REFERENCES clients(id),
+            started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            ended_at TIMESTAMPTZ,
+            UNIQUE(trainer_id,client_id)
+        )""")
+        c.execute("""INSERT INTO trainer_client_history(trainer_id,client_id)
+                     SELECT trainer_id,id FROM clients WHERE trainer_id IS NOT NULL
+                     ON CONFLICT(trainer_id,client_id) DO NOTHING""")
+        c.execute("""CREATE TABLE IF NOT EXISTS trainer_reviews(
+            id BIGSERIAL PRIMARY KEY,
+            trainer_id INTEGER NOT NULL,
+            client_id INTEGER NOT NULL REFERENCES clients(id),
+            rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+            comment TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(trainer_id,client_id)
+        )""")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_trainer_reviews_trainer ON trainer_reviews(trainer_id,created_at DESC)")
+        c.execute("""CREATE TABLE IF NOT EXISTS program_templates(
+            id BIGSERIAL PRIMARY KEY,
+            trainer_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS program_template_days(
+            id BIGSERIAL PRIMARY KEY,
+            template_id BIGINT NOT NULL REFERENCES program_templates(id) ON DELETE CASCADE,
+            day_name TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            sort INTEGER NOT NULL DEFAULT 0,
+            UNIQUE(template_id,day_name)
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS program_template_items(
+            id BIGSERIAL PRIMARY KEY,
+            template_id BIGINT NOT NULL REFERENCES program_templates(id) ON DELETE CASCADE,
+            day_name TEXT NOT NULL,
+            exercise TEXT NOT NULL,
+            sets INTEGER NOT NULL DEFAULT 3,
+            reps TEXT NOT NULL DEFAULT '8-12',
+            target_rir INTEGER NOT NULL DEFAULT 2,
+            sort INTEGER NOT NULL DEFAULT 0,
+            superset_group TEXT NOT NULL DEFAULT '',
+            superset_order INTEGER NOT NULL DEFAULT 0,
+            technique_url TEXT NOT NULL DEFAULT '',
+            rest_seconds INTEGER NOT NULL DEFAULT 0,
+            rest_text TEXT NOT NULL DEFAULT '',
+            rir_by_set TEXT NOT NULL DEFAULT '',
+            alternatives_json TEXT NOT NULL DEFAULT '[]'
+        )""")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_program_templates_trainer ON program_templates(trainer_id,updated_at DESC)")
+        c.execute("CREATE INDEX IF NOT EXISTS ix_program_template_items_template ON program_template_items(template_id,day_name,sort,id)")
         c.execute("""CREATE TABLE IF NOT EXISTS trainer_requests(
             id BIGSERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL REFERENCES clients(id),
@@ -972,8 +1035,18 @@ class TrainerProfileIn(BaseModel):
     instagram:str=Field(default="",max_length=512)
     telegram:str=Field(default="",max_length=512)
     tiktok:str=Field(default="",max_length=512)
+    max_active_clients:int=Field(default=0,ge=0,le=10000)
     accepting_clients:bool=True
     is_published:bool=True
+class TrainerReviewIn(BaseModel):
+    rating:int=Field(ge=1,le=5)
+    comment:str=Field(default="",max_length=2000)
+class ProgramTemplateCreateIn(BaseModel):
+    source_client_id:int
+    name:str=Field(min_length=1,max_length=160)
+    description:str=Field(default="",max_length=1000)
+class ProgramTemplateApplyIn(BaseModel):
+    client_id:int
 class TrainerRequestIn(BaseModel):
     message:str=Field(default="",max_length=1500)
 class TrainerRequestStatusIn(BaseModel):
@@ -1525,6 +1598,9 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
         db.execute("UPDATE clients SET plan_code=%s,access_until=%s WHERE id=%s",(x.plan_code,until,cid))
         if x.plan_code in ("coaching","workout_plan","workout_nutrition"):
             db.execute("UPDATE clients SET trainer_id=COALESCE(trainer_id,%s) WHERE id=%s",(user.user_id,cid))
+            db.execute("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
+                          VALUES(%s,%s,CURRENT_TIMESTAMP,NULL)
+                          ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,cid))
         client_row=db.execute("SELECT * FROM clients WHERE id=%s",(cid,)).fetchone()
         access=access_info(dict(client_row))
         if not access["features"].get("workouts",False):
@@ -1534,8 +1610,38 @@ def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_tra
         db.commit()
     return {"ok":True,"access":access}
 
+def trainer_profile_stats_row(trainer_id:int):
+    return one("""SELECT p.*,
+      COALESCE(a.active_clients,0) AS active_clients,
+      COALESCE(h.total_clients,0) AS total_clients,
+      COALESCE(r.rating_avg,0) AS rating_avg,
+      COALESCE(r.rating_count,0) AS rating_count
+    FROM trainer_profiles p
+    LEFT JOIN (
+      SELECT trainer_id,COUNT(*) AS active_clients
+      FROM clients
+      WHERE trainer_id IS NOT NULL
+        AND status='Активний'
+        AND plan_code IN ('coaching','workout_plan','workout_nutrition')
+        AND (access_until IS NULL OR access_until>=CURRENT_DATE)
+      GROUP BY trainer_id
+    ) a ON a.trainer_id=p.trainer_id
+    LEFT JOIN (
+      SELECT trainer_id,COUNT(DISTINCT client_id) AS total_clients
+      FROM trainer_client_history GROUP BY trainer_id
+    ) h ON h.trainer_id=p.trainer_id
+    LEFT JOIN (
+      SELECT trainer_id,ROUND(AVG(rating)::numeric,1) AS rating_avg,COUNT(*) AS rating_count
+      FROM trainer_reviews GROUP BY trainer_id
+    ) r ON r.trainer_id=p.trainer_id
+    WHERE p.trainer_id=?""",(trainer_id,))
+
 def trainer_profile_response(row:dict|None,request_status:str=""):
     if not row:return None
+    active=int(row.get("active_clients") or 0)
+    capacity=max(0,int(row.get("max_active_clients") or 0))
+    spots_left=max(0,capacity-active) if capacity else None
+    avatar=str(row.get("avatar") or "")
     return {
         "trainer_id":row["trainer_id"],
         "display_name":row.get("display_name") or "Тренер ЄПЛАН",
@@ -1546,16 +1652,44 @@ def trainer_profile_response(row:dict|None,request_status:str=""):
         "instagram":row.get("instagram") or "",
         "telegram":row.get("telegram") or "",
         "tiktok":row.get("tiktok") or "",
-        "accepting_clients":bool(row.get("accepting_clients")),
+        "max_active_clients":capacity,
+        "active_clients":active,
+        "total_clients":int(row.get("total_clients") or 0),
+        "rating_avg":float(row.get("rating_avg") or 0),
+        "rating_count":int(row.get("rating_count") or 0),
+        "spots_left":spots_left,
+        "avatar_url":("/api/trainers/"+str(row["trainer_id"])+"/avatar") if avatar else "",
+        "accepting_clients":bool(row.get("accepting_clients")) and (spots_left is None or spots_left>0),
         "is_published":bool(row.get("is_published")),
         "request_status":request_status or "",
     }
 
 @app.get("/api/trainers")
 def list_trainers(user:AuthUser=Depends(current_user)):
-    profiles=rows("""SELECT * FROM trainer_profiles
-                     WHERE is_published=TRUE
-                     ORDER BY accepting_clients DESC,trainer_id""")
+    profiles=rows("""SELECT p.*,
+      COALESCE(a.active_clients,0) AS active_clients,
+      COALESCE(h.total_clients,0) AS total_clients,
+      COALESCE(r.rating_avg,0) AS rating_avg,
+      COALESCE(r.rating_count,0) AS rating_count
+    FROM trainer_profiles p
+    LEFT JOIN (
+      SELECT trainer_id,COUNT(*) AS active_clients
+      FROM clients
+      WHERE trainer_id IS NOT NULL AND status='Активний'
+        AND plan_code IN ('coaching','workout_plan','workout_nutrition')
+        AND (access_until IS NULL OR access_until>=CURRENT_DATE)
+      GROUP BY trainer_id
+    ) a ON a.trainer_id=p.trainer_id
+    LEFT JOIN (
+      SELECT trainer_id,COUNT(DISTINCT client_id) AS total_clients
+      FROM trainer_client_history GROUP BY trainer_id
+    ) h ON h.trainer_id=p.trainer_id
+    LEFT JOIN (
+      SELECT trainer_id,ROUND(AVG(rating)::numeric,1) AS rating_avg,COUNT(*) AS rating_count
+      FROM trainer_reviews GROUP BY trainer_id
+    ) r ON r.trainer_id=p.trainer_id
+    WHERE p.is_published=TRUE
+    ORDER BY p.accepting_clients DESC,rating_avg DESC,p.trainer_id""")
     request_map={}
     if user.role=="client":
         reqs=rows("""SELECT DISTINCT ON (trainer_id) trainer_id,status
@@ -1575,7 +1709,7 @@ def list_trainers(user:AuthUser=Depends(current_user)):
 
 @app.get("/api/trainers/{trainer_id}")
 def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
-    row=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    row=trainer_profile_stats_row(trainer_id)
     if not row or (not row["is_published"] and user.role!="trainer"):
         raise HTTPException(404,"Тренера не знайдено")
     request_status=""
@@ -1586,14 +1720,20 @@ def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
         request_status=str(req["status"]) if req else ""
     item=trainer_profile_response(row,request_status)
     item["is_current_trainer"]=False
+    item["can_review"]=False
+    item["my_review"]=None
     if user.role=="client":
         owner=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
         item["is_current_trainer"]=bool(owner and int(owner["trainer_id"] or 0)==trainer_id)
+        finished=one("SELECT COUNT(*) AS n FROM workout_sessions WHERE client_id=? AND status='finished'",(user.client_id,))
+        item["can_review"]=item["is_current_trainer"] and int((finished or {}).get("n") or 0)>0
+        mine=one("SELECT rating,comment FROM trainer_reviews WHERE trainer_id=? AND client_id=?",(trainer_id,user.client_id))
+        item["my_review"]=mine
     return item
 
 @app.get("/api/trainer/profile")
 def own_trainer_profile(user:AuthUser=Depends(require_trainer)):
-    row=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(user.user_id,))
+    row=trainer_profile_stats_row(user.user_id)
     if not row: raise HTTPException(404,"Профіль тренера не знайдено")
     return trainer_profile_response(row)
 
@@ -1602,17 +1742,171 @@ def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trai
     name=x.display_name.strip() or user.name or "Тренер ЄПЛАН"
     run("""INSERT INTO trainer_profiles(
               trainer_id,display_name,headline,bio,experience_years,specialties,
-              instagram,telegram,tiktok,accepting_clients,is_published,updated_at)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+              instagram,telegram,tiktok,max_active_clients,accepting_clients,is_published,updated_at)
+           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
            ON CONFLICT(trainer_id) DO UPDATE SET
               display_name=EXCLUDED.display_name,headline=EXCLUDED.headline,bio=EXCLUDED.bio,
               experience_years=EXCLUDED.experience_years,specialties=EXCLUDED.specialties,
               instagram=EXCLUDED.instagram,telegram=EXCLUDED.telegram,tiktok=EXCLUDED.tiktok,
+              max_active_clients=EXCLUDED.max_active_clients,
               accepting_clients=EXCLUDED.accepting_clients,is_published=EXCLUDED.is_published,
               updated_at=CURRENT_TIMESTAMP""",
         (user.user_id,name,x.headline.strip(),x.bio.strip(),x.experience_years,x.specialties.strip(),
-         x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),x.accepting_clients,x.is_published))
-    return trainer_profile_response(one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(user.user_id,)))
+         x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),x.max_active_clients,x.accepting_clients,x.is_published))
+    return trainer_profile_response(trainer_profile_stats_row(user.user_id))
+
+@app.post("/api/trainer/profile/avatar")
+def upload_trainer_avatar(file:UploadFile=File(...),user:AuthUser=Depends(require_trainer)):
+    consume_rate_limit("upload.actor",f"{user.role}:{user.user_id}")
+    content_type=(file.content_type or "").split(";",1)[0].strip().lower()
+    data,_,extension=normalize_avatar(read_screenshot_bytes(file.file),content_type)
+    name="trainer_avatar_"+str(user.user_id)+"_"+secrets.token_hex(16)+extension
+    target=UPLOADS/name
+    old=one("SELECT avatar FROM trainer_profiles WHERE trainer_id=?",(user.user_id,))
+    try:
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        with os.fdopen(fd,"wb") as f:
+            if f.write(data)!=len(data):raise OSError("Incomplete avatar write")
+            f.flush();os.fsync(f.fileno())
+        run("UPDATE trainer_profiles SET avatar=?,updated_at=CURRENT_TIMESTAMP WHERE trainer_id=?",(name,user.user_id))
+    except Exception:
+        try:target.unlink(missing_ok=True)
+        except OSError:pass
+        raise HTTPException(500,"Не вдалося зберегти фото") from None
+    old_name=str((old or {}).get("avatar") or "")
+    if old_name and old_name!=name:
+        try:(UPLOADS/old_name).unlink(missing_ok=True)
+        except OSError:pass
+    return {"avatar_url":"/api/trainers/"+str(user.user_id)+"/avatar"}
+
+@app.get("/api/trainers/{trainer_id}/avatar")
+def trainer_avatar(trainer_id:int,user:AuthUser=Depends(current_user)):
+    row=one("SELECT avatar,is_published FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    if not row or not row["avatar"] or (not row["is_published"] and user.role!="trainer"):
+        raise HTTPException(404,"Фото не знайдено")
+    name=str(row["avatar"])
+    if Path(name).name!=name or not name.startswith("trainer_avatar_"):raise HTTPException(404,"Фото не знайдено")
+    file=UPLOADS/name
+    try:
+        if file.is_symlink():raise HTTPException(404,"Фото не знайдено")
+        data=file.read_bytes()
+        clean,media_type,_=normalize_avatar(data)
+    except (OSError,HTTPException):
+        raise HTTPException(404,"Фото не знайдено") from None
+    return Response(content=clean,media_type=media_type,headers={"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"})
+
+@app.get("/api/trainers/{trainer_id}/reviews")
+def trainer_reviews(trainer_id:int,limit:int=Query(8,ge=1,le=30),user:AuthUser=Depends(current_user)):
+    if not one("SELECT trainer_id FROM trainer_profiles WHERE trainer_id=? AND is_published=TRUE",(trainer_id,)) and user.role!="trainer":
+        raise HTTPException(404,"Тренера не знайдено")
+    return rows("""SELECT r.rating,r.comment,r.created_at,
+                         COALESCE(NULLIF(TRIM(c.first_name||' '||c.last_name),''),c.name) AS client_name
+                  FROM trainer_reviews r JOIN clients c ON c.id=r.client_id
+                  WHERE r.trainer_id=? ORDER BY r.updated_at DESC,r.id DESC LIMIT ?""",(trainer_id,limit))
+
+@app.put("/api/trainers/{trainer_id}/review")
+def save_trainer_review(trainer_id:int,x:TrainerReviewIn,user:AuthUser=Depends(require_client)):
+    client=one("SELECT trainer_id FROM clients WHERE id=?",(user.client_id,))
+    if not client or int(client.get("trainer_id") or 0)!=trainer_id:
+        raise HTTPException(403,"Оцінити можна лише свого тренера")
+    finished=one("SELECT COUNT(*) AS n FROM workout_sessions WHERE client_id=? AND status='finished'",(user.client_id,))
+    if int((finished or {}).get("n") or 0)<1:
+        raise HTTPException(403,"Оцінка доступна після першого завершеного тренування")
+    run("""INSERT INTO trainer_reviews(trainer_id,client_id,rating,comment,updated_at)
+           VALUES(?,?,?,?,CURRENT_TIMESTAMP)
+           ON CONFLICT(trainer_id,client_id) DO UPDATE SET
+             rating=EXCLUDED.rating,comment=EXCLUDED.comment,updated_at=CURRENT_TIMESTAMP""",
+        (trainer_id,user.client_id,x.rating,x.comment.strip()))
+    return {"ok":True}
+
+@app.get("/api/trainer/program-templates")
+def list_program_templates(user:AuthUser=Depends(require_trainer)):
+    return rows("""SELECT t.id,t.name,t.description,t.created_at,t.updated_at,
+                      COUNT(DISTINCT d.id) AS days_count,COUNT(i.id) AS exercises_count
+                   FROM program_templates t
+                   LEFT JOIN program_template_days d ON d.template_id=t.id
+                   LEFT JOIN program_template_items i ON i.template_id=t.id
+                   WHERE t.trainer_id=?
+                   GROUP BY t.id ORDER BY t.updated_at DESC,t.id DESC""",(user.user_id,))
+
+@app.post("/api/trainer/program-templates")
+def create_program_template(x:ProgramTemplateCreateIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.source_client_id)
+    name=x.name.strip()
+    if not name:raise HTTPException(400,"Вкажіть назву шаблону")
+    with con() as db:
+        client=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.source_client_id,)).fetchone()
+        if not client:raise HTTPException(404,"Клієнта не знайдено")
+        items=db.execute("""SELECT * FROM program WHERE client_id=%s
+                            ORDER BY day_name,COALESCE(sort,0),id""",(x.source_client_id,)).fetchall()
+        if not items:raise HTTPException(400,"У клієнта ще немає програми")
+        tid=db.execute("""INSERT INTO program_templates(trainer_id,name,description)
+                          VALUES(%s,%s,%s) RETURNING id""",(user.user_id,name,x.description.strip())).fetchone()["id"]
+        days=db.execute("""SELECT day_name,title FROM program_days WHERE client_id=%s""",(x.source_client_id,)).fetchall()
+        day_names=[]
+        for item in items:
+            day=str(item["day_name"] or "").strip()
+            if day and day not in day_names:day_names.append(day)
+        title_map={str(d["day_name"]):str(d["title"] or "") for d in days}
+        for pos,day in enumerate(day_names,1):
+            db.execute("INSERT INTO program_template_days(template_id,day_name,title,sort) VALUES(%s,%s,%s,%s)",
+                       (tid,day,title_map.get(day,""),pos))
+        for item in items:
+            db.execute("""INSERT INTO program_template_items(
+                template_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+                technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (tid,item["day_name"],item["exercise"],item["sets"],item["reps"],item["target_rir"],
+                 item.get("sort") or 0,item.get("superset_group") or "",item.get("superset_order") or 0,
+                 safe_technique_url(item.get("technique_url") or ""),item.get("rest_seconds") or 0,
+                 item.get("rest_text") or "",item.get("rir_by_set") or "",item.get("alternatives_json") or "[]"))
+        db.commit()
+    return {"id":tid}
+
+@app.get("/api/trainer/program-templates/{template_id}")
+def get_program_template(template_id:int,user:AuthUser=Depends(require_trainer)):
+    t=one("SELECT * FROM program_templates WHERE id=? AND trainer_id=?",(template_id,user.user_id))
+    if not t:raise HTTPException(404,"Шаблон не знайдено")
+    t["days"]=rows("SELECT * FROM program_template_days WHERE template_id=? ORDER BY sort,id",(template_id,))
+    t["items"]=rows("SELECT * FROM program_template_items WHERE template_id=? ORDER BY day_name,sort,id",(template_id,))
+    return t
+
+@app.delete("/api/trainer/program-templates/{template_id}")
+def delete_program_template(template_id:int,user:AuthUser=Depends(require_trainer)):
+    with con() as db:
+        row=db.execute("SELECT id FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",(template_id,user.user_id)).fetchone()
+        if not row:raise HTTPException(404,"Шаблон не знайдено")
+        db.execute("DELETE FROM program_templates WHERE id=%s",(template_id,))
+        db.commit()
+    return {"ok":True}
+
+@app.post("/api/trainer/program-templates/{template_id}/apply")
+def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
+    with con() as db:
+        t=db.execute("SELECT id FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",(template_id,user.user_id)).fetchone()
+        if not t:raise HTTPException(404,"Шаблон не знайдено")
+        client=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,)).fetchone()
+        if not client:raise HTTPException(404,"Клієнта не знайдено")
+        days=db.execute("SELECT * FROM program_template_days WHERE template_id=%s ORDER BY sort,id",(template_id,)).fetchall()
+        items=db.execute("SELECT * FROM program_template_items WHERE template_id=%s ORDER BY day_name,sort,id",(template_id,)).fetchall()
+        if not items:raise HTTPException(400,"Шаблон порожній")
+        db.execute("DELETE FROM program_days WHERE client_id=%s",(x.client_id,))
+        db.execute("DELETE FROM program WHERE client_id=%s",(x.client_id,))
+        for d in days:
+            db.execute("INSERT INTO program_days(client_id,day_name,title) VALUES(%s,%s,%s)",
+                       (x.client_id,d["day_name"],d["title"] or ""))
+        for item in items:
+            db.execute("""INSERT INTO program(
+                client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+                technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (x.client_id,item["day_name"],item["exercise"],item["sets"],item["reps"],item["target_rir"],
+                 item["sort"] or 0,item["superset_group"] or "",item["superset_order"] or 0,
+                 safe_technique_url(item["technique_url"] or ""),item["rest_seconds"] or 0,
+                 item["rest_text"] or "",item["rir_by_set"] or "",item["alternatives_json"] or "[]"))
+        db.commit()
+    return {"ok":True}
 
 @app.post("/api/trainers/{trainer_id}/request")
 def request_trainer(trainer_id:int,x:TrainerRequestIn,user:AuthUser=Depends(require_client)):
@@ -1649,6 +1943,9 @@ def update_trainer_request(request_id:int,x:TrainerRequestStatusIn,user:AuthUser
         db.execute("UPDATE trainer_requests SET status=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",(x.status,request_id))
         if x.status=="accepted":
             db.execute("UPDATE clients SET trainer_id=%s WHERE id=%s",(user.user_id,req["client_id"]))
+            db.execute("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
+                          VALUES(%s,%s,CURRENT_TIMESTAMP,NULL)
+                          ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,req["client_id"]))
         db.commit()
     return {"ok":True,"status":x.status}
 
@@ -1804,9 +2101,16 @@ def save_cardio(x:CardioIn,user:AuthUser=Depends(require_client)):
 def get_exercise_library(user:AuthUser=Depends(current_user)):
     groups=rows("SELECT * FROM exercise_groups ORDER BY sort,id")
     muscles=rows("SELECT * FROM muscles ORDER BY sort,name,id")
-    exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
-                      JOIN exercise_groups g ON g.id=e.group_id
-                      ORDER BY g.sort,g.id,e.name""")
+    if user.role=="trainer":
+        exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                          JOIN exercise_groups g ON g.id=e.group_id
+                          WHERE e.owner_trainer_id IS NULL OR e.owner_trainer_id=?
+                          ORDER BY g.sort,g.id,e.name""",(user.user_id,))
+    else:
+        exercises=rows("""SELECT e.*,g.name AS group_name FROM exercise_library e
+                          JOIN exercise_groups g ON g.id=e.group_id
+                          WHERE e.owner_trainer_id IS NULL AND e.visibility='platform'
+                          ORDER BY g.sort,g.id,e.name""")
     links=rows("SELECT exercise_id,muscle_id,role FROM exercise_muscles ORDER BY exercise_id,muscle_id")
     by_exercise={}
     for link in links:
@@ -1816,10 +2120,13 @@ def get_exercise_library(user:AuthUser=Depends(current_user)):
         exercise["primary_muscle_ids"]=[x["muscle_id"] for x in rel if x["role"]=="primary"]
         exercise["secondary_muscle_ids"]=[x["muscle_id"] for x in rel if x["role"]=="secondary"]
         exercise["technique_url"]=safe_technique_url(exercise.get("technique_url") or "")
+        exercise["scope"]="platform" if exercise.get("owner_trainer_id") is None else "trainer"
+        exercise["editable"]=user.role=="trainer" and (exercise.get("owner_trainer_id")==user.user_id or (exercise.get("owner_trainer_id") is None and user.user_id==1))
     return {"groups":groups,"muscles":muscles,"exercises":exercises}
 
 @app.post("/api/exercise-library/groups")
 def add_exercise_group(x:ExerciseGroupIn,user:AuthUser=Depends(require_trainer)):
+    if user.user_id!=1: raise HTTPException(403,"Довідник ЄПЛАН редагує адміністратор платформи")
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву групи")
     old=one("SELECT id FROM exercise_groups WHERE lower(name)=lower(?)",(name,))
@@ -1828,6 +2135,7 @@ def add_exercise_group(x:ExerciseGroupIn,user:AuthUser=Depends(require_trainer))
 
 @app.delete("/api/exercise-library/groups/{gid}")
 def delete_exercise_group(gid:int,user:AuthUser=Depends(require_trainer)):
+    if user.user_id!=1: raise HTTPException(403,"Довідник ЄПЛАН редагує адміністратор платформи")
     # M06: lock the parent row; ON DELETE CASCADE handles exercises and links in
     # the same transaction. Concurrent add/edit must lock the same group first.
     with con() as c:
@@ -1838,6 +2146,7 @@ def delete_exercise_group(gid:int,user:AuthUser=Depends(require_trainer)):
 
 @app.post("/api/exercise-library/muscles")
 def add_muscle(x:MuscleIn,user:AuthUser=Depends(require_trainer)):
+    if user.user_id!=1: raise HTTPException(403,"Довідник ЄПЛАН редагує адміністратор платформи")
     name=x.name.strip()
     if not name: raise HTTPException(400,"Вкажіть назву м’яза")
     old=one("SELECT id FROM muscles WHERE lower(name)=lower(?)",(name,))
@@ -1846,6 +2155,7 @@ def add_muscle(x:MuscleIn,user:AuthUser=Depends(require_trainer)):
 
 @app.delete("/api/exercise-library/muscles/{mid}")
 def delete_muscle(mid:int,user:AuthUser=Depends(require_trainer)):
+    if user.user_id!=1: raise HTTPException(403,"Довідник ЄПЛАН редагує адміністратор платформи")
     with con() as c:
         muscle=c.execute("SELECT id FROM muscles WHERE id=%s FOR UPDATE",(mid,)).fetchone()
         if muscle:c.execute("DELETE FROM muscles WHERE id=%s",(mid,))
@@ -1882,7 +2192,9 @@ def add_library_exercise(x:ExerciseLibraryIn,user:AuthUser=Depends(require_train
             eid=old["id"]
             c.execute("UPDATE exercise_library SET technique_url=%s WHERE id=%s",(technique_url,eid))
         else:
-            eid=c.execute("INSERT INTO exercise_library(group_id,name,technique_url) VALUES(%s,%s,%s) RETURNING id",(x.group_id,name,technique_url)).fetchone()["id"]
+            eid=c.execute("""INSERT INTO exercise_library(group_id,name,technique_url,owner_trainer_id,visibility)
+                             VALUES(%s,%s,%s,%s,'private') RETURNING id""",
+                          (x.group_id,name,technique_url,user.user_id)).fetchone()["id"]
         save_exercise_muscles(c,eid,x)
         c.commit()
     return {"id":eid}
@@ -1893,7 +2205,12 @@ def edit_library_exercise(eid:int,x:ExerciseLibraryIn,user:AuthUser=Depends(requ
     if not name: raise HTTPException(400,"Вкажіть назву вправи")
     technique_url=require_technique_url(x.technique_url)
     with con() as c:
-        if not c.execute("SELECT id FROM exercise_library WHERE id=%s FOR UPDATE",(eid,)).fetchone(): raise HTTPException(404,"Вправу не знайдено")
+        exercise=c.execute("SELECT id,owner_trainer_id FROM exercise_library WHERE id=%s FOR UPDATE",(eid,)).fetchone()
+        if not exercise: raise HTTPException(404,"Вправу не знайдено")
+        if exercise["owner_trainer_id"] is None:
+            if user.user_id!=1: raise HTTPException(403,"Загальну вправу ЄПЛАН редагує адміністратор платформи")
+        elif int(exercise["owner_trainer_id"])!=user.user_id:
+            raise HTTPException(403,"Це вправа іншого тренера")
         if not c.execute("SELECT id FROM exercise_groups WHERE id=%s FOR UPDATE",(x.group_id,)).fetchone(): raise HTTPException(404,"Групу не знайдено")
         duplicate=c.execute("SELECT id FROM exercise_library WHERE group_id=%s AND lower(name)=lower(%s) AND id<>%s",(x.group_id,name,eid)).fetchone()
         if duplicate: raise HTTPException(400,"Вправа з такою назвою вже є в цій групі")
@@ -1905,8 +2222,13 @@ def edit_library_exercise(eid:int,x:ExerciseLibraryIn,user:AuthUser=Depends(requ
 @app.delete("/api/exercise-library/exercises/{eid}")
 def delete_library_exercise(eid:int,user:AuthUser=Depends(require_trainer)):
     with con() as c:
-        exercise=c.execute("SELECT id FROM exercise_library WHERE id=%s FOR UPDATE",(eid,)).fetchone()
-        if exercise:c.execute("DELETE FROM exercise_library WHERE id=%s",(eid,))
+        exercise=c.execute("SELECT id,owner_trainer_id FROM exercise_library WHERE id=%s FOR UPDATE",(eid,)).fetchone()
+        if not exercise:raise HTTPException(404,"Вправу не знайдено")
+        if exercise["owner_trainer_id"] is None:
+            if user.user_id!=1:raise HTTPException(403,"Загальну вправу ЄПЛАН видаляє адміністратор платформи")
+        elif int(exercise["owner_trainer_id"])!=user.user_id:
+            raise HTTPException(403,"Це вправа іншого тренера")
+        c.execute("DELETE FROM exercise_library WHERE id=%s",(eid,))
         c.commit()
     return {"ok":True}
 
@@ -1951,7 +2273,13 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
             new_alts=[]
             for name in [current,*alternatives]:
                 if name and name!=selected and name not in new_alts:new_alts.append(name)
-            lib=c.execute("SELECT technique_url FROM exercise_library WHERE lower(name)=lower(%s) ORDER BY id LIMIT 1",(selected,)).fetchone()
+            owner=c.execute("SELECT trainer_id FROM clients WHERE id=%s",(p["client_id"],)).fetchone()
+            trainer_id=int(owner["trainer_id"] or 0) if owner else 0
+            lib=c.execute("""SELECT technique_url FROM exercise_library
+                             WHERE lower(name)=lower(%s)
+                               AND (owner_trainer_id IS NULL OR owner_trainer_id=%s)
+                             ORDER BY CASE WHEN owner_trainer_id=%s THEN 0 ELSE 1 END,id LIMIT 1""",
+                          (selected,trainer_id,trainer_id)).fetchone()
             technique_url=safe_technique_url((lib["technique_url"] if lib else "") or "")
             c.execute("UPDATE program SET exercise=%s,alternatives_json=%s,technique_url=%s WHERE id=%s",
                       (selected,json.dumps(new_alts,ensure_ascii=False),technique_url,pid))
