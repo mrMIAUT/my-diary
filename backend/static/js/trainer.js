@@ -31,7 +31,7 @@ function trainerAttention(c){
  if(!a.features?.trainer_review)return {level:'paused',label:'Без супроводу',reason:a.plan_name||'Самостійний тариф'};
  let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0,comp=trainerCompliance(c),days=trainerDaysSince(c.last_finished_at);
  let createdDays=trainerDaysSince(c.created_at),finished=+c.finished_workout_count||0;
- if(finished===0&&createdDays!==null&&createdDays<7)return {level:'new',label:'Новий клієнт',reason:'Початок роботи'};
+ if(finished===0&&(createdDays===null||createdDays<7))return {level:'new',label:'Новий клієнт',reason:'Ще немає завершених тренувань'};
  let reasons=[];
  if(review)reasons.push('Тренування до перевірки: '+review);
  if(check)reasons.push('Щотижневі звіти: '+check);
