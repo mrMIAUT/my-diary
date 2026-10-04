@@ -1918,9 +1918,11 @@ def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUse
 
 @app.post("/api/trainers/{trainer_id}/request")
 def request_trainer(trainer_id:int,x:TrainerRequestIn,user:AuthUser=Depends(require_client)):
-    profile=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(trainer_id,))
+    profile=trainer_profile_stats_row(trainer_id)
     if not profile or not profile["is_published"]: raise HTTPException(404,"Тренера не знайдено")
-    if not profile["accepting_clients"]: raise HTTPException(409,"Тренер зараз не набирає нових клієнтів")
+    active=int(profile.get("active_clients") or 0);capacity=max(0,int(profile.get("max_active_clients") or 0))
+    if not profile["accepting_clients"] or (capacity and active>=capacity):
+        raise HTTPException(409,"Тренер зараз не набирає нових клієнтів")
     pending=one("""SELECT id,status FROM trainer_requests
                    WHERE client_id=? AND trainer_id=? AND status='pending'
                    ORDER BY id DESC LIMIT 1""",(user.client_id,trainer_id))
