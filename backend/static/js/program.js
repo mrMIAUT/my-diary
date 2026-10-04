@@ -190,7 +190,9 @@ async function saveExerciseEdit(pid,cid){
  body.technique_url=safeTechniqueUrl(body.technique_url);
  try{
    await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
-   editExerciseModal.remove();await openClient(cid);
+   editExerciseModal.remove();
+   await openClient(cid,'program');
+   reopenTrainerProgramDay(body.day_name);
  }catch(e){alert(e.message||'Не вдалося зберегти зміни')}
 }
 
@@ -226,7 +228,8 @@ async function saveSupersetExercise(sourceId,dayName,button=null){
    await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
    await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
    supersetModal.remove();
-   await openClient(selected);
+   await openClient(selected,'program');
+   reopenTrainerProgramDay(dayName);
  }catch(e){
    restore();
    alert(e.message||'Не вдалося додати вправу в суперсет');
