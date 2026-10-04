@@ -113,29 +113,89 @@ async function showTrainerCheckins(){
 }
 
 
+window.trainerProgramsMode=window.trainerProgramsMode||'assigned';
+
+function trainerProgramTabsHTML(){
+  let tab=(key,label)=>'<button class="'+(window.trainerProgramsMode===key?'active':'')+'" onclick="window.trainerProgramsMode=\''+key+'\';showTrainerPrograms()">'+label+'</button>';
+  return '<div class="trainer-program-tabs">'+tab('assigned','Призначені')+tab('templates','Шаблони')+'</div>';
+}
+
+function trainerTemplateCardHTML(t){
+  let days=+t.days_count||0,ex=+t.exercises_count||0;
+  return '<div class="trainer-template-card">'
+    +'<div class="trainer-template-card-main"><span class="trainer-template-icon">'+uiIcon('dumbbell')+'</span><div><strong>'+esc(t.name||'Шаблон')+'</strong><small>'+days+' дн. · '+ex+' вправ</small>'+(t.description?'<p>'+esc(t.description)+'</p>':'')+'</div></div>'
+    +'<div class="trainer-template-actions"><button onclick="openAssignProgramTemplateModal('+t.id+')">Призначити</button><button class="dark" onclick="deleteProgramTemplate('+t.id+')">'+uiIcon('trash')+'</button></div>'
+  +'</div>';
+}
+
 async function showTrainerPrograms(){
   currentTrainerMainView='programs';selected=null;window.currentClientData=null;
   let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
-  let rows=cs.map(c=>{
-    let days=+c.program_days_count||0,hasProgram=days>0;
-    let countLabel=days===1?'1 день':days>=2&&days<=4?days+' дні':days+' днів';
-    let label=hasProgram?'Призначено '+countLabel:'Програму ще не призначено';
-    return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
-      +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
-      +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
-      +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(hasProgram?countLabel:'Без програми')+'</span>'
-      +'<span class="trainer-assigned-chevron">›</span>'
-    +'</button>';
-  }).join('');
-  app.innerHTML=shell(`<div class="trainer-programs-page modern">
-    <div class="trainer-page-title trainer-programs-title">
-      <div><h1>Програми</h1><p class="trainer-page-sub">Програми, призначені клієнтам</p></div>
-    </div>
-    ${rows
+  let body='';
+  if(window.trainerProgramsMode==='templates'){
+    let templates=await api('/trainer/program-templates');
+    body='<div class="trainer-template-toolbar"><div><strong>Мої шаблони</strong><span>Зберігай готові програми та призначай їх за кілька секунд.</span></div><button onclick="openCreateProgramTemplateModal()">+ Створити шаблон</button></div>'
+      +(templates.length?'<div class="trainer-template-list">'+templates.map(trainerTemplateCardHTML).join('')+'</div>':'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблонів ще немає</h2><p>Створи перший шаблон із готової програми будь-якого клієнта.</p><button onclick="openCreateProgramTemplateModal()">Створити шаблон</button></div>');
+  }else{
+    let rows=cs.map(c=>{
+      let days=+c.program_days_count||0,hasProgram=days>0;
+      let countLabel=days===1?'1 день':days>=2&&days<=4?days+' дні':days+' днів';
+      let label=hasProgram?'Призначено '+countLabel:'Програму ще не призначено';
+      return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
+        +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
+        +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
+        +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(hasProgram?countLabel:'Без програми')+'</span>'
+        +'<span class="trainer-assigned-chevron">›</span>'
+      +'</button>';
+    }).join('');
+    body=rows
       ?'<div class="trainer-assigned-list modern">'+rows+'</div>'
-      :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Відкрий клієнта, щоб створити або призначити йому програму.</p></div>'}
-  </div>`);
+      :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Відкрий клієнта, щоб створити або призначити йому програму.</p></div>';
+  }
+  app.innerHTML=shell('<div class="trainer-programs-page modern"><div class="trainer-page-title trainer-programs-title"><div><h1>Програми</h1><p class="trainer-page-sub">Призначені програми та твої багаторазові шаблони</p></div></div>'+trainerProgramTabsHTML()+body+'</div>');
 }
+
+async function openCreateProgramTemplateModal(){
+  let cs=(await loadClients()).filter(c=>c.status!=='Видалений'&&(+c.program_days_count||0)>0);
+  if(!cs.length)return alert('Спочатку створи програму хоча б для одного клієнта.');
+  document.getElementById('programTemplateModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="programTemplateModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-template-modal"><div class="between"><div><h2>Новий шаблон</h2><p class="muted">Збережемо копію готової програми. Подальші зміни клієнта шаблон не змінять.</p></div><button class="dark" onclick="programTemplateModal.remove()">✕</button></div><label><span>Назва шаблону</span><input id="templateName" placeholder="Наприклад: Full Body · 3 дні"></label><label><span>Взяти програму клієнта</span><select id="templateSourceClient">'+cs.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' · '+(+x.program_days_count||0)+' дн.</option>').join('')+'</select></label><label><span>Опис <small>необов’язково</small></span><textarea id="templateDescription" placeholder="Для кого цей шаблон, ціль, акцент..."></textarea></label><button class="trainer-template-primary" onclick="createProgramTemplate(this)">Зберегти шаблон</button></div></div>');
+}
+
+async function createProgramTemplate(btn){
+  let name=document.getElementById('templateName')?.value.trim()||'',source_client_id=+document.getElementById('templateSourceClient')?.value||0,description=document.getElementById('templateDescription')?.value||'';
+  if(!name)return alert('Вкажи назву шаблону.');
+  if(btn)btn.disabled=true;
+  try{
+    await api('/trainer/program-templates',{method:'POST',body:JSON.stringify({source_client_id,name,description})});
+    document.getElementById('programTemplateModal')?.remove();
+    window.trainerProgramsMode='templates';await showTrainerPrograms();
+  }catch(e){if(btn)btn.disabled=false;alert(e.message||'Не вдалося створити шаблон')}
+}
+
+async function openAssignProgramTemplateModal(templateId){
+  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
+  document.getElementById('programTemplateAssignModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="programTemplateAssignModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-template-modal"><div class="between"><div><h2>Призначити шаблон</h2><p class="muted">Поточна програма вибраного клієнта буде замінена копією шаблону. Історія завершених тренувань залишиться.</p></div><button class="dark" onclick="programTemplateAssignModal.remove()">✕</button></div><label><span>Клієнт</span><select id="templateTargetClient">'+cs.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('')+'</select></label><button class="trainer-template-primary" onclick="applyProgramTemplate('+templateId+',this)">Призначити програму</button></div></div>');
+}
+
+async function applyProgramTemplate(templateId,btn){
+  let client_id=+document.getElementById('templateTargetClient')?.value||0;if(!client_id)return;
+  if(!confirm('Замінити поточну програму цього клієнта шаблоном?'))return;
+  if(btn)btn.disabled=true;
+  try{
+    await api('/trainer/program-templates/'+templateId+'/apply',{method:'POST',body:JSON.stringify({client_id})});
+    document.getElementById('programTemplateAssignModal')?.remove();
+    window.trainerProgramsMode='assigned';await showTrainerPrograms();
+  }catch(e){if(btn)btn.disabled=false;alert(e.message||'Не вдалося призначити шаблон')}
+}
+
+async function deleteProgramTemplate(templateId){
+  if(!confirm('Видалити цей шаблон? Уже призначені клієнтам програми не зміняться.'))return;
+  await api('/trainer/program-templates/'+templateId,{method:'DELETE'});
+  await showTrainerPrograms();
+}
+
 
 async function showTrainerNutrition(){
  currentTrainerMainView='nutrition';selected=null;window.currentClientData=null;
@@ -168,28 +228,44 @@ async function showTrainerNutrition(){
  </div>`);
 }
 
+function trainerProfileAvatarEditorHTML(p){
+  return '<div class="trainer-profile-editor-avatar '+(p.avatar_url?'has-photo':'')+'">'
+    +(p.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="Фото тренера">':'<span>'+esc(trainerClientInitials({name:p.display_name||'Тренер'}))+'</span>')
+  +'</div>';
+}
+
 async function showTrainerPublicProfileEditor(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
  let p=await api('/trainer/profile');
  let checked=v=>v?'checked':'';
- app.innerHTML=shell(`<div class="trainer-more-page modern trainer-public-profile-editor">
-   <div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Цей профіль бачитимуть клієнти у каталозі тренерів.</p></div></div>
-   <div class="card trainer-public-profile-card">
-     <label><span>Ім’я у профілі</span><input id="tpName" value="${esc(p.display_name||'')}"></label>
-     <label><span>Короткий опис</span><input id="tpHeadline" value="${esc(p.headline||'')}" placeholder="Наприклад: онлайн-тренер · набір м’язової маси"></label>
-     <label><span>Про себе</span><textarea id="tpBio" placeholder="Розкажи про підхід, досвід і кому ти допомагаєш">${esc(p.bio||'')}</textarea></label>
-     <label><span>Досвід, років</span><input id="tpExperience" type="number" min="0" max="100" value="${+p.experience_years||0}"></label>
-     <label><span>Спеціалізації</span><input id="tpSpecialties" value="${esc(p.specialties||'')}" placeholder="Набір м’язів, схуднення, силові тренування"></label>
-     <div class="trainer-public-profile-social-grid">
-       <label><span>Instagram</span><input id="tpInstagram" value="${esc(p.instagram||'')}" placeholder="@username"></label>
-       <label><span>Telegram</span><input id="tpTelegram" value="${esc(p.telegram||'')}" placeholder="@username"></label>
-       <label><span>TikTok</span><input id="tpTiktok" value="${esc(p.tiktok||'')}" placeholder="@username"></label>
-     </div>
-     <label class="trainer-public-profile-check"><input id="tpAccepting" type="checkbox" ${checked(p.accepting_clients)}><span>Набираю нових клієнтів</span></label>
-     <label class="trainer-public-profile-check"><input id="tpPublished" type="checkbox" ${checked(p.is_published)}><span>Показувати профіль у каталозі</span></label>
-     <button class="trainer-public-profile-save" onclick="saveTrainerPublicProfile(this)">Зберегти профіль</button>
-   </div>
- </div>`);
+ let rating=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★ · '+p.rating_count+' відгуків':'Ще без оцінок';
+ app.innerHTML=shell('<div class="trainer-more-page modern trainer-public-profile-editor">'
+   +'<div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Саме так тебе бачитимуть клієнти у каталозі ЄПЛАН.</p></div></div>'
+   +'<div class="trainer-profile-editor-preview card">'+trainerProfileAvatarEditorHTML(p)+'<div><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><span>'+esc(p.headline||'Додай коротке позиціонування')+'</span><small>'+esc(rating)+'</small></div><label class="trainer-avatar-upload"><input id="tpAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTrainerAvatar(this)"><span>'+uiIcon('edit')+' Змінити фото</span></label></div>'
+   +'<div class="trainer-profile-editor-stats"><div><strong>'+esc(String(+p.active_clients||0))+'</strong><span>ведеш зараз</span></div><div><strong>'+esc(String(+p.total_clients||0))+'</strong><span>клієнтів всього</span></div><div><strong>'+esc(String(+p.experience_years||0))+'</strong><span>років досвіду</span></div></div>'
+   +'<div class="card trainer-public-profile-card">'
+     +'<label><span>Ім’я у профілі</span><input id="tpName" value="'+esc(p.display_name||'')+'"></label>'
+     +'<label><span>Короткий опис</span><input id="tpHeadline" value="'+esc(p.headline||'')+'" placeholder="Наприклад: набір м’язів · силові · онлайн"></label>'
+     +'<label><span>Про себе</span><textarea id="tpBio" placeholder="Підхід, досвід, кому ти допомагаєш">'+esc(p.bio||'')+'</textarea></label>'
+     +'<div class="trainer-public-profile-two"><label><span>Досвід, років</span><input id="tpExperience" type="number" min="0" max="100" value="'+(+p.experience_years||0)+'"></label><label><span>Максимум активних клієнтів</span><input id="tpCapacity" type="number" min="0" max="10000" value="'+(+p.max_active_clients||0)+'" placeholder="0 = без ліміту"></label></div>'
+     +'<label><span>Спеціалізації</span><input id="tpSpecialties" value="'+esc(p.specialties||'')+'" placeholder="Набір м’язів, схуднення, силові тренування"></label>'
+     +'<div class="trainer-public-profile-social-grid"><label><span>Instagram</span><input id="tpInstagram" value="'+esc(p.instagram||'')+'" placeholder="@username"></label><label><span>Telegram</span><input id="tpTelegram" value="'+esc(p.telegram||'')+'" placeholder="@username"></label><label><span>TikTok</span><input id="tpTiktok" value="'+esc(p.tiktok||'')+'" placeholder="@username"></label></div>'
+     +'<label class="trainer-public-profile-check"><input id="tpAccepting" type="checkbox" '+checked(p.accepting_clients)+'><span>Набираю нових клієнтів</span></label>'
+     +'<label class="trainer-public-profile-check"><input id="tpPublished" type="checkbox" '+checked(p.is_published)+'><span>Показувати профіль у каталозі</span></label>'
+     +'<button class="trainer-public-profile-save" onclick="saveTrainerPublicProfile(this)">Зберегти профіль</button>'
+   +'</div>'
+ +'</div>');
+}
+
+async function uploadTrainerAvatar(input){
+  let file=input?.files?.[0];if(!file)return;
+  if(file.size>10*1024*1024){input.value='';return alert('Фото завелике. Максимум 10 МБ.')}
+  let form=new FormData();form.append('file',file);
+  try{
+    let response=await eplanFetch(A+'/trainer/profile/avatar',{method:'POST',body:form});
+    if(!response.ok){let body={};try{body=await response.json()}catch{};throw new Error(body.detail||'Не вдалося завантажити фото')}
+    await showTrainerPublicProfileEditor();
+  }catch(e){alert(e.message||'Не вдалося завантажити фото')}
 }
 
 async function saveTrainerPublicProfile(btn){
@@ -200,6 +276,7 @@ async function saveTrainerPublicProfile(btn){
      headline:document.getElementById('tpHeadline')?.value||'',
      bio:document.getElementById('tpBio')?.value||'',
      experience_years:+document.getElementById('tpExperience')?.value||0,
+     max_active_clients:+document.getElementById('tpCapacity')?.value||0,
      specialties:document.getElementById('tpSpecialties')?.value||'',
      instagram:document.getElementById('tpInstagram')?.value||'',
      telegram:document.getElementById('tpTelegram')?.value||'',
