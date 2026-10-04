@@ -116,30 +116,23 @@ async function showTrainerCheckins(){
 async function showTrainerPrograms(){
   currentTrainerMainView='programs';selected=null;window.currentClientData=null;
   let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
-  let rows=await Promise.all(cs.map(async c=>{
-    try{
-      let d=await loadClientData(c.id),days=[...new Set((d.program||[]).map(x=>x.day_name).filter(Boolean))];
-      let hasProgram=days.length>0;
-      let label=hasProgram?days.join(' · '):'Програму ще не призначено';
-      let countLabel=days.length===1?'1 день':days.length>1?days.length+' дні':'Без програми';
-      return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
-        +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
-        +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
-        +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(countLabel)+'</span>'
-        +'<span class="trainer-assigned-chevron">›</span>'
-      +'</button>';
-    }catch(e){
-      console.error('Є ПЛАН: failed to load assigned program',e);
-      return '';
-    }
-  }));
-  let assigned=rows.filter(Boolean).join('');
+  let rows=cs.map(c=>{
+    let days=+c.program_days_count||0,hasProgram=days>0;
+    let countLabel=days===1?'1 день':days>=2&&days<=4?days+' дні':days+' днів';
+    let label=hasProgram?'Призначено '+countLabel:'Програму ще не призначено';
+    return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
+      +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
+      +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
+      +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(hasProgram?countLabel:'Без програми')+'</span>'
+      +'<span class="trainer-assigned-chevron">›</span>'
+    +'</button>';
+  }).join('');
   app.innerHTML=shell(`<div class="trainer-programs-page modern">
     <div class="trainer-page-title trainer-programs-title">
       <div><h1>Програми</h1><p class="trainer-page-sub">Програми, призначені клієнтам</p></div>
     </div>
-    ${assigned
-      ?'<div class="trainer-assigned-list modern">'+assigned+'</div>'
+    ${rows
+      ?'<div class="trainer-assigned-list modern">'+rows+'</div>'
       :'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Призначених програм немає</h2><p>Відкрий клієнта, щоб створити або призначити йому програму.</p></div>'}
   </div>`);
 }
