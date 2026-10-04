@@ -168,11 +168,93 @@ async function showTrainerNutrition(){
  </div>`);
 }
 
+async function showTrainerPublicProfileEditor(){
+ currentTrainerMainView='more';selected=null;window.currentClientData=null;
+ let p=await api('/trainer/profile');
+ let checked=v=>v?'checked':'';
+ app.innerHTML=shell(`<div class="trainer-more-page modern trainer-public-profile-editor">
+   <div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Цей профіль бачитимуть клієнти у каталозі тренерів.</p></div></div>
+   <div class="card trainer-public-profile-card">
+     <label><span>Ім’я у профілі</span><input id="tpName" value="${esc(p.display_name||'')}"></label>
+     <label><span>Короткий опис</span><input id="tpHeadline" value="${esc(p.headline||'')}" placeholder="Наприклад: онлайн-тренер · набір м’язової маси"></label>
+     <label><span>Про себе</span><textarea id="tpBio" placeholder="Розкажи про підхід, досвід і кому ти допомагаєш">${esc(p.bio||'')}</textarea></label>
+     <label><span>Досвід, років</span><input id="tpExperience" type="number" min="0" max="100" value="${+p.experience_years||0}"></label>
+     <label><span>Спеціалізації</span><input id="tpSpecialties" value="${esc(p.specialties||'')}" placeholder="Набір м’язів, схуднення, силові тренування"></label>
+     <div class="trainer-public-profile-social-grid">
+       <label><span>Instagram</span><input id="tpInstagram" value="${esc(p.instagram||'')}" placeholder="@username"></label>
+       <label><span>Telegram</span><input id="tpTelegram" value="${esc(p.telegram||'')}" placeholder="@username"></label>
+       <label><span>TikTok</span><input id="tpTiktok" value="${esc(p.tiktok||'')}" placeholder="@username"></label>
+     </div>
+     <label class="trainer-public-profile-check"><input id="tpAccepting" type="checkbox" ${checked(p.accepting_clients)}><span>Набираю нових клієнтів</span></label>
+     <label class="trainer-public-profile-check"><input id="tpPublished" type="checkbox" ${checked(p.is_published)}><span>Показувати профіль у каталозі</span></label>
+     <button class="trainer-public-profile-save" onclick="saveTrainerPublicProfile(this)">Зберегти профіль</button>
+   </div>
+ </div>`);
+}
+
+async function saveTrainerPublicProfile(btn){
+ if(btn)btn.disabled=true;
+ try{
+   await api('/trainer/profile',{method:'PATCH',body:JSON.stringify({
+     display_name:document.getElementById('tpName')?.value||'',
+     headline:document.getElementById('tpHeadline')?.value||'',
+     bio:document.getElementById('tpBio')?.value||'',
+     experience_years:+document.getElementById('tpExperience')?.value||0,
+     specialties:document.getElementById('tpSpecialties')?.value||'',
+     instagram:document.getElementById('tpInstagram')?.value||'',
+     telegram:document.getElementById('tpTelegram')?.value||'',
+     tiktok:document.getElementById('tpTiktok')?.value||'',
+     accepting_clients:!!document.getElementById('tpAccepting')?.checked,
+     is_published:!!document.getElementById('tpPublished')?.checked
+   })});
+   await showTrainerPublicProfileEditor();
+ }catch(e){
+   if(btn)btn.disabled=false;
+   alert(e.message||'Не вдалося зберегти профіль');
+ }
+}
+
+function trainerRequestStatusLabel(status){
+ return status==='accepted'?'Прийнято':status==='declined'?'Відхилено':'Новий';
+}
+
+async function showTrainerCoachRequests(){
+ currentTrainerMainView='more';selected=null;window.currentClientData=null;
+ let xs=await api('/trainer/requests');
+ let rows=xs.map(x=>{
+   let pending=x.status==='pending';
+   return '<div class="card trainer-coach-request">'
+     +'<div class="trainer-coach-request-head"><div><strong>'+esc(x.client_name||'Клієнт')+'</strong><small>'+esc(x.client_email||'')+'</small></div><span class="trainer-coach-request-status '+esc(x.status)+'">'+esc(trainerRequestStatusLabel(x.status))+'</span></div>'
+     +(x.message?'<p>'+esc(x.message)+'</p>':'<p class="muted">Без повідомлення.</p>')
+     +(pending?'<div class="trainer-coach-request-actions"><button onclick="updateTrainerCoachRequest('+x.id+',\'accepted\')">Прийняти</button><button class="dark" onclick="updateTrainerCoachRequest('+x.id+',\'declined\')">Відхилити</button></div>':'')
+   +'</div>';
+ }).join('');
+ app.innerHTML=shell(`<div class="trainer-more-page modern trainer-coach-requests-page">
+   <div class="trainer-page-title trainer-more-title"><div><h1>Запити на ведення</h1><p class="trainer-page-sub">Клієнти, які обрали тебе у каталозі тренерів.</p></div></div>
+   ${rows||'<div class="trainer-empty">Запитів поки немає.</div>'}
+ </div>`);
+}
+
+async function updateTrainerCoachRequest(id,status){
+ await api('/trainer/requests/'+id,{method:'PATCH',body:JSON.stringify({status})});
+ await showTrainerCoachRequests();
+}
+
 function showTrainerMore(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
  app.innerHTML=shell(`<div class="trainer-more-page modern">
    <div class="trainer-page-title trainer-more-title"><h1>Більше</h1></div>
    <div class="trainer-more-list modern">
+     <button class="trainer-more-item" onclick="showTrainerPublicProfileEditor()">
+       <span class="trainer-more-icon">${uiIcon('user')}</span>
+       <span class="trainer-more-copy"><strong>Мій профіль тренера</strong><small>Публічна сторінка у каталозі</small></span>
+       <span class="trainer-more-chevron">›</span>
+     </button>
+     <button class="trainer-more-item" onclick="showTrainerCoachRequests()">
+       <span class="trainer-more-icon">${uiIcon('users')}</span>
+       <span class="trainer-more-copy"><strong>Запити на ведення</strong><small>Клієнти, які обрали тебе</small></span>
+       <span class="trainer-more-chevron">›</span>
+     </button>
      <button class="trainer-more-item" onclick="showExerciseLibrary()">
        <span class="trainer-more-icon">${uiIcon('dumbbell')}</span>
        <span class="trainer-more-copy"><strong>Бібліотека вправ</strong><small>Вправи, м’язи та техніка</small></span>
