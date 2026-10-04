@@ -105,7 +105,9 @@ class ReleaseContracts(unittest.TestCase):
 
     def test_frontend_respects_tariff_contract(self):
         self.assertIn("features.workouts?item('training'", CORE)
-        self.assertIn("features.nutrition?item('nutrition'", CORE)
+        self.assertIn("item('nutrition','Харчування','food'", CORE)
+        self.assertNotIn("features.nutrition?item('nutrition'", CORE)
+        self.assertIn("План тренувань + План харчування", NUTRITION)
         self.assertIn("checkinEnabled=!!features.checkin", HOME)
         self.assertIn("nutritionEnabled=!!features.nutrition", HOME)
         self.assertIn("features?.meal_plan?", NUTRITION)
