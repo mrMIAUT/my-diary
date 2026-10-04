@@ -458,12 +458,21 @@ function clientNavGroup(view=currentClientView){
  return 'home';
 }
 
+async function goClientHome(cid){
+ try{
+   await clientCabinet(cid);
+ }catch(e){
+   console.error('client home navigation failed',e);
+   location.assign('/');
+ }
+}
+
 function clientBottomNavHTML(){
  if(!session||session.role!=='client'||!session.client_id)return '';
  let cid=session.client_id,active=clientNavGroup(),features=clientAccess().features||{};
- let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
  let items=[
-   item('home','Головна','home',`clientCabinet(${cid})`),
+   item('home','Головна','home',`goClientHome(${cid})`),
    features.workouts?item('training','Тренування','dumbbell',`showClientTraining(${cid})`):'',
    item('progress','Прогрес','chart',`showClientSection('progress')`),
    item('nutrition','Харчування','food',`showClientNutrition(${cid})`),
@@ -475,7 +484,7 @@ function clientBottomNavHTML(){
 function trainerBottomNavHTML(){
  if(!session||session.role!=='trainer')return '';
  let active=currentTrainerMainView||'home';
- let item=(key,label,icon,action)=>`<button class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
  return `<nav class="trainer-bottom-nav" aria-label="Навігація тренера">
    ${item('home','Головна','home','trainerHome()')}
    ${item('clients','Клієнти','users','showTrainerClientsView()')}

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Response, Depends, Query
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.staticfiles import StaticFiles
@@ -1351,11 +1351,20 @@ def _app_index():
         "Pragma":"no-cache", "Expires":"0"
     })
 
+def _canonical_entry(request:Request,path="/"):
+    host=(request.headers.get("x-forwarded-host") or request.headers.get("host") or "").split(",")[0].strip().split(":")[0].lower()
+    if host=="my-diary-fit.onrender.com":
+        suffix=path if path.startswith("/") else "/"+path
+        if request.url.query:
+            suffix+="?"+request.url.query
+        return RedirectResponse("https://eplan.com.ua"+suffix,status_code=307)
+    return _app_index()
+
 @app.get("/")
-def home(): return _app_index()
+def home(request:Request): return _canonical_entry(request,"/")
 
 @app.get("/app")
-def pwa_app(): return _app_index()
+def pwa_app(request:Request): return _canonical_entry(request,"/app")
 
 @app.get("/pwa-reset")
 def pwa_reset():
