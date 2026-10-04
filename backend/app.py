@@ -1005,7 +1005,7 @@ def init():
                 ALTER TABLE public.weekly_checkins
                     RENAME TO weekly_checkins_legacy_pre_redesign;
             END IF;
-        END $;""")
+        END $migration$;""")
         c.execute("""CREATE TABLE IF NOT EXISTS weekly_checkins(
             id BIGSERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL REFERENCES clients(id),
