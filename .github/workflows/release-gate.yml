@@ -2,15 +2,22 @@ name: Release gate
 
 on:
   push:
-    branches: [redesign-v1, main]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: release-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   static-contracts:
     runs-on: ubuntu-latest
     steps:
+      - name: Debounce rapid PR updates
+        if: github.event_name == 'pull_request'
+        run: sleep 20
       - uses: actions/checkout@v4
       - name: Python syntax
         run: python3 -m py_compile backend/app.py
