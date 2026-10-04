@@ -27,6 +27,49 @@ function alternativesInputValue(x){return exerciseAlternatives(x).join(', ')}
 
 function parseAlternatives(v,main=''){let seen=new Set(),m=String(main||'').trim().toLowerCase();return String(v||'').split(',').map(x=>x.trim()).filter(x=>x&&x.toLowerCase()!==m&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase()))}
 
+function nextProgramAlternativeInputId(){
+ window.__programAlternativeRowSeq=(+window.__programAlternativeRowSeq||0)+1;
+ return 'programAlternative_'+window.__programAlternativeRowSeq;
+}
+function programAlternativeRowHTML(value=''){
+ let inputId=nextProgramAlternativeInputId();
+ return `<div class="trainer-program-alternative-row">
+   <input id="${inputId}" class="trainer-program-alternative-input" list="exerciseLibraryNames" value="${esc(value)}" placeholder="Введіть вправу або оберіть з бібліотеки">
+   <button type="button" class="trainer-program-alternative-pick" onclick="openProgramExercisePicker('${inputId}')">Обрати з бібліотеки</button>
+   <button type="button" class="trainer-program-alternative-remove" onclick="removeProgramAlternativeRow(this)" aria-label="Прибрати альтернативу">×</button>
+ </div>`;
+}
+function programAlternativeEditorHTML(containerId,values=[]){
+ let rows=(Array.isArray(values)?values:[]).map(v=>String(v||'').trim()).filter(Boolean);
+ if(!rows.length)rows=[''];
+ return `<div id="${containerId}" class="trainer-program-alternatives-editor">${rows.map(v=>programAlternativeRowHTML(v)).join('')}</div>
+   <button type="button" class="trainer-program-alternative-add" data-target="${containerId}" onclick="addProgramAlternativeRow(this.dataset.target)">＋ Додати альтернативу</button>`;
+}
+function addProgramAlternativeRow(containerId,value=''){
+ let host=document.getElementById(containerId);if(!host)return;
+ host.insertAdjacentHTML('beforeend',programAlternativeRowHTML(value));
+ let input=host.lastElementChild?.querySelector('input');
+ input?.focus();
+}
+function removeProgramAlternativeRow(button){
+ let row=button?.closest('.trainer-program-alternative-row'),host=row?.parentElement;if(!row||!host)return;
+ let rows=[...host.querySelectorAll('.trainer-program-alternative-row')];
+ if(rows.length<=1){
+   let input=row.querySelector('input');if(input){input.value='';input.focus()}
+   return;
+ }
+ row.remove();
+}
+function collectProgramAlternatives(containerId,main=''){
+ let host=document.getElementById(containerId),mainKey=String(main||'').trim().toLowerCase(),seen=new Set(),out=[];
+ (host?[...host.querySelectorAll('.trainer-program-alternative-input')]:[]).forEach(input=>{
+   let value=String(input.value||'').trim(),key=value.toLowerCase();
+   if(!value||key===mainKey||seen.has(key))return;
+   seen.add(key);out.push(value);
+ });
+ return out;
+}
+
 function alternativesTrainerHTML(x){let a=exerciseAlternatives(x);return a.length?`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>${a.map(v=>{let tech=exerciseTechniqueUrl(v);return `<span class="alternative-chip"><span class="alternative-name">${esc(v)}</span>${tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</span>`}).join('')}</div></div>`:''}
 
 function programExtraHTML(x){
@@ -230,7 +273,7 @@ function programHTML(d){
      <label><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
      <label><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
      <label><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
-     <label class="wide"><span>Альтернативи</span><input id="alternatives" list="exerciseLibraryNames" placeholder="Напр. Гак-присідання, Сміт"></label>
+     <div class="wide trainer-program-alternatives-block"><div class="trainer-program-alternatives-title"><span>Альтернативи</span><small>Можна обрати з бібліотеки або ввести вручну</small></div>${programAlternativeEditorHTML('programAlternativesEditor')}</div>
    </div>
    <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
    <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">＋ Додати вправу</button>
@@ -348,11 +391,11 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><div class="trainer-program-exercise-field"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><button type="button" onclick="openProgramExercisePicker('editName','editTech')">Обрати з бібліотеки</button></div><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><div class="trainer-program-exercise-field"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><button type="button" onclick="openProgramExercisePicker('editName','editTech')">Обрати з бібліотеки</button></div><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><div class="wide trainer-program-alternatives-block"><div class="trainer-program-alternatives-title"><span>Альтернативи</span><small>Обери з бібліотеки або введи вручну</small></div>${programAlternativeEditorHTML('editAlternativesEditor',exerciseAlternatives(x))}</div></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
 }
 
 async function saveExerciseEdit(pid,cid){
- let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+((editRirSet.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(editAlternatives.value,editName.value))};
+ let body={client_id:cid,day_name:editDay.value.trim(),exercise:editName.value.trim(),sets:+editSets.value||1,reps:editReps.value.trim(),target_rir:+((editRirSet.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:editTech.value.trim(),rest_seconds:0,rest_text:editRest.value.trim(),rir_by_set:editRirSet.value.trim(),alternatives_json:JSON.stringify(collectProgramAlternatives('editAlternativesEditor',editName.value))};
  if(!body.day_name||!body.exercise)return alert('Вкажи день та назву вправи');
  if(body.technique_url&&!safeTechniqueUrl(body.technique_url))return alert('Посилання на техніку має починатися з https://');
  body.technique_url=safeTechniqueUrl(body.technique_url);
@@ -373,7 +416,7 @@ async function addExercise(button=null){
  let restore=setActionLoading(button,'Додаємо…');
  try{
   if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
-  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
+  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(collectProgramAlternatives('programAlternativesEditor',exercise))})});
   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
   await openClient(selected,'program');
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
