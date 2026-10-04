@@ -1912,6 +1912,8 @@ def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUse
         if not t:raise HTTPException(404,"Шаблон не знайдено")
         client=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,)).fetchone()
         if not client:raise HTTPException(404,"Клієнта не знайдено")
+        live=db.execute("SELECT id FROM workout_sessions WHERE client_id=%s AND status='training' LIMIT 1",(x.client_id,)).fetchone()
+        if live:raise HTTPException(409,"Не можна замінити програму під час активного тренування")
         days=db.execute("SELECT * FROM program_template_days WHERE template_id=%s ORDER BY sort,id",(template_id,)).fetchall()
         items=db.execute("SELECT * FROM program_template_items WHERE template_id=%s ORDER BY day_name,sort,id",(template_id,)).fetchall()
         if not items:raise HTTPException(400,"Шаблон порожній")
