@@ -187,6 +187,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Моя вправа", LIBRARY)
         self.assertIn("trainer-library-filter-strip", LIBRARY)
         self.assertIn("trainer-library-filter-chip", LIBRARY)
+        self.assertIn("opacity:0!important", LIBRARY)
+        self.assertIn("position:absolute!important", LIBRARY)
         self.assertIn("Бібліотека", LIBRARY)
         self.assertIn("Мої вправи", LIBRARY)
 
