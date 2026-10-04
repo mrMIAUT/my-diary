@@ -1481,9 +1481,11 @@ def password_reset_confirm(x:ResetConfirmIn,request:Request,response:Response):
         if client_id==0:
             account=c.execute("SELECT id FROM trainer_auth WHERE id=1 FOR UPDATE").fetchone()
             if not account:raise HTTPException(400,"Посилання недійсне або вже прострочене")
+            login_email=configured_trainer_email().strip().lower()
         else:
-            account=c.execute("SELECT id,status FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone()
+            account=c.execute("SELECT id,status,email FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone()
             if not account or account["status"]=="Видалений":raise HTTPException(403,"Доступ до акаунта закрито")
+            login_email=(account["email"] or "").strip().lower()
         r=c.execute("SELECT id,client_id,expires_at,used FROM password_resets WHERE id=%s AND token_hash=%s FOR UPDATE",
                     (candidate["id"],th)).fetchone()
         if not r or r["used"] or r["expires_at"]<datetime.utcnow():
@@ -1504,6 +1506,12 @@ def password_reset_confirm(x:ResetConfirmIn,request:Request,response:Response):
         if current_cookie_hash:
             c.execute("UPDATE auth_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE token_hash=%s AND revoked_at IS NULL",
                       (current_cookie_hash,))
+        # Successful possession of a valid reset link proves account control.
+        # Clear only this account's failed-login bucket so the user can sign in
+        # immediately with the new password instead of waiting up to 15 minutes.
+        if login_email:
+            c.execute("DELETE FROM security_rate_limits WHERE bucket_key=%s",
+                      (rate_limit_key("login.failure",login_email),))
     response.delete_cookie(SESSION_COOKIE,path="/",secure=True,httponly=True,samesite="strict")
     response.headers["Cache-Control"]="no-store"
     return {"ok":True}
