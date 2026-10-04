@@ -151,6 +151,11 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("showTrainerCoachRequests", TRAINER)
         self.assertIn("openCreateProgramTemplateModal", TRAINER)
         self.assertIn("applyProgramTemplate", TRAINER)
+        self.assertIn("openTrainerAvatarCropper", TRAINER)
+        self.assertIn("saveTrainerAvatarCrop", TRAINER)
+        self.assertIn("canvas.toBlob", TRAINER)
+        self.assertIn("canvas.width=512", TRAINER)
+        self.assertNotIn("file.size>10*1024*1024", TRAINER)
 
     def test_exercise_library_has_platform_and_trainer_scopes(self):
         self.assertIn("owner_trainer_id", APP)
