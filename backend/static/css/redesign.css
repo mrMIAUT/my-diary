@@ -14933,3 +14933,66 @@ body.eplan-redesign.trainer-ui .trainer-program-picker-groups button.active{
   background:#eaf3ff!important;
   color:#176fe5!important;
 }
+
+
+/* Client workout — session-only extra sets */
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-extra{
+  margin-top:8px!important;
+  padding-top:8px!important;
+  border-top:1px dashed #cfdced!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-row.is-extra .setnum{
+  position:relative!important;
+  background:#eef5ff!important;
+  color:#176fe5!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-row.is-extra .setnum small{
+  position:absolute!important;
+  top:-4px!important;
+  right:-4px!important;
+  display:grid!important;
+  place-items:center!important;
+  width:14px!important;
+  height:14px!important;
+  border-radius:999px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:950!important;
+}
+body.eplan-redesign.client-ui .lyfta-extra-set-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:10px 0 2px!important;
+  padding-top:4px!important;
+}
+body.eplan-redesign.client-ui .lyfta-extra-set-actions button{
+  min-height:38px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .lyfta-add-set{
+  border:1px solid #c9dcfb!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+}
+body.eplan-redesign.client-ui .lyfta-remove-set{
+  border:1px solid #dce5ef!important;
+  background:#f5f7fa!important;
+  color:#718096!important;
+}
+@media(max-width:380px){
+  body.eplan-redesign.client-ui .lyfta-extra-set-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  body.eplan-redesign.client-ui .lyfta-extra-set-actions button{
+    width:100%!important;
+  }
+}
