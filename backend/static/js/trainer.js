@@ -256,7 +256,14 @@ async function navigateToClient(id){
 }
 
 
-function isoAddMonths(n){let d=new Date(),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);let last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return d.toISOString().slice(0,10)}
+function localISODate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function isoAddMonthsFrom(value,n){
+ let now=new Date(),today=localISODate(now),base=value&&value>=today?new Date(value+'T12:00:00'):new Date(today+'T12:00:00'),day=base.getDate();
+ base.setDate(1);base.setMonth(base.getMonth()+n);
+ let last=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
+ base.setDate(Math.min(day,last));
+ return localISODate(base);
+}
 
 function trainerAccessHTML(c){
  let a=clientAccess(c),cls=(a.expired||a.manually_frozen)?'off':(a.days_left!==null&&a.days_left<=7?'warn':'ok'),days=a.days_left===null?'Безстроково':a.days_left<0?'Закінчився':`${a.days_left} дн.`;
@@ -277,7 +284,11 @@ function trainerAccessHTML(c){
 
 function toggleAccessEdit(show){let box=document.getElementById('accessEditBox'),view=document.getElementById('accessSavedView');if(box)box.classList.toggle('hidden',!show);if(view){let b=view.querySelector('button');if(b)b.style.display=show?'none':''}}
 
-function quickAccess(cid,m){accessUntil.value=isoAddMonths(m);accessUntil.dispatchEvent(new Event('change',{bubbles:true}))}
+function quickAccess(cid,m){
+ let input=document.getElementById('accessUntil');if(!input)return;
+ input.value=isoAddMonthsFrom(input.value,m);
+ input.dispatchEvent(new Event('change',{bubbles:true}));
+}
 
 async function saveClientAccess(cid,btn){
  if(btn){btn.disabled=true;btn.textContent='Зберігаю...'}
