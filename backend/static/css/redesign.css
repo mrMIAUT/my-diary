@@ -12529,3 +12529,20 @@ body.eplan-redesign.trainer-ui .trainer-coach-request-actions{
   gap:8px;
   margin-top:12px;
 }
+
+
+/* Self-managed nutrition targets v1 */
+body.eplan-redesign.client-ui .redesign-nutrition-actions{
+  display:grid;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-actions .nutrition-targets-button{
+  background:#eef3f8!important;
+  color:#53657e!important;
+  border:1px solid #dce5f0!important;
+}
+body.eplan-redesign.client-ui .nutrition-targets-modal .nutrition-targets-hint{
+  margin:12px 0 0;
+  font-size:11px;
+  line-height:1.45;
+}
