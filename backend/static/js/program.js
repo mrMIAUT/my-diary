@@ -64,6 +64,9 @@ function programExercisePickerUniqueExercises(){
  });
  return [...map.values()].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'uk'));
 }
+function programExercisePickerPrimaryMuscleIds(x){
+ return (x?.primary_muscle_ids||[]).map(Number).filter(Boolean);
+}
 function programExercisePickerMuscleIds(x){
  return [...(x?.primary_muscle_ids||[]),...(x?.secondary_muscle_ids||[])].map(Number).filter(Boolean);
 }
@@ -85,11 +88,12 @@ async function openProgramExercisePicker(targetId,techId=''){
  if(!window.exerciseLibrary?.exercises?.length)await loadExerciseLibrary();
  document.getElementById('programExercisePickerModal')?.remove();
  let recents=programExercisePickerRecent();
- window.__programExercisePickerState={targetId:String(targetId||''),techId:String(techId||''),mode:recents.length?'recent':'all',muscleId:0,query:''};
+ window.__programExercisePickerState={targetId:String(targetId||''),techId:String(techId||''),mode:recents.length?'recent':'all',muscleScope:'primary',muscleId:0,query:''};
  document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-program-picker-modal" id="programExercisePickerModal" onclick="if(event.target===this)closeProgramExercisePicker()"><div class="card trainer-program-picker-card">
-   <div class="trainer-program-picker-head"><div><small>БІБЛІОТЕКА ВПРАВ</small><h2>Обрати вправу</h2><p>Фільтр враховує основні та додаткові м’язи.</p></div><button type="button" class="trainer-program-picker-close" onclick="closeProgramExercisePicker()" aria-label="Закрити">✕</button></div>
+   <div class="trainer-program-picker-head"><div><small>БІБЛІОТЕКА ВПРАВ</small><h2>Обрати вправу</h2><p>За замовчуванням фільтруємо за основними м’язами.</p></div><button type="button" class="trainer-program-picker-close" onclick="closeProgramExercisePicker()" aria-label="Закрити">✕</button></div>
    <label class="trainer-program-picker-search"><span>⌕</span><input id="programExercisePickerSearch" type="search" placeholder="Пошук вправи..." autocomplete="off" oninput="programExercisePickerSetQuery(this.value)"></label>
    <div class="trainer-program-picker-modes" id="programExercisePickerModes"></div>
+   <div class="trainer-program-picker-scope" id="programExercisePickerScope"></div>
    <div class="trainer-program-picker-muscles" id="programExercisePickerMuscles"></div>
    <div class="trainer-program-picker-results" id="programExercisePickerResults"></div>
    <button type="button" class="trainer-program-picker-manual" onclick="useManualProgramExercise()">Не знайшли вправу? <strong>Ввести вручну</strong></button>
@@ -106,6 +110,11 @@ function programExercisePickerSetQuery(value){
 }
 function programExercisePickerSetMode(button){
  let s=programExercisePickerState();if(!s)return;s.mode=String(button?.dataset?.pickerMode||'all');renderProgramExercisePicker();
+}
+function programExercisePickerSetMuscleScope(button){
+ let s=programExercisePickerState();if(!s)return;
+ s.muscleScope=String(button?.dataset?.muscleScope||'primary');
+ renderProgramExercisePicker();
 }
 function programExercisePickerSetMuscle(button){
  let s=programExercisePickerState();if(!s)return;s.muscleId=+(button?.dataset?.muscleId||0);renderProgramExercisePicker();
@@ -136,13 +145,17 @@ function useManualProgramExercise(){
 }
 function renderProgramExercisePicker(){
  let s=programExercisePickerState();if(!s)return;
- let modes=document.getElementById('programExercisePickerModes'),muscles=document.getElementById('programExercisePickerMuscles');
+ let modes=document.getElementById('programExercisePickerModes'),scope=document.getElementById('programExercisePickerScope'),muscles=document.getElementById('programExercisePickerMuscles');
  let recentCount=programExercisePickerRecent().length,favCount=programExercisePickerFavorites().length;
  if(modes)modes.innerHTML=[
    ['all','Усі'],
    ['favorite','★ Обране'+(favCount?' · '+favCount:'')],
    ['recent','Нещодавні'+(recentCount?' · '+recentCount:'')]
  ].map(([mode,label])=>`<button type="button" class="${s.mode===mode?'active':''}" data-picker-mode="${mode}" onclick="programExercisePickerSetMode(this)">${esc(label)}</button>`).join('');
+ if(scope)scope.innerHTML=[
+   ['primary','Основні м’язи'],
+   ['all','Основні + додаткові']
+ ].map(([value,label])=>`<button type="button" class="${s.muscleScope===value?'active':''}" data-muscle-scope="${value}" onclick="programExercisePickerSetMuscleScope(this)">${label}</button>`).join('');
  if(muscles){
   let ms=(window.exerciseLibrary?.muscles||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'uk'));
   muscles.innerHTML=`<button type="button" class="${!s.muscleId?'active':''}" data-muscle-id="0" onclick="programExercisePickerSetMuscle(this)">Усі м’язи</button>`
@@ -155,7 +168,10 @@ function renderProgramExercisePickerResults(){
  let favs=programExercisePickerFavorites(),recents=programExercisePickerRecent(),all=programExercisePickerUniqueExercises(),rows=all.filter(x=>{
    if(s.mode==='favorite'&&!programExercisePickerMatchStored(x,favs))return false;
    if(s.mode==='recent'&&!programExercisePickerMatchStored(x,recents))return false;
-   if(s.muscleId&&!programExercisePickerMuscleIds(x).includes(+s.muscleId))return false;
+   if(s.muscleId){
+     let muscleIds=s.muscleScope==='all'?programExercisePickerMuscleIds(x):programExercisePickerPrimaryMuscleIds(x);
+     if(!muscleIds.includes(+s.muscleId))return false;
+   }
    if(s.query&&!String(x.name||'').toLowerCase().includes(s.query))return false;
    return true;
  });

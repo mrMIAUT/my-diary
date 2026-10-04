@@ -14859,3 +14859,40 @@ body.eplan-redesign.trainer-ui .trainer-program-picker-manual strong{
     min-width:0!important;
   }
 }
+
+
+/* Primary muscle scope in program exercise picker */
+body.eplan-redesign.trainer-ui .trainer-program-picker-scope{
+  display:flex!important;
+  flex:0 0 auto!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:0 1px 7px!important;
+  scrollbar-width:none!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-scope::-webkit-scrollbar{
+  display:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-scope button{
+  flex:0 0 auto!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0 11px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:999px!important;
+  background:#fff!important;
+  color:#52627a!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-scope button.active{
+  border-color:#bdd5fb!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+}
