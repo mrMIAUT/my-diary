@@ -54,7 +54,35 @@ function redesignClientMetric(title,value,unit,delta,icon,action,subtitle){
     +'</button>';
 }
 
-function redesignClientHomeHTML(d,c,cid,groups){
+function homeTrainerInitials(name){
+  let parts=String(name||'Тренер').trim().split(/\s+/).filter(Boolean);
+  return (parts.slice(0,2).map(x=>x[0]).join('')||'ТР').toUpperCase();
+}
+
+function redesignHomeTrainersHTML(trainers,cid){
+  let xs=(trainers||[]).slice().sort((a,b)=>(b.is_current_trainer?1:0)-(a.is_current_trainer?1:0)).slice(0,4);
+  if(!xs.length)return '';
+  return '<div class="client-home-trainers">'
+    +'<div class="client-home-section-head client-home-trainers-head">'
+      +'<h2>Тренери</h2>'
+      +'<button onclick="showClientTrainers('+cid+')">Переглянути всіх ›</button>'
+    +'</div>'
+    +'<div class="client-home-trainers-row">'
+      +xs.map(p=>{
+        let status=p.is_current_trainer?'Твій тренер':p.request_status==='pending'?'Запит надіслано':p.accepting_clients?'Набирає клієнтів':'Набір закрито';
+        let cls=p.is_current_trainer?' current':p.accepting_clients?' open':'';
+        return '<button class="client-home-trainer-card'+cls+'" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+          +'<span class="client-home-trainer-avatar">'+esc(homeTrainerInitials(p.display_name))+'</span>'
+          +'<span class="client-home-trainer-copy"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><small>'+esc(p.headline||'Персональний тренер')+'</small></span>'
+          +'<span class="client-home-trainer-status">'+esc(status)+'</span>'
+          +'<span class="client-home-trainer-arrow">›</span>'
+        +'</button>';
+      }).join('')
+    +'</div>'
+  +'</div>';
+}
+
+function redesignClientHomeHTML(d,c,cid,groups,trainers=[]){
   let days=Object.keys(groups||{});
   let cycle=workoutCycleState(d,groups||{});
   let sessions=d.workout_sessions||[];
@@ -139,6 +167,7 @@ function redesignClientHomeHTML(d,c,cid,groups){
       +redesignClientMetric('Талія',last&&+last.waist>0?fmtProgress(last.waist):'', 'см', redesignClientDelta(last,prev,'waist'), 'ruler', 'showClientSection(\'progress\')','')
       +'<button class="client-home-metric client-home-training-metric" onclick="showClientSection(\'history\')"><span class="client-home-metric-icon">'+uiIcon('dumbbell')+'</span><span>Тренування</span><strong>'+weekDone+'<small>'+(days.length?' / '+days.length:'')+'</small></strong><div class="home-week-bars">'+weekBars+'</div><em>цього тижня</em></button>'
     +'</div>'
+    +redesignHomeTrainersHTML(trainers,cid)
   +'</section>';
 }
 
@@ -163,8 +192,12 @@ function redesignPausedClientHomeHTML(c,id,access=clientAccess(c)){
 }
 
 window.clientCabinet = async function(id){
-  let d=await loadClientData(id),c=d.client;
+  let [d,trainers]=await Promise.all([
+    loadClientData(id),
+    api('/trainers').catch(()=>[])
+  ]),c=d.client;
   window.currentClientData=d;
+  window.clientTrainerCatalog=trainers;
   let groups={};
   (d.program||[]).forEach(function(x){(groups[x.day_name]||(groups[x.day_name]=[])).push(x)});
 
@@ -177,6 +210,6 @@ window.clientCabinet = async function(id){
   }
 
   currentClientView='home';
-  app.innerHTML=shell(accessBannerHTML(c)+redesignClientHomeHTML(d,c,id,groups));
+  app.innerHTML=shell(accessBannerHTML(c)+redesignClientHomeHTML(d,c,id,groups,trainers));
   refreshNotificationBadge(id,'client','clientNotifyBtn');
 };
