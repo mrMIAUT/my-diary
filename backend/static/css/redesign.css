@@ -14364,3 +14364,8 @@ body.eplan-auth-page .auth-secondary:active{
     width:100%;
   }
 }
+
+
+/* Auth pages intentionally stay in the light product theme even when Safari/Gmail uses dark mode. */
+body.eplan-auth-page{color-scheme:light}
+body.eplan-auth-page .auth-logo-name{color:#0b1f44!important}
