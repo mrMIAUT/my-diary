@@ -14310,3 +14310,14 @@ body.eplan-redesign.trainer-ui #supersetModal .trainer-superset-primary:active{
     grid-column:auto;
   }
 }
+
+
+/* Client bottom nav touch hardening */
+body.eplan-redesign.client-ui .client-bottom-nav{
+  pointer-events:auto!important;
+}
+body.eplan-redesign.client-ui .client-bottom-nav button{
+  pointer-events:auto!important;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
