@@ -2467,18 +2467,24 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
     numbers=[s.set_number for s in x.sets]
     if len(numbers)!=len(set(numbers)):
         raise HTTPException(400,"Номери підходів не мають повторюватися")
-    today=str(kyiv_today())
     ids=[]
-    # Explicit editing remains allowed, but replacement is all-or-nothing.
+    # Keep every set on the calendar day when the workout session started.
+    # Lock the client row so saving a first set cannot race with accidental
+    # workout cancellation.
     with con() as c:
-        c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,today))
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
+        active=c.execute("""SELECT workout_day,started_at FROM workout_sessions
+                            WHERE client_id=%s AND status='training'
+                            ORDER BY id DESC LIMIT 1""",(x.client_id,)).fetchone()
+        result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
+        c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
             row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir)
                              VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                          (x.client_id,x.program_id,x.exercise,today,item.set_number,item.weight,item.reps,item.rir)).fetchone()
+                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir)).fetchone()
             ids.append(row["id"])
         c.commit()
-    return {"ok":True,"ids":ids}
+    return {"ok":True,"ids":ids,"day":result_day}
 
 @app.get("/api/result-sets/{cid}")
 def result_set_history(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
@@ -2768,6 +2774,38 @@ def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
                     f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
                     "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
     return finished
+
+
+@app.post("/api/workout/{sid}/cancel")
+def cancel_workout(sid:int,user:AuthUser=Depends(require_client)):
+    session=one("SELECT id,client_id FROM workout_sessions WHERE id=?",(sid,))
+    if not session:
+        raise HTTPException(404,"Тренування не знайдено")
+    authorize_client(user,session["client_id"])
+    client_id=session["client_id"]
+    with con() as c:
+        # Serialize against result-set saves for this client.
+        if not c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone():
+            raise HTTPException(404,"Клієнта не знайдено")
+        row=c.execute("""SELECT *,
+                               GREATEST(0,EXTRACT(EPOCH FROM (clock_timestamp()::timestamp-started_at))) AS age_seconds
+                        FROM workout_sessions
+                        WHERE id=%s FOR UPDATE""",(sid,)).fetchone()
+        if not row:
+            raise HTTPException(404,"Тренування не знайдено")
+        if row["status"]!="training":
+            raise HTTPException(400,"Можна скасувати лише активне тренування")
+        if float(row.get("age_seconds") or 0)>120:
+            raise HTTPException(400,"Скасувати тренування можна лише протягом перших 2 хвилин")
+        workout_day=str(row.get("workout_day") or kyiv_today())[:10]
+        has_sets=c.execute("""SELECT 1 FROM result_sets
+                              WHERE client_id=%s AND day=%s
+                              LIMIT 1""",(client_id,workout_day)).fetchone()
+        if has_sets:
+            raise HTTPException(400,"Тренування вже має збережені підходи і не може бути скасоване")
+        c.execute("DELETE FROM workout_sessions WHERE id=%s",(sid,))
+        c.commit()
+    return {"ok":True,"cancelled":True}
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn,user:AuthUser=Depends(require_client)):
