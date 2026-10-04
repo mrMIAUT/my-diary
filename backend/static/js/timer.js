@@ -3,6 +3,49 @@
 
 function restTimerEnd(){return +(localStorage.getItem(REST_TIMER_KEY)||0)}
 
+function restTrackStorageKey(){
+ let scope='';
+ try{scope=typeof offlineLocalScopeKey==='function'?(offlineLocalScopeKey()||''):''}catch(e){}
+ return scope?'eplanRestTrackV1_'+scope:'eplanRestTrackV1';
+}
+function readTrackedRest(){
+ try{return JSON.parse(localStorage.getItem(restTrackStorageKey())||'null')}catch(e){return null}
+}
+function writeTrackedRest(track){
+ try{if(track)localStorage.setItem(restTrackStorageKey(),JSON.stringify(track));else localStorage.removeItem(restTrackStorageKey())}catch(e){}
+}
+function finalizeTrackedRest(reason='cancel'){
+ let track=readTrackedRest();if(!track)return 0;
+ let started=+track.started_at||0,end=+track.end_at||0,stop=Date.now();
+ if(reason==='finish'&&end)stop=Math.min(stop,end);
+ let seconds=started?Math.max(0,Math.min(3600,Math.round((stop-started)/1000))):0;
+ try{
+   if(track.sid&&track.pid&&track.set_number&&typeof saveWorkoutDraft==='function'){
+     saveWorkoutDraft(+track.sid,+track.pid,+track.set_number,'rest_seconds',seconds);
+   }
+ }catch(e){}
+ writeTrackedRest(null);
+ return seconds;
+}
+function beginTrackedRest(context,end){
+ let existing=readTrackedRest();
+ if(existing)finalizeTrackedRest(existing.end_at&&Date.now()>=+existing.end_at?'finish':'cancel');
+ if(!context?.sid||!context?.pid||!context?.set_number)return;
+ writeTrackedRest({sid:+context.sid,pid:+context.pid,set_number:+context.set_number,started_at:Date.now(),end_at:+end||0,paused:false});
+}
+function updateTrackedRestEnd(end){
+ let track=readTrackedRest();if(!track)return;
+ track.end_at=+end||0;track.paused=false;writeTrackedRest(track);
+}
+function setTrackedRestPaused(paused){
+ let track=readTrackedRest();if(!track)return;
+ track.paused=!!paused;writeTrackedRest(track);
+}
+function recoverTrackedRest(){
+ let track=readTrackedRest();if(!track||track.paused)return;
+ if(track.end_at&&Date.now()>=+track.end_at&&!restTimerEnd())finalizeTrackedRest('finish');
+}
+
 function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.now())/1000))}
 function restTimerPausedSeconds(){return Math.max(0,+(localStorage.getItem('eplanRestTimerPausedSeconds')||0))}
 function clearRestTimerPaused(){localStorage.removeItem('eplanRestTimerPausedSeconds')}
@@ -45,24 +88,30 @@ async function ensureTimerNotifications(){
  try{return (await Notification.requestPermission())==='granted'}catch(e){return false}
 }
 
-async function startRestTimer(seconds,sourceBtn=null){
+async function startRestTimer(seconds,sourceBtn=null,tracking=null){
  document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));
  if(sourceBtn)sourceBtn.classList.add('selected');
  await unlockTimerSound();
  await ensureTimerNotifications();
  clearRestTimerPaused();
  let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
+ if(tracking===false){
+   let existing=readTrackedRest();
+   if(existing)finalizeTrackedRest(existing.end_at&&Date.now()>=+existing.end_at?'finish':'cancel');
+ }else if(tracking)beginTrackedRest(tracking,end);else updateTrackedRestEnd(end);
  $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 
 function addRestTimer(seconds){
  clearRestTimerPaused();
- let end=Math.max(Date.now(),restTimerEnd())+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
+ let end=Math.max(Date.now(),restTimerEnd())+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));updateTrackedRestEnd(end);
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
 }
 
 function cancelRestTimer(){
+ let track=readTrackedRest();
+ finalizeTrackedRest(track?.end_at&&Date.now()>=+track.end_at?'finish':'cancel');
  localStorage.removeItem(REST_TIMER_KEY);clearRestTimerPaused();document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
  updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
@@ -71,6 +120,7 @@ function cancelRestTimer(){
 function pauseRestTimer(){
  let remaining=restTimerRemaining();if(!remaining)return;
  localStorage.setItem('eplanRestTimerPausedSeconds',String(remaining));
+ setTrackedRestPaused(true);
  localStorage.removeItem(REST_TIMER_KEY);
  if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
@@ -128,6 +178,7 @@ function timerBeep(){
 
 async function finishRestTimer(){
  if(!restTimerEnd())return;
+ finalizeTrackedRest('finish');
  localStorage.removeItem(REST_TIMER_KEY);clearRestTimerPaused();document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();timerBeep();
  if(document.visibilityState==='visible'&&Notification.permission==='granted'){
   try{let reg=await navigator.serviceWorker.ready;reg.showNotification('Є ПЛАН · Відпочинок завершено',{body:'Час починати наступний підхід.',icon:'/static/icon-192.png',badge:'/static/icon-192.png',tag:'eplan-rest-finished',renotify:true})}catch(e){}
@@ -182,10 +233,14 @@ async function completeWorkoutSetAndStartTimer(pid,n,total,btn){
  btn?.classList.toggle('done');
  if(btn?.classList.contains('done')){
    if(n>=total)cancelRestTimer();
-   else await startRestTimer(preferredRestTimerSeconds());
+   else{
+     let sid=workoutDraftSessionId(window.currentClientData||{});
+     await startRestTimer(preferredRestTimerSeconds(),null,{sid,pid,set_number:n});
+   }
  }
 }
 function compactRestTimerHTML(){
+ recoverTrackedRest();
  let s=restTimerRemaining(),paused=restTimerPausedSeconds(),shown=s||paused;
  setTimeout(()=>{
    if(s){startRestTimerTicker();renderFloatingRestTimer()}
@@ -196,3 +251,6 @@ function compactRestTimerHTML(){
    +'<button id="restTimerPlayPause" class="redesign-rest-timer-play '+(s?'running':'')+'" onclick="toggleRestTimerPlayback()" aria-label="'+(s?'Поставити таймер на паузу':'Запустити таймер відпочинку')+'" title="'+(s?'Пауза':'Запустити таймер')+'">'+(s?'Ⅱ':'▶')+'</button>'
    +'</div>';
 }
+
+
+setTimeout(()=>{try{recoverTrackedRest()}catch(e){}},0);

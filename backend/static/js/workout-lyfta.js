@@ -16,14 +16,14 @@ function lyftaHistoryRows(d,pid,exerciseName=''){
 }
 
 function lyftaPreviousDaySets(d,pid,exerciseName=''){
-  let rows=lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<isoToday());
+  let rows=lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<workoutDataDay(d));
   if(!rows.length)return [];
   let day=rows[rows.length-1].day;
   return rows.filter(s=>s.day===day).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
 }
 
 function lyftaAllTimeBestWeight(d,pid,exerciseName=''){
-  return Math.max(0,...lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<isoToday()).map(s=>+s.weight||0));
+  return Math.max(0,...lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<workoutDataDay(d)).map(s=>+s.weight||0));
 }
 
 function lyftaRestSeconds(x){
@@ -67,7 +67,7 @@ function lyftaShouldStartRestAfterSet(x,d){
   return +peers[peers.length-1].id===+x.id;
 }
 
-async function lyftaCompleteSet(pid,n,restSeconds,btn){
+async function lyftaCompleteSet(pid,n,total,restSeconds,btn){
   if(btn?.classList.contains('done'))return;
   let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
   if(!w?.value||!r?.value||!i?.value){alert('Заповни вагу, повтори та RIR у цьому підході.');return}
@@ -77,7 +77,10 @@ async function lyftaCompleteSet(pid,n,restSeconds,btn){
   if(btn){btn.textContent='✓';btn.classList.add('done')}
   let sid=workoutDraftSessionId(window.currentClientData||{});
   if(sid)saveWorkoutDraft(sid,pid,n,'done',true);
-  if(restSeconds>0)await startRestTimer(restSeconds);
+  if(restSeconds>0){
+    let tracking=n<total?{sid,pid,set_number:n}:false;
+    await startRestTimer(restSeconds,null,tracking);
+  }
 }
 
 function lyftaExerciseChartData(d,pid,exerciseName=''){
@@ -114,12 +117,12 @@ function setRows(x,d){
     let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done;
     let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??'';
     h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+'">'
-      +'<div class="lyfta-prev-line"><span>Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir:'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
+      +'<div class="lyfta-prev-line"><span>Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
       +'<div class="lyfta-set-row'+(done?' is-complete':'')+'"><div class="setnum">'+n+'</div>'
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
         +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
-        +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+restAfterSet+',this)">✓</button>'
+        +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+x.sets+','+restAfterSet+',this)">✓</button>'
       +'</div>'
     +'</div>';
   }

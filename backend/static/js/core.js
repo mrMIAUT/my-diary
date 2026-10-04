@@ -19,7 +19,7 @@ function offlineScope(s=session){
 
 function offlineLocalScopeKey(s=session){const scope=offlineScope(s);return scope?encodeURIComponent(scope):''}
 function offlinePrivateLocalKeyScope(key=''){
- for(const prefix of ['eplanWorkoutDraftV2_','eplanDailyDraftV2_','eplanActiveWorkoutV2_']){
+ for(const prefix of ['eplanWorkoutDraftV2_','eplanDailyDraftV2_','eplanActiveWorkoutV2_','eplanRestTrackV1_']){
    if(key.startsWith(prefix)){let part=key.slice(prefix.length).split('_',1)[0];try{return decodeURIComponent(part)}catch{return ''}}
  }
  return '';
@@ -163,9 +163,9 @@ async function purgeOfflinePrivateData({notice=false,scope='',all=false}={}){
      for(let i=localStorage.length-1;i>=0;i--){
        let k=localStorage.key(i)||'',remove=false;
        const legacyUnscoped=k.startsWith('eplanWorkoutDraft_')||k.startsWith('eplanDailyDraftV1_')||k.startsWith('activeWorkout_');
-       if(all)remove=OFF_PRIVATE_LOCAL_PREFIXES.some(p=>k.startsWith(p))||k===REST_TIMER_KEY;
-       else if(legacyUnscoped)remove=true;
-       else if(targetKey)remove=(k.startsWith('eplanWorkoutDraftV2_')||k.startsWith('eplanDailyDraftV2_')||k.startsWith('eplanActiveWorkoutV2_'))&&k.includes(`_${targetKey}_`);
+       if(all)remove=OFF_PRIVATE_LOCAL_PREFIXES.some(p=>k.startsWith(p))||k===REST_TIMER_KEY||k==='eplanRestTrackV1';
+       else if(legacyUnscoped||k==='eplanRestTrackV1')remove=true;
+       else if(targetKey)remove=(k.startsWith('eplanWorkoutDraftV2_')||k.startsWith('eplanDailyDraftV2_')||k.startsWith('eplanActiveWorkoutV2_')||k.startsWith('eplanRestTrackV1_'))&&k.includes(`_${targetKey}`);
        if(remove)localStorage.removeItem(k);
      }
      if(!all)try{localStorage.removeItem(REST_TIMER_KEY)}catch(_){ }
@@ -425,6 +425,12 @@ async function syncOfflineQueue(){
    offlineStatus(pending?'● Є дані, що очікують синхронізації':'✓ Синхронізовано');
  }catch{offlineStatus('● Є дані, що очікують синхронізації')}
  finally{offSyncing=false}
+}
+
+function formatSetRest(seconds){
+ let s=Math.max(0,Math.round(+seconds||0));
+ if(!s)return '';
+ return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 }
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
