@@ -427,6 +427,12 @@ async function syncOfflineQueue(){
  finally{offSyncing=false}
 }
 
+function formatSetRest(seconds){
+ let s=Math.max(0,Math.round(+seconds||0));
+ if(!s)return '';
+ return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
+
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 function safeTechniqueUrl(value=''){
