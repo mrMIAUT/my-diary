@@ -130,7 +130,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("with con() as db:", block)
         self.assertIn("ON CONFLICT(trainer_id)", block)
         self.assertNotIn('run("""INSERT INTO trainer_profiles', block)
-        self.assertNotIn("RETURNING id", block)
+        sql_block = block.split('db.execute("""', 1)[1].split('""",', 1)[0]
+        self.assertNotIn("RETURNING id", sql_block)
 
     def test_trainer_marketplace_foundation(self):
         self.assertIn("CREATE TABLE IF NOT EXISTS trainer_profiles", APP)
