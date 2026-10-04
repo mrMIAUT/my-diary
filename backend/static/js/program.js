@@ -14,7 +14,8 @@ function exerciseAlternatives(x){try{let a=JSON.parse(x?.alternatives_json||'[]'
 
 function libraryExerciseByName(name){
  let q=String(name||'').trim().toLowerCase();
- return (window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===q)||null;
+ let matches=(window.exerciseLibrary?.exercises||[]).filter(x=>String(x.name||'').trim().toLowerCase()===q);
+ return matches.find(x=>x.scope==='trainer')||matches[0]||null;
 }
 
 function exerciseTechniqueUrl(name,fallback=''){
@@ -34,7 +35,7 @@ function programExtraHTML(x){
 }
 
 function autofillTechnique(name,targetId){
- let q=String(name||'').trim().toLowerCase(),item=(window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===q);
+ let item=libraryExerciseByName(name);
  let el=document.getElementById(targetId);if(el)el.value=item?.technique_url||'';
 }
 
@@ -58,7 +59,7 @@ function programHTML(d){
      <label><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
      <label class="wide"><span>Альтернативи</span><input id="alternatives" list="exerciseLibraryNames" placeholder="Напр. Гак-присідання, Сміт"></label>
    </div>
-   <datalist id="exerciseLibraryNames">${(window.exerciseLibrary?.exercises||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
+   <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
    <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">＋ Додати вправу</button>
  </div>`;
  let entries=Object.entries(groups);
