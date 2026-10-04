@@ -14321,3 +14321,46 @@ body.eplan-redesign.client-ui .client-bottom-nav button{
   touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
 }
+
+
+/* Password recovery — current auth redesign */
+body.eplan-auth-page .auth-status{
+  min-height:20px;
+  margin:12px 0 8px;
+  color:#687892;
+  font-size:12px;
+  line-height:1.4;
+}
+body.eplan-auth-page .auth-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+}
+body.eplan-auth-page .auth-actions .auth-submit{
+  width:100%;
+  margin:0;
+}
+body.eplan-auth-page .auth-secondary{
+  height:52px;
+  min-width:96px;
+  padding:0 18px;
+  border:1px solid #d9e3ef!important;
+  border-radius:15px!important;
+  background:#eef3f8!important;
+  color:#183153!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:850!important;
+}
+body.eplan-auth-page .auth-secondary:active{
+  transform:translateY(1px);
+}
+@media(max-width:380px){
+  body.eplan-auth-page .auth-actions{
+    grid-template-columns:1fr;
+  }
+  body.eplan-auth-page .auth-secondary{
+    width:100%;
+  }
+}
