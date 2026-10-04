@@ -775,7 +775,8 @@ def init():
             PRIMARY KEY(client_id,day_name)
         )""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
-        c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER,rest_seconds INTEGER)""")
+        c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS rest_seconds INTEGER")
         # A program exercise can have only one saved value for a given set number on a given day.
         # Clean legacy duplicate rows first, then prevent them from being created again.
         c.execute("""DELETE FROM result_sets a USING result_sets b
@@ -1113,7 +1114,7 @@ class ResultIn(BaseModel):
 class SupersetIn(BaseModel):
     superset_group:str=Field(default="",max_length=64)
 class SetIn(BaseModel):
-    set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR)
+    set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
 class SetResultIn(BaseModel):
     client_id:int; program_id:int; exercise:str=Field(max_length=255); sets:List[SetIn]=Field(max_length=100)
 class NutIn(BaseModel):
@@ -1181,7 +1182,7 @@ class CommentIn(BaseModel):
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:date; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class HistoricalSetIn(BaseModel):
-    program_id:int; exercise:str=Field(max_length=255); set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR)
+    program_id:int; exercise:str=Field(max_length=255); set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:date; day_name:str=Field(max_length=128); sets:List[HistoricalSetIn]=Field(max_length=200)
 
@@ -2479,9 +2480,9 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
         result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
-            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir)).fetchone()
+            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds)).fetchone()
             ids.append(row["id"])
         c.commit()
     return {"ok":True,"ids":ids,"day":result_day}
@@ -2847,9 +2848,9 @@ def historical_workout(x:HistoricalWorkoutIn,user:AuthUser=Depends(require_clien
             if existing:
                 raise HTTPException(400,"Тренування за цей день уже записано")
             for item in x.sets:
-                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
-                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir))
+                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds))
             snapshot=[dict(row) for row in c.execute("""SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order
                                                          FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",
                                                       (x.client_id,x.day_name)).fetchall()]
