@@ -14369,3 +14369,63 @@ body.eplan-auth-page .auth-secondary:active{
 /* Auth pages intentionally stay in the light product theme even when Safari/Gmail uses dark mode. */
 body.eplan-auth-page{color-scheme:light}
 body.eplan-auth-page .auth-logo-name{color:#0b1f44!important}
+
+
+/* Client training — technique links on their own row */
+body.eplan-redesign.client-ui .redesign-training-main-title-row{
+  display:block!important;
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .redesign-training-main-title-row>strong{
+  display:block!important;
+  min-width:0!important;
+  line-height:1.22!important;
+}
+body.eplan-redesign.client-ui .redesign-training-technique{
+  display:block!important;
+  margin:3px 0 1px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .redesign-training-technique>.redesign-training-tech-link{
+  display:inline-flex!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  font-size:9.5px!important;
+  line-height:1.15!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
+
+body.eplan-redesign.client-ui .workout-exercise-title-line{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .workout-exercise-title-line>strong{
+  display:block!important;
+  min-width:0!important;
+  line-height:1.22!important;
+}
+body.eplan-redesign.client-ui .workout-technique-row{
+  display:block!important;
+  margin:4px 0 1px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .workout-technique-row>.workout-live-tech-link{
+  display:inline-flex!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#d66a20!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
