@@ -5,8 +5,14 @@ function exerciseHistoryDates(d,pid){
  return [...new Set((d.result_sets||[]).filter(r=>r.program_id===pid).map(r=>r.day))].sort();
 }
 
+function workoutDataDay(d){
+ let active=(d?.workout_sessions||[]).find(x=>x.status==='training');
+ let day=String(active?.workout_day||'').slice(0,10);
+ return day||isoToday();
+}
+
 function previousExerciseHTML(d,pid){
- let dates=exerciseHistoryDates(d,pid).filter(day=>day<isoToday());
+ let dates=exerciseHistoryDates(d,pid).filter(day=>day<workoutDataDay(d));
  if(!dates.length)return '<div class="muted" style="margin-top:10px">Попередніх результатів ще немає.</div>';
 
  let latest=dates[dates.length-1];
@@ -43,8 +49,9 @@ function completedComparisonHTML(x,d){
 
 
 function todaySets(d,pid){
+ let workoutDay=workoutDataDay(d);
  return uniqueResultSets((d?.result_sets||[])
-   .filter(s=>+s.program_id===+pid&&s.day===isoToday()))
+   .filter(s=>+s.program_id===+pid&&s.day===workoutDay))
    .slice()
    .sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
 }
@@ -115,18 +122,22 @@ function previewWorkout(day,cid){
  showClientTraining(cid)
 }
 
-async function startWorkout(cid,day,btn=null){
- let button=btn||(typeof event!=='undefined'?event.currentTarget:null);
- if(button?.dataset.starting==='1')return;
- if(button){button.dataset.starting='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Запускаємо…'}
+function startWorkout(cid,day,btn=null){
+ document.getElementById('workoutStartConfirmModal')?.remove();
+ let count=(window.currentClientData?.program||[]).filter(x=>x.day_name===day).length;
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="workoutStartConfirmModal" onclick="if(event.target===this)this.remove()"><div class="card workout-start-confirm"><button type="button" class="workout-confirm-close" aria-label="Закрити" onclick="workoutStartConfirmModal.remove()">✕</button><span class="workout-confirm-icon">🏋️</span><h2>Почати тренування?</h2><p><strong>${esc(day)}</strong>${count?' · '+count+' '+(count===1?'вправа':count<5?'вправи':'вправ'):''}</p><small>Таймер тренування запуститься одразу після підтвердження.</small><div class="workout-confirm-actions"><button type="button" class="workout-confirm-secondary" onclick="workoutStartConfirmModal.remove()">Скасувати</button><button type="button" class="workout-confirm-primary" data-cid="${cid}" data-day="${esc(day)}" onclick="confirmWorkoutStart(this)">Почати</button></div></div></div>`);
+}
+
+async function confirmWorkoutStart(button){
+ let cid=+button.dataset.cid,day=button.dataset.day;
+ if(button.dataset.starting==='1')return;
+ button.dataset.starting='1';button.disabled=true;button.textContent='Запускаємо…';
  try{
    let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day})});
    if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
+   document.getElementById('workoutStartConfirmModal')?.remove();
    {let k=offlineLocalScopeKey();if(k)localStorage.setItem(`eplanActiveWorkoutV2_${k}_${cid}`,JSON.stringify(s));}
    previewWorkoutDay=null;
-   // The start endpoint creates/reuses the active session on the server.
-   // Refresh client data before rendering, otherwise showClientTraining()
-   // can reuse the pre-start cache and keep showing the program screen.
    window.currentClientData=await loadClientData(cid);
    await showClientTraining(cid);
    requestAnimationFrame(()=>{
@@ -135,7 +146,27 @@ async function startWorkout(cid,day,btn=null){
    });
  }catch(e){
    alert(e?.message||'Не вдалося почати тренування. Спробуй ще раз.');
-   if(button){button.disabled=false;button.dataset.starting='0';button.textContent=button.dataset.oldText||'Почати тренування'}
+   button.disabled=false;button.dataset.starting='0';button.textContent='Почати';
+ }
+}
+
+async function cancelWorkout(cid,sid,button=null){
+ if(button?.dataset.cancelling==='1')return;
+ if(!confirm('Скасувати це тренування? Воно не буде зараховане.'))return;
+ if(button){button.dataset.cancelling='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Скасовуємо…'}
+ try{
+   await api('/workout/'+sid+'/cancel',{method:'POST'});
+   cancelRestTimer();
+   clearWorkoutDraftsForSession(sid);
+   {let k=offlineLocalScopeKey();if(k)localStorage.removeItem(`eplanActiveWorkoutV2_${k}_${cid}`)}
+   previewWorkoutDay=null;window.workoutExerciseChoices={};window.clientTrainingTab='program';
+   window.currentClientData=await loadClientData(cid);
+   await showClientTraining(cid);
+ }catch(e){
+   alert(e?.message||'Не вдалося скасувати тренування.');
+   if(button){button.dataset.cancelling='0';button.disabled=false;button.textContent=button.dataset.oldText||'Скасувати тренування'}
+   window.currentClientData=await loadClientData(cid);
+   await showClientTraining(cid);
  }
 }
 
@@ -299,10 +330,10 @@ async function selectWorkoutExercise(pid,cid,index){
 }
 
 function activeExercisesHTML(items,d,cid){
- let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training');
+ let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false){
-  let doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===isoToday()),shownName=workoutExerciseName(x),shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
+  let doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=workoutExerciseName(x),shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
   return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${x.sets} × ${esc(x.reps)}</span>${restLabel(x)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(x))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="arrow">⌄</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
  }
  for(let x of items){

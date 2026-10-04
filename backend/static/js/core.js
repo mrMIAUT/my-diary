@@ -180,6 +180,11 @@ function offBody(opt){try{return opt?.body?JSON.parse(opt.body):{}}catch{return 
 
 function offToday(){return new Date().toLocaleDateString('sv-SE')}
 
+function offWorkoutDay(d){
+ let active=(d?.workout_sessions||[]).find(x=>x.status==='training');
+ return String(active?.workout_day||active?.started_at||'').slice(0,10)||offToday();
+}
+
 function offClientKey(cid){return '/client/'+cid}
 
 async function offClient(cid){return await offGet('cache',offClientKey(cid))}
@@ -189,13 +194,13 @@ async function offSaveClient(cid,d){if(d)await offPut('cache',d,offClientKey(cid
 async function offApply(path,opt,localSid){
  let b=offBody(opt),m=(opt.method||'GET').toUpperCase(),cid=b.client_id||session?.client_id, d=cid?await offClient(cid):null;
  if(!d)return;
- if(path==='/result-sets'&&m==='POST'){d.result_sets=(d.result_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===offToday()));(b.sets||[]).forEach(x=>d.result_sets.push({...x,id:-Date.now()-x.set_number,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:offToday()}))}
+ if(path==='/result-sets'&&m==='POST'){let workoutDay=offWorkoutDay(d);d.result_sets=(d.result_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===workoutDay));(b.sets||[]).forEach(x=>d.result_sets.push({...x,id:-Date.now()-x.set_number,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:workoutDay}))}
  else if(path==='/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];d.nutrition.unshift({id:-Date.now(),client_id:cid,day:offToday(),kcal:b.kcal,protein:b.protein,fat:b.fat,carbs:b.carbs})}
  else if(/^\/nutrition\/-?\d+$/.test(path)&&m==='PATCH'){let id=+path.split('/').pop(),x=(d.nutrition||[]).find(x=>x.id==id);if(x)Object.assign(x,b)}
  else if(path==='/history/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];let x=d.nutrition.find(x=>x.day===b.day);if(x)Object.assign(x,b);else d.nutrition.unshift({id:-Date.now(),...b})}
  else if(path==='/measurements'&&m==='POST'){d.measurements=d.measurements||[];d.measurements.push({id:-Date.now(),day:offToday(),...b})}
  else if(path==='/cardio'&&m==='POST'){d.cardio=d.cardio||[];let day=b.day||offToday(),x=d.cardio.find(x=>x.day===day);if(x)Object.assign(x,b,{day});else d.cardio.unshift({id:-Date.now(),...b,day})}
- else if(path==='/workout/start'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:localSid,client_id:cid,day_name:b.day_name,status:'training',started_at:offToday()+' 12:00:00',program_snapshot:'[]'})}
+ else if(path==='/workout/start'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:localSid,client_id:cid,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0,program_snapshot:'[]'})}
  else if(/^\/workout\/-\d+\/finish$/.test(path)&&m==='POST'){let id=+path.split('/')[2],x=(d.workout_sessions||[]).find(x=>x.id==id);if(x){x.status='finished';x.finished_at=offToday()+' 13:00:00'}}
  else if(path==='/history/workout'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:-Date.now(),client_id:cid,day_name:b.day_name,status:'finished',started_at:b.day+' 12:00:00',finished_at:b.day+' 13:00:00'});d.result_sets=d.result_sets||[];(b.sets||[]).forEach((x,i)=>d.result_sets.push({...x,id:-Date.now()-i,client_id:cid,day:b.day}))}
  else if(path==='/comments'&&m==='POST'){d.comments=d.comments||[];d.comments.unshift({id:-Date.now(),created_at:new Date().toISOString(),...b})}
@@ -211,7 +216,7 @@ async function offApply(path,opt,localSid){
 
 function offResponse(path,opt,localSid){
  let b=offBody(opt);
- if(path==='/workout/start')return {id:localSid,client_id:b.client_id,day_name:b.day_name,status:'training',started_at:new Date().toISOString()};
+ if(path==='/workout/start')return {id:localSid,client_id:b.client_id,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0};
  if(/\/finish$/.test(path))return {ok:true,status:'finished'};
  if(path==='/nutrition'||path==='/measurements'||path==='/comments')return {id:-Date.now(),ok:true};
  return {ok:true,offline:true};
@@ -220,6 +225,9 @@ function offResponse(path,opt,localSid){
 function offCanQueue(path,opt){
  let m=(opt.method||'GET').toUpperCase();
  if(m==='GET'||!session||session.role!=='client'||!offlineScope())return false;
+ // Early workout cancellation is deliberately server-only: its 2-minute
+ // window and "no saved sets" rule must be checked authoritatively.
+ if(/^\/workout\/-?\d+\/cancel$/.test(path))return false;
  return !logoutPending&&!path.startsWith('/login')&&!path.startsWith('/logout')&&!path.startsWith('/session')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications')&&!path.startsWith('/push/');
 }
 
