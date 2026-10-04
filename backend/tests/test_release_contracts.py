@@ -50,7 +50,7 @@ class ReleaseContracts(unittest.TestCase):
             plans["workout_plan"],
             {
                 "workouts": True,
-                "nutrition": False,
+                "nutrition": True,
                 "measurements": True,
                 "cardio": True,
                 "trainer_review": False,
@@ -107,7 +107,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("features.workouts?item('training'", CORE)
         self.assertIn("item('nutrition','Харчування','food'", CORE)
         self.assertNotIn("features.nutrition?item('nutrition'", CORE)
-        self.assertIn("План тренувань + План харчування", NUTRITION)
+        self.assertIn("Персональний план харчування", NUTRITION)
+        self.assertIn("Переглянути тренерів", NUTRITION)
         self.assertIn("checkinEnabled=!!features.checkin", HOME)
         self.assertIn("nutritionEnabled=!!features.nutrition", HOME)
         self.assertIn("features?.meal_plan?", NUTRITION)
@@ -116,6 +117,20 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("hasFeature('measurements'", measurements)
         self.assertIn("isoAddMonthsFrom", trainer)
         self.assertIn("trainerAccessIsActive", trainer)
+
+    def test_trainer_marketplace_foundation(self):
+        self.assertIn("CREATE TABLE IF NOT EXISTS trainer_profiles", APP)
+        self.assertIn("CREATE TABLE IF NOT EXISTS trainer_requests", APP)
+        self.assertIn('@app.get("/api/trainers")', APP)
+        self.assertIn('@app.get("/api/trainer/profile")', APP)
+        self.assertIn('@app.post("/api/trainers/{trainer_id}/request")', APP)
+        self.assertIn('"trainer_id"', APP)
+        more = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
+        trainer = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
+        self.assertIn("showClientTrainers", more)
+        self.assertIn("showClientTrainerProfile", more)
+        self.assertIn("showTrainerPublicProfileEditor", trainer)
+        self.assertIn("showTrainerCoachRequests", trainer)
 
     def test_no_unfinished_program_template_placeholder(self):
         self.assertNotIn("Конструктор шаблонів програм додамо наступним етапом", TRAINER)
