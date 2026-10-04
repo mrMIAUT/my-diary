@@ -115,6 +115,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("features?.meal_plan", NUTRITION)
         self.assertIn("openNutritionTargetsModal", NUTRITION)
         self.assertIn("ЄПЛАН Самостійно", TRAINER)
+        self.assertIn("redesignHomeTrainersHTML", HOME)
+        self.assertIn("api('/trainers')", HOME)
         measurements = (ROOT / "backend" / "static" / "js" / "measurements.js").read_text(encoding="utf-8")
         trainer = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
         self.assertIn("hasFeature('measurements'", measurements)
