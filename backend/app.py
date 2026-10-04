@@ -1757,10 +1757,13 @@ def own_trainer_profile(user:AuthUser=Depends(require_trainer)):
 @app.patch("/api/trainer/profile")
 def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trainer)):
     name=x.display_name.strip() or user.name or "Тренер ЄПЛАН"
-    run("""INSERT INTO trainer_profiles(
+    # Do not use run() here: its generic INSERT helper appends RETURNING id,
+    # while trainer_profiles is keyed by trainer_id and intentionally has no id column.
+    with con() as db:
+        db.execute("""INSERT INTO trainer_profiles(
               trainer_id,display_name,headline,bio,experience_years,specialties,
               instagram,telegram,tiktok,max_active_clients,accepting_clients,is_published,updated_at)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+           VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP)
            ON CONFLICT(trainer_id) DO UPDATE SET
               display_name=EXCLUDED.display_name,headline=EXCLUDED.headline,bio=EXCLUDED.bio,
               experience_years=EXCLUDED.experience_years,specialties=EXCLUDED.specialties,
@@ -1768,8 +1771,9 @@ def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trai
               max_active_clients=EXCLUDED.max_active_clients,
               accepting_clients=EXCLUDED.accepting_clients,is_published=EXCLUDED.is_published,
               updated_at=CURRENT_TIMESTAMP""",
-        (user.user_id,name,x.headline.strip(),x.bio.strip(),x.experience_years,x.specialties.strip(),
-         x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),x.max_active_clients,x.accepting_clients,x.is_published))
+          (user.user_id,name,x.headline.strip(),x.bio.strip(),x.experience_years,x.specialties.strip(),
+           x.instagram.strip(),x.telegram.strip(),x.tiktok.strip(),x.max_active_clients,x.accepting_clients,x.is_published))
+        db.commit()
     return trainer_profile_response(trainer_profile_stats_row(user.user_id))
 
 @app.post("/api/trainer/profile/avatar")
