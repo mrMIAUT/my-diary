@@ -241,7 +241,7 @@ async function showTrainerPublicProfileEditor(){
  let rating=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★ · '+p.rating_count+' відгуків':'Ще без оцінок';
  app.innerHTML=shell('<div class="trainer-more-page modern trainer-public-profile-editor">'
    +'<div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Саме так тебе бачитимуть клієнти у каталозі ЄПЛАН.</p></div></div>'
-   +'<div class="trainer-profile-editor-preview card">'+trainerProfileAvatarEditorHTML(p)+'<div><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><span>'+esc(p.headline||'Додай коротке позиціонування')+'</span><small>'+esc(rating)+'</small></div><label class="trainer-avatar-upload"><input id="tpAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadTrainerAvatar(this)"><span>'+uiIcon('edit')+' Змінити фото</span></label></div>'
+   +'<div class="trainer-profile-editor-preview card">'+trainerProfileAvatarEditorHTML(p)+'<div><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><span>'+esc(p.headline||'Додай коротке позиціонування')+'</span><small>'+esc(rating)+'</small></div><label class="trainer-avatar-upload"><input id="tpAvatarFile" type="file" accept="image/*" onchange="openTrainerAvatarCropper(this)"><span>'+uiIcon('edit')+' Змінити фото</span></label></div>'
    +'<div class="trainer-profile-editor-stats"><div><strong>'+esc(String(+p.active_clients||0))+'</strong><span>ведеш зараз</span></div><div><strong>'+esc(String(+p.total_clients||0))+'</strong><span>клієнтів всього</span></div><div><strong>'+esc(String(+p.experience_years||0))+'</strong><span>років досвіду</span></div></div>'
    +'<div class="card trainer-public-profile-card">'
      +'<label><span>Ім’я у профілі</span><input id="tpName" value="'+esc(p.display_name||'')+'"></label>'
@@ -257,15 +257,127 @@ async function showTrainerPublicProfileEditor(){
  +'</div>');
 }
 
-async function uploadTrainerAvatar(input){
+let trainerAvatarCropState=null;
+
+function closeTrainerAvatarCropper(){
+  let state=trainerAvatarCropState;
+  if(state?.objectUrl)URL.revokeObjectURL(state.objectUrl);
+  if(state?.input)state.input.value='';
+  trainerAvatarCropState=null;
+  document.getElementById('trainerAvatarCropModal')?.remove();
+}
+
+function clampTrainerAvatarCrop(){
+  let s=trainerAvatarCropState;if(!s)return;
+  let scale=s.baseScale*s.zoom,w=s.naturalWidth*scale,h=s.naturalHeight*scale;
+  s.x=Math.min(0,Math.max(s.size-w,s.x));
+  s.y=Math.min(0,Math.max(s.size-h,s.y));
+}
+
+function renderTrainerAvatarCrop(){
+  let s=trainerAvatarCropState,img=document.getElementById('trainerAvatarCropImage');if(!s||!img)return;
+  let scale=s.baseScale*s.zoom;
+  clampTrainerAvatarCrop();
+  img.style.width=(s.naturalWidth*scale)+'px';
+  img.style.height=(s.naturalHeight*scale)+'px';
+  img.style.transform='translate3d('+s.x+'px,'+s.y+'px,0)';
+}
+
+function setTrainerAvatarCropZoom(value){
+  let s=trainerAvatarCropState;if(!s)return;
+  let oldScale=s.baseScale*s.zoom,newZoom=Math.max(1,Math.min(3,+value||1)),newScale=s.baseScale*newZoom;
+  let cx=(s.size/2-s.x)/oldScale,cy=(s.size/2-s.y)/oldScale;
+  s.zoom=newZoom;
+  s.x=s.size/2-cx*newScale;
+  s.y=s.size/2-cy*newScale;
+  renderTrainerAvatarCrop();
+}
+
+function bindTrainerAvatarCropDrag(viewport){
+  let active=false,lastX=0,lastY=0;
+  viewport.addEventListener('pointerdown',e=>{
+    if(!trainerAvatarCropState)return;
+    active=true;lastX=e.clientX;lastY=e.clientY;
+    viewport.setPointerCapture?.(e.pointerId);
+    viewport.classList.add('is-dragging');
+  });
+  viewport.addEventListener('pointermove',e=>{
+    if(!active||!trainerAvatarCropState)return;
+    trainerAvatarCropState.x+=e.clientX-lastX;
+    trainerAvatarCropState.y+=e.clientY-lastY;
+    lastX=e.clientX;lastY=e.clientY;
+    renderTrainerAvatarCrop();
+  });
+  let finish=e=>{
+    if(!active)return;
+    active=false;viewport.classList.remove('is-dragging');
+    try{viewport.releasePointerCapture?.(e.pointerId)}catch{}
+  };
+  viewport.addEventListener('pointerup',finish);
+  viewport.addEventListener('pointercancel',finish);
+}
+
+async function openTrainerAvatarCropper(input){
   let file=input?.files?.[0];if(!file)return;
-  if(file.size>10*1024*1024){input.value='';return alert('Фото завелике. Максимум 10 МБ.')}
-  let form=new FormData();form.append('file',file);
+  if(!String(file.type||'').startsWith('image/')){
+    input.value='';return alert('Обери файл зображення.');
+  }
+  document.getElementById('trainerAvatarCropModal')?.remove();
+  let objectUrl=URL.createObjectURL(file);
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal trainer-avatar-crop-modal" id="trainerAvatarCropModal">'
+    +'<div class="card trainer-avatar-crop-card">'
+      +'<div class="trainer-avatar-crop-head"><div><h2>Фото профілю</h2><p>Перетягни фото та збільш його, щоб обрати потрібну область.</p></div><button type="button" class="dark" onclick="closeTrainerAvatarCropper()">✕</button></div>'
+      +'<div class="trainer-avatar-crop-stage"><div class="trainer-avatar-crop-viewport" id="trainerAvatarCropViewport"><img id="trainerAvatarCropImage" alt=""><span class="trainer-avatar-crop-shade"></span><span class="trainer-avatar-crop-ring"></span></div></div>'
+      +'<div class="trainer-avatar-crop-zoom"><span>−</span><input id="trainerAvatarCropZoom" type="range" min="1" max="3" step="0.01" value="1" oninput="setTrainerAvatarCropZoom(this.value)"><span>＋</span></div>'
+      +'<div class="trainer-avatar-crop-actions"><button type="button" class="dark" onclick="closeTrainerAvatarCropper()">Скасувати</button><button type="button" class="trainer-avatar-crop-save" onclick="saveTrainerAvatarCrop(this)">Використати фото</button></div>'
+    +'</div></div>');
+  let img=document.getElementById('trainerAvatarCropImage'),viewport=document.getElementById('trainerAvatarCropViewport');
+  img.onload=()=>{
+    let size=viewport.clientWidth||280,nw=img.naturalWidth||1,nh=img.naturalHeight||1,baseScale=Math.max(size/nw,size/nh);
+    trainerAvatarCropState={input,file,objectUrl,naturalWidth:nw,naturalHeight:nh,size,baseScale,zoom:1,x:(size-nw*baseScale)/2,y:(size-nh*baseScale)/2};
+    bindTrainerAvatarCropDrag(viewport);
+    renderTrainerAvatarCrop();
+  };
+  img.onerror=()=>{
+    URL.revokeObjectURL(objectUrl);input.value='';
+    document.getElementById('trainerAvatarCropModal')?.remove();
+    trainerAvatarCropState=null;
+    alert('Не вдалося відкрити це фото. Спробуй інше зображення.');
+  };
+  img.src=objectUrl;
+}
+
+function trainerAvatarCanvasBlob(canvas,quality=.86){
+  return new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+}
+
+async function saveTrainerAvatarCrop(btn){
+  let s=trainerAvatarCropState;if(!s)return;
+  if(btn){btn.disabled=true;btn.textContent='Обробляємо…'}
   try{
+    let scale=s.baseScale*s.zoom;
+    clampTrainerAvatarCrop();
+    let sx=Math.max(0,-s.x/scale),sy=Math.max(0,-s.y/scale),sw=s.size/scale,sh=s.size/scale;
+    let source=document.getElementById('trainerAvatarCropImage');
+    let canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+    let ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('Не вдалося обробити фото');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,512,512);
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(source,sx,sy,sw,sh,0,0,512,512);
+    let blob=await trainerAvatarCanvasBlob(canvas,.86);
+    if(blob&&blob.size>400*1024)blob=await trainerAvatarCanvasBlob(canvas,.72);
+    if(!blob)throw new Error('Не вдалося стиснути фото');
+    let form=new FormData();form.append('file',blob,'avatar.jpg');
+    if(btn)btn.textContent='Завантажуємо…';
     let response=await eplanFetch(A+'/trainer/profile/avatar',{method:'POST',body:form});
     if(!response.ok){let body={};try{body=await response.json()}catch{};throw new Error(body.detail||'Не вдалося завантажити фото')}
+    closeTrainerAvatarCropper();
     await showTrainerPublicProfileEditor();
-  }catch(e){alert(e.message||'Не вдалося завантажити фото')}
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Використати фото'}
+    alert(e.message||'Не вдалося завантажити фото');
+  }
 }
 
 async function saveTrainerPublicProfile(btn){
