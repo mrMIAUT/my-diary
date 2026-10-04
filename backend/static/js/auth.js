@@ -98,7 +98,9 @@ function renderLogin(){
 }
 
 function renderForgotPassword(){
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Відновлення пароля</h1><p class="muted">Введіть справжній email, який тренер вказав під час створення акаунта.</p><input id="resetEmail" type="email" placeholder="Email"><p id="resetMsg" class="muted"></p><button onclick="requestPasswordReset()">Надіслати посилання</button><button class="dark" style="margin-left:8px" onclick="renderLogin()">Назад</button></div></div>`
+ document.body.classList.remove('client-ui');
+ document.body.classList.add('eplan-redesign','eplan-auth-page');
+ app.innerHTML=`<main class="auth-shell"><div class="auth-logo"><img src="/static/icons/apple-touch-icon.png?v=67" alt="Є ПЛАН"><div class="auth-logo-name">Є план</div></div><section class="auth-card"><div class="auth-heading"><h1>Відновлення пароля</h1><p>Введіть email, який тренер вказав під час створення акаунта.</p></div><label class="auth-field"><span>Email</span><input id="resetEmail" type="email" autocomplete="email" placeholder="name@email.com"></label><p id="resetMsg" class="auth-status"></p><div class="auth-actions"><button class="auth-submit" type="button" onclick="requestPasswordReset()">Надіслати посилання</button><button class="auth-secondary" type="button" onclick="renderLogin()">Назад</button></div></section></main>`
 }
 
 async function requestPasswordReset(){
@@ -107,7 +109,9 @@ async function requestPasswordReset(){
 
 function renderResetPassword(token){
  // H03: token is data in this closure, never HTML or JavaScript source.
- app.innerHTML=`<div class="wrap login"><div class="brand"><span class="brand-e">Є</span><span class="brand-divider"></span><span class="brand-plan">ПЛАН</span></div><div class="card"><h1>Новий пароль</h1><div class="password-field-wrap"><input id="newPass" type="password" data-password-field="1" autocomplete="new-password" placeholder="Новий пароль, мінімум 8 символів"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPass')">${passwordEyeSVG(true)}</button></div><div class="password-field-wrap"><input id="newPassRepeat" type="password" data-password-field="1" autocomplete="new-password" placeholder="Повторіть новий пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPassRepeat')">${passwordEyeSVG(true)}</button></div><p id="resetMsg" class="muted"></p><button id="confirmResetButton">Зберегти пароль</button></div></div>`;
+ document.body.classList.remove('client-ui');
+ document.body.classList.add('eplan-redesign','eplan-auth-page');
+ app.innerHTML=`<main class="auth-shell"><div class="auth-logo"><img src="/static/icons/apple-touch-icon.png?v=67" alt="Є ПЛАН"><div class="auth-logo-name">Є план</div></div><section class="auth-card"><div class="auth-heading"><h1>Новий пароль</h1><p>Створи новий пароль для входу в ЄПЛАН.</p></div><label class="auth-field"><span>Новий пароль</span><div class="password-field-wrap"><input id="newPass" type="password" data-password-field="1" autocomplete="new-password" placeholder="Мінімум 8 символів"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPass')">${passwordEyeSVG(true)}</button></div></label><label class="auth-field"><span>Повтори пароль</span><div class="password-field-wrap"><input id="newPassRepeat" type="password" data-password-field="1" autocomplete="new-password" placeholder="Повтори новий пароль"><button type="button" class="password-eye-btn" aria-label="Показати пароль" onclick="togglePasswordField(this,'newPassRepeat')">${passwordEyeSVG(true)}</button></div></label><p id="resetMsg" class="auth-status"></p><button id="confirmResetButton" class="auth-submit" type="button">Зберегти пароль</button></section></main>`;
  document.getElementById('confirmResetButton').addEventListener('click',()=>confirmPasswordReset(token));
 }
 
