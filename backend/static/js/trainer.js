@@ -350,7 +350,7 @@ function trainerAccessHTML(c){
  let editor=`<div id="accessEditBox" class="access-edit-box hidden">
    <div class="access-editor-head"><small>РЕДАГУВАННЯ ДОСТУПУ</small><strong>Тариф і термін</strong></div>
    <div class="access-grid">
-     <div class="access-field"><label for="accessPlan">Тариф</label><select id="accessPlan"><option value="coaching" ${a.plan_code==='coaching'?'selected':''}>Онлайн-ведення</option><option value="workout_nutrition" ${a.plan_code==='workout_nutrition'?'selected':''}>План тренувань + План харчування</option><option value="workout_plan" ${a.plan_code==='workout_plan'?'selected':''}>План тренувань</option><option value="self" ${a.plan_code==='self'?'selected':''}>Самостійно</option><option value="free" ${a.plan_code==='free'?'selected':''}>Free</option></select></div>
+     <div class="access-field"><label for="accessPlan">Тариф</label><select id="accessPlan"><option value="coaching" ${a.plan_code==='coaching'?'selected':''}>Онлайн-ведення</option><option value="workout_nutrition" ${a.plan_code==='workout_nutrition'?'selected':''}>План тренувань + харчування</option><option value="workout_plan" ${a.plan_code==='workout_plan'?'selected':''}>План тренувань</option><option value="self" ${a.plan_code==='self'?'selected':''}>ЄПЛАН Самостійно</option><option value="free" ${a.plan_code==='free'?'selected':''}>Free</option></select></div>
      <div class="access-field"><label for="accessUntil">Доступ до</label><input id="accessUntil" type="date" value="${esc(a.access_until||'')}"></div>
    </div>
    <div class="access-quick-title">Швидко продовжити</div>
