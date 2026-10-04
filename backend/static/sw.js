@@ -1,4 +1,4 @@
-const VERSION='eplan-v153';
+const VERSION='eplan-v154';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -139,7 +139,9 @@ self.addEventListener('push',event=>{
 });
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
-  const url=new URL(event.notification.data?.url||'/',self.location.origin).href;
+  const raw=event.notification.data?.url||'/';
+  const base=self.location.hostname==='my-diary-fit.onrender.com'?'https://eplan.com.ua':self.location.origin;
+  const url=new URL(raw,base).href;
   event.waitUntil((async()=>{
     const list=await clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of list){
