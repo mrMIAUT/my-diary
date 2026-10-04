@@ -234,16 +234,42 @@ function trainerProfileAvatarEditorHTML(p){
   +'</div>';
 }
 
-async function showTrainerPublicProfileEditor(){
+window.trainerProfileEditing=window.trainerProfileEditing??null;
+
+function trainerProfileCompactHTML(p,rating){
+  let specs=String(p.specialties||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean).slice(0,4);
+  let availability=p.accepting_clients?'Набираю клієнтів':'Набір закрито';
+  let capacity=(+p.max_active_clients||0)>0
+    ?(+p.active_clients||0)+' / '+(+p.max_active_clients||0)+' активних'
+    :( +p.active_clients||0)+' активних';
+  return '<div class="trainer-profile-collapsed">'
+    +'<div class="trainer-profile-collapsed-top">'
+      +trainerProfileAvatarEditorHTML(p)
+      +'<div class="trainer-profile-collapsed-copy"><span class="trainer-profile-collapsed-status '+(p.accepting_clients?'open':'closed')+'">'+esc(availability)+'</span><h2>'+esc(p.display_name||'Тренер ЄПЛАН')+'</h2><p>'+esc(p.headline||'Додай коротке позиціонування')+'</p><small>'+esc(rating)+'</small></div>'
+    +'</div>'
+    +'<div class="trainer-profile-collapsed-stats"><div><strong>'+esc(String(+p.experience_years||0))+'</strong><span>років досвіду</span></div><div><strong>'+esc(String(+p.total_clients||0))+'</strong><span>клієнтів всього</span></div><div><strong>'+esc(capacity)+'</strong><span>завантаження</span></div></div>'
+    +(specs.length?'<div class="trainer-profile-collapsed-tags">'+specs.map(x=>'<span>'+esc(x)+'</span>').join('')+'</div>':'')
+    +(p.bio?'<p class="trainer-profile-collapsed-bio">'+esc(p.bio)+'</p>':'')
+    +'<button class="trainer-profile-edit-toggle" onclick="showTrainerPublicProfileEditor(true)">'+uiIcon('edit')+' Редагувати профіль</button>'
+  +'</div>';
+}
+
+async function showTrainerPublicProfileEditor(forceEdit=null){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
  let p=await api('/trainer/profile');
+ let hasProfile=!!(String(p.headline||'').trim()||String(p.bio||'').trim()||String(p.specialties||'').trim()||+p.experience_years||p.avatar_url);
+ if(forceEdit===true)window.trainerProfileEditing=true;
+ else if(forceEdit===false)window.trainerProfileEditing=false;
+ else if(window.trainerProfileEditing===null)window.trainerProfileEditing=!hasProfile;
+ let editing=!!window.trainerProfileEditing;
  let checked=v=>v?'checked':'';
  let rating=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★ · '+p.rating_count+' відгуків':'Ще без оцінок';
- app.innerHTML=shell('<div class="trainer-more-page modern trainer-public-profile-editor">'
-   +'<div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Саме так тебе бачитимуть клієнти у каталозі ЄПЛАН.</p></div></div>'
-   +'<div class="trainer-profile-editor-preview card">'+trainerProfileAvatarEditorHTML(p)+'<div><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><span>'+esc(p.headline||'Додай коротке позиціонування')+'</span><small>'+esc(rating)+'</small></div><label class="trainer-avatar-upload"><input id="tpAvatarFile" type="file" accept="image/*" onchange="openTrainerAvatarCropper(this)"><span>'+uiIcon('edit')+' Змінити фото</span></label></div>'
+ let compact=trainerProfileCompactHTML(p,rating);
+ let form=editing
+  ?'<div class="trainer-profile-editor-preview card">'+trainerProfileAvatarEditorHTML(p)+'<div><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><span>'+esc(p.headline||'Додай коротке позиціонування')+'</span><small>'+esc(rating)+'</small></div><label class="trainer-avatar-upload"><input id="tpAvatarFile" type="file" accept="image/*" onchange="openTrainerAvatarCropper(this)"><span>'+uiIcon('edit')+' Змінити фото</span></label></div>'
    +'<div class="trainer-profile-editor-stats"><div><strong>'+esc(String(+p.active_clients||0))+'</strong><span>ведеш зараз</span></div><div><strong>'+esc(String(+p.total_clients||0))+'</strong><span>клієнтів всього</span></div><div><strong>'+esc(String(+p.experience_years||0))+'</strong><span>років досвіду</span></div></div>'
    +'<div class="card trainer-public-profile-card">'
+     +'<div class="trainer-profile-form-head"><div><strong>Редагування профілю</strong><span>Зміни будуть видимі у каталозі після збереження.</span></div><button class="trainer-profile-collapse-btn" type="button" onclick="showTrainerPublicProfileEditor(false)">Згорнути</button></div>'
      +'<label><span>Ім’я у профілі</span><input id="tpName" value="'+esc(p.display_name||'')+'"></label>'
      +'<label><span>Короткий опис</span><input id="tpHeadline" value="'+esc(p.headline||'')+'" placeholder="Наприклад: набір м’язів · силові · онлайн"></label>'
      +'<label><span>Про себе</span><textarea id="tpBio" placeholder="Підхід, досвід, кому ти допомагаєш">'+esc(p.bio||'')+'</textarea></label>'
@@ -254,6 +280,10 @@ async function showTrainerPublicProfileEditor(){
      +'<label class="trainer-public-profile-check"><input id="tpPublished" type="checkbox" '+checked(p.is_published)+'><span>Показувати профіль у каталозі</span></label>'
      +'<button class="trainer-public-profile-save" onclick="saveTrainerPublicProfile(this)">Зберегти профіль</button>'
    +'</div>'
+  :compact;
+ app.innerHTML=shell('<div class="trainer-more-page modern trainer-public-profile-editor '+(editing?'is-editing':'is-collapsed')+'">'
+   +'<div class="trainer-page-title trainer-more-title"><div><h1>Профіль тренера</h1><p class="trainer-page-sub">Саме так тебе бачитимуть клієнти у каталозі ЄПЛАН.</p></div></div>'
+   +form
  +'</div>');
 }
 
@@ -376,7 +406,7 @@ async function saveTrainerAvatarCrop(btn){
     let response=await eplanFetch(A+'/trainer/profile/avatar',{method:'POST',body:form});
     if(!response.ok){let body={};try{body=await response.json()}catch{};throw new Error(body.detail||'Не вдалося завантажити фото')}
     closeTrainerAvatarCropper();
-    await showTrainerPublicProfileEditor();
+    await showTrainerPublicProfileEditor(true);
   }catch(e){
     if(btn){btn.disabled=false;btn.textContent='Використати фото'}
     alert(e.message||'Не вдалося завантажити фото');
@@ -399,7 +429,8 @@ async function saveTrainerPublicProfile(btn){
      accepting_clients:!!document.getElementById('tpAccepting')?.checked,
      is_published:!!document.getElementById('tpPublished')?.checked
    })});
-   await showTrainerPublicProfileEditor();
+   window.trainerProfileEditing=false;
+   await showTrainerPublicProfileEditor(false);
  }catch(e){
    if(btn)btn.disabled=false;
    alert(e.message||'Не вдалося зберегти профіль');
