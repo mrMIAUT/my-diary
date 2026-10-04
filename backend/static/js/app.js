@@ -34,7 +34,7 @@ const OFF_CACHE_MAX_RECORDS=200;
 const OFF_CACHE_MAX_RECORD_BYTES=4*1024*1024;
 const OFF_CACHE_MAX_BYTES=12*1024*1024;
 const OFF_QUEUE_MAX_RECORDS=100;
-const OFF_PRIVATE_LOCAL_PREFIXES=['eplanWorkoutDraft_','eplanWorkoutDraftV2_','eplanDailyDraftV1_','eplanDailyDraftV2_','activeWorkout_','eplanActiveWorkoutV2_','eplanPushEnabled_'];
+const OFF_PRIVATE_LOCAL_PREFIXES=['eplanWorkoutDraft_','eplanWorkoutDraftV2_','eplanDailyDraftV1_','eplanDailyDraftV2_','activeWorkout_','eplanActiveWorkoutV2_','eplanPushEnabled_','eplanRestTrackV1_'];
 const OFF_PENDING_LOCAL_PREFIXES=['eplanWorkoutDraft_','eplanWorkoutDraftV2_','eplanDailyDraftV1_','eplanDailyDraftV2_'];
 
 const apiMutationsInFlight=new Map();
