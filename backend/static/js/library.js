@@ -61,7 +61,7 @@ async function showExerciseLibrary(){
 
  let groupCards=groups.map(g=>{
    let all=L.exercises.filter(x=>+x.group_id===+g.id),xs=all.filter(exerciseVisible);
-   if((q||muscleFilter)&&!xs.length)return '';
+   if((q||muscleFilter||scopeFilter!=='all')&&!xs.length)return '';
    return `<div class="card trainer-library-group">
      <button class="exercise-toggle trainer-library-group-toggle redesign-library-group-head" onclick="toggleExercise('libGroup${g.id}',this)">
        <strong>${esc(g.name)}</strong>
