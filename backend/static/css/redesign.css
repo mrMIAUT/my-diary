@@ -14896,3 +14896,40 @@ body.eplan-redesign.trainer-ui .trainer-program-picker-scope button.active{
   background:#edf4ff!important;
   color:#176fe5!important;
 }
+
+
+/* Exercise group row in trainer program picker */
+body.eplan-redesign.trainer-ui .trainer-program-picker-groups{
+  display:flex!important;
+  flex:0 0 auto!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:0 1px 7px!important;
+  scrollbar-width:none!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-groups::-webkit-scrollbar{
+  display:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-groups button{
+  flex:0 0 auto!important;
+  min-height:36px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:999px!important;
+  background:#fff!important;
+  color:#31445f!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-picker-groups button.active{
+  border-color:#9ec3ff!important;
+  background:#eaf3ff!important;
+  color:#176fe5!important;
+}
