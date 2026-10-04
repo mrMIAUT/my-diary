@@ -29,16 +29,20 @@ function finalizeTrackedRest(reason='cancel'){
 }
 function beginTrackedRest(context,end){
  let existing=readTrackedRest();
- if(existing)finalizeTrackedRest('cancel');
+ if(existing)finalizeTrackedRest(existing.end_at&&Date.now()>=+existing.end_at?'finish':'cancel');
  if(!context?.sid||!context?.pid||!context?.set_number)return;
- writeTrackedRest({sid:+context.sid,pid:+context.pid,set_number:+context.set_number,started_at:Date.now(),end_at:+end||0});
+ writeTrackedRest({sid:+context.sid,pid:+context.pid,set_number:+context.set_number,started_at:Date.now(),end_at:+end||0,paused:false});
 }
 function updateTrackedRestEnd(end){
  let track=readTrackedRest();if(!track)return;
- track.end_at=+end||0;writeTrackedRest(track);
+ track.end_at=+end||0;track.paused=false;writeTrackedRest(track);
+}
+function setTrackedRestPaused(paused){
+ let track=readTrackedRest();if(!track)return;
+ track.paused=!!paused;writeTrackedRest(track);
 }
 function recoverTrackedRest(){
- let track=readTrackedRest();if(!track)return;
+ let track=readTrackedRest();if(!track||track.paused)return;
  if(track.end_at&&Date.now()>=+track.end_at&&!restTimerEnd())finalizeTrackedRest('finish');
 }
 
@@ -103,7 +107,8 @@ function addRestTimer(seconds){
 }
 
 function cancelRestTimer(){
- finalizeTrackedRest('cancel');
+ let track=readTrackedRest();
+ finalizeTrackedRest(track?.end_at&&Date.now()>=+track.end_at?'finish':'cancel');
  localStorage.removeItem(REST_TIMER_KEY);clearRestTimerPaused();document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
  updateRestTimerUI(0);document.querySelector('#floatingRestTimer')?.remove();
@@ -112,6 +117,7 @@ function cancelRestTimer(){
 function pauseRestTimer(){
  let remaining=restTimerRemaining();if(!remaining)return;
  localStorage.setItem('eplanRestTimerPausedSeconds',String(remaining));
+ setTrackedRestPaused(true);
  localStorage.removeItem(REST_TIMER_KEY);
  if(restTimerInterval){clearInterval(restTimerInterval);restTimerInterval=null}
  navigator.serviceWorker?.controller?.postMessage({type:'CANCEL_REST_TIMER'});
