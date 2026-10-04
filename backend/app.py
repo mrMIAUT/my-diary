@@ -602,7 +602,7 @@ PLAN_FEATURES={
  "workout_nutrition":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":True,"checkin":False},
  "self":{"workouts":True,"nutrition":True,"measurements":True,"cardio":True,"trainer_review":False,"meal_plan":False,"checkin":False},
  "free":{"workouts":False,"nutrition":False,"measurements":False,"cardio":False,"trainer_review":False,"meal_plan":False,"checkin":False}}
-PLAN_NAMES={"coaching":"Онлайн-ведення","workout_plan":"План тренувань","workout_nutrition":"План тренувань + План харчування","self":"Самостійно","free":"Free"}
+PLAN_NAMES={"coaching":"Онлайн-ведення","workout_plan":"План тренувань","workout_nutrition":"План тренувань + харчування","self":"ЄПЛАН Самостійно","free":"Free"}
 
 def client_state(cid:int):
     return one("SELECT id,status,plan_code,access_until FROM clients WHERE id=?",(cid,))
@@ -1036,6 +1036,11 @@ class ClientProfileIn(BaseModel):
     first_name:str=Field(default="",max_length=120); last_name:str=Field(default="",max_length=120); age:int=Field(default=0,ge=0,le=150); sex:str=Field(default="",max_length=32); goal:str=Field(default="",max_length=2000); contraindications:str=Field(default="",max_length=10000); injuries:str=Field(default="",max_length=10000); contact:str=Field(default="",max_length=512); instagram:str=Field(default="",max_length=512); telegram:str=Field(default="",max_length=512); tiktok:str=Field(default="",max_length=512)
 class TrainerNoteIn(BaseModel):
     body:str=Field(default="",max_length=10000)
+class ClientNutritionTargetsIn(BaseModel):
+    kcal:int=Field(default=0,ge=0,le=MAX_KCAL)
+    protein:int=Field(default=0,ge=0,le=MAX_MACRO_G)
+    fat:int=Field(default=0,ge=0,le=MAX_MACRO_G)
+    carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class WeeklyCheckinIn(BaseModel):
     mood:int=Field(ge=1,le=5)
     sleep:int=Field(ge=1,le=5)
@@ -1744,6 +1749,16 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
         c.execute("UPDATE weekly_checkins SET reviewed=%s WHERE id=%s",(x.reviewed,checkin_id))
         c.commit()
     return {"ok":True}
+
+@app.patch("/api/client/{cid}/nutrition-targets")
+def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_client)):
+    authorize_client(user,cid)
+    access=require_active_client(cid,'nutrition')
+    if access["features"].get("meal_plan",False):
+        raise HTTPException(403,"Цілі БЖВ у цьому тарифі задає тренер")
+    run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,cid))
+    row=one("SELECT * FROM clients WHERE id=?",(cid,))
+    return client_response({**row,"access":access})
 
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
