@@ -119,7 +119,9 @@ function redesignNutritionTodayHTML(d,c,cid){
     +'<div class="redesign-nutrition-actions">'
       +(x?'<button onclick="openRedesignNutritionEntry('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>')
     +'</div>'
-    +(clientAccess(c).features?.meal_plan?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>'):'')
+    +(clientAccess(c).features?.meal_plan
+      ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
+      :'<div class="card nutrition-coaching-upsell"><span class="nutrition-kicker">ПОСЛУГА ТРЕНЕРА</span><strong>Персональний план харчування</strong><p>Щоденник БЖВ доступний у твоєму тарифі. Персональний план харчування складається тренером окремо.</p><button onclick="showClientTrainers('+cid+')">Переглянути тренерів ›</button></div>')
   +'</div>';
 }
 
@@ -148,7 +150,7 @@ window.showClientNutrition = async function(cid){
   let c=d.client;window.currentClientData=d;currentClientView='nutrition';
   let access=clientAccess(c);
   if(!access.features?.nutrition){
-    app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1><div class="redesign-empty-panel"><strong>Харчування недоступне у цьому тарифі</strong><span>Розділ «Харчування» доступний у тарифах «План тренувань + План харчування» та «Онлайн-ведення».</span></div></div>');
+    app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1><div class="redesign-empty-panel"><strong>Харчування доступне в активних тарифах ЄПЛАН</strong><span>Активуй будь-який платний тариф, щоб вести БЖВ та історію харчування.</span></div></div>');
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
   }
   let body=window.clientNutritionPeriod==='week'?nutritionHistoryHTML(d,7,'тиждень'):window.clientNutritionPeriod==='month'?nutritionHistoryHTML(d,30,'місяць'):redesignNutritionTodayHTML(d,c,cid);
