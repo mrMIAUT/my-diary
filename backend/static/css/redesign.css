@@ -12546,3 +12546,103 @@ body.eplan-redesign.client-ui .nutrition-targets-modal .nutrition-targets-hint{
   font-size:11px;
   line-height:1.45;
 }
+
+
+/* Client home trainer marketplace teaser v1 */
+body.eplan-redesign.client-ui .client-home-trainers{
+  margin-top:24px;
+}
+body.eplan-redesign.client-ui .client-home-trainers-head{
+  margin-bottom:10px;
+}
+body.eplan-redesign.client-ui .client-home-trainers-row{
+  display:flex;
+  gap:9px;
+  overflow-x:auto;
+  margin:0 -14px;
+  padding:0 14px 4px;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+body.eplan-redesign.client-ui .client-home-trainers-row::-webkit-scrollbar{display:none}
+body.eplan-redesign.client-ui .client-home-trainer-card{
+  flex:0 0 min(310px,82vw);
+  scroll-snap-align:start;
+  position:relative;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr);
+  grid-template-areas:
+    "avatar copy"
+    "avatar status";
+  gap:3px 11px;
+  align-items:center;
+  min-height:92px;
+  padding:13px 38px 13px 13px;
+  text-align:left;
+  background:#fff!important;
+  color:#0a1738!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:17px!important;
+  box-shadow:0 8px 22px rgba(35,70,108,.055)!important;
+}
+body.eplan-redesign.client-ui .client-home-trainer-card.current{
+  border-color:#cfe2fb!important;
+  background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)!important;
+}
+body.eplan-redesign.client-ui .client-home-trainer-avatar{
+  grid-area:avatar;
+  width:44px;height:44px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:#edf1f6;
+  color:#66758b;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+body.eplan-redesign.client-ui .client-home-trainer-card.current .client-home-trainer-avatar{
+  background:#e9f3ff;
+  color:#1677ff;
+}
+body.eplan-redesign.client-ui .client-home-trainer-copy{
+  grid-area:copy;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .client-home-trainer-copy strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+}
+body.eplan-redesign.client-ui .client-home-trainer-copy small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#75839a;
+  font-size:10.5px;
+}
+body.eplan-redesign.client-ui .client-home-trainer-status{
+  grid-area:status;
+  color:#5e718b;
+  font-size:10px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .client-home-trainer-card.open .client-home-trainer-status{color:#198754}
+body.eplan-redesign.client-ui .client-home-trainer-card.current .client-home-trainer-status{color:#1677ff}
+body.eplan-redesign.client-ui .client-home-trainer-arrow{
+  position:absolute;
+  right:13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#8f9daf;
+  font-size:22px;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .client-home-trainer-card{
+    flex-basis:min(292px,84vw);
+  }
+}
