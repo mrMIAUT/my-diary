@@ -148,7 +148,7 @@ window.showClientNutrition = async function(cid){
   let c=d.client;window.currentClientData=d;currentClientView='nutrition';
   let access=clientAccess(c);
   if(!access.features?.nutrition){
-    app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1><div class="redesign-empty-panel"><strong>Харчування недоступне</strong><span>Ця функція не входить до поточного тарифу.</span></div></div>');
+    app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1><div class="redesign-empty-panel"><strong>Харчування недоступне у цьому тарифі</strong><span>Розділ «Харчування» доступний у тарифах «План тренувань + План харчування» та «Онлайн-ведення».</span></div></div>');
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
   }
   let body=window.clientNutritionPeriod==='week'?nutritionHistoryHTML(d,7,'тиждень'):window.clientNutritionPeriod==='month'?nutritionHistoryHTML(d,30,'місяць'):redesignNutritionTodayHTML(d,c,cid);
