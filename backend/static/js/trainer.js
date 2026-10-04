@@ -134,8 +134,8 @@ async function showTrainerPrograms(){
   let body='';
   if(window.trainerProgramsMode==='templates'){
     let templates=await api('/trainer/program-templates');
-    body='<div class="trainer-template-toolbar"><div><strong>Мої шаблони</strong><span>Зберігай готові програми та призначай їх за кілька секунд.</span></div><button onclick="openCreateProgramTemplateModal()">+ Створити шаблон</button></div>'
-      +(templates.length?'<div class="trainer-template-list">'+templates.map(trainerTemplateCardHTML).join('')+'</div>':'<div class="trainer-program-empty compact"><span class="trainer-program-empty-icon">'+uiIcon('dumbbell')+'</span><h2>Шаблонів ще немає</h2><p>Створи перший шаблон із готової програми будь-якого клієнта.</p><button onclick="openCreateProgramTemplateModal()">Створити шаблон</button></div>');
+    body='<div class="trainer-template-toolbar modern"><div><strong>Мої шаблони</strong><span>Зберігай готові програми та призначай їх за кілька секунд.</span></div><button class="trainer-template-create" onclick="openCreateProgramTemplateModal()">＋ Створити</button></div>'
+      +(templates.length?'<div class="trainer-template-list modern">'+templates.map(trainerTemplateCardHTML).join('')+'</div>':'<div class="trainer-template-empty"><span class="trainer-template-empty-icon">'+uiIcon('dumbbell')+'</span><strong>Шаблонів ще немає</strong><p>Створи перший шаблон із готової програми будь-якого клієнта.</p></div>');
   }else{
     let rows=cs.map(c=>{
       let days=+c.program_days_count||0,hasProgram=days>0;
