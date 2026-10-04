@@ -330,6 +330,7 @@ async function saveExerciseEdit(pid,cid){
  body.technique_url=safeTechniqueUrl(body.technique_url);
  try{
    await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
+   if(libraryExerciseByName(body.exercise))rememberProgramExercise(body.exercise);
    editExerciseModal.remove();
    await openClient(cid,'program');
    reopenTrainerProgramDay(body.day_name);
@@ -345,6 +346,7 @@ async function addExercise(button=null){
  try{
   if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
+  if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
   await openClient(selected,'program');
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
 }
@@ -367,6 +369,7 @@ async function saveSupersetExercise(sourceId,dayName,button=null){
    let group='SS'+sourceId;
    await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
    await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
+   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
    supersetModal.remove();
    await openClient(selected,'program');
    reopenTrainerProgramDay(dayName);
