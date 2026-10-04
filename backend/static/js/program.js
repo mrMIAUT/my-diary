@@ -44,6 +44,11 @@ function programDayTitle(d,day){
  return String(x?.title||'').trim();
 }
 
+function trainerProgramExerciseTitleHTML(name){
+ let value=String(name||'').trim(),long=value.length>24;
+ return '<span class="trainer-program-name-marquee'+(long?' is-long':'')+'" title="'+esc(value)+'"><span class="trainer-program-name-track"><strong>'+esc(value)+'</strong>'+(long?'<strong aria-hidden="true">'+esc(value)+'</strong>':'')+'</span></span>';
+}
+
 function programHTML(d){
  let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
  let form=`<div class="card trainer-program-editor">
@@ -84,7 +89,7 @@ function programHTML(d){
        let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
        return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
          <div class="trainer-exercise-head">
-           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}"><strong>${esc(x.exercise)}</strong>${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
+           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}">${trainerProgramExerciseTitleHTML(x.exercise)}${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
            ${itemActions}
          </div>
          <div class="trainer-exercise-body">
@@ -175,7 +180,7 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
 }
 
 async function saveExerciseEdit(pid,cid){
