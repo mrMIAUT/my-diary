@@ -365,9 +365,12 @@ async function saveTrainerAvatarCrop(btn){
     ctx.fillStyle='#fff';ctx.fillRect(0,0,512,512);
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
     ctx.drawImage(source,sx,sy,sw,sh,0,0,512,512);
-    let blob=await trainerAvatarCanvasBlob(canvas,.86);
-    if(blob&&blob.size>400*1024)blob=await trainerAvatarCanvasBlob(canvas,.72);
-    if(!blob)throw new Error('Не вдалося стиснути фото');
+    let blob=null;
+    for(let quality of [.86,.72,.58,.46]){
+      blob=await trainerAvatarCanvasBlob(canvas,quality);
+      if(blob&&blob.size<=360*1024)break;
+    }
+    if(!blob||blob.size>420*1024)throw new Error('Не вдалося достатньо зменшити фото');
     let form=new FormData();form.append('file',blob,'avatar.jpg');
     if(btn)btn.textContent='Завантажуємо…';
     let response=await eplanFetch(A+'/trainer/profile/avatar',{method:'POST',body:form});
