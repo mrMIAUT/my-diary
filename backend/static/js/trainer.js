@@ -20,8 +20,14 @@ function trainerDaysSince(value){
  let d=new Date(value);if(Number.isNaN(d.getTime()))return null;
  return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));
 }
+function trainerAccessIsActive(c){
+ let a=clientAccess(c);
+ return c.status==='Активний'&&!a.expired&&!a.manually_frozen&&a.effective_plan!=='free';
+}
 function trainerAttention(c){
- if(c.status!=='Активний'||c.access?.expired)return {level:'paused',label:'На паузі',reason:'Доступ неактивний'};
+ let a=clientAccess(c);
+ if(!trainerAccessIsActive(c))return {level:'paused',label:'На паузі',reason:a.plan_code==='free'?'Безкоштовний режим':'Доступ неактивний'};
+ if(!a.features?.trainer_review)return {level:'paused',label:'Без супроводу',reason:a.plan_name||'Самостійний тариф'};
  let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0,comp=trainerCompliance(c),days=trainerDaysSince(c.last_finished_at);
  let reasons=[];
  if(review)reasons.push('Тренування до перевірки: '+review);
@@ -42,7 +48,7 @@ function trainerClientInitials(c){
 async function trainerHome(){
  currentTrainerMainView='home';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
- let active=cs.filter(c=>c.status==='Активний'&&!c.access?.expired);
+ let active=cs.filter(c=>trainerAccessIsActive(c));
  let states=cs.map(c=>({c,state:trainerAttention(c)}));
  let attention=states.filter(x=>x.state.level==='attention'||x.state.level==='risk');
  let checkins=cs.reduce((n,c)=>n+(+c.checkin_pending_count||0),0);
@@ -79,7 +85,7 @@ async function showTrainerClientsView(){
  currentTrainerMainView='clients';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
  let filter=window.trainerHomeFilter||'all',q=String(window.trainerClientSearch||'').trim().toLowerCase();
- let base=filter==='review'?cs.filter(c=>['attention','risk'].includes(trainerAttention(c).level)):filter==='active'?cs.filter(c=>c.status==='Активний'&&!c.access?.expired):cs;
+ let base=filter==='review'?cs.filter(c=>['attention','risk'].includes(trainerAttention(c).level)):filter==='active'?cs.filter(c=>trainerAccessIsActive(c)):cs;
  let shown=q?base.filter(c=>String(c.name||'').toLowerCase().includes(q)||String(c.goal||'').toLowerCase().includes(q)):base;
  let chip=(key,label,n)=>'<button class="'+(filter===key?'active':'')+'" onclick="window.trainerHomeFilter=\''+key+'\';showTrainerClientsView()">'+label+' <span>'+n+'</span></button>';
  app.innerHTML=shell(`<div class="trainer-clients-page">
@@ -87,7 +93,7 @@ async function showTrainerClientsView(){
    <label class="trainer-search">${uiIcon('menu')}<input value="${esc(window.trainerClientSearch||'')}" placeholder="Пошук клієнтів..." oninput="window.trainerClientSearch=this.value;showTrainerClientsView()"></label>
    <div class="trainer-filter-chips">
      ${chip('all','Усі',cs.length)}
-     ${chip('active','Активні',cs.filter(c=>c.status==='Активний'&&!c.access?.expired).length)}
+     ${chip('active','Активні',cs.filter(c=>trainerAccessIsActive(c)).length)}
      ${chip('review','Потребують уваги',cs.filter(c=>['attention','risk'].includes(trainerAttention(c).level)).length)}
    </div>
    <div class="trainer-client-list">${shown.map(c=>{
