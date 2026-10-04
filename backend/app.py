@@ -1586,6 +1586,12 @@ def get_trainer_profile(trainer_id:int,user:AuthUser=Depends(current_user)):
         item["is_current_trainer"]=bool(owner and int(owner["trainer_id"] or 0)==trainer_id)
     return item
 
+@app.get("/api/trainer/profile")
+def own_trainer_profile(user:AuthUser=Depends(require_trainer)):
+    row=one("SELECT * FROM trainer_profiles WHERE trainer_id=?",(user.user_id,))
+    if not row: raise HTTPException(404,"Профіль тренера не знайдено")
+    return trainer_profile_response(row)
+
 @app.patch("/api/trainer/profile")
 def update_trainer_profile(x:TrainerProfileIn,user:AuthUser=Depends(require_trainer)):
     name=x.display_name.strip() or user.name or "Тренер ЄПЛАН"
