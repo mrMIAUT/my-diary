@@ -730,7 +730,8 @@ def ensure_workout_start_indexes(c):
 def init():
     configured_trainer_email()
     with con() as c:
-        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT,goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний')""")
+        c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT,goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний',created_at TIMESTAMP)""")
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS created_at TIMESTAMP")
         c.execute("ALTER TABLE clients ALTER COLUMN password DROP DEFAULT")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
@@ -1525,7 +1526,7 @@ CLIENT_RESPONSE_FIELDS=(
     "id","name","email","goal","weight","kcal","protein","fat","carbs",
     "meal_plan","status","first_name","last_name","age","sex",
     "contraindications","injuries","contact","instagram","telegram","tiktok","avatar","trainer_id",
-    "plan_code","access_until","access","live_status","needs_review_count",
+    "plan_code","access_until","access","live_status","created_at","needs_review_count",
     "finished_workout_count","last_finished_at","review_state",
     "workouts_28d","program_days_count","nutrition_days_7d","checkin_pending_count","last_checkin_at",
 )
@@ -1612,7 +1613,7 @@ def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
     # Trainer creates the client by real email. The client sets their own password from the invitation.
     initial_password=secrets.token_urlsafe(32)
     try:
-        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs,trainer_id) VALUES(?,?,?,?,?,?,?,?,?,?)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs,user.user_id))
+        i=run("INSERT INTO clients(name,email,password,goal,weight,kcal,protein,fat,carbs,trainer_id,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)",(x.name.strip(),email,hash_password(initial_password),x.goal,x.weight,x.kcal,x.protein,x.fat,x.carbs,user.user_id))
         run("""INSERT INTO trainer_client_history(trainer_id,client_id,started_at,ended_at)
                VALUES(?,?,CURRENT_TIMESTAMP,NULL)
                ON CONFLICT(trainer_id,client_id) DO UPDATE SET ended_at=NULL""",(user.user_id,i))
