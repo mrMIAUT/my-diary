@@ -94,7 +94,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("require_active_client(cid,'meal_plan')", APP)
 
     def test_access_downgrade_preserves_manual_status_and_closes_live_workout(self):
-        block = APP.split('@app.patch("/api/clients/{cid}/access")', 1)[1].split("\n@app.", 1)[0]
+        block = APP.split('@app.patch("/api/clients/{cid}/access")', 1)[1].split('return {"ok":True,"access":access}', 1)[0]
         self.assertNotIn("status=CASE WHEN", block)
         self.assertNotIn("status='Активний'", block)
         self.assertIn("FOR UPDATE", block)
