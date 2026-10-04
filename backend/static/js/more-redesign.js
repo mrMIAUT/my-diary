@@ -183,14 +183,33 @@ function trainerMarketplaceSocials(p){
   }).join('')+'</div>';
 }
 
+function trainerMarketplaceAvatarHTML(p,large=false){
+  let cls='trainer-market-avatar'+(large?' large':'')+(p.avatar_url?' has-photo':'');
+  return p.avatar_url
+    ?'<span class="'+cls+'"><img src="'+esc(p.avatar_url)+'" alt="'+esc(p.display_name||'Тренер ЄПЛАН')+'"></span>'
+    :'<span class="'+cls+'">'+esc(trainerMarketplaceInitials(p.display_name))+'</span>';
+}
+
+function trainerMarketplaceAvailability(p){
+  if(p.is_current_trainer)return 'Твій тренер';
+  if(p.request_status==='pending')return 'Запит надіслано';
+  if(!p.accepting_clients)return 'Набір закрито';
+  if(Number.isFinite(+p.spots_left)&&+p.spots_left>0)return 'Ще '+p.spots_left+' місц'+(+p.spots_left===1?'е':'я');
+  return 'Набирає клієнтів';
+}
+
+function trainerMarketplaceRating(p){
+  return +p.rating_count>0?Number(p.rating_avg||0).toFixed(1)+' ★':'Новий';
+}
+
 function trainerMarketplaceCardHTML(p,cid){
-  let specs=trainerMarketplaceSpecialties(p.specialties);
-  let status=p.is_current_trainer?'Твій тренер':p.request_status==='pending'?'Запит надіслано':p.request_status==='accepted'?'Запит прийнято':p.accepting_clients?'Набирає клієнтів':'Набір закрито';
+  let specs=trainerMarketplaceSpecialties(p.specialties),status=trainerMarketplaceAvailability(p);
   let statusClass=p.is_current_trainer?'current':p.accepting_clients?'open':'closed';
-  return '<button class="trainer-market-card" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
-    +'<span class="trainer-market-avatar">'+esc(trainerMarketplaceInitials(p.display_name))+'</span>'
-    +'<span class="trainer-market-card-copy"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><small>'+esc(p.headline||'Персональний тренер')+'</small>'
+  return '<button class="trainer-market-card premium" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+    +trainerMarketplaceAvatarHTML(p)
+    +'<span class="trainer-market-card-copy"><span class="trainer-market-name-line"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><b>'+esc(trainerMarketplaceRating(p))+'</b></span><small>'+esc(p.headline||'Персональний тренер')+'</small>'
       +(specs.length?'<span class="trainer-market-tags">'+specs.slice(0,3).map(x=>'<i>'+esc(x)+'</i>').join('')+'</span>':'')
+      +'<span class="trainer-market-card-stats"><i><b>'+esc(String(+p.active_clients||0))+'</b> зараз</i><i><b>'+esc(String(+p.total_clients||0))+'</b> клієнтів</i></span>'
     +'</span>'
     +'<span class="trainer-market-status '+statusClass+'">'+esc(status)+'</span>'
     +'<span class="trainer-market-arrow">›</span>'
@@ -210,7 +229,10 @@ window.showClientTrainers = async function(cid){
 
 window.showClientTrainerProfile = async function(cid,trainerId){
   currentClientView='more';
-  let p=await api('/trainers/'+trainerId),specs=trainerMarketplaceSpecialties(p.specialties);
+  let [p,reviews]=await Promise.all([
+    api('/trainers/'+trainerId),
+    api('/trainers/'+trainerId+'/reviews').catch(()=>[])
+  ]),specs=trainerMarketplaceSpecialties(p.specialties);
   window.currentTrainerMarketplaceProfile=p;
   let requestButton='';
   if(p.is_current_trainer){
@@ -224,18 +246,56 @@ window.showClientTrainerProfile = async function(cid,trainerId){
   }else{
     requestButton='<button class="trainer-market-primary" disabled>Набір клієнтів закрито</button>';
   }
-  let body='<div class="client-section-page redesign-more-subpage trainer-profile-public">'
+  let ratingText=+p.rating_count>0?Number(p.rating_avg||0).toFixed(1):'—';
+  let availability=trainerMarketplaceAvailability(p);
+  let reviewRows=reviews.length?reviews.map(x=>'<div class="trainer-review-row"><div><strong>'+esc(x.client_name||'Клієнт')+'</strong><span>'+esc(String(x.rating))+' ★</span></div>'+(x.comment?'<p>'+esc(x.comment)+'</p>':'')+'</div>').join(''):'<div class="trainer-review-empty">Поки без відгуків. Рейтинг з’явиться після оцінок реальних клієнтів.</div>';
+  let reviewCta=p.can_review?'<button class="trainer-review-action" onclick="openTrainerReviewModal('+cid+','+trainerId+')">'+(p.my_review?'Оновити мою оцінку':'Оцінити тренера')+'</button>':'';
+  let body='<div class="client-section-page redesign-more-subpage trainer-profile-public premium">'
     +'<div class="redesign-back-title"><button class="unified-back-button" onclick="showClientTrainers('+cid+')" aria-label="Назад">‹</button><h1>Профіль тренера</h1></div>'
-    +'<div class="card trainer-profile-hero-public"><span class="trainer-market-avatar large">'+esc(trainerMarketplaceInitials(p.display_name))+'</span><div><h2>'+esc(p.display_name||'Тренер ЄПЛАН')+'</h2><p>'+esc(p.headline||'Персональний тренер')+'</p></div></div>'
+    +'<div class="trainer-profile-cover">'
+      +trainerMarketplaceAvatarHTML(p,true)
+      +'<div class="trainer-profile-cover-copy"><span class="trainer-profile-availability '+(p.accepting_clients?'open':'closed')+'">'+esc(availability)+'</span><h2>'+esc(p.display_name||'Тренер ЄПЛАН')+'</h2><p>'+esc(p.headline||'Персональний тренер')+'</p>'
+      +'<div class="trainer-profile-rating-line"><strong>'+esc(ratingText)+'</strong><span>★</span><small>'+((+p.rating_count||0)>0?esc(String(p.rating_count))+' відгуків':'Ще немає оцінок')+'</small></div></div>'
+    +'</div>'
+    +'<div class="trainer-profile-stats">'
+      +'<div><strong>'+esc(String(+p.experience_years||0))+'</strong><span>років досвіду</span></div>'
+      +'<div><strong>'+esc(String(+p.active_clients||0))+'</strong><span>веде зараз</span></div>'
+      +'<div><strong>'+esc(String(+p.total_clients||0))+'</strong><span>клієнтів всього</span></div>'
+      +'<div><strong>'+(p.accepting_clients?(Number.isFinite(+p.spots_left)&&+p.spots_left>0?esc(String(p.spots_left)):'✓'):'—')+'</strong><span>'+(p.accepting_clients?'вільних місць':'набір закрито')+'</span></div>'
+    +'</div>'
     +(specs.length?'<div class="trainer-profile-section"><h3>Спеціалізація</h3><div class="trainer-profile-tags">'+specs.map(x=>'<span>'+esc(x)+'</span>').join('')+'</div></div>':'')
-    +(p.experience_years?'<div class="trainer-profile-section"><h3>Досвід</h3><p>'+p.experience_years+' '+(p.experience_years===1?'рік':p.experience_years<5?'роки':'років')+' тренерської роботи</p></div>':'')
     +(p.bio?'<div class="trainer-profile-section"><h3>Про тренера</h3><p class="trainer-profile-bio">'+esc(p.bio)+'</p></div>':'')
     +trainerMarketplaceSocials(p)
-    +'<div class="trainer-profile-service-note"><strong>Послуги тренера</strong><p>Персональні тренування, харчування та онлайн-ведення — це окремі послуги поверх доступу до ЄПЛАН.</p></div>'
+    +'<div class="trainer-profile-section trainer-reviews-section"><div class="trainer-reviews-head"><div><h3>Відгуки</h3><p>'+((+p.rating_count||0)>0?'Середня оцінка '+esc(ratingText)+' з 5':'Лише від реальних клієнтів')+'</p></div>'+reviewCta+'</div>'+reviewRows+'</div>'
+    +'<div class="trainer-profile-service-note"><strong>Послуги тренера</strong><p>Персональні тренування, харчування та онлайн-ведення — окремі послуги поверх доступу до ЄПЛАН.</p></div>'
     +requestButton
   +'</div>';
   app.innerHTML=shell(body);
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+window.openTrainerReviewModal = function(cid,trainerId){
+  let p=window.currentTrainerMarketplaceProfile||{},mine=p.my_review||{},selected=+mine.rating||5;
+  document.getElementById('trainerReviewModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="trainerReviewModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-review-modal"><div class="between"><div><h2>Оцінити тренера</h2><p class="muted">Відгук побачать інші користувачі ЄПЛАН.</p></div><button class="dark" onclick="trainerReviewModal.remove()">✕</button></div><div class="trainer-review-stars" id="trainerReviewStars">'+[1,2,3,4,5].map(n=>'<button class="'+(n<=selected?'active':'')+'" onclick="setTrainerReviewRating('+n+')" aria-label="'+n+' з 5">★</button>').join('')+'</div><input type="hidden" id="trainerReviewRating" value="'+selected+'"><textarea id="trainerReviewComment" placeholder="Коротко розкажи про свій досвід">'+esc(mine.comment||'')+'</textarea><button class="trainer-market-primary" onclick="saveTrainerReview('+cid+','+trainerId+',this)">Зберегти оцінку</button></div></div>');
+};
+
+window.setTrainerReviewRating = function(value){
+  let input=document.getElementById('trainerReviewRating');if(input)input.value=value;
+  document.querySelectorAll('#trainerReviewStars button').forEach((b,i)=>b.classList.toggle('active',i<value));
+};
+
+window.saveTrainerReview = async function(cid,trainerId,btn){
+  if(btn)btn.disabled=true;
+  try{
+    let rating=+document.getElementById('trainerReviewRating')?.value||5,comment=document.getElementById('trainerReviewComment')?.value||'';
+    await api('/trainers/'+trainerId+'/review',{method:'PUT',body:JSON.stringify({rating,comment})});
+    document.getElementById('trainerReviewModal')?.remove();
+    await showClientTrainerProfile(cid,trainerId);
+  }catch(e){
+    if(btn)btn.disabled=false;
+    alert(e.message||'Не вдалося зберегти оцінку');
+  }
 };
 
 window.openTrainerRequestModal = function(cid,trainerId){
