@@ -165,11 +165,102 @@ function redesignAchievementsHTML(d){
   +'</div>';
 }
 
+function trainerMarketplaceInitials(name){
+  let parts=String(name||'Тренер').trim().split(/\s+/).filter(Boolean);
+  return (parts.slice(0,2).map(x=>x[0]).join('')||'ТР').toUpperCase();
+}
+
+function trainerMarketplaceSpecialties(value){
+  return String(value||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean).slice(0,8);
+}
+
+function trainerMarketplaceSocials(p){
+  let items=[['instagram',p.instagram],['telegram',p.telegram],['tiktok',p.tiktok]].filter(x=>x[1]);
+  if(!items.length)return '';
+  return '<div class="trainer-market-socials">'+items.map(([kind,value])=>{
+    let href=typeof socialHref==='function'?socialHref(kind,value):'';
+    return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener" aria-label="'+esc(kind)+'">'+socialIcon(kind)+'</a>':'';
+  }).join('')+'</div>';
+}
+
+function trainerMarketplaceCardHTML(p,cid){
+  let specs=trainerMarketplaceSpecialties(p.specialties);
+  let status=p.is_current_trainer?'Твій тренер':p.request_status==='pending'?'Запит надіслано':p.request_status==='accepted'?'Запит прийнято':p.accepting_clients?'Набирає клієнтів':'Набір закрито';
+  let statusClass=p.is_current_trainer?'current':p.accepting_clients?'open':'closed';
+  return '<button class="trainer-market-card" onclick="showClientTrainerProfile('+cid+','+(+p.trainer_id||0)+')">'
+    +'<span class="trainer-market-avatar">'+esc(trainerMarketplaceInitials(p.display_name))+'</span>'
+    +'<span class="trainer-market-card-copy"><strong>'+esc(p.display_name||'Тренер ЄПЛАН')+'</strong><small>'+esc(p.headline||'Персональний тренер')+'</small>'
+      +(specs.length?'<span class="trainer-market-tags">'+specs.slice(0,3).map(x=>'<i>'+esc(x)+'</i>').join('')+'</span>':'')
+    +'</span>'
+    +'<span class="trainer-market-status '+statusClass+'">'+esc(status)+'</span>'
+    +'<span class="trainer-market-arrow">›</span>'
+  +'</button>';
+}
+
+window.showClientTrainers = async function(cid){
+  currentClientView='more';
+  let trainers=await api('/trainers');
+  let body='<div class="client-section-page redesign-more-subpage trainer-market-page">'
+    +'<div class="redesign-back-title"><button class="unified-back-button" onclick="showClientMore('+cid+')" aria-label="Назад">‹</button><div><h1>Тренери</h1><p>Обери спеціаліста та переглянь його профіль.</p></div></div>'
+    +(trainers.length?'<div class="trainer-market-list">'+trainers.map(p=>trainerMarketplaceCardHTML(p,cid)).join('')+'</div>':'<div class="redesign-empty-panel"><strong>Тренерів поки немає</strong><span>Коли тренери відкриють свої профілі, вони з’являться тут.</span></div>')
+  +'</div>';
+  app.innerHTML=shell(body);
+  refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+window.showClientTrainerProfile = async function(cid,trainerId){
+  currentClientView='more';
+  let p=await api('/trainers/'+trainerId),specs=trainerMarketplaceSpecialties(p.specialties);
+  let requestButton='';
+  if(p.is_current_trainer){
+    requestButton='<button class="trainer-market-primary current" disabled>Твій тренер ✓</button>';
+  }else if(p.request_status==='pending'){
+    requestButton='<button class="trainer-market-primary current" disabled>Запит уже надіслано</button>';
+  }else if(p.request_status==='accepted'){
+    requestButton='<button class="trainer-market-primary current" disabled>Тренер прийняв запит ✓</button>';
+  }else if(p.accepting_clients){
+    requestButton='<button class="trainer-market-primary" onclick="openTrainerRequestModal('+cid+','+trainerId+',\''+esc(String(p.display_name||'Тренер ЄПЛАН')).replace(/'/g,"\\'")+'\')">Обрати тренера</button>';
+  }else{
+    requestButton='<button class="trainer-market-primary" disabled>Набір клієнтів закрито</button>';
+  }
+  let body='<div class="client-section-page redesign-more-subpage trainer-profile-public">'
+    +'<div class="redesign-back-title"><button class="unified-back-button" onclick="showClientTrainers('+cid+')" aria-label="Назад">‹</button><h1>Профіль тренера</h1></div>'
+    +'<div class="card trainer-profile-hero-public"><span class="trainer-market-avatar large">'+esc(trainerMarketplaceInitials(p.display_name))+'</span><div><h2>'+esc(p.display_name||'Тренер ЄПЛАН')+'</h2><p>'+esc(p.headline||'Персональний тренер')+'</p></div></div>'
+    +(specs.length?'<div class="trainer-profile-section"><h3>Спеціалізація</h3><div class="trainer-profile-tags">'+specs.map(x=>'<span>'+esc(x)+'</span>').join('')+'</div></div>':'')
+    +(p.experience_years?'<div class="trainer-profile-section"><h3>Досвід</h3><p>'+p.experience_years+' '+(p.experience_years===1?'рік':p.experience_years<5?'роки':'років')+' тренерської роботи</p></div>':'')
+    +(p.bio?'<div class="trainer-profile-section"><h3>Про тренера</h3><p class="trainer-profile-bio">'+esc(p.bio)+'</p></div>':'')
+    +trainerMarketplaceSocials(p)
+    +'<div class="trainer-profile-service-note"><strong>Послуги тренера</strong><p>Персональні тренування, харчування та онлайн-ведення — це окремі послуги поверх доступу до ЄПЛАН.</p></div>'
+    +requestButton
+  +'</div>';
+  app.innerHTML=shell(body);
+  refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+window.openTrainerRequestModal = function(cid,trainerId,name){
+  document.getElementById('trainerRequestModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="trainerRequestModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-request-modal"><div class="between"><div><h2>Обрати тренера</h2><p class="muted">Запит для '+esc(name)+'</p></div><button class="dark" onclick="trainerRequestModal.remove()">✕</button></div><label><span>Повідомлення <small>необов’язково</small></span><textarea id="trainerRequestMessage" placeholder="Наприклад: хочу набрати м’язову масу та тренуватися 3 рази на тиждень"></textarea></label><button class="trainer-market-primary" onclick="submitTrainerRequest('+cid+','+trainerId+',this)">Надіслати запит</button></div></div>');
+};
+
+window.submitTrainerRequest = async function(cid,trainerId,btn){
+  if(btn)btn.disabled=true;
+  try{
+    let message=document.getElementById('trainerRequestMessage')?.value||'';
+    await api('/trainers/'+trainerId+'/request',{method:'POST',body:JSON.stringify({message})});
+    document.getElementById('trainerRequestModal')?.remove();
+    await showClientTrainerProfile(cid,trainerId);
+  }catch(e){
+    if(btn)btn.disabled=false;
+    alert(e.message||'Не вдалося надіслати запит');
+  }
+};
+
 window.showClientMore = function(cid){
   let d=window.currentClientData||{},c=d.client||{},a=clientAccess(c);currentClientView='more';
   let body='<div class="client-section-page redesign-more-page"><h1>Більше</h1>'
     +'<div class="redesign-more-list">'
       +redesignMoreItem('user','Мій профіль','Особисті дані та анкета','showClientProfile('+cid+')')
+      +redesignMoreItem('users','Тренери','Обрати тренера або переглянути профіль','showClientTrainers('+cid+')','green')
       +redesignMoreItem('calendar','Історія тренувань','Усі виконані тренування','showClientSection(\'history\')')
       +redesignMoreItem('dumbbell','Вправи','Бібліотека вправ і техніка','showClientExerciseLibrary('+cid+')')
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
