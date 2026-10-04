@@ -14996,3 +14996,121 @@ body.eplan-redesign.client-ui .lyfta-remove-set{
     width:100%!important;
   }
 }
+
+
+/* Trainer program — structured alternative exercise editor */
+body.eplan-redesign.trainer-ui .trainer-program-alternatives-block{
+  grid-column:1/-1!important;
+  min-width:0!important;
+  padding:12px!important;
+  border:1px solid #e1e8f2!important;
+  border-radius:14px!important;
+  background:#fbfcfe!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternatives-title{
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:9px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternatives-title>span{
+  color:#52637c!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternatives-title>small{
+  color:#8996a9!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  text-align:right!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternatives-editor{
+  display:grid!important;
+  gap:8px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 132px 38px!important;
+  gap:7px!important;
+  align-items:center!important;
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-row .trainer-program-alternative-input{
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-pick{
+  min-width:0!important;
+  min-height:46px!important;
+  margin:0!important;
+  padding:0 10px!important;
+  border:1px solid #cfe0fb!important;
+  border-radius:12px!important;
+  background:#edf4ff!important;
+  color:#176fe5!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui #editExerciseModal .trainer-program-alternative-pick{
+  min-height:48px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-remove{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #e0e7f0!important;
+  border-radius:11px!important;
+  background:#f4f7fa!important;
+  color:#78879b!important;
+  box-shadow:none!important;
+  font-size:20px!important;
+  line-height:1!important;
+  font-weight:500!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-add{
+  width:auto!important;
+  min-height:38px!important;
+  margin:9px 0 0!important;
+  padding:0 12px!important;
+  border:1px dashed #b9cff0!important;
+  border-radius:11px!important;
+  background:#f4f8ff!important;
+  color:#176fe5!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui #editExerciseModal .trainer-program-alternatives-block{
+  grid-column:1/-1!important;
+}
+@media(max-width:520px){
+  body.eplan-redesign.trainer-ui .trainer-program-alternative-row{
+    grid-template-columns:minmax(0,1fr) 40px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-alternative-pick{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-height:40px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-alternative-remove{
+    grid-column:2!important;
+    grid-row:1!important;
+    width:40px!important;
+    height:46px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-alternatives-title{
+    display:block!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-program-alternatives-title>small{
+    display:block!important;
+    margin-top:3px!important;
+    text-align:left!important;
+  }
+}
