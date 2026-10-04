@@ -14538,3 +14538,12 @@ body.eplan-redesign.client-ui .workout-cancel-early:active{
     grid-template-columns:1fr;
   }
 }
+
+
+/* Per-set rest history */
+body.eplan-redesign.client-ui .lyfta-prev-line strong{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.25!important;
+}
