@@ -125,6 +125,13 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("isoAddMonthsFrom", trainer)
         self.assertIn("trainerAccessIsActive", trainer)
 
+    def test_trainer_profile_upsert_uses_trainer_id_safe_transaction(self):
+        block = APP.split('@app.patch("/api/trainer/profile")', 1)[1].split('@app.post("/api/trainer/profile/avatar")', 1)[0]
+        self.assertIn("with con() as db:", block)
+        self.assertIn("ON CONFLICT(trainer_id)", block)
+        self.assertNotIn('run("""INSERT INTO trainer_profiles', block)
+        self.assertNotIn("RETURNING id", block)
+
     def test_trainer_marketplace_foundation(self):
         self.assertIn("CREATE TABLE IF NOT EXISTS trainer_profiles", APP)
         self.assertIn("CREATE TABLE IF NOT EXISTS trainer_requests", APP)
