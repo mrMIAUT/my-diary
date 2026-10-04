@@ -181,7 +181,9 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("ux_exercise_library_trainer_name", APP)
         self.assertIn('exercise["scope"]="platform"', APP)
         self.assertIn("Моя вправа", LIBRARY)
-        self.assertIn("Усі бібліотеки", LIBRARY)
+        self.assertIn("trainer-library-filter-strip", LIBRARY)
+        self.assertIn("trainer-library-filter-chip", LIBRARY)
+        self.assertIn("Бібліотека", LIBRARY)
         self.assertIn("Мої вправи", LIBRARY)
 
 
