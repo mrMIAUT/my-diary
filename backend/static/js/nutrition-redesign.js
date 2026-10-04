@@ -118,12 +118,45 @@ function redesignNutritionTodayHTML(d,c,cid){
     +'</div>'
     +'<div class="redesign-nutrition-actions">'
       +(x?'<button onclick="openRedesignNutritionEntry('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>')
+      +(!clientAccess(c).features?.meal_plan?'<button class="nutrition-targets-button" onclick="openNutritionTargetsModal('+cid+')">'+uiIcon('edit')+' Налаштувати цілі</button>':'')
     +'</div>'
     +(clientAccess(c).features?.meal_plan
       ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
       :'<div class="card nutrition-coaching-upsell"><span class="nutrition-kicker">ПОСЛУГА ТРЕНЕРА</span><strong>Персональний план харчування</strong><p>Щоденник БЖВ доступний у твоєму тарифі. Персональний план харчування складається тренером окремо.</p><button onclick="showClientTrainers('+cid+')">Переглянути тренерів ›</button></div>')
   +'</div>';
 }
+
+window.openNutritionTargetsModal = function(cid){
+  document.getElementById('nutritionTargetsModal')?.remove();
+  let c=(window.currentClientData||{}).client||{};
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal" id="nutritionTargetsModal"><div class="card redesign-nutrition-modal nutrition-targets-modal">'
+    +'<div class="between"><div><h2>Цілі харчування</h2><p class="muted">Вкажи свої орієнтири на день.</p></div><button class="dark" onclick="nutritionTargetsModal.remove()">✕</button></div>'
+    +'<div class="grid"><input id="targetKcal" type="number" inputmode="numeric" value="'+(+c.kcal||'')+'" placeholder="Ккал"><input id="targetProtein" type="number" inputmode="numeric" value="'+(+c.protein||'')+'" placeholder="Білки, г"><input id="targetFat" type="number" inputmode="numeric" value="'+(+c.fat||'')+'" placeholder="Жири, г"><input id="targetCarbs" type="number" inputmode="numeric" value="'+(+c.carbs||'')+'" placeholder="Вуглеводи, г"></div>'
+    +'<p class="muted nutrition-targets-hint">Ці значення задаєш ти сам. Якщо підключиш персональний план харчування, цілі буде задавати тренер.</p>'
+    +'<button style="width:100%;margin-top:14px" onclick="saveNutritionTargets('+cid+',this)">Зберегти цілі</button>'
+    +'</div></div>');
+};
+
+window.saveNutritionTargets = async function(cid,btn){
+  let body={
+    kcal:+document.getElementById('targetKcal')?.value||0,
+    protein:+document.getElementById('targetProtein')?.value||0,
+    fat:+document.getElementById('targetFat')?.value||0,
+    carbs:+document.getElementById('targetCarbs')?.value||0
+  };
+  if(Object.values(body).some(v=>v<0))return alert('Значення не можуть бути від’ємними.');
+  if(btn){btn.disabled=true;btn.textContent='Зберігаємо…'}
+  try{
+    await api('/client/'+cid+'/nutrition-targets',{method:'PATCH',body:JSON.stringify(body)});
+    document.getElementById('nutritionTargetsModal')?.remove();
+    let d=await loadClientData(cid);window.currentClientData=d;
+    await showClientNutrition(cid);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Зберегти цілі'}
+    alert(e.message||'Не вдалося зберегти цілі.');
+  }
+};
 
 function openRedesignNutritionEntry(cid,nid=null){
   document.getElementById('redesignNutritionModal')?.remove();
