@@ -983,6 +983,28 @@ def init():
             body TEXT NOT NULL DEFAULT '',
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        # Production compatibility: preserve an incompatible legacy table
+        # instead of dropping or rewriting unknown historical data.
+        weekly_checkins_rel=c.execute(
+            "SELECT to_regclass('public.weekly_checkins') AS rel"
+        ).fetchone()
+        if weekly_checkins_rel and weekly_checkins_rel.get("rel"):
+            weekly_checkins_shape=c.execute("""SELECT COUNT(*) AS n
+                FROM information_schema.columns
+                WHERE table_schema='public'
+                  AND table_name='weekly_checkins'
+                  AND column_name IN (
+                      'id','client_id','week_start','mood','sleep','hunger',
+                      'energy','difficulty','comment','reviewed','created_at'
+                  )""").fetchone()
+            if int(weekly_checkins_shape["n"]) < 11:
+                weekly_checkins_legacy=c.execute(
+                    "SELECT to_regclass('public.weekly_checkins_legacy_pre_redesign') AS rel"
+                ).fetchone()
+                if weekly_checkins_legacy and weekly_checkins_legacy.get("rel"):
+                    raise RuntimeError("weekly_checkins legacy backup already exists")
+                c.execute("""ALTER TABLE public.weekly_checkins
+                             RENAME TO weekly_checkins_legacy_pre_redesign""")
         c.execute("""CREATE TABLE IF NOT EXISTS weekly_checkins(
             id BIGSERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL REFERENCES clients(id),
@@ -997,6 +1019,7 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(client_id,week_start)
         )""")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_weekly_checkins_client_week ON weekly_checkins(client_id,week_start)")
         c.execute("CREATE INDEX IF NOT EXISTS ix_weekly_checkins_client_week ON weekly_checkins(client_id,week_start DESC)")
 
         # M03A additive migration: business tables and H05 migration are unchanged.
