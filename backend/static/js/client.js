@@ -59,8 +59,7 @@ function socialContactsHTML(c){
 }
 
 function clientProfileAvatarHTML(c,cid){
- let photo=String(c.avatar||'').trim();
- let inner=photo?'<img src="/uploads/'+encodeURIComponent(photo)+'" alt="Фото профілю">':'<span class="avatar-initials avatar-initials-large">'+esc(clientInitials(c))+'</span>';
+ let inner='<span class="avatar-initials avatar-initials-large">'+esc(clientInitials(c))+'</span>';
  let name=[c.first_name||'',c.last_name||''].filter(Boolean).join(' ').trim()||c.name||'Мій профіль';
  return '<div class="client-profile-hero">'
    +'<div class="client-profile-avatar is-placeholder" aria-label="Аватар профілю">'+inner+'</div>'
