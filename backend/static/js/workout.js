@@ -24,9 +24,10 @@ function previousExerciseHTML(d,pid){
    <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
    ${cur.map(s=>{
       let p=prev.find(z=>z.set_number===s.set_number);
-      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>`;
+      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
       return `<div style="margin-top:9px">
-        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}</div>
+        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
+        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${p.reps} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
         <div class="muted" style="margin-top:3px">Різниця: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>
       </div>`;
    }).join('')}
@@ -41,7 +42,7 @@ function completedComparisonHTML(x,d){
  let prev=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
  return `<div class="exercise" style="margin-top:12px"><strong>Порівняння з ${esc(previousDay)}</strong>${cur.map(s=>{
    let p=prev.find(z=>z.set_number===s.set_number);if(!p)return '';
-   return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>`;
+   return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}${+s.rest_seconds>0||+p.rest_seconds>0?` · відпочинок ${+p.rest_seconds>0?formatSetRest(p.rest_seconds):'—'} → ${+s.rest_seconds>0?formatSetRest(s.rest_seconds):'—'}`:''}</div>`;
  }).join('')}</div>`;
 }
 
@@ -68,7 +69,7 @@ function completedExerciseHTML(x,d,cid){
    </div>
    ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
    <div class="workout-completed-sets">
-     ${done.map(s=>`<div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}</em></div>`).join('')}
+     ${done.map(s=>`<div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>`).join('')}
    </div>
    <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${x.sets},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
@@ -398,21 +399,31 @@ function focusNextUnfinishedExercise(pid){
 
 
 async function saveSets(cid,pid,exercise,count){
- let sets=[];
+ let raw=[];
  for(let n=1;n<=count;n++){
   let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
   if(!w.value&&!r.value&&!i.value)continue;
   if(!w.value||!r.value||!i.value)return alert(`Заповни вагу, повтори та RIR у підході ${n}`);
-  sets.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value})
+  raw.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value});
  }
- if(!sets.length)return alert('Заповни хоча б один підхід');
- await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
- // Finishing an exercise always ends its rest period. This also clears a paused timer.
+ if(!raw.length)return alert('Заповни хоча б один підхід');
+ let currentData=window.currentClientData||{},sid=workoutDraftSessionId(currentData);
+ // Finalize the currently running rest timer before reading the draft so the
+ // last measured rest interval is included in the saved exercise.
  cancelRestTimer();
- clearWorkoutDraft(workoutDraftSessionId(window.currentClientData||{}),pid);
+ let draft=readWorkoutDraft(sid,pid),day=workoutDataDay(currentData);
+ let existing=(currentData.result_sets||[]).filter(s=>+s.program_id===+pid&&s.day===day);
+ let sets=raw.map(s=>{
+   let prior=existing.find(x=>+x.set_number===+s.set_number),rest=draft[s.set_number]?.rest_seconds;
+   if(rest===undefined||rest===null||rest==='')rest=prior?.rest_seconds;
+   let restSeconds=rest===undefined||rest===null||rest===''?null:Math.max(0,Math.min(3600,Math.round(+rest||0)));
+   return {...s,rest_seconds:restSeconds};
+ });
+ await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
+ clearWorkoutDraft(sid,pid);
  let body=$('#exerciseBody'+pid);
  if(body){
-   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
+   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
  }
