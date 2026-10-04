@@ -1763,6 +1763,7 @@ def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:Auth
 @app.patch("/api/client/{cid}/nutrition")
 def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,cid)
+    require_active_client(cid,'meal_plan')
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
     legacy=x.meal_plan.strip()
