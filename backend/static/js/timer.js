@@ -224,7 +224,10 @@ async function completeWorkoutSetAndStartTimer(pid,n,total,btn){
  btn?.classList.toggle('done');
  if(btn?.classList.contains('done')){
    if(n>=total)cancelRestTimer();
-   else await startRestTimer(preferredRestTimerSeconds());
+   else{
+     let sid=workoutDraftSessionId(window.currentClientData||{});
+     await startRestTimer(preferredRestTimerSeconds(),null,{sid,pid,set_number:n});
+   }
  }
 }
 function compactRestTimerHTML(){
