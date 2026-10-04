@@ -1461,13 +1461,24 @@ def set_client_status(cid:int,x:ClientStatusIn,user:AuthUser=Depends(require_tra
 def set_client_access(cid:int,x:ClientAccessIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,cid)
     if x.plan_code not in PLAN_FEATURES: raise HTTPException(400,"Невідомий тариф")
-    if not one("SELECT id FROM clients WHERE id=?",(cid,)): raise HTTPException(404,"Клієнта не знайдено")
     until=None
     if x.access_until.strip():
         try: until=date.fromisoformat(x.access_until.strip())
         except Exception: raise HTTPException(400,"Некоректна дата доступу")
-    run("UPDATE clients SET plan_code=?,access_until=? WHERE id=?",(x.plan_code,until,cid))
-    return {"ok":True,"access":access_info(one("SELECT * FROM clients WHERE id=?",(cid,)))}
+    # Use the same client-row lock as workout start so a simultaneous access
+    # downgrade cannot leave a new active workout behind.
+    with con() as db:
+        row=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone()
+        if not row: raise HTTPException(404,"Клієнта не знайдено")
+        db.execute("UPDATE clients SET plan_code=%s,access_until=%s WHERE id=%s",(x.plan_code,until,cid))
+        client_row=db.execute("SELECT * FROM clients WHERE id=%s",(cid,)).fetchone()
+        access=access_info(dict(client_row))
+        if not access["features"].get("workouts",False):
+            db.execute("""UPDATE workout_sessions
+                          SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP)
+                          WHERE client_id=%s AND status='training'""",(cid,))
+        db.commit()
+    return {"ok":True,"access":access}
 
 @app.delete("/api/clients/{cid}")
 def del_client(cid:int,user:AuthUser=Depends(require_trainer)):
