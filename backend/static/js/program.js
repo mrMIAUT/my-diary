@@ -39,6 +39,146 @@ function autofillTechnique(name,targetId){
  let el=document.getElementById(targetId);if(el)el.value=item?.technique_url||'';
 }
 
+function programExercisePickerStored(key,limit=60){
+ try{
+  let a=JSON.parse(localStorage.getItem(key)||'[]');
+  return Array.isArray(a)?a.map(x=>String(x||'').trim()).filter(Boolean).slice(0,limit):[];
+ }catch(e){return []}
+}
+function programExercisePickerWrite(key,items,limit=60){
+ try{localStorage.setItem(key,JSON.stringify((items||[]).slice(0,limit)))}catch(e){}
+}
+function programExercisePickerFavorites(){return programExercisePickerStored('eplanTrainerExerciseFavoritesV1')}
+function programExercisePickerRecent(){return programExercisePickerStored('eplanTrainerExerciseRecentV1',20)}
+function rememberProgramExercise(name){
+ let value=String(name||'').trim();if(!value)return;
+ let next=[value,...programExercisePickerRecent().filter(x=>x.toLowerCase()!==value.toLowerCase())];
+ programExercisePickerWrite('eplanTrainerExerciseRecentV1',next,20);
+}
+function programExercisePickerUniqueExercises(){
+ let map=new Map();
+ (window.exerciseLibrary?.exercises||[]).forEach(x=>{
+  let name=String(x.name||'').trim();if(!name)return;
+  let key=name.toLowerCase(),current=map.get(key);
+  if(!current||String(x.scope||'platform')==='trainer')map.set(key,x);
+ });
+ return [...map.values()].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'uk'));
+}
+function programExercisePickerMuscleIds(x){
+ return [...(x?.primary_muscle_ids||[]),...(x?.secondary_muscle_ids||[])].map(Number).filter(Boolean);
+}
+function programExercisePickerMuscleNames(x){
+ let ids=programExercisePickerMuscleIds(x),seen=new Set(),names=[];
+ ids.forEach(id=>{
+  let name=(window.exerciseLibrary?.muscles||[]).find(m=>+m.id===+id)?.name||'';
+  if(name&&!seen.has(name)){seen.add(name);names.push(name)}
+ });
+ return names;
+}
+function programExercisePickerMatchStored(exercise,names){
+ let key=String(exercise?.name||'').trim().toLowerCase();
+ return (names||[]).some(x=>String(x||'').trim().toLowerCase()===key);
+}
+function programExercisePickerState(){return window.__programExercisePickerState||null}
+
+async function openProgramExercisePicker(targetId,techId=''){
+ if(!window.exerciseLibrary?.exercises?.length)await loadExerciseLibrary();
+ document.getElementById('programExercisePickerModal')?.remove();
+ let recents=programExercisePickerRecent();
+ window.__programExercisePickerState={targetId:String(targetId||''),techId:String(techId||''),mode:recents.length?'recent':'all',muscleId:0,query:''};
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-program-picker-modal" id="programExercisePickerModal" onclick="if(event.target===this)closeProgramExercisePicker()"><div class="card trainer-program-picker-card">
+   <div class="trainer-program-picker-head"><div><small>БІБЛІОТЕКА ВПРАВ</small><h2>Обрати вправу</h2><p>Фільтр враховує основні та додаткові м’язи.</p></div><button type="button" class="trainer-program-picker-close" onclick="closeProgramExercisePicker()" aria-label="Закрити">✕</button></div>
+   <label class="trainer-program-picker-search"><span>⌕</span><input id="programExercisePickerSearch" type="search" placeholder="Пошук вправи..." autocomplete="off" oninput="programExercisePickerSetQuery(this.value)"></label>
+   <div class="trainer-program-picker-modes" id="programExercisePickerModes"></div>
+   <div class="trainer-program-picker-muscles" id="programExercisePickerMuscles"></div>
+   <div class="trainer-program-picker-results" id="programExercisePickerResults"></div>
+   <button type="button" class="trainer-program-picker-manual" onclick="useManualProgramExercise()">Не знайшли вправу? <strong>Ввести вручну</strong></button>
+ </div></div>`);
+ renderProgramExercisePicker();
+ setTimeout(()=>document.getElementById('programExercisePickerSearch')?.focus(),40);
+}
+function closeProgramExercisePicker(){
+ document.getElementById('programExercisePickerModal')?.remove();
+ window.__programExercisePickerState=null;
+}
+function programExercisePickerSetQuery(value){
+ let s=programExercisePickerState();if(!s)return;s.query=String(value||'').trim().toLowerCase();renderProgramExercisePickerResults();
+}
+function programExercisePickerSetMode(button){
+ let s=programExercisePickerState();if(!s)return;s.mode=String(button?.dataset?.pickerMode||'all');renderProgramExercisePicker();
+}
+function programExercisePickerSetMuscle(button){
+ let s=programExercisePickerState();if(!s)return;s.muscleId=+(button?.dataset?.muscleId||0);renderProgramExercisePicker();
+}
+function toggleProgramExerciseFavorite(button){
+ let name=String(button?.dataset?.exerciseName||'').trim();if(!name)return;
+ let items=programExercisePickerFavorites(),exists=items.some(x=>x.toLowerCase()===name.toLowerCase());
+ items=exists?items.filter(x=>x.toLowerCase()!==name.toLowerCase()):[name,...items.filter(x=>x.toLowerCase()!==name.toLowerCase())];
+ programExercisePickerWrite('eplanTrainerExerciseFavoritesV1',items,60);
+ renderProgramExercisePicker();
+}
+function chooseProgramLibraryExercise(button){
+ let s=programExercisePickerState(),name=String(button?.dataset?.exerciseName||'').trim();if(!s||!name)return;
+ let target=document.getElementById(s.targetId),item=libraryExerciseByName(name);
+ if(target){target.value=name;target.dispatchEvent(new Event('input',{bubbles:true}));target.dispatchEvent(new Event('change',{bubbles:true}))}
+ if(s.techId){
+  let tech=document.getElementById(s.techId);
+  if(tech)tech.value=item?.technique_url||'';
+ }
+ rememberProgramExercise(name);
+ closeProgramExercisePicker();
+ target?.focus();
+}
+function useManualProgramExercise(){
+ let s=programExercisePickerState(),target=s?document.getElementById(s.targetId):null;
+ closeProgramExercisePicker();
+ setTimeout(()=>target?.focus(),30);
+}
+function renderProgramExercisePicker(){
+ let s=programExercisePickerState();if(!s)return;
+ let modes=document.getElementById('programExercisePickerModes'),muscles=document.getElementById('programExercisePickerMuscles');
+ let recentCount=programExercisePickerRecent().length,favCount=programExercisePickerFavorites().length;
+ if(modes)modes.innerHTML=[
+   ['all','Усі'],
+   ['favorite','★ Обране'+(favCount?' · '+favCount:'')],
+   ['recent','Нещодавні'+(recentCount?' · '+recentCount:'')]
+ ].map(([mode,label])=>`<button type="button" class="${s.mode===mode?'active':''}" data-picker-mode="${mode}" onclick="programExercisePickerSetMode(this)">${esc(label)}</button>`).join('');
+ if(muscles){
+  let ms=(window.exerciseLibrary?.muscles||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'uk'));
+  muscles.innerHTML=`<button type="button" class="${!s.muscleId?'active':''}" data-muscle-id="0" onclick="programExercisePickerSetMuscle(this)">Усі м’язи</button>`
+    +ms.map(m=>`<button type="button" class="${+s.muscleId===+m.id?'active':''}" data-muscle-id="${m.id}" onclick="programExercisePickerSetMuscle(this)">${esc(m.name)}</button>`).join('');
+ }
+ renderProgramExercisePickerResults();
+}
+function renderProgramExercisePickerResults(){
+ let s=programExercisePickerState(),host=document.getElementById('programExercisePickerResults');if(!s||!host)return;
+ let favs=programExercisePickerFavorites(),recents=programExercisePickerRecent(),all=programExercisePickerUniqueExercises(),rows=all.filter(x=>{
+   if(s.mode==='favorite'&&!programExercisePickerMatchStored(x,favs))return false;
+   if(s.mode==='recent'&&!programExercisePickerMatchStored(x,recents))return false;
+   if(s.muscleId&&!programExercisePickerMuscleIds(x).includes(+s.muscleId))return false;
+   if(s.query&&!String(x.name||'').toLowerCase().includes(s.query))return false;
+   return true;
+ });
+ if(s.mode==='recent'){
+  let order=new Map(recents.map((x,i)=>[x.toLowerCase(),i]));
+  rows.sort((a,b)=>(order.get(String(a.name||'').toLowerCase())??999)-(order.get(String(b.name||'').toLowerCase())??999));
+ }
+ if(!rows.length){
+  host.innerHTML='<div class="trainer-program-picker-empty"><strong>Нічого не знайдено</strong><span>Зміни фільтр або введи назву вправи вручну.</span></div>';
+  return;
+ }
+ let favoriteKeys=new Set(favs.map(x=>x.toLowerCase()));
+ host.innerHTML=rows.map(x=>{
+   let names=programExercisePickerMuscleNames(x).slice(0,4),isFav=favoriteKeys.has(String(x.name||'').toLowerCase()),hasTech=!!safeTechniqueUrl(x.technique_url||'');
+   return `<div class="trainer-program-picker-row">
+     <button type="button" class="trainer-program-picker-pick" data-exercise-name="${esc(x.name)}" onclick="chooseProgramLibraryExercise(this)">
+       <span class="trainer-program-picker-copy"><strong>${esc(x.name)}</strong><small>${names.length?esc(names.join(' · ')):'М’язи не вказані'}${hasTech?' · є техніка':''}</small></span><span class="trainer-program-picker-select">Обрати ›</span>
+     </button>
+     <button type="button" class="trainer-program-picker-fav ${isFav?'active':''}" data-exercise-name="${esc(x.name)}" onclick="toggleProgramExerciseFavorite(this)" aria-label="${isFav?'Прибрати з обраного':'Додати в обране'}">★</button>
+   </div>`;
+ }).join('');
+}
+
 function programDayTitle(d,day){
  let x=(d?.program_days||[]).find(v=>v.day_name===day);
  return String(x?.title||'').trim();
@@ -56,7 +196,7 @@ function programHTML(d){
    <div class="trainer-program-editor-grid">
      <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
      <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
-     <label class="wide"><span>Вправа</span><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Оберіть або введіть вправу"></label>
+     <label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ex','tech')">Обрати з бібліотеки</button></div></label>
      <label class="wide"><span>Техніка</span><input id="tech" placeholder="https://..."></label>
      <label><span>Підходи</span><input id="st" type="number" value="3" placeholder="3"></label>
      <label><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
@@ -180,7 +320,7 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><div class="trainer-program-exercise-field"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><button type="button" onclick="openProgramExercisePicker('editName','editTech')">Обрати з бібліотеки</button></div><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><input id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><input id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input id="editAlternatives" list="exerciseLibraryNames" value="${esc(alternativesInputValue(x))}" placeholder="Альтернативи через кому"></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
 }
 
 async function saveExerciseEdit(pid,cid){
@@ -190,6 +330,7 @@ async function saveExerciseEdit(pid,cid){
  body.technique_url=safeTechniqueUrl(body.technique_url);
  try{
    await api('/program/'+pid,{method:'PUT',body:JSON.stringify(body)});
+   if(libraryExerciseByName(body.exercise))rememberProgramExercise(body.exercise);
    editExerciseModal.remove();
    await openClient(cid,'program');
    reopenTrainerProgramDay(body.day_name);
@@ -205,6 +346,7 @@ async function addExercise(button=null){
  try{
   if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(parseAlternatives(alternatives.value,exercise))})});
+  if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
   await openClient(selected,'program');
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
 }
@@ -212,7 +354,7 @@ async function addExercise(button=null){
 
 function addSupersetExercise(sourceId,dayName){
  document.getElementById('supersetModal')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">＋ Додати в суперсет</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">＋ Додати в суперсет</button></div></div>`);
  setTimeout(()=>document.getElementById('ssex')?.focus(),30);
 }
 
@@ -227,6 +369,7 @@ async function saveSupersetExercise(sourceId,dayName,button=null){
    let group='SS'+sourceId;
    await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
    await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
+   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
    supersetModal.remove();
    await openClient(selected,'program');
    reopenTrainerProgramDay(dayName);
