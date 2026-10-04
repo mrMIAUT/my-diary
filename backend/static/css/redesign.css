@@ -4202,6 +4202,9 @@ body.eplan-redesign.trainer-ui .trainer-smart-status{
   font-size:10px;font-weight:850;line-height:1.15;white-space:nowrap;
 }
 body.eplan-redesign.trainer-ui .trainer-smart-status.ok{background:#e9f7ef;color:#238b57}
+body.eplan-redesign.trainer-ui .trainer-smart-status.training{background:#e7f8ef;color:#168a52}
+body.eplan-redesign.trainer-ui .trainer-smart-status.training::before{content:'';width:6px;height:6px;margin-right:5px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(22,138,82,.12)}
+body.eplan-redesign.trainer-ui .trainer-smart-status.new{background:#edf4ff;color:#2f72dc}
 body.eplan-redesign.trainer-ui .trainer-smart-status.attention{background:#fff3e8;color:#c86c25}
 body.eplan-redesign.trainer-ui .trainer-smart-status.risk{background:#ffecef;color:#c94755}
 body.eplan-redesign.trainer-ui .trainer-smart-status.paused{background:#eef1f5;color:#78869b}
