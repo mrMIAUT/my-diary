@@ -238,11 +238,28 @@ function programTemplateEditorLibraryOptions(){
   return rows.join('');
 }
 
-function programTemplateAlternativesText(item){
+function programTemplateAlternatives(item){
   try{
     let xs=JSON.parse(item?.alternatives_json||'[]');
-    return Array.isArray(xs)?xs.filter(Boolean).join('; '):'';
-  }catch(e){return ''}
+    return Array.isArray(xs)?xs.map(x=>String(x||'').trim()).filter(Boolean):[];
+  }catch(e){return []}
+}
+
+function programTemplateAlternativesEditorHTML(item,di,ii){
+  let xs=programTemplateAlternatives(item);
+  let rows=xs.map((value,ai)=>{
+    let inputId='templateAlternative_'+di+'_'+ii+'_'+ai;
+    return '<div class="trainer-template-alternative-row">'
+      +'<input id="'+inputId+'" list="programTemplateExerciseLibraryNames" value="'+esc(value)+'" placeholder="Альтернативна вправа" oninput="updateProgramTemplateAlternative('+di+','+ii+','+ai+',this.value)">'
+      +'<button type="button" class="dark trainer-template-alternative-pick" onclick="openProgramExercisePicker(\''+inputId+'\')">З бібліотеки</button>'
+      +'<button type="button" class="dark trainer-template-alternative-remove" aria-label="Видалити альтернативу" onclick="removeProgramTemplateAlternative('+di+','+ii+','+ai+')">✕</button>'
+    +'</div>';
+  }).join('');
+  return '<div class="trainer-template-alternatives">'
+    +'<div class="trainer-template-alternatives-head"><span>Альтернативи</span><small>Кожна вправа додається окремо</small></div>'
+    +(rows||'<div class="trainer-template-alternatives-empty">Альтернатив ще немає.</div>')
+    +'<button type="button" class="trainer-template-alternative-add" onclick="addProgramTemplateAlternative('+di+','+ii+')">＋ Додати альтернативу</button>'
+  +'</div>';
 }
 
 function trainerTemplateEditorItemHTML(item,di,ii){
@@ -264,8 +281,8 @@ function trainerTemplateEditorItemHTML(item,di,ii){
       +'<label><span>RIR базовий</span><input type="number" min="0" max="10" value="'+esc(String(item.target_rir))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'target_rir\',this.value)"></label>'
       +'<label><span>RIR по підходах</span><input value="'+esc(item.rir_by_set)+'" placeholder="2,1,1" oninput="updateProgramTemplateItem('+di+','+ii+',\'rir_by_set\',this.value)"></label>'
       +'<label><span>Відпочинок</span><input value="'+esc(item.rest_text)+'" placeholder="2-3 хв" oninput="updateProgramTemplateItem('+di+','+ii+',\'rest_text\',this.value)"></label>'
-      +'<label class="wide"><span>Альтернативи</span><input value="'+esc(programTemplateAlternativesText(item))+'" placeholder="Вправа 1; Вправа 2" oninput="updateProgramTemplateAlternatives('+di+','+ii+',this.value)"></label>'
     +'</div>'
+    +programTemplateAlternativesEditorHTML(item,di,ii)
   +'</div>';
 }
 
@@ -318,10 +335,31 @@ function updateProgramTemplateItem(di,ii,field,value){
   if(['sets','target_rir','rest_seconds','superset_order'].includes(field))item[field]=+value||0;
   else item[field]=value;
 }
-function updateProgramTemplateAlternatives(di,ii,value){
+function setProgramTemplateAlternatives(item,xs){
+  if(!item)return;
+  item.alternatives_json=JSON.stringify((xs||[]).map(x=>String(x||'').trim()).filter(Boolean));
+}
+function updateProgramTemplateAlternative(di,ii,ai,value){
   let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
-  let xs=String(value||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean);
+  let xs=programTemplateAlternatives(item);
+  while(xs.length<=ai)xs.push('');
+  xs[ai]=String(value||'');
+  setProgramTemplateAlternatives(item,xs);
+}
+function addProgramTemplateAlternative(di,ii){
+  let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
+  let xs=programTemplateAlternatives(item);
+  xs.push('');
   item.alternatives_json=JSON.stringify(xs);
+  renderProgramTemplateEditor();
+  setTimeout(()=>document.getElementById('templateAlternative_'+di+'_'+ii+'_'+(xs.length-1))?.focus(),30);
+}
+function removeProgramTemplateAlternative(di,ii,ai){
+  let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
+  let xs=programTemplateAlternatives(item);
+  xs.splice(ai,1);
+  setProgramTemplateAlternatives(item,xs);
+  renderProgramTemplateEditor();
 }
 
 function nextProgramTemplateDayName(st){
