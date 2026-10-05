@@ -228,6 +228,12 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-day-title-save", PROGRAM)
         self.assertNotIn('style="width:100%;margin-top:14px"', PROGRAM)
 
+    def test_delete_exercise_stays_on_program_tab(self):
+        self.assertIn("async function deleteExercise", PROGRAM)
+        self.assertIn("pane.innerHTML=trainerTrainingTabHTML(fresh)", PROGRAM)
+        self.assertIn("reopenTrainerProgramDay(dayName)", PROGRAM)
+        self.assertNotIn("openClient(selected)}}", PROGRAM)
+
     def test_completed_badge_and_template_alternatives_ui(self):
         self.assertIn("workout-live-toggle-side", WORKOUT)
         self.assertIn("exercise-done-badge compact", WORKOUT)
