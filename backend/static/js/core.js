@@ -194,7 +194,7 @@ async function offSaveClient(cid,d){if(d)await offPut('cache',d,offClientKey(cid
 async function offApply(path,opt,localSid){
  let b=offBody(opt),m=(opt.method||'GET').toUpperCase(),cid=b.client_id||session?.client_id, d=cid?await offClient(cid):null;
  if(!d)return;
- if(path==='/result-sets'&&m==='POST'){let workoutDay=offWorkoutDay(d);d.result_sets=(d.result_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===workoutDay));(b.sets||[]).forEach(x=>d.result_sets.push({...x,id:-Date.now()-x.set_number,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:workoutDay}))}
+ if(path==='/result-sets'&&m==='POST'){let workoutDay=offWorkoutDay(d);d.result_sets=(d.result_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===workoutDay));(b.sets||[]).forEach(x=>d.result_sets.push({...x,id:-Date.now()-x.set_number,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:workoutDay}));d.aux_sets=(d.aux_sets||[]).filter(x=>!(x.program_id==b.program_id&&x.day===workoutDay));(b.aux_sets||[]).forEach((x,i)=>d.aux_sets.push({...x,id:-Date.now()-1000-i,client_id:cid,program_id:b.program_id,exercise:b.exercise,day:workoutDay}))}
  else if(path==='/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];d.nutrition.unshift({id:-Date.now(),client_id:cid,day:offToday(),kcal:b.kcal,protein:b.protein,fat:b.fat,carbs:b.carbs})}
  else if(/^\/nutrition\/-?\d+$/.test(path)&&m==='PATCH'){let id=+path.split('/').pop(),x=(d.nutrition||[]).find(x=>x.id==id);if(x)Object.assign(x,b)}
  else if(path==='/history/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];let x=d.nutrition.find(x=>x.day===b.day);if(x)Object.assign(x,b);else d.nutrition.unshift({id:-Date.now(),...b})}

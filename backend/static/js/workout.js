@@ -92,8 +92,9 @@ function completedExerciseHTML(x,d,cid){
      <div><strong>Виконано</strong><small>Результати вправи збережено</small></div>
    </div>
    ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
+   ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${a.reps}</span>`).join('')}</div>`:''})()}
    <div class="workout-completed-sets">
-     ${done.map(s=>`<div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>`).join('')}
+     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${a.reps}</strong></div>`).join('')}</div>`}).join('')}
    </div>
    <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0))},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
@@ -137,6 +138,93 @@ function workoutDraftKey(sid,pid){let scope=offlineLocalScopeKey();return scope?
 function readWorkoutDraft(sid,pid){try{let k=workoutDraftKey(sid,pid);return k?(JSON.parse(localStorage.getItem(k)||'{}')||{}):{}}catch(e){return {}}}
 
 function saveWorkoutDraft(sid,pid,n,field,value){if(!sid)return;let k=workoutDraftKey(sid,pid);if(!k)return;let d=readWorkoutDraft(sid,pid);d[n]=d[n]||{};d[n][field]=value;try{localStorage.setItem(k,JSON.stringify(d))}catch(e){}}
+
+function persistWorkoutDraft(sid,pid,draft){
+ if(!sid)return;
+ try{let k=workoutDraftKey(sid,pid);if(k)localStorage.setItem(k,JSON.stringify(draft||{}))}catch(e){}
+}
+function workoutAuxSetsFor(d,pid,day=workoutDataDay(d)){
+ return (d?.aux_sets||[]).filter(x=>+x.program_id===+pid&&x.day===day);
+}
+function workoutAuxDraftState(d,pid){
+ let sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,pid),persisted=workoutAuxSetsFor(d,pid);
+ let warmups=Array.isArray(draft.__warmups)
+   ?draft.__warmups
+   :persisted.filter(x=>x.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0)).map(x=>({weight:x.weight,reps:x.reps}));
+ let drops=draft.__drops&&typeof draft.__drops==='object'?draft.__drops:{};
+ if(!(draft.__drops&&typeof draft.__drops==='object')){
+   persisted.filter(x=>x.kind==='drop').sort((a,b)=>(+a.parent_set_number||0)-(+b.parent_set_number||0)||(+a.aux_number||0)-(+b.aux_number||0)).forEach(x=>{
+     let key=String(+x.parent_set_number||0);(drops[key]??=[]).push({weight:x.weight,reps:x.reps});
+   });
+ }
+ return {sid,draft,warmups,drops};
+}
+function saveWorkoutAuxValue(pid,kind,parent,index,field,value){
+ let d=window.currentClientData||{},state=workoutAuxDraftState(d,pid);
+ if(!state.sid)return;
+ if(kind==='warmup'){
+   while(state.warmups.length<=index)state.warmups.push({});
+   state.warmups[index][field]=value;
+   state.draft.__warmups=state.warmups;
+ }else{
+   let key=String(parent),rows=state.drops[key]||[];
+   while(rows.length<=index)rows.push({});
+   rows[index][field]=value;
+   state.drops[key]=rows;state.draft.__drops=state.drops;
+ }
+ persistWorkoutDraft(state.sid,pid,state.draft);
+}
+function addWorkoutWarmupSet(cid,pid){
+ let d=window.currentClientData||{},state=workoutAuxDraftState(d,pid);
+ if(!state.sid)return;
+ if(state.warmups.length>=20)return alert('Максимум 20 розминочних підходів.');
+ state.warmups.push({});state.draft.__warmups=state.warmups;persistWorkoutDraft(state.sid,pid,state.draft);
+ let x=(d.program||[]).find(v=>+v.id===+pid),body=document.getElementById('exerciseBody'+pid);
+ if(x&&body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+}
+function removeWorkoutWarmupSet(cid,pid,index){
+ let d=window.currentClientData||{},state=workoutAuxDraftState(d,pid);
+ if(!state.sid||!state.warmups[index])return;
+ state.warmups.splice(index,1);state.draft.__warmups=state.warmups;persistWorkoutDraft(state.sid,pid,state.draft);
+ let x=(d.program||[]).find(v=>+v.id===+pid),body=document.getElementById('exerciseBody'+pid);
+ if(x&&body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+}
+function addWorkoutDropSet(cid,pid,parent){
+ let d=window.currentClientData||{},state=workoutAuxDraftState(d,pid);
+ if(!state.sid)return;
+ let key=String(parent),rows=state.drops[key]||[];
+ if(rows.length>=10)return alert('Максимум 10 дроп-сетів після одного підходу.');
+ rows.push({});state.drops[key]=rows;state.draft.__drops=state.drops;persistWorkoutDraft(state.sid,pid,state.draft);
+ let x=(d.program||[]).find(v=>+v.id===+pid),body=document.getElementById('exerciseBody'+pid);
+ if(x&&body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+}
+function removeWorkoutDropSet(cid,pid,parent,index){
+ let d=window.currentClientData||{},state=workoutAuxDraftState(d,pid);
+ if(!state.sid)return;
+ let key=String(parent),rows=state.drops[key]||[];if(!rows[index])return;
+ rows.splice(index,1);if(rows.length)state.drops[key]=rows;else delete state.drops[key];
+ state.draft.__drops=state.drops;persistWorkoutDraft(state.sid,pid,state.draft);
+ let x=(d.program||[]).find(v=>+v.id===+pid),body=document.getElementById('exerciseBody'+pid);
+ if(x&&body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+}
+function collectWorkoutAuxSets(d,pid){
+ let state=workoutAuxDraftState(d,pid),out=[];
+ for(let i=0;i<state.warmups.length;i++){
+   let row=state.warmups[i]||{},w=String(row.weight??'').trim(),r=String(row.reps??'').trim();
+   if(!w&&!r)continue;
+   if(!w||!r)throw new Error('Заповни вагу та повтори у розминочному підході '+(i+1));
+   out.push({kind:'warmup',parent_set_number:null,aux_number:i+1,weight:+w,reps:+r});
+ }
+ Object.keys(state.drops).sort((a,b)=>(+a)-(+b)).forEach(key=>{
+   (state.drops[key]||[]).forEach((row,i)=>{
+     let w=String(row?.weight??'').trim(),r=String(row?.reps??'').trim();
+     if(!w&&!r)return;
+     if(!w||!r)throw new Error('Заповни вагу та повтори у дроп-сеті після підходу '+key);
+     out.push({kind:'drop',parent_set_number:+key,aux_number:i+1,weight:+w,reps:+r});
+   });
+ });
+ return out;
+}
 
 function saveWorkoutDraftSetCount(sid,pid,count){
  if(!sid)return;
@@ -536,7 +624,9 @@ async function saveSets(cid,pid,exercise,count){
    let restSeconds=rest===undefined||rest===null||rest===''?null:Math.max(0,Math.min(3600,Math.round(+rest||0)));
    return {...s,rest_seconds:restSeconds};
  });
- await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets})});
+ let auxSets=[];
+ try{auxSets=collectWorkoutAuxSets(currentData,pid)}catch(e){return alert(e.message||'Перевір додаткові підходи')}
+ await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets,aux_sets:auxSets})});
  clearWorkoutDraft(sid,pid);
  let body=$('#exerciseBody'+pid);
  if(body){

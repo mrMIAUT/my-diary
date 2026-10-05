@@ -83,8 +83,11 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
      cur=uniqueResultSets(sets.filter(s=>norm(s.exercise)===norm(x.exercise))).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
    }
    let prev=uniqueResultSets(prevSets.filter(s=>+s.program_id===+x.id||norm(s.exercise)===norm(x.exercise))).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   let aux=(d.aux_sets||[]).filter(a=>a.day===day&&(+a.program_id===+x.id||norm(a.exercise)===norm(x.exercise)));
+   let warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
    return '<div class="trainer-review-exercise">'
      +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
+     +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(String(a.reps??0))+'</span>').join('')+'</div>':'')
      +'<div class="trainer-review-sets">'+cur.map(s=>{
        let p=prev.find(z=>+z.set_number===+s.set_number),deltaHTML='';
        if(p){
@@ -96,7 +99,9 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
        }
        let currentMeta='<span class="trainer-review-set-meta"><span class="trainer-review-rir">RIR '+esc(String(s.rir??'—'))+'</span>'+(+s.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(s.rest_seconds))+'</span>':'')+'</span>';
        let previousMeta=p?'<span class="trainer-review-set-meta previous"><span class="trainer-review-rir">RIR '+esc(String(p.rir??'—'))+'</span>'+(+p.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(p.rest_seconds))+'</span>':'')+'</span>':'';
+       let drops=aux.filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
        return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b>'+currentMeta+'</div>'
+         +(drops.length?'<div class="trainer-review-drop-list">'+drops.map((a,i)=>'<div><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(String(a.weight??0))+' кг × '+esc(String(a.reps??0))+'</strong></div>').join('')+'</div>':'')
          +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+'</strong>'+previousMeta+deltaHTML+'</div>':'')
        +'</section>';
      }).join('')+'</div>'

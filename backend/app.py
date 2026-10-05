@@ -778,6 +778,20 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER,rest_seconds INTEGER)""")
         c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS rest_seconds INTEGER")
+        c.execute("""CREATE TABLE IF NOT EXISTS workout_aux_sets(
+            id SERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL,
+            program_id INTEGER NOT NULL,
+            exercise TEXT NOT NULL DEFAULT '',
+            day TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            parent_set_number INTEGER,
+            aux_number INTEGER NOT NULL DEFAULT 1,
+            weight DOUBLE PRECISION NOT NULL DEFAULT 0,
+            reps INTEGER NOT NULL DEFAULT 1
+        )""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_workout_aux_sets_client_day
+                     ON workout_aux_sets(client_id,day,program_id,kind,parent_set_number,aux_number)""")
         # A program exercise can have only one saved value for a given set number on a given day.
         # Clean legacy duplicate rows first, then prevent them from being created again.
         c.execute("""DELETE FROM result_sets a USING result_sets b
@@ -1139,8 +1153,14 @@ class SupersetIn(BaseModel):
     superset_group:str=Field(default="",max_length=64)
 class SetIn(BaseModel):
     set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+class WorkoutAuxSetIn(BaseModel):
+    kind:str=Field(max_length=16)
+    parent_set_number:int|None=Field(default=None,ge=1,le=MAX_SET_COUNT)
+    aux_number:int=Field(default=1,ge=1,le=50)
+    weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
+    reps:int=Field(ge=1,le=MAX_REPS)
 class SetResultIn(BaseModel):
-    client_id:int; program_id:int; exercise:str=Field(max_length=255); sets:List[SetIn]=Field(max_length=100)
+    client_id:int; program_id:int; exercise:str=Field(max_length=255); sets:List[SetIn]=Field(max_length=100); aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
 class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
@@ -2167,6 +2187,7 @@ def client(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         "program_days":"SELECT * FROM program_days WHERE client_id=? ORDER BY day_name",
         "results":"SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",
         "result_sets":"SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
+        "aux_sets":"SELECT * FROM workout_aux_sets WHERE client_id=? ORDER BY day DESC,program_id,kind,parent_set_number,aux_number,id",
         "nutrition":"SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",
         "nutrition_plan":"SELECT * FROM nutrition_plan_items WHERE client_id=? ORDER BY meal_number,variant_number,sort,id",
         "measurements":"SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",
@@ -2571,11 +2592,31 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
                             ORDER BY id DESC LIMIT 1""",(x.client_id,)).fetchone()
         result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
+        c.execute("DELETE FROM workout_aux_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
             row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
                              VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
                           (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds)).fetchone()
             ids.append(row["id"])
+        aux_seen=set()
+        for item in x.aux_sets:
+            kind=(item.kind or "").strip().lower()
+            if kind not in ("warmup","drop"):
+                raise HTTPException(400,"Невідомий тип додаткового підходу")
+            if kind=="warmup":
+                parent=None
+            else:
+                parent=item.parent_set_number
+                if parent is None or parent not in numbers:
+                    raise HTTPException(400,"Дроп-сет має бути прив'язаний до робочого підходу")
+            key=(kind,parent,item.aux_number)
+            if key in aux_seen:
+                raise HTTPException(400,"Номери додаткових підходів не мають повторюватися")
+            aux_seen.add(key)
+            c.execute("""INSERT INTO workout_aux_sets(
+                client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps))
         c.commit()
     return {"ok":True,"ids":ids,"day":result_day}
 

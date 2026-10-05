@@ -136,6 +136,22 @@ function lyftaProgressionHintHTML(x,d,prevSets=[]){
   return '<div class="lyfta-progression-hint" title="Минулого разу всі планові підходи виконані у верхній межі повторень із запланованим RIR"><span>↑</span><strong>Можна трохи збільшити вагу</strong></div>';
 }
 
+function lyftaWarmupRowsHTML(x,d,cid){
+  let state=workoutAuxDraftState(d,x.id),rows=state.warmups||[];
+  if(!rows.length)return '<button type="button" class="lyfta-warmup-toggle" onclick="addWorkoutWarmupSet('+cid+','+x.id+')">＋ Додати розминочні підходи</button>';
+  return '<div class="lyfta-warmup-block"><div class="lyfta-warmup-head"><div><strong>Розминка</strong><small>Не впливає на RIR і прогресію</small></div><button type="button" onclick="addWorkoutWarmupSet('+cid+','+x.id+')">＋ Підхід</button></div>'
+    +'<div class="lyfta-warmup-list">'+rows.map((row,i)=>'<div class="lyfta-aux-row"><span>'+(i+1)+'</span><input type="number" step="0.5" value="'+esc(String(row.weight??''))+'" placeholder="кг" oninput="saveWorkoutAuxValue('+x.id+',\'warmup\',0,'+i+',\'weight\',this.value)"><input type="number" value="'+esc(String(row.reps??''))+'" placeholder="повтори" oninput="saveWorkoutAuxValue('+x.id+',\'warmup\',0,'+i+',\'reps\',this.value)"><button type="button" aria-label="Видалити розминочний підхід" onclick="removeWorkoutWarmupSet('+cid+','+x.id+','+i+')">✕</button></div>').join('')+'</div>'
+  +'</div>';
+}
+
+function lyftaDropRowsHTML(x,d,cid,parent,done){
+  let state=workoutAuxDraftState(d,x.id),rows=(state.drops||{})[String(parent)]||[];
+  return '<div class="lyfta-drop-zone'+(done?' is-visible':'')+'">'
+    +(rows.length?'<div class="lyfta-drop-list">'+rows.map((row,i)=>'<div class="lyfta-aux-row drop"><span>Д'+(i+1)+'</span><input type="number" step="0.5" value="'+esc(String(row.weight??''))+'" placeholder="кг" oninput="saveWorkoutAuxValue('+x.id+',\'drop\','+parent+','+i+',\'weight\',this.value)"><input type="number" value="'+esc(String(row.reps??''))+'" placeholder="повтори" oninput="saveWorkoutAuxValue('+x.id+',\'drop\','+parent+','+i+',\'reps\',this.value)"><button type="button" aria-label="Видалити дроп-сет" onclick="removeWorkoutDropSet('+cid+','+x.id+','+parent+','+i+')">✕</button></div>').join('')+'</div>':'')
+    +'<button type="button" class="lyfta-add-drop" onclick="addWorkoutDropSet('+cid+','+x.id+','+parent+')">＋ Додати дроп-сет</button>'
+  +'</div>';
+}
+
 function setRows(x,d,cid){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
@@ -153,6 +169,7 @@ function setRows(x,d,cid){
         +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
         +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+total+','+restAfterSet+',this)">✓</button>'
       +'</div>'
+      +lyftaDropRowsHTML(x,d,cid,n,done)
     +'</div>';
   }
   let extras=Math.max(0,total-planned);
@@ -162,5 +179,5 @@ function setRows(x,d,cid){
   return '<div class="lyfta-workout-tools">'
     +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
     +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
-    +'</div>'+lyftaProgressionHintHTML(x,d,prev)+h+extraActions;
+    +'</div>'+lyftaProgressionHintHTML(x,d,prev)+lyftaWarmupRowsHTML(x,d,cid)+h+extraActions;
 }
