@@ -1130,7 +1130,7 @@ class ResetConfirmIn(BaseModel):
 class ClientIn(BaseModel):
     name:str=Field(max_length=200); email:str=Field(max_length=254); password:str=Field(default="",max_length=256,json_schema_extra=password_input_schema); goal:str=Field(default="",max_length=2000); weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
+    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
 class ClientProgramExerciseSwapIn(BaseModel):
     exercise:str=Field(max_length=255)
 class ExerciseGroupIn(BaseModel): name:str=Field(max_length=120)
@@ -2478,9 +2478,33 @@ def delete_library_exercise(eid:int,user:AuthUser=Depends(require_trainer)):
 @app.post("/api/program")
 def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,x.client_id)
+    day=x.day_name.strip()
+    exercise=x.exercise.strip()
+    if not day or not exercise: raise HTTPException(400,"Вкажіть день і вправу")
     technique_url=require_technique_url(x.technique_url)
     alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json)); return {"id":i}
+    with con() as c:
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
+        next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(x.client_id,day)).fetchone()["n"])
+        superset_group=x.superset_group.strip()
+        superset_order=x.superset_order
+        if x.superset_with_id:
+            source=c.execute("SELECT id,day_name,superset_group FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
+            if not source: raise HTTPException(404,"Вправу для суперсету не знайдено")
+            if str(source["day_name"] or "").strip()!=day: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
+            if str(source["superset_group"] or "").strip(): raise HTTPException(409,"Ця вправа вже входить у суперсет")
+            superset_group=f"SS{source['id']}"
+            superset_order=1
+            c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(superset_group,source["id"]))
+        row=c.execute("""INSERT INTO program(
+            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            (x.client_id,day,exercise,x.sets,x.reps.strip() or "8-12",x.target_rir,next_sort,
+             superset_group,superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),
+             x.rir_by_set.strip(),alternatives_json)).fetchone()
+        c.commit()
+    return {"id":row["id"],"sort":next_sort,"superset_group":superset_group}
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     p=owned_record(user,"program",pid)
