@@ -127,7 +127,7 @@ function trainerTemplateCardHTML(t){
   let days=+t.days_count||0,ex=+t.exercises_count||0;
   return '<div class="trainer-template-card">'
     +'<div class="trainer-template-card-main"><span class="trainer-template-icon">'+uiIcon('dumbbell')+'</span><div><strong>'+esc(t.name||'Шаблон')+'</strong><small>'+days+' дн. · '+ex+' вправ</small>'+(t.description?'<p>'+esc(t.description)+'</p>':'')+'</div></div>'
-    +'<div class="trainer-template-actions"><button onclick="openAssignProgramTemplateModal('+t.id+')">Призначити</button><button class="dark" onclick="deleteProgramTemplate('+t.id+')">'+uiIcon('trash')+'</button></div>'
+    +'<div class="trainer-template-actions"><button onclick="openAssignProgramTemplateModal('+t.id+')">Призначити</button><button class="dark" onclick="openEditProgramTemplate('+t.id+')">Редагувати</button><button class="dark" onclick="deleteProgramTemplate('+t.id+')">'+uiIcon('trash')+'</button></div>'
   +'</div>';
 }
 
@@ -174,6 +174,242 @@ async function createProgramTemplate(btn){
     document.getElementById('programTemplateModal')?.remove();
     window.trainerProgramsMode='templates';await showTrainerPrograms();
   }catch(e){if(btn)btn.disabled=false;alert(e.message||'Не вдалося створити шаблон')}
+}
+
+
+window.programTemplateEditorDraft=window.programTemplateEditorDraft||null;
+
+function programTemplateEditorState(){
+  return window.programTemplateEditorDraft;
+}
+
+function programTemplateEditorNormalizeItem(x,dayName,sort){
+  return {
+    day_name:dayName,
+    exercise:String(x?.exercise||''),
+    sets:Math.max(1,+x?.sets||3),
+    reps:String(x?.reps||'8-12'),
+    target_rir:Number.isFinite(+x?.target_rir)?+x.target_rir:2,
+    sort:+x?.sort||sort||1,
+    superset_group:String(x?.superset_group||''),
+    superset_order:+x?.superset_order||0,
+    technique_url:String(x?.technique_url||''),
+    rest_seconds:+x?.rest_seconds||0,
+    rest_text:String(x?.rest_text||''),
+    rir_by_set:String(x?.rir_by_set||''),
+    alternatives_json:String(x?.alternatives_json||'[]')
+  };
+}
+
+async function openEditProgramTemplate(templateId){
+  document.getElementById('programTemplateEditorModal')?.remove();
+  try{
+    await loadExerciseLibrary();
+    let t=await api('/trainer/program-templates/'+templateId);
+    let days=(t.days||[]).slice().sort((a,b)=>(+a.sort||0)-(+b.sort||0)||(+a.id||0)-(+b.id||0));
+    if(!days.length){
+      let names=[...new Set((t.items||[]).map(x=>String(x.day_name||'')).filter(Boolean))];
+      days=names.map((day_name,i)=>({day_name,title:'',sort:i+1}));
+    }
+    window.programTemplateEditorDraft={
+      id:+t.id||+templateId,
+      name:String(t.name||''),
+      description:String(t.description||''),
+      days:days.map((d,di)=>{
+        let dayName=String(d.day_name||('День '+(di+1)));
+        let items=(t.items||[]).filter(x=>String(x.day_name||'')===dayName)
+          .slice().sort((a,b)=>(+a.sort||0)-(+b.sort||0)||(+a.id||0)-(+b.id||0))
+          .map((x,ii)=>programTemplateEditorNormalizeItem(x,dayName,ii+1));
+        return {day_name:dayName,title:String(d.title||''),items};
+      })
+    };
+    renderProgramTemplateEditor();
+  }catch(e){
+    alert(e.message||'Не вдалося відкрити шаблон');
+  }
+}
+
+function programTemplateEditorLibraryOptions(){
+  let seen=new Set(),rows=[];
+  (window.exerciseLibrary?.exercises||[]).forEach(x=>{
+    let name=String(x.name||'').trim(),key=name.toLowerCase();
+    if(name&&!seen.has(key)){seen.add(key);rows.push('<option value="'+esc(name)+'"></option>')}
+  });
+  return rows.join('');
+}
+
+function programTemplateAlternativesText(item){
+  try{
+    let xs=JSON.parse(item?.alternatives_json||'[]');
+    return Array.isArray(xs)?xs.filter(Boolean).join('; '):'';
+  }catch(e){return ''}
+}
+
+function trainerTemplateEditorItemHTML(item,di,ii){
+  let exerciseId='templateExercise_'+di+'_'+ii;
+  let canUp=ii>0,st=programTemplateEditorState(),canDown=ii<(st?.days?.[di]?.items?.length||0)-1;
+  return '<div class="trainer-template-editor-item">'
+    +'<div class="trainer-template-editor-item-head"><strong>Вправа '+(ii+1)+'</strong><div>'
+      +'<button type="button" class="dark" '+(canUp?'':'disabled')+' onclick="moveProgramTemplateItem('+di+','+ii+',-1)">↑</button>'
+      +'<button type="button" class="dark" '+(canDown?'':'disabled')+' onclick="moveProgramTemplateItem('+di+','+ii+',1)">↓</button>'
+      +'<button type="button" class="dark danger-soft" onclick="removeProgramTemplateItem('+di+','+ii+')">Видалити</button>'
+    +'</div></div>'
+    +'<div class="trainer-template-editor-exercise">'
+      +'<input id="'+exerciseId+'" list="programTemplateExerciseLibraryNames" value="'+esc(item.exercise)+'" placeholder="Назва вправи" oninput="updateProgramTemplateItem('+di+','+ii+',\'exercise\',this.value)">'
+      +'<button type="button" class="dark" onclick="openProgramExercisePicker(\''+exerciseId+'\')">З бібліотеки</button>'
+    +'</div>'
+    +'<div class="trainer-template-editor-grid">'
+      +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(item.sets))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'sets\',this.value)"></label>'
+      +'<label><span>Повтори</span><input value="'+esc(item.reps)+'" placeholder="8-12" oninput="updateProgramTemplateItem('+di+','+ii+',\'reps\',this.value)"></label>'
+      +'<label><span>RIR базовий</span><input type="number" min="0" max="10" value="'+esc(String(item.target_rir))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'target_rir\',this.value)"></label>'
+      +'<label><span>RIR по підходах</span><input value="'+esc(item.rir_by_set)+'" placeholder="2,1,1" oninput="updateProgramTemplateItem('+di+','+ii+',\'rir_by_set\',this.value)"></label>'
+      +'<label><span>Відпочинок</span><input value="'+esc(item.rest_text)+'" placeholder="2-3 хв" oninput="updateProgramTemplateItem('+di+','+ii+',\'rest_text\',this.value)"></label>'
+      +'<label class="wide"><span>Альтернативи</span><input value="'+esc(programTemplateAlternativesText(item))+'" placeholder="Вправа 1; Вправа 2" oninput="updateProgramTemplateAlternatives('+di+','+ii+',this.value)"></label>'
+    +'</div>'
+  +'</div>';
+}
+
+function renderProgramTemplateEditor(){
+  let st=programTemplateEditorState();if(!st)return;
+  let old=document.getElementById('programTemplateEditorModal');
+  let days=(st.days||[]).map((d,di)=>{
+    let canUp=di>0,canDown=di<(st.days.length-1);
+    return '<section class="trainer-template-editor-day">'
+      +'<div class="trainer-template-editor-day-head"><div><small>'+esc(d.day_name)+'</small><input value="'+esc(d.title)+'" placeholder="Назва дня, наприклад Груди + Спина" oninput="updateProgramTemplateDayTitle('+di+',this.value)"></div><div>'
+        +'<button type="button" class="dark" '+(canUp?'':'disabled')+' onclick="moveProgramTemplateDay('+di+',-1)">↑</button>'
+        +'<button type="button" class="dark" '+(canDown?'':'disabled')+' onclick="moveProgramTemplateDay('+di+',1)">↓</button>'
+        +'<button type="button" class="dark danger-soft" onclick="removeProgramTemplateDay('+di+')">Видалити день</button>'
+      +'</div></div>'
+      +'<div class="trainer-template-editor-items">'+(d.items||[]).map((x,ii)=>trainerTemplateEditorItemHTML(x,di,ii)).join('')+'</div>'
+      +'<button type="button" class="trainer-template-editor-add-exercise" onclick="addProgramTemplateItem('+di+')">＋ Додати вправу</button>'
+    +'</section>';
+  }).join('');
+  let html='<div class="modal trainer-template-editor-modal" id="programTemplateEditorModal"><div class="card trainer-template-editor-card">'
+    +'<div class="trainer-template-editor-top"><div><small>ШАБЛОН ПРОГРАМИ</small><h2>Редагувати шаблон</h2><p>Зміни тут не вплинуть на програми, які вже призначені клієнтам.</p></div><button type="button" class="dark" onclick="closeProgramTemplateEditor()">✕</button></div>'
+    +'<div class="trainer-template-editor-meta"><label><span>Назва шаблону</span><input value="'+esc(st.name)+'" oninput="updateProgramTemplateMeta(\'name\',this.value)"></label><label><span>Опис</span><textarea oninput="updateProgramTemplateMeta(\'description\',this.value)">'+esc(st.description)+'</textarea></label></div>'
+    +'<datalist id="programTemplateExerciseLibraryNames">'+programTemplateEditorLibraryOptions()+'</datalist>'
+    +'<div class="trainer-template-editor-days">'+days+'</div>'
+    +'<button type="button" class="trainer-template-editor-add-day" onclick="addProgramTemplateDay()">＋ Додати тренувальний день</button>'
+    +'<div class="trainer-template-editor-actions"><button type="button" class="dark" onclick="saveProgramTemplateAsNew(this)">Зберегти як новий</button><button type="button" class="trainer-template-primary" onclick="saveProgramTemplateChanges(this)">Зберегти зміни</button></div>'
+  +'</div></div>';
+  if(old)old.outerHTML=html;else document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function closeProgramTemplateEditor(){
+  document.getElementById('programTemplateEditorModal')?.remove();
+  window.programTemplateEditorDraft=null;
+}
+
+function updateProgramTemplateMeta(field,value){
+  let st=programTemplateEditorState();if(st&&['name','description'].includes(field))st[field]=value;
+}
+function updateProgramTemplateDayTitle(di,value){
+  let st=programTemplateEditorState();if(st?.days?.[di])st.days[di].title=value;
+}
+function updateProgramTemplateItem(di,ii,field,value){
+  let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
+  if(['sets','target_rir','rest_seconds','superset_order'].includes(field))item[field]=+value||0;
+  else item[field]=value;
+}
+function updateProgramTemplateAlternatives(di,ii,value){
+  let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
+  let xs=String(value||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean);
+  item.alternatives_json=JSON.stringify(xs);
+}
+
+function nextProgramTemplateDayName(st){
+  let used=new Set((st?.days||[]).map(d=>String(d.day_name||'')));
+  let n=1;while(used.has('День '+n))n++;
+  return 'День '+n;
+}
+function addProgramTemplateDay(){
+  let st=programTemplateEditorState();if(!st)return;
+  let dayName=nextProgramTemplateDayName(st);
+  st.days.push({day_name:dayName,title:'',items:[programTemplateEditorNormalizeItem({},dayName,1)]});
+  renderProgramTemplateEditor();
+}
+function removeProgramTemplateDay(di){
+  let st=programTemplateEditorState(),day=st?.days?.[di];if(!day)return;
+  if(st.days.length<=1)return alert('У шаблоні має залишитися хоча б один тренувальний день.');
+  if((day.items||[]).length&&!confirm('Видалити '+day.day_name+' разом з усіма вправами?'))return;
+  st.days.splice(di,1);renderProgramTemplateEditor();
+}
+function moveProgramTemplateDay(di,delta){
+  let st=programTemplateEditorState(),to=di+delta;if(!st||to<0||to>=st.days.length)return;
+  [st.days[di],st.days[to]]=[st.days[to],st.days[di]];renderProgramTemplateEditor();
+}
+function addProgramTemplateItem(di){
+  let st=programTemplateEditorState(),day=st?.days?.[di];if(!day)return;
+  day.items.push(programTemplateEditorNormalizeItem({},day.day_name,day.items.length+1));
+  renderProgramTemplateEditor();
+}
+function removeProgramTemplateItem(di,ii){
+  let st=programTemplateEditorState(),day=st?.days?.[di];if(!day?.items?.[ii])return;
+  if(day.items.length<=1)return alert('У тренувальному дні має залишитися хоча б одна вправа.');
+  day.items.splice(ii,1);renderProgramTemplateEditor();
+}
+function moveProgramTemplateItem(di,ii,delta){
+  let st=programTemplateEditorState(),xs=st?.days?.[di]?.items,to=ii+delta;if(!xs||to<0||to>=xs.length)return;
+  [xs[ii],xs[to]]=[xs[to],xs[ii]];renderProgramTemplateEditor();
+}
+
+function programTemplateEditorPayload(nameOverride=''){
+  let st=programTemplateEditorState();if(!st)return null;
+  let name=String(nameOverride||st.name||'').trim(),description=String(st.description||'').trim();
+  if(!name){alert('Вкажи назву шаблону.');return null}
+  let days=[],items=[];
+  for(let di=0;di<st.days.length;di++){
+    let day=st.days[di],dayName=String(day.day_name||'').trim();
+    if(!dayName){alert('У шаблоні є день без назви.');return null}
+    days.push({day_name:dayName,title:String(day.title||'').trim(),sort:di+1});
+    if(!(day.items||[]).length){alert(dayName+' не містить вправ.');return null}
+    for(let ii=0;ii<day.items.length;ii++){
+      let item=day.items[ii],exercise=String(item.exercise||'').trim();
+      if(!exercise){alert('Вкажи вправу в '+dayName+', позиція '+(ii+1)+'.');return null}
+      let libraryItem=(window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===exercise.toLowerCase());
+      items.push({
+        day_name:dayName,exercise,
+        sets:Math.max(1,+item.sets||1),
+        reps:String(item.reps||'8-12').trim()||'8-12',
+        target_rir:Math.max(0,+item.target_rir||0),
+        sort:ii+1,
+        superset_group:String(item.superset_group||''),
+        superset_order:Math.max(0,+item.superset_order||0),
+        technique_url:String(libraryItem?.technique_url||item.technique_url||''),
+        rest_seconds:Math.max(0,+item.rest_seconds||0),
+        rest_text:String(item.rest_text||'').trim(),
+        rir_by_set:String(item.rir_by_set||'').trim(),
+        alternatives_json:String(item.alternatives_json||'[]')
+      });
+    }
+  }
+  return {name,description,days,items};
+}
+
+async function saveProgramTemplateChanges(btn){
+  let st=programTemplateEditorState(),payload=programTemplateEditorPayload();if(!st||!payload)return;
+  let restore=setActionLoading(btn,'Зберігаємо…');
+  try{
+    await api('/trainer/program-templates/'+st.id,{method:'PUT',body:JSON.stringify(payload)});
+    closeProgramTemplateEditor();
+    window.trainerProgramsMode='templates';
+    await showTrainerPrograms();
+  }catch(e){restore();alert(e.message||'Не вдалося зберегти шаблон')}
+}
+
+async function saveProgramTemplateAsNew(btn){
+  let st=programTemplateEditorState();if(!st)return;
+  let suggested=String(st.name||'Шаблон').trim()+' · копія';
+  let name=prompt('Назва нового шаблону',suggested);if(name===null)return;
+  name=String(name||'').trim();if(!name)return alert('Вкажи назву нового шаблону.');
+  let payload=programTemplateEditorPayload(name);if(!payload)return;
+  let restore=setActionLoading(btn,'Створюємо…');
+  try{
+    await api('/trainer/program-templates/'+st.id+'/copy',{method:'POST',body:JSON.stringify(payload)});
+    closeProgramTemplateEditor();
+    window.trainerProgramsMode='templates';
+    await showTrainerPrograms();
+  }catch(e){restore();alert(e.message||'Не вдалося створити новий шаблон')}
 }
 
 async function openAssignProgramTemplateModal(templateId){
