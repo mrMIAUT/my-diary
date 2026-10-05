@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[2]
 APP = (ROOT / "backend" / "app.py").read_text(encoding="utf-8")
 CORE = (ROOT / "backend" / "static" / "js" / "core.js").read_text(encoding="utf-8")
 TRAINER = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
+PROGRAM = (ROOT / "backend" / "static" / "js" / "program.js").read_text(encoding="utf-8")
 WORKOUT = (ROOT / "backend" / "static" / "js" / "workout.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
@@ -220,6 +221,12 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Додати розминочні підходи", WORKOUT_LYFTA)
         self.assertIn("Додати дроп-сет", WORKOUT_LYFTA)
         self.assertIn("collectWorkoutAuxSets", WORKOUT)
+
+    def test_training_day_title_modal_uses_redesign_ui(self):
+        self.assertIn("trainer-day-title-modal", PROGRAM)
+        self.assertIn("trainer-day-title-card", PROGRAM)
+        self.assertIn("trainer-day-title-save", PROGRAM)
+        self.assertNotIn('style="width:100%;margin-top:14px"', PROGRAM)
 
     def test_completed_badge_and_template_alternatives_ui(self):
         self.assertIn("workout-live-toggle-side", WORKOUT)
