@@ -234,6 +234,17 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("reopenTrainerProgramDay(dayName)", PROGRAM)
         self.assertNotIn("openClient(selected)}}", PROGRAM)
 
+    def test_alternative_exercises_have_independent_parameters(self):
+        self.assertIn("normalize_program_alternatives", APP)
+        self.assertIn("selected_cfg[\"sets\"]", APP)
+        self.assertIn("selected_cfg[\"rir_by_set\"]", APP)
+        self.assertIn("function exerciseAlternativeConfigs", PROGRAM)
+        self.assertIn("trainer-program-alternative-params", PROGRAM)
+        self.assertIn("collectProgramAlternatives", PROGRAM)
+        self.assertIn("function workoutEffectiveExercise", WORKOUT)
+        self.assertIn("workoutChoiceSummary", WORKOUT)
+        self.assertIn("updateProgramTemplateAlternativeField", TRAINER)
+
     def test_completed_badge_and_template_alternatives_ui(self):
         self.assertIn("workout-live-toggle-side", WORKOUT)
         self.assertIn("exercise-done-badge compact", WORKOUT)
