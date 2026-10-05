@@ -13254,7 +13254,6 @@ body.eplan-redesign.trainer-ui .trainer-template-primary{
 }
 
 body.eplan-redesign.trainer-ui .trainer-template-editor-modal{
-  z-index:11800;
   padding:12px;
   align-items:flex-start;
   overflow:auto;
