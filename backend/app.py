@@ -2678,6 +2678,7 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
     numbers=[s.set_number for s in x.sets]
     if len(numbers)!=len(set(numbers)):
         raise HTTPException(400,"Номери підходів не мають повторюватися")
+    repeat_mode=normalize_repeat_mode(x.repeat_mode)
     ids=[]
     # Keep every set on the calendar day when the workout session started.
     # Lock the client row so saving a first set cannot race with accidental
@@ -2691,9 +2692,9 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         c.execute("DELETE FROM workout_aux_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
-            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds)).fetchone()
+            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds,repeat_mode)).fetchone()
             ids.append(row["id"])
         aux_seen=set()
         for item in x.aux_sets:
@@ -3006,7 +3007,7 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
                                       ORDER BY id DESC LIMIT 1""",(x.client_id,today)).fetchone()
                 if existing:
                     raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
+                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
                                                                   FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",(x.client_id,x.day_name)).fetchall()]
                 for item in snapshot_rows:item["technique_url"]=safe_technique_url(item.get("technique_url") or "")
                 snapshot=json.dumps(snapshot_rows,ensure_ascii=False)
@@ -3138,11 +3139,14 @@ def historical_workout(x:HistoricalWorkoutIn,user:AuthUser=Depends(require_clien
                                   ORDER BY id DESC LIMIT 1""",(x.client_id,day)).fetchone()
             if existing:
                 raise HTTPException(400,"Тренування за цей день уже записано")
+            program_modes={int(r["id"]):normalize_repeat_mode(r.get("repeat_mode")) for r in c.execute(
+                "SELECT id,repeat_mode FROM program WHERE client_id=%s",(x.client_id,)).fetchall()}
             for item in x.sets:
-                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds))
-            snapshot=[dict(row) for row in c.execute("""SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order
+                mode=program_modes.get(int(item.program_id),"normal")
+                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds,mode))
+            snapshot=[dict(row) for row in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order
                                                          FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",
                                                       (x.client_id,x.day_name)).fetchall()]
             snapshot_json=json.dumps(snapshot,ensure_ascii=False)
