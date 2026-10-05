@@ -2479,7 +2479,8 @@ def delete_library_exercise(eid:int,user:AuthUser=Depends(require_trainer)):
 def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,x.client_id)
     technique_url=require_technique_url(x.technique_url)
-    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]")); return {"id":i}
+    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
+    i=run("INSERT INTO program(client_id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.client_id,x.day_name,x.exercise,x.sets,x.reps,x.target_rir,x.superset_group,x.superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json)); return {"id":i}
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     p=owned_record(user,"program",pid)
@@ -2487,8 +2488,9 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
     technique_url=require_technique_url(x.technique_url)
+    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),x.alternatives_json.strip() or "[]",pid))
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
     return {"ok":True}
 
 @app.patch("/api/program/{pid}/client-exercise")
@@ -2710,6 +2712,57 @@ def require_technique_url(value:str)->str:
     if not safe:
         raise HTTPException(400,"Посилання на техніку має бути коректною HTTPS-адресою")
     return safe
+
+
+def normalize_program_alternatives(value:str,fallback:dict|None=None)->str:
+    fallback=fallback or {}
+    try:
+        data=json.loads((value or "[]").strip() or "[]")
+    except (TypeError,ValueError):
+        raise HTTPException(400,"Некоректний список альтернативних вправ")
+    if not isinstance(data,list):
+        raise HTTPException(400,"Некоректний список альтернативних вправ")
+    out=[]
+    seen=set()
+    for raw in data:
+        if isinstance(raw,str):
+            item={"exercise":raw}
+        elif isinstance(raw,dict):
+            item=dict(raw)
+        else:
+            raise HTTPException(400,"Некоректна альтернативна вправа")
+        exercise=str(item.get("exercise") or item.get("name") or "").strip()
+        if not exercise:
+            continue
+        if len(exercise)>255:
+            raise HTTPException(400,"Назва альтернативної вправи занадто довга")
+        key=exercise.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            sets=int(item.get("sets") or fallback.get("sets") or 3)
+            target=int(item.get("target_rir") if item.get("target_rir") is not None else fallback.get("target_rir",2))
+            rest_seconds=int(item.get("rest_seconds") or fallback.get("rest_seconds") or 0)
+        except (TypeError,ValueError):
+            raise HTTPException(400,"Некоректні параметри альтернативної вправи")
+        if sets<1 or sets>MAX_SET_COUNT or target<0 or target>MAX_RIR or rest_seconds<0 or rest_seconds>3600:
+            raise HTTPException(400,"Некоректні параметри альтернативної вправи")
+        reps=str(item.get("reps") if item.get("reps") is not None else fallback.get("reps","8-12")).strip() or "8-12"
+        rir_by_set=str(item.get("rir_by_set") if item.get("rir_by_set") is not None else fallback.get("rir_by_set","")).strip()
+        rest_text=str(item.get("rest_text") if item.get("rest_text") is not None else fallback.get("rest_text","")).strip()
+        if len(reps)>64 or len(rir_by_set)>512 or len(rest_text)>1000:
+            raise HTTPException(400,"Параметри альтернативної вправи занадто довгі")
+        out.append({
+            "exercise":exercise,
+            "sets":sets,
+            "reps":reps,
+            "target_rir":target,
+            "rir_by_set":rir_by_set,
+            "rest_seconds":rest_seconds,
+            "rest_text":rest_text,
+        })
+    return json.dumps(out,ensure_ascii=False)
 
 
 def sanitize_program_snapshot(value:str)->str:
