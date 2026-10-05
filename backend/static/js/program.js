@@ -426,9 +426,10 @@ function programHTML(d){
 
 function toggleNewExerciseSupersetBuilder(force=null){
  let host=document.getElementById('inlineSupersetFields'),btn=document.getElementById('inlineSupersetToggle');if(!host)return;
- let show=force===null?host.classList.contains('hidden'):!!force;
+ let show=force===null?host.classList.contains('hidden'):!!force,save=document.querySelector('.trainer-program-editor>.trainer-program-add');
  host.classList.toggle('hidden',!show);
- if(btn){btn.classList.toggle('active',show);btn.textContent=show?'Суперсет додано':'＋ Додати суперсет'}
+ if(btn){btn.classList.toggle('active',show);btn.textContent=show?'✓ Суперсет':'＋ Додати суперсет'}
+ if(save)save.textContent=show?'＋ Додати суперсет':'＋ Додати вправу';
  if(show)setTimeout(()=>document.getElementById('ssInlineEx')?.focus(),30);
 }
 
