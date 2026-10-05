@@ -2504,20 +2504,41 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
         p=dict(row)
         authorize_client(user,p["client_id"])
         if p["client_id"]!=user.client_id:raise HTTPException(403,"Немає доступу до цієї вправи")
-        try:
-            alternatives=json.loads(p.get("alternatives_json") or "[]")
-        except (TypeError,ValueError):
-            alternatives=[]
-        if not isinstance(alternatives,list):alternatives=[]
-        alternatives=[str(v).strip() for v in alternatives if str(v).strip()]
-        allowed=[str(p.get("exercise") or "").strip(),*alternatives]
+        current=str(p.get("exercise") or "").strip()
+        fallback={
+            "sets":p.get("sets") or 3,
+            "reps":p.get("reps") or "8-12",
+            "target_rir":p.get("target_rir") if p.get("target_rir") is not None else 2,
+            "rest_seconds":p.get("rest_seconds") or 0,
+            "rest_text":p.get("rest_text") or "",
+            "rir_by_set":p.get("rir_by_set") or "",
+        }
+        alternatives=json.loads(normalize_program_alternatives(p.get("alternatives_json") or "[]",fallback))
+        by_name={str(v.get("exercise") or "").strip():v for v in alternatives if str(v.get("exercise") or "").strip()}
+        allowed=[current,*by_name.keys()]
         if selected not in allowed:
             raise HTTPException(400,"Цю вправу не дозволено як заміну")
-        current=str(p.get("exercise") or "").strip()
         if selected!=current:
+            selected_cfg=by_name.get(selected)
+            if not selected_cfg:
+                raise HTTPException(400,"Для альтернативної вправи не знайдено параметри")
+            old_main={
+                "exercise":current,
+                "sets":int(p.get("sets") or 3),
+                "reps":str(p.get("reps") or "8-12"),
+                "target_rir":int(p.get("target_rir") if p.get("target_rir") is not None else 2),
+                "rir_by_set":str(p.get("rir_by_set") or ""),
+                "rest_seconds":int(p.get("rest_seconds") or 0),
+                "rest_text":str(p.get("rest_text") or ""),
+            }
             new_alts=[]
-            for name in [current,*alternatives]:
-                if name and name!=selected and name not in new_alts:new_alts.append(name)
+            seen=set()
+            for cfg in [old_main,*alternatives]:
+                name=str(cfg.get("exercise") or "").strip()
+                key=name.casefold()
+                if not name or name==selected or key in seen:
+                    continue
+                seen.add(key);new_alts.append(cfg)
             owner=c.execute("SELECT trainer_id FROM clients WHERE id=%s",(p["client_id"],)).fetchone()
             trainer_id=int(owner["trainer_id"] or 0) if owner else 0
             lib=c.execute("""SELECT technique_url FROM exercise_library
@@ -2526,8 +2547,13 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
                              ORDER BY CASE WHEN owner_trainer_id=%s THEN 0 ELSE 1 END,id LIMIT 1""",
                           (selected,trainer_id,trainer_id)).fetchone()
             technique_url=safe_technique_url((lib["technique_url"] if lib else "") or "")
-            c.execute("UPDATE program SET exercise=%s,alternatives_json=%s,technique_url=%s WHERE id=%s",
-                      (selected,json.dumps(new_alts,ensure_ascii=False),technique_url,pid))
+            c.execute("""UPDATE program
+                         SET exercise=%s,sets=%s,reps=%s,target_rir=%s,rir_by_set=%s,
+                             rest_seconds=%s,rest_text=%s,alternatives_json=%s,technique_url=%s
+                         WHERE id=%s""",
+                      (selected,selected_cfg["sets"],selected_cfg["reps"],selected_cfg["target_rir"],
+                       selected_cfg["rir_by_set"],selected_cfg["rest_seconds"],selected_cfg["rest_text"],
+                       json.dumps(new_alts,ensure_ascii=False),technique_url,pid))
         c.commit()
     return {"ok":True,"exercise":selected}
 
