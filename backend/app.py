@@ -769,6 +769,7 @@ def init():
         ensure_v92_fk_constraints(c)
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS alternatives_json TEXT DEFAULT '[]'")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("""CREATE TABLE IF NOT EXISTS program_days(
             client_id INTEGER NOT NULL,
             day_name TEXT NOT NULL,
@@ -778,6 +779,7 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER,rest_seconds INTEGER)""")
         c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS rest_seconds INTEGER")
+        c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_aux_sets(
             id SERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL,
@@ -790,6 +792,7 @@ def init():
             weight DOUBLE PRECISION NOT NULL DEFAULT 0,
             reps INTEGER NOT NULL DEFAULT 1
         )""")
+        c.execute("ALTER TABLE workout_aux_sets ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_workout_aux_sets_client_day
                      ON workout_aux_sets(client_id,day,program_id,kind,parent_set_number,aux_number)""")
         # A program exercise can have only one saved value for a given set number on a given day.
@@ -962,6 +965,7 @@ def init():
             alternatives_json TEXT NOT NULL DEFAULT '[]'
         )""")
         c.execute("CREATE INDEX IF NOT EXISTS ix_program_templates_trainer ON program_templates(trainer_id,updated_at DESC)")
+        c.execute("ALTER TABLE program_template_items ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("CREATE INDEX IF NOT EXISTS ix_program_template_items_template ON program_template_items(template_id,day_name,sort,id)")
         c.execute("""CREATE TABLE IF NOT EXISTS trainer_requests(
             id BIGSERIAL PRIMARY KEY,
@@ -1113,6 +1117,7 @@ class ProgramTemplateItemSaveIn(BaseModel):
     rest_text:str=Field(default="",max_length=1000)
     rir_by_set:str=Field(default="",max_length=512)
     alternatives_json:str=Field(default="[]",max_length=65536)
+    repeat_mode:str=Field(default="normal",max_length=16)
 class ProgramTemplateSaveIn(BaseModel):
     name:str=Field(min_length=1,max_length=160)
     description:str=Field(default="",max_length=1000)
@@ -1130,7 +1135,7 @@ class ResetConfirmIn(BaseModel):
 class ClientIn(BaseModel):
     name:str=Field(max_length=200); email:str=Field(max_length=254); password:str=Field(default="",max_length=256,json_schema_extra=password_input_schema); goal:str=Field(default="",max_length=2000); weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
+    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); repeat_mode:str=Field(default="normal",max_length=16); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
 class ProgramSupersetPairIn(BaseModel):
     first:ProgramIn
     second:ProgramIn
@@ -1163,7 +1168,7 @@ class WorkoutAuxSetIn(BaseModel):
     weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
     reps:int=Field(ge=1,le=MAX_REPS)
 class SetResultIn(BaseModel):
-    client_id:int; program_id:int; exercise:str=Field(max_length=255); sets:List[SetIn]=Field(max_length=100); aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
+    client_id:int; program_id:int; exercise:str=Field(max_length=255); repeat_mode:str=Field(default="normal",max_length=16); sets:List[SetIn]=Field(max_length=100); aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
 class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
@@ -1998,10 +2003,10 @@ def create_program_template(x:ProgramTemplateCreateIn,user:AuthUser=Depends(requ
                        (tid,day,title_map.get(day,""),pos))
         for item in items:
             db.execute("""INSERT INTO program_template_items(
-                template_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+                template_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
                 technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (tid,item["day_name"],item["exercise"],item["sets"],item["reps"],item["target_rir"],
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (tid,item["day_name"],item["exercise"],item["sets"],item["reps"],normalize_repeat_mode(item.get("repeat_mode")),item["target_rir"],
                  item.get("sort") or 0,item.get("superset_group") or "",item.get("superset_order") or 0,
                  safe_technique_url(item.get("technique_url") or ""),item.get("rest_seconds") or 0,
                  item.get("rest_text") or "",item.get("rir_by_set") or "",item.get("alternatives_json") or "[]"))
@@ -2039,6 +2044,7 @@ def write_program_template_payload(db,template_id:int,x:ProgramTemplateSaveIn):
             "rest_seconds":item.rest_seconds,
             "rest_text":item.rest_text,
             "rir_by_set":item.rir_by_set,
+            "repeat_mode":item.repeat_mode,
         })
         normalized_items.append((day,exercise,item,alternatives))
     if not normalized_items: raise HTTPException(400,"Шаблон має містити хоча б одну вправу")
@@ -2054,10 +2060,10 @@ def write_program_template_payload(db,template_id:int,x:ProgramTemplateSaveIn):
                    (template_id,d.day_name.strip(),d.title.strip(),pos))
     for day,exercise,item,alternatives in normalized_items:
         db.execute("""INSERT INTO program_template_items(
-            template_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            template_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
             technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-            (template_id,day,exercise,item.sets,item.reps.strip() or "8-12",item.target_rir,item.sort,
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (template_id,day,exercise,item.sets,item.reps.strip() or "8-12",normalize_repeat_mode(item.repeat_mode),item.target_rir,item.sort,
              item.superset_group.strip(),item.superset_order,safe_technique_url(item.technique_url or ""),
              item.rest_seconds,item.rest_text.strip(),item.rir_by_set.strip(),alternatives))
 
@@ -2113,10 +2119,10 @@ def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUse
                        (x.client_id,d["day_name"],d["title"] or ""))
         for item in items:
             db.execute("""INSERT INTO program(
-                client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+                client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
                 technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (x.client_id,item["day_name"],item["exercise"],item["sets"],item["reps"],item["target_rir"],
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (x.client_id,item["day_name"],item["exercise"],item["sets"],item["reps"],normalize_repeat_mode(item.get("repeat_mode")),item["target_rir"],
                  item["sort"] or 0,item["superset_group"] or "",item["superset_order"] or 0,
                  safe_technique_url(item["technique_url"] or ""),item["rest_seconds"] or 0,
                  item["rest_text"] or "",item["rir_by_set"] or "",item["alternatives_json"] or "[]"))
@@ -2485,7 +2491,8 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     exercise=x.exercise.strip()
     if not day or not exercise: raise HTTPException(400,"Вкажіть день і вправу")
     technique_url=require_technique_url(x.technique_url)
-    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
+    repeat_mode=normalize_repeat_mode(x.repeat_mode)
+    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
         next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(x.client_id,day)).fetchone()["n"])
@@ -2500,10 +2507,10 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
             superset_order=1
             c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(superset_group,source["id"]))
         row=c.execute("""INSERT INTO program(
-            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
             technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-            (x.client_id,day,exercise,x.sets,x.reps.strip() or "8-12",x.target_rir,next_sort,
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            (x.client_id,day,exercise,x.sets,x.reps.strip() or "8-12",repeat_mode,x.target_rir,next_sort,
              superset_group,superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),
              x.rir_by_set.strip(),alternatives_json)).fetchone()
         c.commit()
@@ -2518,24 +2525,25 @@ def add_program_superset_pair(x:ProgramSupersetPairIn,user:AuthUser=Depends(requ
     if not day_a or not day_b or not ex_a or not ex_b: raise HTTPException(400,"Вкажіть день і обидві вправи")
     if day_a!=day_b: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
     tech_a=require_technique_url(a.technique_url); tech_b=require_technique_url(b.technique_url)
-    alts_a=normalize_program_alternatives(a.alternatives_json,{"sets":a.sets,"reps":a.reps,"target_rir":a.target_rir,"rest_seconds":a.rest_seconds,"rest_text":a.rest_text,"rir_by_set":a.rir_by_set})
-    alts_b=normalize_program_alternatives(b.alternatives_json,{"sets":b.sets,"reps":b.reps,"target_rir":b.target_rir,"rest_seconds":b.rest_seconds,"rest_text":b.rest_text,"rir_by_set":b.rir_by_set})
+    repeat_a=normalize_repeat_mode(a.repeat_mode); repeat_b=normalize_repeat_mode(b.repeat_mode)
+    alts_a=normalize_program_alternatives(a.alternatives_json,{"sets":a.sets,"reps":a.reps,"repeat_mode":repeat_a,"target_rir":a.target_rir,"rest_seconds":a.rest_seconds,"rest_text":a.rest_text,"rir_by_set":a.rir_by_set})
+    alts_b=normalize_program_alternatives(b.alternatives_json,{"sets":b.sets,"reps":b.reps,"repeat_mode":repeat_b,"target_rir":b.target_rir,"rest_seconds":b.rest_seconds,"rest_text":b.rest_text,"rir_by_set":b.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(a.client_id,))
         next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(a.client_id,day_a)).fetchone()["n"])
         first=c.execute("""INSERT INTO program(
-            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
             technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,'',0,%s,%s,%s,%s,%s) RETURNING id""",
-            (a.client_id,day_a,ex_a,a.sets,a.reps.strip() or "8-12",a.target_rir,next_sort,
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,'',0,%s,%s,%s,%s,%s) RETURNING id""",
+            (a.client_id,day_a,ex_a,a.sets,a.reps.strip() or "8-12",repeat_a,a.target_rir,next_sort,
              tech_a,a.rest_seconds,a.rest_text.strip(),a.rir_by_set.strip(),alts_a)).fetchone()
         group=f"SS{first['id']}"
         c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(group,first["id"]))
         second=c.execute("""INSERT INTO program(
-            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
             technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,1,%s,%s,%s,%s,%s) RETURNING id""",
-            (b.client_id,day_b,ex_b,b.sets,b.reps.strip() or "8-12",b.target_rir,next_sort+1,
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,1,%s,%s,%s,%s,%s) RETURNING id""",
+            (b.client_id,day_b,ex_b,b.sets,b.reps.strip() or "8-12",repeat_b,b.target_rir,next_sort+1,
              group,tech_b,b.rest_seconds,b.rest_text.strip(),b.rir_by_set.strip(),alts_b)).fetchone()
         c.commit()
     return {"ok":True,"ids":[first["id"],second["id"]],"superset_group":group}
@@ -2547,9 +2555,10 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     p=one("SELECT * FROM program WHERE id=?",(pid,))
     if not p: raise HTTPException(404,"Вправу не знайдено")
     technique_url=require_technique_url(x.technique_url)
-    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
-    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
+    repeat_mode=normalize_repeat_mode(x.repeat_mode)
+    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,repeat_mode=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),repeat_mode,x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
     return {"ok":True}
 
 @app.patch("/api/program/{pid}/client-exercise")
@@ -2567,6 +2576,7 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
         fallback={
             "sets":p.get("sets") or 3,
             "reps":p.get("reps") or "8-12",
+            "repeat_mode":p.get("repeat_mode") or "normal",
             "target_rir":p.get("target_rir") if p.get("target_rir") is not None else 2,
             "rest_seconds":p.get("rest_seconds") or 0,
             "rest_text":p.get("rest_text") or "",
@@ -2585,6 +2595,7 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
                 "exercise":current,
                 "sets":int(p.get("sets") or 3),
                 "reps":str(p.get("reps") or "8-12"),
+                "repeat_mode":normalize_repeat_mode(p.get("repeat_mode")),
                 "target_rir":int(p.get("target_rir") if p.get("target_rir") is not None else 2),
                 "rir_by_set":str(p.get("rir_by_set") or ""),
                 "rest_seconds":int(p.get("rest_seconds") or 0),
@@ -2607,10 +2618,10 @@ def client_replace_program_exercise(pid:int,x:ClientProgramExerciseSwapIn,user:A
                           (selected,trainer_id,trainer_id)).fetchone()
             technique_url=safe_technique_url((lib["technique_url"] if lib else "") or "")
             c.execute("""UPDATE program
-                         SET exercise=%s,sets=%s,reps=%s,target_rir=%s,rir_by_set=%s,
+                         SET exercise=%s,sets=%s,reps=%s,repeat_mode=%s,target_rir=%s,rir_by_set=%s,
                              rest_seconds=%s,rest_text=%s,alternatives_json=%s,technique_url=%s
                          WHERE id=%s""",
-                      (selected,selected_cfg["sets"],selected_cfg["reps"],selected_cfg["target_rir"],
+                      (selected,selected_cfg["sets"],selected_cfg["reps"],normalize_repeat_mode(selected_cfg.get("repeat_mode")),selected_cfg["target_rir"],
                        selected_cfg["rir_by_set"],selected_cfg["rest_seconds"],selected_cfg["rest_text"],
                        json.dumps(new_alts,ensure_ascii=False),technique_url,pid))
         c.commit()
@@ -2668,6 +2679,7 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
     numbers=[s.set_number for s in x.sets]
     if len(numbers)!=len(set(numbers)):
         raise HTTPException(400,"Номери підходів не мають повторюватися")
+    repeat_mode=normalize_repeat_mode(x.repeat_mode)
     ids=[]
     # Keep every set on the calendar day when the workout session started.
     # Lock the client row so saving a first set cannot race with accidental
@@ -2681,9 +2693,9 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         c.execute("DELETE FROM workout_aux_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
-            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds)).fetchone()
+            row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                          (x.client_id,x.program_id,x.exercise,result_day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds,repeat_mode)).fetchone()
             ids.append(row["id"])
         aux_seen=set()
         for item in x.aux_sets:
@@ -2701,9 +2713,9 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
                 raise HTTPException(400,"Номери додаткових підходів не мають повторюватися")
             aux_seen.add(key)
             c.execute("""INSERT INTO workout_aux_sets(
-                client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps))
+                client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps,repeat_mode)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps,repeat_mode))
         c.commit()
     return {"ok":True,"ids":ids,"day":result_day}
 
@@ -2799,6 +2811,14 @@ def require_technique_url(value:str)->str:
     return safe
 
 
+REPEAT_MODES={"normal","total","per_leg","per_arm","per_side"}
+
+def normalize_repeat_mode(value:str|None)->str:
+    mode=str(value or "normal").strip().lower()
+    if mode not in REPEAT_MODES:
+        raise HTTPException(400,"Некоректний спосіб підрахунку повторів")
+    return mode
+
 def normalize_program_alternatives(value:str,fallback:dict|None=None)->str:
     fallback=fallback or {}
     try:
@@ -2836,6 +2856,7 @@ def normalize_program_alternatives(value:str,fallback:dict|None=None)->str:
         reps=str(item.get("reps") if item.get("reps") is not None else fallback.get("reps","8-12")).strip() or "8-12"
         rir_by_set=str(item.get("rir_by_set") if item.get("rir_by_set") is not None else fallback.get("rir_by_set","")).strip()
         rest_text=str(item.get("rest_text") if item.get("rest_text") is not None else fallback.get("rest_text","")).strip()
+        repeat_mode=normalize_repeat_mode(item.get("repeat_mode") if item.get("repeat_mode") is not None else fallback.get("repeat_mode","normal"))
         if len(reps)>64 or len(rir_by_set)>512 or len(rest_text)>1000:
             raise HTTPException(400,"Параметри альтернативної вправи занадто довгі")
         out.append({
@@ -2846,6 +2867,7 @@ def normalize_program_alternatives(value:str,fallback:dict|None=None)->str:
             "rir_by_set":rir_by_set,
             "rest_seconds":rest_seconds,
             "rest_text":rest_text,
+            "repeat_mode":repeat_mode,
         })
     return json.dumps(out,ensure_ascii=False)
 
@@ -2986,7 +3008,7 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
                                       ORDER BY id DESC LIMIT 1""",(x.client_id,today)).fetchone()
                 if existing:
                     raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
-                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
+                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
                                                                   FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",(x.client_id,x.day_name)).fetchall()]
                 for item in snapshot_rows:item["technique_url"]=safe_technique_url(item.get("technique_url") or "")
                 snapshot=json.dumps(snapshot_rows,ensure_ascii=False)
@@ -3118,11 +3140,14 @@ def historical_workout(x:HistoricalWorkoutIn,user:AuthUser=Depends(require_clien
                                   ORDER BY id DESC LIMIT 1""",(x.client_id,day)).fetchone()
             if existing:
                 raise HTTPException(400,"Тренування за цей день уже записано")
+            program_modes={int(r["id"]):normalize_repeat_mode(r.get("repeat_mode")) for r in c.execute(
+                "SELECT id,repeat_mode FROM program WHERE client_id=%s",(x.client_id,)).fetchall()}
             for item in x.sets:
-                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds)
-                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds))
-            snapshot=[dict(row) for row in c.execute("""SELECT id,day_name,exercise,sets,reps,target_rir,superset_group,superset_order
+                mode=program_modes.get(int(item.program_id),"normal")
+                c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
+                             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                          (x.client_id,item.program_id,item.exercise,day,item.set_number,item.weight,item.reps,item.rir,item.rest_seconds,mode))
+            snapshot=[dict(row) for row in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order
                                                          FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",
                                                       (x.client_id,x.day_name)).fetchall()]
             snapshot_json=json.dumps(snapshot,ensure_ascii=False)

@@ -189,6 +189,7 @@ function programTemplateEditorNormalizeItem(x,dayName,sort){
     exercise:String(x?.exercise||''),
     sets:Math.max(1,+x?.sets||3),
     reps:String(x?.reps||'8-12'),
+    repeat_mode:normalizeRepeatMode(x?.repeat_mode),
     target_rir:Number.isFinite(+x?.target_rir)?+x.target_rir:2,
     sort:+x?.sort||sort||1,
     superset_group:String(x?.superset_group||''),
@@ -263,6 +264,7 @@ function programTemplateAlternativesEditorHTML(item,di,ii){
       +'<div class="trainer-program-alternative-params">'
         +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(value.sets))+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'sets\',this.value)"></label>'
         +'<label><span>Повтори</span><input value="'+esc(value.reps)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'reps\',this.value)"></label>'
+        +'<label><span>Як рахувати</span>'+repeatModeSelectHTML('',value.repeat_mode,'trainer-program-alternative-repeat-mode').replace('<select','<select onchange="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'repeat_mode\',this.value)"')+'</label>'
         +'<label><span>RIR по підходах</span><input value="'+esc(value.rir_by_set)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rir_by_set\',this.value)"></label>'
         +'<label><span>Відпочинок</span><input value="'+esc(value.rest_text)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rest_text\',this.value)"></label>'
       +'</div>'
@@ -291,6 +293,7 @@ function trainerTemplateEditorItemHTML(item,di,ii){
     +'<div class="trainer-template-editor-grid">'
       +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(item.sets))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'sets\',this.value)"></label>'
       +'<label><span>Повтори</span><input value="'+esc(item.reps)+'" placeholder="8-12" oninput="updateProgramTemplateItem('+di+','+ii+',\'reps\',this.value)"></label>'
+      +'<label><span>Як рахувати повтори</span>'+repeatModeSelectHTML('',item.repeat_mode,'trainer-template-repeat-mode').replace('<select','<select onchange="updateProgramTemplateItem('+di+','+ii+',\'repeat_mode\',this.value)"')+'</label>'
       +'<label><span>RIR базовий</span><input type="number" min="0" max="10" value="'+esc(String(item.target_rir))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'target_rir\',this.value)"></label>'
       +'<label><span>RIR по підходах</span><input value="'+esc(item.rir_by_set)+'" placeholder="2,1,1" oninput="updateProgramTemplateItem('+di+','+ii+',\'rir_by_set\',this.value)"></label>'
       +'<label><span>Відпочинок</span><input value="'+esc(item.rest_text)+'" placeholder="2-3 хв" oninput="updateProgramTemplateItem('+di+','+ii+',\'rest_text\',this.value)"></label>'
@@ -346,6 +349,7 @@ function updateProgramTemplateItem(di,ii,field,value){
     return;
   }
   if(['sets','target_rir','rest_seconds','superset_order'].includes(field))item[field]=+value||0;
+  else if(field==='repeat_mode')item[field]=normalizeRepeatMode(value);
   else item[field]=value;
 }
 function updateProgramTemplateAlternativeField(di,ii,ai,field,value){
@@ -355,6 +359,7 @@ function updateProgramTemplateAlternativeField(di,ii,ai,field,value){
   let alt=xs[ai];
   if(field==='sets')alt.sets=Math.max(1,+value||1);
   else if(field==='target_rir')alt.target_rir=Math.max(0,+value||0);
+  else if(field==='repeat_mode')alt.repeat_mode=normalizeRepeatMode(value);
   else alt[field]=String(value??'');
   if(field==='rir_by_set'){
     let first=String(value||'').split(',').map(x=>x.trim()).find(Boolean);
@@ -432,6 +437,7 @@ function programTemplateEditorPayload(nameOverride=''){
         day_name:dayName,exercise,
         sets:Math.max(1,+item.sets||1),
         reps:String(item.reps||'8-12').trim()||'8-12',
+        repeat_mode:normalizeRepeatMode(item.repeat_mode),
         target_rir:Math.max(0,+item.target_rir||0),
         sort:ii+1,
         superset_group:String(item.superset_group||''),

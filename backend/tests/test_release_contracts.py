@@ -10,6 +10,8 @@ TRAINER = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding
 PROGRAM = (ROOT / "backend" / "static" / "js" / "program.js").read_text(encoding="utf-8")
 WORKOUT = (ROOT / "backend" / "static" / "js" / "workout.js").read_text(encoding="utf-8")
 RESULTS = (ROOT / "backend" / "static" / "js" / "results.js").read_text(encoding="utf-8")
+PROGRESS_REDESIGN = (ROOT / "backend" / "static" / "js" / "progress-redesign.js").read_text(encoding="utf-8")
+CALENDAR = (ROOT / "backend" / "static" / "js" / "calendar.js").read_text(encoding="utf-8")
 TRAINING_REDESIGN = (ROOT / "backend" / "static" / "js" / "training-redesign.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
@@ -268,6 +270,25 @@ class ReleaseContracts(unittest.TestCase):
     def test_exercise_submit_actions_use_save_labels(self):
         self.assertIn(">Зберегти вправу</button>", PROGRAM)
         self.assertIn("save.textContent=show?'Зберегти суперсет':'Зберегти вправу'", PROGRAM)
+
+    def test_repetition_count_mode_is_persisted_and_rendered(self):
+        self.assertIn("ALTER TABLE program ADD COLUMN IF NOT EXISTS repeat_mode", APP)
+        self.assertIn("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS repeat_mode", APP)
+        self.assertIn("ALTER TABLE program_template_items ADD COLUMN IF NOT EXISTS repeat_mode", APP)
+        self.assertIn("ALTER TABLE workout_aux_sets ADD COLUMN IF NOT EXISTS repeat_mode", APP)
+        self.assertIn("def normalize_repeat_mode", APP)
+        self.assertIn("REPEAT_MODE_OPTIONS", PROGRAM)
+        self.assertIn("repeatPlanText", PROGRAM)
+        self.assertIn("repeatResultText", PROGRAM)
+        self.assertIn("repeatModeSelectHTML('repeatmode','normal')", PROGRAM)
+        self.assertIn("repeatModeSelectHTML('ssInlineRepeatMode','normal')", PROGRAM)
+        self.assertIn("repeat_mode:repeatMode", WORKOUT)
+        self.assertIn("repeatModeShortLabel", WORKOUT_LYFTA)
+        self.assertIn("repeat_mode:normalizeRepeatMode(item.repeat_mode)", TRAINER)
+        self.assertIn("repeatResultText", RESULTS)
+        self.assertIn("repeatResultText", PROGRESS_REDESIGN)
+        self.assertIn("repeatResultText", CALENDAR)
+        self.assertIn("repeat_mode:b.repeat_mode||'normal'", CORE)
 
     def test_superset_rest_is_rendered_once(self):
         self.assertIn("function supersetRestLabel", PROGRAM)

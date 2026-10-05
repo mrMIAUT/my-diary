@@ -153,16 +153,16 @@ function lyftaDropRowsHTML(x,d,cid,parent,done){
 }
 
 function setRows(x,d,cid){
-  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
-  let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
+  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x),mode=normalizeRepeatMode(x.repeat_mode);
+  let prev=lyftaPreviousDaySets(d,x.id,exerciseName).filter(v=>normalizeRepeatMode(v.repeat_mode)===mode),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
   let hasPrev=prev.length>0,total=workoutExerciseSetCount(x,d),planned=Math.max(1,+x.sets||1);
-  let h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span></div>';
+  let modeLabel=repeatModeShortLabel(mode),h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори'+(modeLabel?'<small>'+esc(modeLabel)+'</small>':'')+'</span><span>RIR</span><span></span></div>';
   for(let n=1;n<=total;n++){
     let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned;
     let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??rp[rp.length-1]??'';
     h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'">'
-      +'<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+p.reps+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
+      +'<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+repeatResultText(p.reps,p.repeat_mode||mode)+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
       +'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'

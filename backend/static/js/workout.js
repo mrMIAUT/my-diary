@@ -47,11 +47,11 @@ function previousExerciseHTML(d,pid){
  return `<div class="exercise" style="margin-top:12px">
    <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
    ${cur.map(s=>{
-      let p=prev.find(z=>z.set_number===s.set_number);
-      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
+      let p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode)===normalizeRepeatMode(s.repeat_mode));
+      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
       return `<div style="margin-top:9px">
-        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
-        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${p.reps} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
+        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
+        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${repeatResultText(p.reps,p.repeat_mode)} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
         <div class="muted" style="margin-top:3px">Різниця: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>
       </div>`;
    }).join('')}
@@ -65,7 +65,7 @@ function completedComparisonHTML(x,d){
  let cur=history.filter(r=>r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
  let prev=history.filter(r=>r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
  return `<div class="exercise" style="margin-top:12px"><strong>Порівняння з ${esc(previousDay)}</strong>${cur.map(s=>{
-   let p=prev.find(z=>z.set_number===s.set_number);if(!p)return '';
+   let p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===normalizeRepeatMode(s.repeat_mode||x.repeat_mode));if(!p)return '';
    return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}${+s.rest_seconds>0||+p.rest_seconds>0?` · відпочинок ${+p.rest_seconds>0?formatSetRest(p.rest_seconds):'—'} → ${+s.rest_seconds>0?formatSetRest(s.rest_seconds):'—'}`:''}</div>`;
  }).join('')}</div>`;
 }
@@ -93,9 +93,9 @@ function completedExerciseHTML(x,d,cid){
      <div><strong>Виконано</strong><small>Результати вправи збережено</small></div>
    </div>
    ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
-   ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${a.reps}</span>`).join('')}</div>`:''})()}
+   ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</span>`).join('')}</div>`:''})()}
    <div class="workout-completed-sets">
-     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${a.reps}</strong></div>`).join('')}</div>`}).join('')}
+     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`}).join('')}
    </div>
    <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0))},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
@@ -472,10 +472,10 @@ function clientTrainingProgramHTML(d,cid,groups){
      let x=xs[i];if(used.has(x.id))continue;
      if(x.superset_group){
        let pair=xs.filter(y=>y.superset_group===x.superset_group);pair.forEach(y=>used.add(y.id));
-       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(y.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${y.technique_url?techniqueLinkHTML(y.technique_url):''}</div>`}).join('')}</div></div>`;
+       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(repeatPlanText(y))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${y.technique_url?techniqueLinkHTML(y.technique_url):''}</div>`}).join('')}</div></div>`;
      }else{
        used.add(x.id);let rest=restLabel(x),rp=rirPlan(x);
-       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(x.reps)}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${x.technique_url?techniqueLinkHTML(x.technique_url):''}</div>`;
+       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(repeatPlanText(x))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${x.technique_url?techniqueLinkHTML(x.technique_url):''}</div>`;
      }
    }
    let dayTitle=programDayTitle(d,previewWorkoutDay);
@@ -505,7 +505,7 @@ function workoutEffectiveExercise(x){
 
 function workoutChoiceSummary(v){
  let rest=restLabel(v),rir=rirPlan(v).join(' / ');
- return v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'');
+ return v.sets+' × '+esc(repeatPlanText(v))+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'');
 }
 
 function chooseWorkoutExercise(pid,cid){
@@ -558,7 +558,7 @@ function activeExercisesHTML(items,d,cid){
  function card(x,inner=false,showRest=true){
   let effective=workoutEffectiveExercise(x),doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
   let rest=showRest?restLabel(effective):'';
-  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(effective.reps)}</span>${rest?`<span class="workout-plan-meta">Відпочинок ${esc(rest)}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
+  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(repeatPlanText(effective))}</span>${rest?`<span class="workout-plan-meta">Відпочинок ${esc(rest)}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
@@ -604,10 +604,10 @@ function previewExercisesHTML(items){
   if(x.superset_group){
    let pair=items.filter(y=>y.superset_group===x.superset_group);
    pair.forEach(y=>used.add(y.id));
-   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(y.reps)}${restLabel(y)?` · Відпочинок ${esc(restLabel(y))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(y).join(' / ')}</span></div></div>`).join('')}</div></div>`;
+   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(repeatPlanText(y))}${restLabel(y)?` · Відпочинок ${esc(restLabel(y))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(y).join(' / ')}</span></div></div>`).join('')}</div></div>`;
   }else{
    used.add(x.id);
-   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }<div class="muted">План: ${x.sets} × ${esc(x.reps)}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></div></div>`;
+   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }<div class="muted">План: ${x.sets} × ${esc(repeatPlanText(x))}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></div></div>`;
   }
  }
  return html;
@@ -645,11 +645,12 @@ async function saveSets(cid,pid,exercise,count){
  });
  let auxSets=[];
  try{auxSets=collectWorkoutAuxSets(currentData,pid)}catch(e){return alert(e.message||'Перевір додаткові підходи')}
- await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,sets,aux_sets:auxSets})});
+ let planned=(currentData.program||[]).find(v=>+v.id===+pid),effective=planned?workoutEffectiveExercise(planned):null,repeatMode=normalizeRepeatMode(effective?.repeat_mode);
+ await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,repeat_mode:repeatMode,sets,aux_sets:auxSets})});
  clearWorkoutDraft(sid,pid);
  let body=$('#exerciseBody'+pid);
  if(body){
-   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${s.reps} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
+   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${repeatResultText(s.reps,repeatMode)} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
  }

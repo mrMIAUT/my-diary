@@ -87,9 +87,9 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
    let warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
    return '<div class="trainer-review-exercise">'
      +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
-     +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(String(a.reps??0))+'</span>').join('')+'</div>':'')
+     +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||cur[0]?.repeat_mode||x.repeat_mode))+'</span>').join('')+'</div>':'')
      +'<div class="trainer-review-sets">'+cur.map(s=>{
-       let p=prev.find(z=>+z.set_number===+s.set_number),deltaHTML='';
+       let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>+z.set_number===+s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode),deltaHTML='';
        if(p){
          let dw=(+s.weight||0)-(+p.weight||0),dr=(+s.reps||0)-(+p.reps||0),deltas=[];
          if(dw!==0)deltas.push('<i class="'+(dw>0?'delta-up':'delta-down')+'">'+(dw>0?'+':'')+fmtProgress(dw)+' кг</i>');
@@ -100,9 +100,9 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
        let currentMeta='<span class="trainer-review-set-meta"><span class="trainer-review-rir">RIR '+esc(String(s.rir??'—'))+'</span>'+(+s.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(s.rest_seconds))+'</span>':'')+'</span>';
        let previousMeta=p?'<span class="trainer-review-set-meta previous"><span class="trainer-review-rir">RIR '+esc(String(p.rir??'—'))+'</span>'+(+p.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(p.rest_seconds))+'</span>':'')+'</span>':'';
        let drops=aux.filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
-       return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b>'+currentMeta+'</div>'
-         +(drops.length?'<div class="trainer-review-drop-list">'+drops.map((a,i)=>'<div><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(String(a.weight??0))+' кг × '+esc(String(a.reps??0))+'</strong></div>').join('')+'</div>':'')
-         +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+'</strong>'+previousMeta+deltaHTML+'</div>':'')
+       return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(repeatResultText(s.reps,mode))+'</b>'+currentMeta+'</div>'
+         +(drops.length?'<div class="trainer-review-drop-list">'+drops.map((a,i)=>'<div><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(String(a.weight??0))+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||mode))+'</strong></div>').join('')+'</div>':'')
+         +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(repeatResultText(p.reps,p.repeat_mode||mode))+'</strong>'+previousMeta+deltaHTML+'</div>':'')
        +'</section>';
      }).join('')+'</div>'
    +'</div>';
@@ -567,8 +567,8 @@ function trainerDayResultsHTML(d,dayName){
         <span><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }${x.superset_group?`<span class="badge" style="margin-left:8px;color:var(--yellow)">Суперсет</span>`:''}<span class="muted" style="display:block;margin-top:5px">${cur.length} підходи</span></span><span class="arrow">⌄</span>
        </button>
        <div id="${esc(bodyId)}" class="hidden" style="margin-top:10px">${cur.map(s=>{
-        let p=prev.find(z=>z.set_number===s.set_number);
-        return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${p.reps} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
+        let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode);
+        return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${repeatResultText(p.reps,p.repeat_mode||mode)} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
        }).join('')}</div>
       </div>`;
     }).join('')}

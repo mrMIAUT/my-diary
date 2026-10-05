@@ -16252,3 +16252,75 @@ body.eplan-redesign.trainer-ui .trainer-inline-superset-grid>label>input{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* Repetition counting mode */
+body.eplan-redesign.trainer-ui .trainer-program-editor-grid select,
+body.eplan-redesign.trainer-ui .trainer-inline-superset-grid select,
+body.eplan-redesign.trainer-ui .trainer-repeat-mode-field select{
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0 36px 0 13px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:13px!important;
+  background:#f7f9fc!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-inline-superset-grid select{
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-repeat-mode-field{
+  display:block!important;
+}
+body.eplan-redesign.trainer-ui .trainer-repeat-mode-field>span{
+  display:block!important;
+  margin:0 0 6px!important;
+  color:#72819a!important;
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-params{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-alternative-params select,
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid select{
+  width:100%!important;
+  min-width:0!important;
+  height:38px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0 26px 0 8px!important;
+  border:1px solid #dce5f1!important;
+  border-radius:10px!important;
+  background:#f8fafc!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  font-size:9.5px!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid select{
+  height:46px!important;
+  padding:0 32px 0 10px!important;
+  background:#f7f9fc!important;
+  font-size:10px!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-head>span>small{
+  display:block!important;
+  margin-top:2px!important;
+  color:#9aa5b5!important;
+  font-size:7.5px!important;
+  line-height:1.05!important;
+  font-weight:800!important;
+  text-transform:none!important;
+}
+@media(max-width:620px){
+  body.eplan-redesign.trainer-ui .trainer-program-alternative-params{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
