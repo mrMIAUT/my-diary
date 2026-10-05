@@ -134,13 +134,20 @@ function alternativesTrainerHTML(x){
  if(!a.length)return '';
  let html=a.map(v=>{
    let tech=exerciseTechniqueUrl(v.exercise),rest=restLabel(v),rir=rirPlan(v).join(' / ');
-   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-name">'+esc(v.exercise)+'</span><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small>'+(tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span>';
+   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-chip-top"><span class="alternative-name">'+esc(v.exercise)+'</span>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small></span>';
  }).join('');
  return '<div class="exercise-alternatives"><strong>Альтернативи</strong><div>'+html+'</div></div>';
 }
 
-function programExtraHTML(x){
- let rest=restLabel(x),rp=rirPlan(x);
+function orderedSupersetItems(items){
+ return (items||[]).slice().sort((a,b)=>(+a.superset_order||0)-(+b.superset_order||0)||(+a.sort||0)-(+b.sort||0)||(+a.id||0)-(+b.id||0));
+}
+function supersetRestLabel(items){
+ let xs=orderedSupersetItems(items),last=xs[xs.length-1];
+ return last?restLabel(last):'';
+}
+function programExtraHTML(x,showRest=true){
+ let rest=showRest?restLabel(x):'',rp=rirPlan(x);
  return `<div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>`;
 }
 
@@ -332,7 +339,7 @@ function programHTML(d){
  let form=`<div class="card trainer-program-editor">
    <div class="trainer-program-editor-head"><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div>
    <div class="trainer-program-editor-grid">
-     <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
+     <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1" oninput="refreshNewExerciseSupersetOptions()"></label>
      <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
      <label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'tech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ex','tech')">Обрати з бібліотеки</button></div></label>
      <label class="wide"><span>Техніка</span><input id="tech" placeholder="https://..."></label>
@@ -340,6 +347,7 @@ function programHTML(d){
      <label><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
      <label><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
      <label><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
+     <label class="wide trainer-program-superset-field"><span>Суперсет <small>необов'язково</small></span><select id="supersetwith"><option value="0">Не об'єднувати у суперсет</option></select><small>Після вибору дня тут з'являться вправи, з якими можна об'єднати нову.</small></label>
      <div class="wide trainer-program-alternatives-block"><div class="trainer-program-alternatives-title"><span>Альтернативи</span><small>Можна обрати з бібліотеки або ввести вручну</small></div>${programAlternativeEditorHTML('programAlternativesEditor',[],{sets:3,reps:'8-12',rir_by_set:'2,2,2',target_rir:2,rest_text:'2'})}</div>
    </div>
    <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
@@ -361,7 +369,8 @@ function programHTML(d){
      let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
      let normalBlockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
      let supersetMoveActions=isSuper?`<span class="trainer-exercise-head-actions trainer-superset-inline-move">${moveUp}${moveDown}</span>`:'';
-     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span></div>`:'';
+     let superRest=isSuper?supersetRestLabel(b.items):'';
+     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span>${superRest?`<small>Відпочинок ${esc(superRest)}</small>`:''}</div>`:'';
      let info=superHead+b.items.map((x,xi)=>{
        let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
        let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
@@ -372,7 +381,7 @@ function programHTML(d){
          </div>
          <div class="trainer-exercise-body">
            <div class="muted">${x.sets} підходи × ${esc(x.reps)}</div>
-           ${programExtraHTML(x)}
+           ${programExtraHTML(x,!isSuper)}
            ${alternativesTrainerHTML(x)}
            <div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div>
          </div>
@@ -392,6 +401,15 @@ function programHTML(d){
    </div>`;
  }).join(''):'<div class="card muted">Програма ще порожня.</div>';
  return form+list;
+}
+
+function refreshNewExerciseSupersetOptions(){
+ let select=document.getElementById('supersetwith');if(!select)return;
+ let day=String(document.getElementById('dn')?.value||'').trim(),d=window.currentClientData||{};
+ let current=+select.value||0;
+ let xs=(d.program||[]).filter(x=>x.day_name===day&&!String(x.superset_group||'').trim());
+ select.innerHTML='<option value="0">Не об\'єднувати у суперсет</option>'+xs.map(x=>'<option value="'+x.id+'">З '+esc(x.exercise)+'</option>').join('');
+ if(xs.some(x=>+x.id===current))select.value=String(current);
 }
 
 function toggleProgramDay(id,btn){
@@ -477,16 +495,17 @@ async function saveExerciseEdit(pid,cid){
 }
 
 async function addExercise(button=null){
- let day=dn.value.trim(),title=(document.getElementById('dntitle')?.value||'').trim(),exercise=ex.value.trim(),technique=(tech.value||'').trim();
+ let day=dn.value.trim(),title=(document.getElementById('dntitle')?.value||'').trim(),exercise=ex.value.trim(),technique=(tech.value||'').trim(),supersetWith=+(document.getElementById('supersetwith')?.value||0);
  if(!day||!exercise)return alert('Вкажи день і вправу');
  if(technique&&!safeTechniqueUrl(technique))return alert('Посилання на техніку має починатися з https://');
  technique=safeTechniqueUrl(technique);
  let restore=setActionLoading(button,'Додаємо…');
  try{
   if(title)await api('/program-day-title',{method:'PUT',body:JSON.stringify({client_id:selected,day_name:day,title})});
-  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(collectProgramAlternatives('programAlternativesEditor',exercise))})});
+  await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:day,exercise,sets:+st.value||3,reps:rp.value||'8-12',target_rir:+((rirset.value||'2').split(',')[0].trim())||2,superset_group:'',superset_order:0,superset_with_id:supersetWith,technique_url:technique,rest_seconds:0,rest_text:resttext.value.trim(),rir_by_set:rirset.value.trim(),alternatives_json:JSON.stringify(collectProgramAlternatives('programAlternativesEditor',exercise))})});
   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
   await openClient(selected,'program');
+  reopenTrainerProgramDay(day);
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
 }
 
@@ -505,9 +524,7 @@ async function saveSupersetExercise(sourceId,dayName,button=null){
  technique=safeTechniqueUrl(technique);
  let restore=setActionLoading(button,'Додаємо…');
  try{
-   let group='SS'+sourceId;
-   await api('/program/'+sourceId+'/superset',{method:'PATCH',body:JSON.stringify({superset_group:group})});
-   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:group,superset_order:1,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
+   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',target_rir:+ssrir.value||2,superset_group:'',superset_order:0,superset_with_id:sourceId,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
    if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
    supersetModal.remove();
    await openClient(selected,'program');

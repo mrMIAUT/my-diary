@@ -9,6 +9,7 @@ CORE = (ROOT / "backend" / "static" / "js" / "core.js").read_text(encoding="utf-
 TRAINER = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
 PROGRAM = (ROOT / "backend" / "static" / "js" / "program.js").read_text(encoding="utf-8")
 WORKOUT = (ROOT / "backend" / "static" / "js" / "workout.js").read_text(encoding="utf-8")
+TRAINING_REDESIGN = (ROOT / "backend" / "static" / "js" / "training-redesign.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
@@ -244,6 +245,24 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("function workoutEffectiveExercise", WORKOUT)
         self.assertIn("workoutChoiceSummary", WORKOUT)
         self.assertIn("updateProgramTemplateAlternativeField", TRAINER)
+
+    def test_program_superset_creation_and_append_order(self):
+        self.assertIn("superset_with_id:int=Field(default=0,ge=0)", APP)
+        self.assertIn("COALESCE(MAX(sort),0)+1 AS n", APP)
+        self.assertIn("superset_group=f\"SS{source['id']}\"", APP)
+        self.assertIn("superset_with_id:supersetWith", PROGRAM)
+        self.assertIn("refreshNewExerciseSupersetOptions", PROGRAM)
+        self.assertIn("superset_with_id:sourceId", PROGRAM)
+
+    def test_superset_rest_is_rendered_once(self):
+        self.assertIn("function supersetRestLabel", PROGRAM)
+        self.assertIn("programExtraHTML(x,!isSuper)", PROGRAM)
+        self.assertIn("redesignTrainingExerciseRow(y,xs.indexOf(y)+1,true,false)", TRAINING_REDESIGN)
+        self.assertIn("card(y,true,false)", WORKOUT)
+
+    def test_alternative_technique_uses_clean_top_row(self):
+        self.assertIn("alternative-chip-top", PROGRAM)
+        self.assertNotIn("alternative-divider", PROGRAM.split("function alternativesTrainerHTML",1)[1].split("function orderedSupersetItems",1)[0])
 
     def test_completed_badge_and_template_alternatives_ui(self):
         self.assertIn("workout-live-toggle-side", WORKOUT)
