@@ -241,7 +241,7 @@ function programTemplateEditorLibraryOptions(){
 function programTemplateAlternatives(item){
   try{
     let xs=JSON.parse(item?.alternatives_json||'[]');
-    return Array.isArray(xs)?xs.map(x=>String(x||'').trim()).filter(Boolean):[];
+    return Array.isArray(xs)?xs.map(x=>String(x||'').trim()):[];
   }catch(e){return []}
 }
 
@@ -337,7 +337,7 @@ function updateProgramTemplateItem(di,ii,field,value){
 }
 function setProgramTemplateAlternatives(item,xs){
   if(!item)return;
-  item.alternatives_json=JSON.stringify((xs||[]).map(x=>String(x||'').trim()).filter(Boolean));
+  item.alternatives_json=JSON.stringify((xs||[]).map(x=>String(x||'').trim()));
 }
 function updateProgramTemplateAlternative(di,ii,ai,value){
   let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
@@ -424,7 +424,7 @@ function programTemplateEditorPayload(nameOverride=''){
         rest_seconds:Math.max(0,+item.rest_seconds||0),
         rest_text:String(item.rest_text||'').trim(),
         rir_by_set:String(item.rir_by_set||'').trim(),
-        alternatives_json:String(item.alternatives_json||'[]')
+        alternatives_json:JSON.stringify(programTemplateAlternatives(item).filter(Boolean))
       });
     }
   }
