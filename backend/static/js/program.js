@@ -346,7 +346,8 @@ function reopenTrainerProgramDay(dayName){
 
 function editProgramDayTitle(day){
  let d=window.currentClientData||{},current=programDayTitle(d,day);
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="dayTitleModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><div><h2>Назва тренувального дня</h2><div class="muted">${esc(day)}</div></div><button class="dark edit-exercise-close" onclick="dayTitleModal.remove()">✕</button></div><input id="dayTitleInput" value="${esc(current)}" placeholder="Напр. Груди + Спина"><p class="muted" style="margin-top:10px">Клієнт побачить цю назву після вибору тренувального дня.</p><button style="width:100%;margin-top:14px" data-day="${esc(day)}" onclick="saveProgramDayTitle(this.dataset.day,event.currentTarget)">Зберегти назву</button></div></div>`);
+ document.getElementById('dayTitleModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-day-title-modal" id="dayTitleModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-day-title-card"><div class="edit-exercise-head"><div><small class="trainer-day-title-kicker">ТРЕНУВАЛЬНИЙ ДЕНЬ</small><h2>Назва тренувального дня</h2><div class="trainer-day-title-day">${esc(day)}</div></div><button class="dark edit-exercise-close" type="button" aria-label="Закрити" onclick="dayTitleModal.remove()">✕</button></div><label class="trainer-day-title-field"><span>Назва дня</span><input id="dayTitleInput" value="${esc(current)}" placeholder="Наприклад: Груди + Спина"></label><p class="trainer-day-title-hint">Цю назву клієнт бачитиме у своїй програмі тренувань.</p><button class="trainer-day-title-save" data-day="${esc(day)}" onclick="saveProgramDayTitle(this.dataset.day,event.currentTarget)">Зберегти назву</button></div></div>`);
  setTimeout(()=>document.getElementById('dayTitleInput')?.focus(),30);
 }
 
