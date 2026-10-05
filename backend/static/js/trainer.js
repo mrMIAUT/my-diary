@@ -308,6 +308,13 @@ function updateProgramTemplateDayTitle(di,value){
 }
 function updateProgramTemplateItem(di,ii,field,value){
   let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
+  if(field==='exercise'){
+    item.exercise=value;
+    let name=String(value||'').trim().toLowerCase();
+    let libraryItem=(window.exerciseLibrary?.exercises||[]).find(x=>String(x.name||'').trim().toLowerCase()===name);
+    item.technique_url=libraryItem?.technique_url||'';
+    return;
+  }
   if(['sets','target_rir','rest_seconds','superset_order'].includes(field))item[field]=+value||0;
   else item[field]=value;
 }
