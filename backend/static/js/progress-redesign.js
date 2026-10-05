@@ -155,7 +155,10 @@ function progressVolumeNumber(v){
 }
 
 function progressExerciseVolume(exercise){
- return (exercise?.sets||[]).reduce((sum,set)=>sum+(Math.max(0,+set.weight||0)*Math.max(0,+set.reps||0)),0);
+ return (exercise?.sets||[]).reduce((sum,set)=>{
+   let mode=normalizeRepeatMode(set.repeat_mode),factor=['per_leg','per_arm','per_side'].includes(mode)?2:1;
+   return sum+(Math.max(0,+set.weight||0)*Math.max(0,+set.reps||0)*factor);
+ },0);
 }
 
 function progressWorkoutStats(data){
@@ -224,7 +227,7 @@ function progressWorkoutDetailHTML(d,sid){
    let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(a.reps)+'</span>').join('')+'</div>':'';
    let setsHTML=x.sets.map(set=>{
      let drops=(x.aux||[]).filter(a=>a.kind==='drop'&&+a.parent_set_number===+set.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
-     return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(set.reps)+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>'
+     return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(repeatResultText(set.reps,set.repeat_mode))+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>'
        +drops.map((a,i)=>'<div class="progress-workout-drop"><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(a.weight)+' кг × '+esc(a.reps)+'</strong></div>').join('')+'</div>';
    }).join('');
    return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div>'+warmHTML+'<div class="progress-workout-sets">'+setsHTML+'</div></div>';
