@@ -11443,19 +11443,23 @@ body.eplan-redesign.trainer-ui .trainer-review-set-previous span{font-weight:750
 body.eplan-redesign.trainer-ui .trainer-review-set-previous strong{color:#53647d!important;font-size:9.5px!important;font-weight:850!important}
 body.eplan-redesign.trainer-ui .trainer-review-set-previous small{margin-left:auto!important;color:#8b98aa!important;font-size:8.5px!important}
 body.eplan-redesign.trainer-ui .trainer-review-set-meta{
-  display:grid!important;justify-items:end!important;gap:1px!important;min-width:48px!important;line-height:1.15!important;
+  display:inline-flex!important;align-items:center!important;justify-content:flex-end!important;gap:5px!important;min-width:0!important;line-height:1.15!important;white-space:nowrap!important;
 }
 body.eplan-redesign.trainer-ui .trainer-review-set-meta .trainer-review-rir{
   color:#718099!important;font-size:9.5px!important;font-weight:850!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta .trainer-review-meta-separator{
+  color:#a8b2c1!important;font-size:9px!important;font-weight:700!important;
 }
 body.eplan-redesign.trainer-ui .trainer-review-set-meta .trainer-review-rest{
   color:#5f708a!important;font-size:9px!important;font-weight:800!important;white-space:nowrap!important;
 }
 body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous{
-  display:inline-flex!important;align-items:center!important;gap:6px!important;min-width:0!important;margin-left:2px!important;
+  gap:5px!important;min-width:0!important;margin-left:2px!important;
 }
 body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-rir,
-body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-rest{
+body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-rest,
+body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-meta-separator{
   font-size:8.8px!important;
 }
 
