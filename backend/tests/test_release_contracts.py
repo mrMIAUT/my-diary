@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[2]
 APP = (ROOT / "backend" / "app.py").read_text(encoding="utf-8")
 CORE = (ROOT / "backend" / "static" / "js" / "core.js").read_text(encoding="utf-8")
 TRAINER = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
+WORKOUT = (ROOT / "backend" / "static" / "js" / "workout.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
@@ -208,6 +209,14 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Можна трохи збільшити вагу", WORKOUT_LYFTA)
         self.assertIn("(+p.reps||0)<upper", WORKOUT_LYFTA)
         self.assertIn("(+p.rir||0)<+target", WORKOUT_LYFTA)
+
+    def test_completed_badge_and_template_alternatives_ui(self):
+        self.assertIn("workout-live-toggle-side", WORKOUT)
+        self.assertIn("exercise-done-badge compact", WORKOUT)
+        self.assertIn("programTemplateAlternativesEditorHTML", TRAINER)
+        self.assertIn("addProgramTemplateAlternative", TRAINER)
+        self.assertIn("openProgramExercisePicker", TRAINER)
+        self.assertNotIn("Вправа 1; Вправа 2", TRAINER)
 
     def test_index_shell_assets_exist_and_are_cached(self):
         urls = re.findall(r'(?:src|href)="(/(?:static/[^"]+|manifest\.webmanifest[^"]*))"', INDEX)
