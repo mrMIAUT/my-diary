@@ -131,10 +131,12 @@ function collectProgramAlternatives(containerId,main=''){
 
 function alternativesTrainerHTML(x){
  let a=exerciseAlternativeConfigs(x);
- return a.length?\`<div class="exercise-alternatives"><strong>Альтернативи</strong><div>\${a.map(v=>{
+ if(!a.length)return '';
+ let html=a.map(v=>{
    let tech=exerciseTechniqueUrl(v.exercise),rest=restLabel(v),rir=rirPlan(v).join(' / ');
-   return \`<span class="alternative-chip alternative-chip-detailed"><span class="alternative-name">\${esc(v.exercise)}</span><small>\${v.sets} × \${esc(v.reps)} · RIR \${esc(rir)}\${rest?' · '+esc(rest):''}</small>\${tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</span>\`
- }).join('')}</div></div>\`:'' 
+   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-name">'+esc(v.exercise)+'</span><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small>'+(tech?'<span class="alternative-divider" aria-hidden="true"></span>'+techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span>';
+ }).join('');
+ return '<div class="exercise-alternatives"><strong>Альтернативи</strong><div>'+html+'</div></div>';
 }
 
 function programExtraHTML(x){
