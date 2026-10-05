@@ -265,6 +265,10 @@ class ReleaseContracts(unittest.TestCase):
         self.assertNotIn('id="supersetwith"', PROGRAM)
         self.assertIn("superset_with_id:sourceId", PROGRAM)
 
+    def test_exercise_submit_actions_use_save_labels(self):
+        self.assertIn(">Зберегти вправу</button>", PROGRAM)
+        self.assertIn("save.textContent=show?'Зберегти суперсет':'Зберегти вправу'", PROGRAM)
+
     def test_superset_rest_is_rendered_once(self):
         self.assertIn("function supersetRestLabel", PROGRAM)
         self.assertIn("programExtraHTML(x,!isSuper)", PROGRAM)
