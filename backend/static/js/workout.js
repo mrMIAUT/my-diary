@@ -47,11 +47,11 @@ function previousExerciseHTML(d,pid){
  return `<div class="exercise" style="margin-top:12px">
    <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
    ${cur.map(s=>{
-      let p=prev.find(z=>z.set_number===s.set_number);
-      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
+      let p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode)===normalizeRepeatMode(s.repeat_mode));
+      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
       return `<div style="margin-top:9px">
-        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${s.reps}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
-        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${p.reps} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
+        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
+        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${repeatResultText(p.reps,p.repeat_mode)} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
         <div class="muted" style="margin-top:3px">Різниця: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>
       </div>`;
    }).join('')}
@@ -65,7 +65,7 @@ function completedComparisonHTML(x,d){
  let cur=history.filter(r=>r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
  let prev=history.filter(r=>r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
  return `<div class="exercise" style="margin-top:12px"><strong>Порівняння з ${esc(previousDay)}</strong>${cur.map(s=>{
-   let p=prev.find(z=>z.set_number===s.set_number);if(!p)return '';
+   let p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===normalizeRepeatMode(s.repeat_mode||x.repeat_mode));if(!p)return '';
    return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}${+s.rest_seconds>0||+p.rest_seconds>0?` · відпочинок ${+p.rest_seconds>0?formatSetRest(p.rest_seconds):'—'} → ${+s.rest_seconds>0?formatSetRest(s.rest_seconds):'—'}`:''}</div>`;
  }).join('')}</div>`;
 }
@@ -93,9 +93,9 @@ function completedExerciseHTML(x,d,cid){
      <div><strong>Виконано</strong><small>Результати вправи збережено</small></div>
    </div>
    ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
-   ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${a.reps}</span>`).join('')}</div>`:''})()}
+   ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</span>`).join('')}</div>`:''})()}
    <div class="workout-completed-sets">
-     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${s.reps}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${a.reps}</strong></div>`).join('')}</div>`}).join('')}
+     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`}).join('')}
    </div>
    <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0))},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
