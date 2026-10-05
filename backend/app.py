@@ -792,6 +792,7 @@ def init():
             weight DOUBLE PRECISION NOT NULL DEFAULT 0,
             reps INTEGER NOT NULL DEFAULT 1
         )""")
+        c.execute("ALTER TABLE workout_aux_sets ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_workout_aux_sets_client_day
                      ON workout_aux_sets(client_id,day,program_id,kind,parent_set_number,aux_number)""")
         # A program exercise can have only one saved value for a given set number on a given day.
@@ -2712,9 +2713,9 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
                 raise HTTPException(400,"Номери додаткових підходів не мають повторюватися")
             aux_seen.add(key)
             c.execute("""INSERT INTO workout_aux_sets(
-                client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps))
+                client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps,repeat_mode)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps,repeat_mode))
         c.commit()
     return {"ok":True,"ids":ids,"day":result_day}
 
