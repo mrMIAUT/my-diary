@@ -48,6 +48,19 @@ function trainerPreviousSameWorkoutDay(d,session){
  return days[0]||'';
 }
 
+function trainerWorkoutClientCommentHTML(d,session){
+ let day=sessionDay(session);
+ if(!day)return '';
+ let comments=(d.comments||[])
+   .filter(x=>x.day===day&&x.author==='client'&&(+x.program_id||0)===0&&!String(x.exercise||'').trim())
+   .slice()
+   .sort((a,b)=>(+a.id||0)-(+b.id||0));
+ if(!comments.length)return '';
+ return '<div class="trainer-review-client-comment"><div class="trainer-review-client-comment-head"><span>Коментар клієнта</span><small>після тренування</small></div>'
+   +comments.map(x=>'<p>'+esc(x.body||'')+'</p>').join('')
+   +'</div>';
+}
+
 function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
  let day=sessionDay(session),dayName=session.day_name||'Тренування';
  let snap=sessionProgramForDate(d,dayName,day);
@@ -107,6 +120,7 @@ function trainerPendingReviewsHTML(d){
          +'<span class="trainer-review-badge">До перевірки</span><b class="trainer-review-arrow">⌄</b>'
        +'</button>'
        +'<div id="'+bodyId+'" class="trainer-review-detail hidden">'
+         +trainerWorkoutClientCommentHTML(d,s)
          +trainerReviewExerciseRowsHTML(d,s)
          +'<label class="trainer-review-comment"><span>Коментар клієнту <small>необов’язково</small></span><textarea id="reviewComment'+s.id+'" placeholder="Наприклад: у жимі ногами наступного разу залиш 1–2 повтори в запасі..."></textarea></label>'
          +'<div class="trainer-review-actions"><button onclick="reviewWorkout('+s.id+','+d.client.id+',true,event.currentTarget)">Надіслати та перевірити</button><button class="dark" onclick="reviewWorkout('+s.id+','+d.client.id+',false,event.currentTarget)">Без коментаря</button></div>'
@@ -154,6 +168,7 @@ function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
             +'<span class="trainer-workout-calendar-status '+(reviewed||!canReview?'reviewed':'pending')+'">'+(reviewed?'Перевірено ✓':canReview?'До перевірки':'Завершено')+'</span>'
           +'</div>'
         +'</div>'
+        +trainerWorkoutClientCommentHTML(d,s)
         +'<div class="trainer-workout-calendar-exercises">'+trainerReviewExerciseRowsHTML(d,s,previousDay)+'</div>'
         +(reviewed&&s.trainer_comment?'<div class="trainer-workout-calendar-comment"><small>Коментар тренера</small><p>'+esc(s.trainer_comment)+'</p></div>':'')
         +(canReview&&!reviewed&&sid?'<button class="trainer-workout-calendar-review-link" onclick="focusTrainerPendingSession('+sid+')">Перейти до перевірки →</button>':'')
