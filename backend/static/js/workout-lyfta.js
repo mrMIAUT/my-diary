@@ -108,6 +108,34 @@ function showExerciseProgressHistory(pid){
   document.body.insertAdjacentHTML('beforeend','<div class="modal" id="exerciseHistoryModal" onclick="if(event.target===this)this.remove()"><div class="card lyfta-history-modal"><div class="between"><div><span class="lyfta-history-kicker">Історія вправи</span><h2>'+esc(exerciseName||x?.exercise||'Вправа')+'</h2></div><button class="dark" onclick="exerciseHistoryModal.remove()">✕</button></div>'+chart+'<div class="lyfta-history-list">'+rows+'</div></div></div>');
 }
 
+function lyftaProgressionRepUpper(reps){
+  let text=String(reps||'').trim().replace(/[–—]/g,'-');
+  let match=text.match(/^(\d+)\s*-\s*(\d+)$/);
+  if(!match)return 0;
+  let low=+match[1]||0,high=+match[2]||0;
+  return high>low?high:0;
+}
+
+function lyftaShouldSuggestProgression(x,d,prevSets=[]){
+  let planned=Math.max(1,+x?.sets||1),upper=lyftaProgressionRepUpper(x?.reps);
+  if(!upper||prevSets.length<planned)return false;
+  let targets=rirPlan(x);
+  for(let n=1;n<=planned;n++){
+    let p=prevSets.find(v=>+v.set_number===n);
+    if(!p)return false;
+    let target=targets[n-1]??targets[targets.length-1]??(+x?.target_rir||0);
+    if(!(+p.weight>0))return false;
+    if((+p.reps||0)<upper)return false;
+    if(Number.isFinite(+target)&&(+p.rir||0)<+target)return false;
+  }
+  return true;
+}
+
+function lyftaProgressionHintHTML(x,d,prevSets=[]){
+  if(!lyftaShouldSuggestProgression(x,d,prevSets))return '';
+  return '<div class="lyfta-progression-hint" title="Минулого разу всі планові підходи виконані у верхній межі повторень із запланованим RIR"><span>↑</span><strong>Можна трохи збільшити вагу</strong></div>';
+}
+
 function setRows(x,d,cid){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName),rest=lyftaRestSeconds(x);
@@ -134,5 +162,5 @@ function setRows(x,d,cid){
   return '<div class="lyfta-workout-tools">'
     +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
     +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
-    +'</div>'+h+extraActions;
+    +'</div>'+lyftaProgressionHintHTML(x,d,prev)+h+extraActions;
 }

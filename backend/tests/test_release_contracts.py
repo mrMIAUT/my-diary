@@ -11,6 +11,7 @@ HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encod
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
 LIBRARY = (ROOT / "backend" / "static" / "js" / "library.js").read_text(encoding="utf-8")
+WORKOUT_LYFTA = (ROOT / "backend" / "static" / "js" / "workout-lyfta.js").read_text(encoding="utf-8")
 INDEX = (ROOT / "backend" / "static" / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "backend" / "static" / "sw.js").read_text(encoding="utf-8")
 
@@ -196,6 +197,17 @@ class ReleaseContracts(unittest.TestCase):
     def test_no_unfinished_program_template_placeholder(self):
         self.assertNotIn("Конструктор шаблонів програм додамо наступним етапом", TRAINER)
         self.assertNotIn("trainerProgramsTab", TRAINER)
+        self.assertIn('@app.put("/api/trainer/program-templates/{template_id}")', APP)
+        self.assertIn('@app.post("/api/trainer/program-templates/{template_id}/copy")', APP)
+        self.assertIn("openEditProgramTemplate", TRAINER)
+        self.assertIn("saveProgramTemplateChanges", TRAINER)
+        self.assertIn("saveProgramTemplateAsNew", TRAINER)
+
+    def test_progression_hint_uses_reps_and_rir(self):
+        self.assertIn("lyftaShouldSuggestProgression", WORKOUT_LYFTA)
+        self.assertIn("Можна трохи збільшити вагу", WORKOUT_LYFTA)
+        self.assertIn("(+p.reps||0)<upper", WORKOUT_LYFTA)
+        self.assertIn("(+p.rir||0)<+target", WORKOUT_LYFTA)
 
     def test_index_shell_assets_exist_and_are_cached(self):
         urls = re.findall(r'(?:src|href)="(/(?:static/[^"]+|manifest\.webmanifest[^"]*))"', INDEX)
