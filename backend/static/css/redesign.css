@@ -2493,6 +2493,15 @@ body.eplan-redesign.client-ui .lyfta-workout-tools{
 body.eplan-redesign.client-ui .lyfta-workout-tools button{
   flex:1 1 140px;padding:10px 12px;font-size:11px;border-radius:12px;
 }
+body.eplan-redesign.client-ui .lyfta-progression-hint{
+  display:flex;align-items:center;gap:7px;width:max-content;max-width:100%;
+  margin:-2px 0 10px;padding:7px 10px;border:1px solid #ccebd9;border-radius:10px;
+  background:#f0faf4;color:#218b55;font-size:10px;font-weight:800;line-height:1.25;
+}
+body.eplan-redesign.client-ui .lyfta-progression-hint span{
+  display:grid;place-items:center;width:18px;height:18px;border-radius:999px;background:#dff5e8;color:#169657;font-size:12px;font-weight:950;
+}
+body.eplan-redesign.client-ui .lyfta-progression-hint strong{font:inherit;color:inherit}
 body.eplan-redesign.client-ui .lyfta-set-head{
   display:grid;grid-template-columns:42px 1fr 1fr .8fr 38px;gap:7px;
   padding:0 2px 6px;color:#78879b;font-size:9.5px;font-weight:800;text-align:center;
@@ -13195,7 +13204,7 @@ body.eplan-redesign.trainer-ui .trainer-template-card-main p{
 }
 body.eplan-redesign.trainer-ui .trainer-template-actions{
   display:grid;
-  grid-template-columns:1fr auto;
+  grid-template-columns:minmax(0,1fr) auto auto;
   gap:7px;
   margin-top:11px;
 }
@@ -13205,6 +13214,11 @@ body.eplan-redesign.trainer-ui .trainer-template-actions button{
   font-size:10.5px;
 }
 body.eplan-redesign.trainer-ui .trainer-template-actions .dark{
+  width:auto;
+  min-width:42px;
+  padding:0 10px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-actions .dark:last-child{
   width:42px;
   padding:0;
 }
@@ -13237,6 +13251,125 @@ body.eplan-redesign.trainer-ui .trainer-template-primary{
   min-height:46px;
   margin-top:14px;
   border-radius:13px;
+}
+
+body.eplan-redesign.trainer-ui .trainer-template-editor-modal{
+  z-index:11800;
+  padding:12px;
+  align-items:flex-start;
+  overflow:auto;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-card{
+  width:min(96vw,760px);
+  max-height:none;
+  margin:12px auto 110px;
+  padding:18px;
+  box-sizing:border-box;
+  border-radius:22px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top>div{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top small{
+  display:block;color:#1677ff;font-size:9px;font-weight:900;letter-spacing:.06em;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top h2{
+  margin:3px 0 0;color:#0a1738;font-size:20px;font-weight:950;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top p{
+  margin:5px 0 0;color:#7b889a;font-size:10.5px;line-height:1.4;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-top>button{
+  width:38px;min-width:38px;height:38px;padding:0!important;border-radius:12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta label,
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid label{display:block}
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta label>span,
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid label>span{
+  display:block;margin-bottom:5px;color:#63738a;font-size:9.5px;font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta input,
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta textarea,
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid input,
+body.eplan-redesign.trainer-ui .trainer-template-editor-exercise input{
+  width:100%;box-sizing:border-box;border:1px solid #dce5f1!important;border-radius:11px!important;background:#fff!important;color:#0a1738!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-meta textarea{
+  min-height:66px;resize:vertical;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-days{display:grid;gap:12px}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day{
+  padding:12px;border:1px solid #dfe7f2;border-radius:17px;background:#f8faff;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head>div:first-child{min-width:0;flex:1}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head small{
+  display:block;margin-bottom:4px;color:#1677ff;font-size:9px;font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head input{
+  width:100%;box-sizing:border-box;padding:8px 9px!important;border:1px solid #dce5f1!important;border-radius:10px!important;background:#fff!important;color:#0a1738!important;box-shadow:none!important;font-size:11px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head>div:last-child,
+body.eplan-redesign.trainer-ui .trainer-template-editor-item-head>div{
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head button,
+body.eplan-redesign.trainer-ui .trainer-template-editor-item-head button{
+  min-height:31px;padding:0 8px!important;border-radius:9px!important;font-size:9px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-day-head button:disabled,
+body.eplan-redesign.trainer-ui .trainer-template-editor-item-head button:disabled{opacity:.35}
+body.eplan-redesign.trainer-ui .trainer-template-editor-items{display:grid;gap:8px}
+body.eplan-redesign.trainer-ui .trainer-template-editor-item{
+  padding:11px;border:1px solid #e1e8f1;border-radius:13px;background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-item-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-item-head strong{
+  color:#0a1738;font-size:11px;font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-exercise{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:8px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-exercise button{
+  min-height:39px;padding:0 10px!important;border-radius:10px!important;font-size:9.5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid label.wide{grid-column:1/-1}
+body.eplan-redesign.trainer-ui .trainer-template-editor-grid input{
+  min-width:0;padding:8px 7px!important;font-size:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-add-exercise,
+body.eplan-redesign.trainer-ui .trainer-template-editor-add-day{
+  width:100%;min-height:38px;margin-top:9px;border:1px dashed #b9cce6!important;border-radius:11px!important;background:#f4f8ff!important;color:#1677ff!important;box-shadow:none!important;font-size:10px!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-add-day{
+  min-height:44px;margin-top:12px;background:#eef5ff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-actions{
+  position:sticky;bottom:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;padding:8px;border:1px solid #dfe7f2;border-radius:15px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-actions button{
+  min-height:44px;margin:0!important;border-radius:11px!important;font-size:10.5px!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-template-editor-actions .trainer-template-primary{
+  background:#1677ff!important;color:#fff!important;border-color:#1677ff!important;
+}
+body.eplan-redesign.trainer-ui .danger-soft{color:#c85d5d!important}
+@media(max-width:620px){
+  body.eplan-redesign.trainer-ui .trainer-template-editor-meta{grid-template-columns:1fr}
+  body.eplan-redesign.trainer-ui .trainer-template-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.eplan-redesign.trainer-ui .trainer-template-editor-day-head{align-items:flex-start;flex-direction:column}
+  body.eplan-redesign.trainer-ui .trainer-template-editor-day-head>div:last-child{width:100%;justify-content:flex-start}
 }
 
 /* Exercise library ownership */
