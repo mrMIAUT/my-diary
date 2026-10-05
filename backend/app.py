@@ -1131,6 +1131,9 @@ class ClientIn(BaseModel):
     name:str=Field(max_length=200); email:str=Field(max_length=254); password:str=Field(default="",max_length=256,json_schema_extra=password_input_schema); goal:str=Field(default="",max_length=2000); weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class ProgramIn(BaseModel):
     client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
+class ProgramSupersetPairIn(BaseModel):
+    first:ProgramIn
+    second:ProgramIn
 class ClientProgramExerciseSwapIn(BaseModel):
     exercise:str=Field(max_length=255)
 class ExerciseGroupIn(BaseModel): name:str=Field(max_length=120)
@@ -2505,6 +2508,38 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
              x.rir_by_set.strip(),alternatives_json)).fetchone()
         c.commit()
     return {"id":row["id"],"sort":next_sort,"superset_group":superset_group}
+@app.post("/api/program/superset-pair")
+def add_program_superset_pair(x:ProgramSupersetPairIn,user:AuthUser=Depends(require_trainer)):
+    a,b=x.first,x.second
+    if a.client_id!=b.client_id: raise HTTPException(400,"Вправи суперсету мають належати одному клієнту")
+    authorize_client(user,a.client_id)
+    day_a=a.day_name.strip(); day_b=b.day_name.strip()
+    ex_a=a.exercise.strip(); ex_b=b.exercise.strip()
+    if not day_a or not day_b or not ex_a or not ex_b: raise HTTPException(400,"Вкажіть день і обидві вправи")
+    if day_a!=day_b: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
+    tech_a=require_technique_url(a.technique_url); tech_b=require_technique_url(b.technique_url)
+    alts_a=normalize_program_alternatives(a.alternatives_json,{"sets":a.sets,"reps":a.reps,"target_rir":a.target_rir,"rest_seconds":a.rest_seconds,"rest_text":a.rest_text,"rir_by_set":a.rir_by_set})
+    alts_b=normalize_program_alternatives(b.alternatives_json,{"sets":b.sets,"reps":b.reps,"target_rir":b.target_rir,"rest_seconds":b.rest_seconds,"rest_text":b.rest_text,"rir_by_set":b.rir_by_set})
+    with con() as c:
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(a.client_id,))
+        next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(a.client_id,day_a)).fetchone()["n"])
+        first=c.execute("""INSERT INTO program(
+            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,'',0,%s,%s,%s,%s,%s) RETURNING id""",
+            (a.client_id,day_a,ex_a,a.sets,a.reps.strip() or "8-12",a.target_rir,next_sort,
+             tech_a,a.rest_seconds,a.rest_text.strip(),a.rir_by_set.strip(),alts_a)).fetchone()
+        group=f"SS{first['id']}"
+        c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(group,first["id"]))
+        second=c.execute("""INSERT INTO program(
+            client_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,1,%s,%s,%s,%s,%s) RETURNING id""",
+            (b.client_id,day_b,ex_b,b.sets,b.reps.strip() or "8-12",b.target_rir,next_sort+1,
+             group,tech_b,b.rest_seconds,b.rest_text.strip(),b.rir_by_set.strip(),alts_b)).fetchone()
+        c.commit()
+    return {"ok":True,"ids":[first["id"],second["id"]],"superset_group":group}
+
 @app.put("/api/program/{pid}")
 def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     p=owned_record(user,"program",pid)
