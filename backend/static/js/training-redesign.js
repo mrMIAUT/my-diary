@@ -12,8 +12,8 @@ async function switchClientTrainingTab(key){
   if(session?.role==='client'&&session.client_id)await showClientTraining(session.client_id);
 }
 
-function redesignTrainingExerciseRow(x,num,inSuperset=false){
-  let rest=restLabel(x),rir=rirPlan(x).join(' / '),alts=exerciseAlternativeConfigs(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url);
+function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
+  let rest=showRest?restLabel(x):'',rir=rirPlan(x).join(' / '),alts=exerciseAlternativeConfigs(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url);
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
     +'<span>'+num+'</span>'
     +'<div class="redesign-training-exercise-copy">'
@@ -38,9 +38,10 @@ function redesignTrainingExerciseList(xs){
         .slice()
         .sort(function(a,b){return (+a.superset_order||0)-(+b.superset_order||0)||xs.indexOf(a)-xs.indexOf(b);});
       pair.forEach(function(y){used.add(y.id);});
+      let superRest=supersetRestLabel(pair);
       html+='<div class="redesign-training-superset">'
-        +'<div class="redesign-training-superset-label"><span>Суперсет</span><small>виконати вправи по черзі</small></div>'
-        +pair.map(function(y){return redesignTrainingExerciseRow(y,xs.indexOf(y)+1,true);}).join('')
+        +'<div class="redesign-training-superset-label"><span>Суперсет</span><small>виконати вправи по черзі'+(superRest?' · Відпочинок '+esc(superRest):'')+'</small></div>'
+        +pair.map(function(y){return redesignTrainingExerciseRow(y,xs.indexOf(y)+1,true,false);}).join('')
       +'</div>';
     }else{
       used.add(x.id);
