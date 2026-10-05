@@ -224,11 +224,11 @@ function progressWorkoutDetailHTML(d,sid){
  let exercises=data.exercises.length?data.exercises.map(x=>{
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
    let warm=(x.aux||[]).filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
-   let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(a.reps)+'</span>').join('')+'</div>':'';
+   let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||x.sets[0]?.repeat_mode))+'</span>').join('')+'</div>':'';
    let setsHTML=x.sets.map(set=>{
      let drops=(x.aux||[]).filter(a=>a.kind==='drop'&&+a.parent_set_number===+set.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
      return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(repeatResultText(set.reps,set.repeat_mode))+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>'
-       +drops.map((a,i)=>'<div class="progress-workout-drop"><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(a.weight)+' кг × '+esc(a.reps)+'</strong></div>').join('')+'</div>';
+       +drops.map((a,i)=>'<div class="progress-workout-drop"><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(a.weight)+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||set.repeat_mode))+'</strong></div>').join('')+'</div>';
    }).join('');
    return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div>'+warmHTML+'<div class="progress-workout-sets">'+setsHTML+'</div></div>';
  }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
