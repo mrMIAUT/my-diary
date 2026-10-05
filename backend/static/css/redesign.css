@@ -10651,6 +10651,31 @@ body.eplan-redesign.trainer-ui .trainer-review-exercise-head{display:flex!import
 body.eplan-redesign.trainer-ui .trainer-review-exercise-head strong{color:#0a1738!important;font-size:13px!important;font-weight:900!important}
 body.eplan-redesign.trainer-ui .trainer-review-exercise-head span{color:#8592a6!important;font-size:9.5px!important;font-weight:800!important;white-space:nowrap!important}
 body.eplan-redesign.trainer-ui .trainer-review-sets{display:grid!important;gap:6px!important;margin-top:9px!important}
+body.eplan-redesign.trainer-ui .trainer-review-aux{
+  display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important;
+  margin:8px 0 0!important;padding:7px 9px!important;border:1px solid #e0e7f0!important;
+  border-radius:10px!important;background:#f8fafc!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-aux small{
+  color:#7d899b!important;font-size:8.5px!important;font-weight:900!important;margin-right:2px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-aux span{
+  padding:3px 6px!important;border-radius:7px!important;background:#fff!important;color:#53647d!important;
+  font-size:9px!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-drop-list{
+  display:grid!important;gap:3px!important;margin:4px 0 0 18px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-drop-list>div{
+  display:grid!important;grid-template-columns:70px minmax(0,1fr)!important;gap:7px!important;align-items:center!important;
+  padding:4px 8px!important;border-left:2px solid #d9e3ee!important;border-radius:0 8px 8px 0!important;background:#fafbfd!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-drop-list span{
+  color:#8491a4!important;font-size:8.5px!important;font-weight:800!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-drop-list strong{
+  color:#53647d!important;font-size:9.5px!important;font-weight:850!important;
+}
 body.eplan-redesign.trainer-ui .trainer-review-sets>div{
   display:grid!important;grid-template-columns:70px minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;padding:8px 9px!important;
   border-radius:10px!important;background:#f6f8fb!important;
