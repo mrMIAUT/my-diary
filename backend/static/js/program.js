@@ -452,4 +452,23 @@ async function saveSupersetExercise(sourceId,dayName,button=null){
 }
 
 
-async function deleteExercise(id){if(confirm('Видалити вправу?')){await api('/program/'+id,{method:'DELETE'});openClient(selected)}}
+async function deleteExercise(id){
+ if(!confirm('Видалити вправу?'))return;
+ let d=window.currentClientData||{},item=(d.program||[]).find(x=>+x.id===+id);
+ let dayName=item?.day_name||'',cid=d.client?.id||selected;
+ try{
+   await api('/program/'+id,{method:'DELETE'});
+   let fresh=await loadClientData(cid);
+   window.currentClientData=fresh;
+   let pane=document.getElementById('program');
+   if(pane){
+     pane.innerHTML=trainerTrainingTabHTML(fresh);
+     if(dayName)reopenTrainerProgramDay(dayName);
+   }else{
+     await openClient(cid,'program');
+     if(dayName)setTimeout(()=>reopenTrainerProgramDay(dayName),30);
+   }
+ }catch(e){
+   alert(e.message||'Не вдалося видалити вправу');
+ }
+}
