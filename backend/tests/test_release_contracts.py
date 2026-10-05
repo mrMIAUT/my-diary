@@ -256,8 +256,13 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("superset_with_id:int=Field(default=0,ge=0)", APP)
         self.assertIn("COALESCE(MAX(sort),0)+1 AS n", APP)
         self.assertIn("superset_group=f\"SS{source['id']}\"", APP)
-        self.assertIn("superset_with_id:supersetWith", PROGRAM)
-        self.assertIn("refreshNewExerciseSupersetOptions", PROGRAM)
+        self.assertIn("ProgramSupersetPairIn", APP)
+        self.assertIn('@app.post("/api/program/superset-pair")', APP)
+        self.assertIn("toggleNewExerciseSupersetBuilder", PROGRAM)
+        self.assertIn("programSupersetAlternativesEditor", PROGRAM)
+        self.assertIn("api('/program/superset-pair'", PROGRAM)
+        self.assertNotIn("refreshNewExerciseSupersetOptions", PROGRAM)
+        self.assertNotIn('id="supersetwith"', PROGRAM)
         self.assertIn("superset_with_id:sourceId", PROGRAM)
 
     def test_superset_rest_is_rendered_once(self):
