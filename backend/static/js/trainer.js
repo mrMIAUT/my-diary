@@ -249,16 +249,16 @@ function programTemplateAlternativesEditorHTML(item,di,ii){
   let xs=programTemplateAlternatives(item);
   let rows=xs.map((value,ai)=>{
     let inputId='templateAlternative_'+di+'_'+ii+'_'+ai;
-    return '<div class="trainer-template-alternative-row">'
-      +'<input id="'+inputId+'" list="programTemplateExerciseLibraryNames" value="'+esc(value)+'" placeholder="Альтернативна вправа" oninput="updateProgramTemplateAlternative('+di+','+ii+','+ai+',this.value)">'
-      +'<button type="button" class="dark trainer-template-alternative-pick" onclick="openProgramExercisePicker(\''+inputId+'\')">З бібліотеки</button>'
-      +'<button type="button" class="dark trainer-template-alternative-remove" aria-label="Видалити альтернативу" onclick="removeProgramTemplateAlternative('+di+','+ii+','+ai+')">✕</button>'
+    return '<div class="trainer-program-alternative-row trainer-template-alternative-row">'
+      +'<input id="'+inputId+'" class="trainer-program-alternative-input" list="programTemplateExerciseLibraryNames" value="'+esc(value)+'" placeholder="Введіть вправу або оберіть з бібліотеки" oninput="updateProgramTemplateAlternative('+di+','+ii+','+ai+',this.value)">'
+      +'<button type="button" class="trainer-program-alternative-pick trainer-template-alternative-pick" onclick="openProgramExercisePicker(\''+inputId+'\')">Обрати з бібліотеки</button>'
+      +'<button type="button" class="trainer-program-alternative-remove trainer-template-alternative-remove" aria-label="Видалити альтернативу" onclick="removeProgramTemplateAlternative('+di+','+ii+','+ai+')">✕</button>'
     +'</div>';
   }).join('');
-  return '<div class="trainer-template-alternatives">'
-    +'<div class="trainer-template-alternatives-head"><span>Альтернативи</span><small>Кожна вправа додається окремо</small></div>'
-    +(rows||'<div class="trainer-template-alternatives-empty">Альтернатив ще немає.</div>')
-    +'<button type="button" class="trainer-template-alternative-add" onclick="addProgramTemplateAlternative('+di+','+ii+')">＋ Додати альтернативу</button>'
+  return '<div class="trainer-program-alternatives-block trainer-template-alternatives">'
+    +'<div class="trainer-program-alternatives-title trainer-template-alternatives-head"><span>Альтернативи</span><small>Можна обрати з бібліотеки або ввести вручну</small></div>'
+    +'<div class="trainer-program-alternatives-editor">'+(rows||'<div class="trainer-template-alternatives-empty">Альтернатив ще немає.</div>')+'</div>'
+    +'<button type="button" class="trainer-program-alternative-add trainer-template-alternative-add" onclick="addProgramTemplateAlternative('+di+','+ii+')">＋ Додати альтернативу</button>'
   +'</div>';
 }
 
@@ -271,10 +271,10 @@ function trainerTemplateEditorItemHTML(item,di,ii){
       +'<button type="button" class="dark" '+(canDown?'':'disabled')+' onclick="moveProgramTemplateItem('+di+','+ii+',1)">↓</button>'
       +'<button type="button" class="dark danger-soft" onclick="removeProgramTemplateItem('+di+','+ii+')">Видалити</button>'
     +'</div></div>'
-    +'<div class="trainer-template-editor-exercise">'
-      +'<input id="'+exerciseId+'" list="programTemplateExerciseLibraryNames" value="'+esc(item.exercise)+'" placeholder="Назва вправи" oninput="updateProgramTemplateItem('+di+','+ii+',\'exercise\',this.value)">'
-      +'<button type="button" class="dark" onclick="openProgramExercisePicker(\''+exerciseId+'\')">З бібліотеки</button>'
-    +'</div>'
+    +'<label class="trainer-template-editor-main-exercise"><span>Вправа</span><div class="trainer-program-exercise-field trainer-template-editor-exercise">'
+      +'<input id="'+exerciseId+'" list="programTemplateExerciseLibraryNames" value="'+esc(item.exercise)+'" placeholder="Оберіть або введіть вправу" oninput="updateProgramTemplateItem('+di+','+ii+',\'exercise\',this.value)">'
+      +'<button type="button" onclick="openProgramExercisePicker(\''+exerciseId+'\')">Обрати з бібліотеки</button>'
+    +'</div></label>'
     +'<div class="trainer-template-editor-grid">'
       +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(item.sets))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'sets\',this.value)"></label>'
       +'<label><span>Повтори</span><input value="'+esc(item.reps)+'" placeholder="8-12" oninput="updateProgramTemplateItem('+di+','+ii+',\'reps\',this.value)"></label>'
