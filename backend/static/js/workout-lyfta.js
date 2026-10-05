@@ -77,7 +77,9 @@ async function lyftaCompleteSet(pid,n,total,restSeconds,btn){
   let sid=workoutDraftSessionId(window.currentClientData||{});
   if(sid)saveWorkoutDraft(sid,pid,n,'done',true);
   if(restSeconds>0){
-    let tracking=n<total?{sid,pid,set_number:n}:false;
+    // Track rest after every completed set, including the final set.
+    // saveSets() finalizes the running timer before persisting the exercise.
+    let tracking={sid,pid,set_number:n};
     await startRestTimer(restSeconds,null,tracking);
   }
 }
