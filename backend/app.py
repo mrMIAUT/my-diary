@@ -1081,6 +1081,29 @@ class ProgramTemplateCreateIn(BaseModel):
     source_client_id:int
     name:str=Field(min_length=1,max_length=160)
     description:str=Field(default="",max_length=1000)
+class ProgramTemplateDaySaveIn(BaseModel):
+    day_name:str=Field(min_length=1,max_length=128)
+    title:str=Field(default="",max_length=255)
+    sort:int=Field(default=0,ge=0,le=10000)
+class ProgramTemplateItemSaveIn(BaseModel):
+    day_name:str=Field(min_length=1,max_length=128)
+    exercise:str=Field(min_length=1,max_length=255)
+    sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT)
+    reps:str=Field(default="8-12",max_length=64)
+    target_rir:int=Field(default=2,ge=0,le=MAX_RIR)
+    sort:int=Field(default=0,ge=0,le=10000)
+    superset_group:str=Field(default="",max_length=64)
+    superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT)
+    technique_url:str=Field(default="",max_length=2048)
+    rest_seconds:int=Field(default=0,ge=0,le=3600)
+    rest_text:str=Field(default="",max_length=1000)
+    rir_by_set:str=Field(default="",max_length=512)
+    alternatives_json:str=Field(default="[]",max_length=65536)
+class ProgramTemplateSaveIn(BaseModel):
+    name:str=Field(min_length=1,max_length=160)
+    description:str=Field(default="",max_length=1000)
+    days:List[ProgramTemplateDaySaveIn]=Field(min_length=1,max_length=30)
+    items:List[ProgramTemplateItemSaveIn]=Field(min_length=1,max_length=500)
 class ProgramTemplateApplyIn(BaseModel):
     client_id:int
 class TrainerRequestIn(BaseModel):
