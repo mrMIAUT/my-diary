@@ -11442,6 +11442,22 @@ body.eplan-redesign.trainer-ui .trainer-review-set-previous{
 body.eplan-redesign.trainer-ui .trainer-review-set-previous span{font-weight:750!important}
 body.eplan-redesign.trainer-ui .trainer-review-set-previous strong{color:#53647d!important;font-size:9.5px!important;font-weight:850!important}
 body.eplan-redesign.trainer-ui .trainer-review-set-previous small{margin-left:auto!important;color:#8b98aa!important;font-size:8.5px!important}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta{
+  display:grid!important;justify-items:end!important;gap:1px!important;min-width:48px!important;line-height:1.15!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta .trainer-review-rir{
+  color:#718099!important;font-size:9.5px!important;font-weight:850!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta .trainer-review-rest{
+  color:#5f708a!important;font-size:9px!important;font-weight:800!important;white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous{
+  display:inline-flex!important;align-items:center!important;gap:6px!important;min-width:0!important;margin-left:2px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-rir,
+body.eplan-redesign.trainer-ui .trainer-review-set-meta.previous .trainer-review-rest{
+  font-size:8.8px!important;
+}
 
 /* Day volume inside selected calendar date */
 body.eplan-redesign.trainer-ui .trainer-calendar-day-volume{
