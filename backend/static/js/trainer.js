@@ -241,22 +241,35 @@ function programTemplateEditorLibraryOptions(){
 function programTemplateAlternatives(item){
   try{
     let xs=JSON.parse(item?.alternatives_json||'[]');
-    return Array.isArray(xs)?xs.map(x=>String(x||'').trim()):[];
+    return Array.isArray(xs)?xs.map(x=>normalizeProgramAlternative(x,item||{})):[];
   }catch(e){return []}
+}
+
+function setProgramTemplateAlternatives(item,xs){
+  if(!item)return;
+  item.alternatives_json=JSON.stringify((xs||[]).map(x=>normalizeProgramAlternative(x,item)).filter(x=>x.exercise));
 }
 
 function programTemplateAlternativesEditorHTML(item,di,ii){
   let xs=programTemplateAlternatives(item);
   let rows=xs.map((value,ai)=>{
     let inputId='templateAlternative_'+di+'_'+ii+'_'+ai;
-    return '<div class="trainer-program-alternative-row trainer-template-alternative-row">'
-      +'<input id="'+inputId+'" class="trainer-program-alternative-input" list="programTemplateExerciseLibraryNames" value="'+esc(value)+'" placeholder="Введіть вправу або оберіть з бібліотеки" oninput="updateProgramTemplateAlternative('+di+','+ii+','+ai+',this.value)">'
-      +'<button type="button" class="trainer-program-alternative-pick trainer-template-alternative-pick" onclick="openProgramExercisePicker(\''+inputId+'\')">Обрати з бібліотеки</button>'
-      +'<button type="button" class="trainer-program-alternative-remove trainer-template-alternative-remove" aria-label="Видалити альтернативу" onclick="removeProgramTemplateAlternative('+di+','+ii+','+ai+')">✕</button>'
+    return '<div class="trainer-program-alternative-card trainer-program-alternative-row trainer-template-alternative-row">'
+      +'<div class="trainer-program-alternative-main">'
+        +'<input id="'+inputId+'" class="trainer-program-alternative-input" list="programTemplateExerciseLibraryNames" value="'+esc(value.exercise)+'" placeholder="Введіть вправу або оберіть з бібліотеки" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'exercise\',this.value)">'
+        +'<button type="button" class="trainer-program-alternative-pick trainer-template-alternative-pick" onclick="openProgramExercisePicker(\''+inputId+'\')">Обрати з бібліотеки</button>'
+        +'<button type="button" class="trainer-program-alternative-remove trainer-template-alternative-remove" aria-label="Видалити альтернативу" onclick="removeProgramTemplateAlternative('+di+','+ii+','+ai+')">✕</button>'
+      +'</div>'
+      +'<div class="trainer-program-alternative-params">'
+        +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(value.sets))+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'sets\',this.value)"></label>'
+        +'<label><span>Повтори</span><input value="'+esc(value.reps)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'reps\',this.value)"></label>'
+        +'<label><span>RIR по підходах</span><input value="'+esc(value.rir_by_set)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rir_by_set\',this.value)"></label>'
+        +'<label><span>Відпочинок</span><input value="'+esc(value.rest_text)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rest_text\',this.value)"></label>'
+      +'</div>'
     +'</div>';
   }).join('');
   return '<div class="trainer-program-alternatives-block trainer-template-alternatives">'
-    +'<div class="trainer-program-alternatives-title trainer-template-alternatives-head"><span>Альтернативи</span><small>Можна обрати з бібліотеки або ввести вручну</small></div>'
+    +'<div class="trainer-program-alternatives-title trainer-template-alternatives-head"><span>Альтернативи</span><small>Для кожної можна задати окремі підходи, повтори, RIR і відпочинок</small></div>'
     +'<div class="trainer-program-alternatives-editor">'+(rows||'<div class="trainer-template-alternatives-empty">Альтернатив ще немає.</div>')+'</div>'
     +'<button type="button" class="trainer-program-alternative-add trainer-template-alternative-add" onclick="addProgramTemplateAlternative('+di+','+ii+')">＋ Додати альтернативу</button>'
   +'</div>';
@@ -335,21 +348,24 @@ function updateProgramTemplateItem(di,ii,field,value){
   if(['sets','target_rir','rest_seconds','superset_order'].includes(field))item[field]=+value||0;
   else item[field]=value;
 }
-function setProgramTemplateAlternatives(item,xs){
-  if(!item)return;
-  item.alternatives_json=JSON.stringify((xs||[]).map(x=>String(x||'').trim()));
-}
-function updateProgramTemplateAlternative(di,ii,ai,value){
+function updateProgramTemplateAlternativeField(di,ii,ai,field,value){
   let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
   let xs=programTemplateAlternatives(item);
-  while(xs.length<=ai)xs.push('');
-  xs[ai]=String(value||'');
+  while(xs.length<=ai)xs.push(normalizeProgramAlternative('',item));
+  let alt=xs[ai];
+  if(field==='sets')alt.sets=Math.max(1,+value||1);
+  else if(field==='target_rir')alt.target_rir=Math.max(0,+value||0);
+  else alt[field]=String(value??'');
+  if(field==='rir_by_set'){
+    let first=String(value||'').split(',').map(x=>x.trim()).find(Boolean);
+    if(first!==undefined&&Number.isFinite(+first))alt.target_rir=Math.max(0,Math.min(10,+first));
+  }
   setProgramTemplateAlternatives(item,xs);
 }
 function addProgramTemplateAlternative(di,ii){
   let st=programTemplateEditorState(),item=st?.days?.[di]?.items?.[ii];if(!item)return;
   let xs=programTemplateAlternatives(item);
-  xs.push('');
+  xs.push(normalizeProgramAlternative('',item));
   item.alternatives_json=JSON.stringify(xs);
   renderProgramTemplateEditor();
   setTimeout(()=>document.getElementById('templateAlternative_'+di+'_'+ii+'_'+(xs.length-1))?.focus(),30);
@@ -424,7 +440,7 @@ function programTemplateEditorPayload(nameOverride=''){
         rest_seconds:Math.max(0,+item.rest_seconds||0),
         rest_text:String(item.rest_text||'').trim(),
         rir_by_set:String(item.rir_by_set||'').trim(),
-        alternatives_json:JSON.stringify(programTemplateAlternatives(item).filter(Boolean))
+        alternatives_json:JSON.stringify(programTemplateAlternatives(item).filter(x=>x.exercise))
       });
     }
   }
