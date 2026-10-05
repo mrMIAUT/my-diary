@@ -9,8 +9,7 @@ function lyftaHistoryExerciseName(d,pid){
 
 function lyftaHistoryRows(d,pid,exerciseName=''){
   let name=String(exerciseName||lyftaHistoryExerciseName(d,pid)||'').trim();
-  return (d?.result_sets||[])
-    .filter(s=>+s.program_id===+pid && s.day && (!name||String(s.exercise||'').trim()===name))
+  return workoutHistoryRows(d,pid,name)
     .slice()
     .sort((a,b)=>a.day.localeCompare(b.day)||(+a.set_number||0)-(+b.set_number||0));
 }

@@ -1,8 +1,32 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
 
-function exerciseHistoryDates(d,pid){
- return [...new Set((d.result_sets||[]).filter(r=>r.program_id===pid).map(r=>r.day))].sort();
+function workoutHistoryNameKey(value){
+ return String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('uk-UA');
+}
+
+function workoutHistoryExerciseName(d,pid,exerciseName=''){
+ let explicit=String(exerciseName||'').trim();
+ if(explicit)return explicit;
+ let x=(d?.program||[]).find(v=>+v.id===+pid);
+ return x?workoutExerciseName(x):'';
+}
+
+function workoutHistoryRows(d,pid,exerciseName=''){
+ let name=workoutHistoryExerciseName(d,pid,exerciseName),nameKey=workoutHistoryNameKey(name);
+ return (d?.result_sets||[]).filter(r=>{
+   if(!r?.day)return false;
+   let rowKey=workoutHistoryNameKey(r.exercise);
+   // Exercise identity is the performed exercise name, not the current program row id.
+   // This keeps history when a trainer replaces a program and the same exercise is assigned again.
+   if(nameKey&&rowKey)return rowKey===nameKey;
+   // Legacy rows without a saved exercise name keep the old program-id fallback.
+   return +r.program_id===+pid;
+ });
+}
+
+function exerciseHistoryDates(d,pid,exerciseName=''){
+ return [...new Set(workoutHistoryRows(d,pid,exerciseName).map(r=>r.day))].sort();
 }
 
 function workoutDataDay(d){
@@ -12,13 +36,13 @@ function workoutDataDay(d){
 }
 
 function previousExerciseHTML(d,pid){
- let dates=exerciseHistoryDates(d,pid).filter(day=>day<workoutDataDay(d));
+ let history=workoutHistoryRows(d,pid),dates=[...new Set(history.map(r=>r.day))].sort().filter(day=>day<workoutDataDay(d));
  if(!dates.length)return '<div class="muted" style="margin-top:10px">Попередніх результатів ще немає.</div>';
 
  let latest=dates[dates.length-1];
  let previous=dates.length>1?dates[dates.length-2]:null;
- let cur=(d.result_sets||[]).filter(r=>r.program_id===pid&&r.day===latest).sort((a,b)=>a.set_number-b.set_number);
- let prev=previous?(d.result_sets||[]).filter(r=>r.program_id===pid&&r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
+ let cur=history.filter(r=>r.day===latest).sort((a,b)=>a.set_number-b.set_number);
+ let prev=previous?history.filter(r=>r.day===previous).sort((a,b)=>a.set_number-b.set_number):[];
 
  return `<div class="exercise" style="margin-top:12px">
    <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
@@ -35,11 +59,11 @@ function previousExerciseHTML(d,pid){
 }
 
 function completedComparisonHTML(x,d){
- let dates=exerciseHistoryDates(d,x.id);
+ let history=workoutHistoryRows(d,x.id,workoutExerciseName(x)),dates=[...new Set(history.map(r=>r.day))].sort();
  if(dates.length<2)return '';
  let currentDay=dates[dates.length-1],previousDay=dates[dates.length-2];
- let cur=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
- let prev=(d.result_sets||[]).filter(r=>r.program_id===x.id&&r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
+ let cur=history.filter(r=>r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
+ let prev=history.filter(r=>r.day===previousDay).sort((a,b)=>a.set_number-b.set_number);
  return `<div class="exercise" style="margin-top:12px"><strong>Порівняння з ${esc(previousDay)}</strong>${cur.map(s=>{
    let p=prev.find(z=>z.set_number===s.set_number);if(!p)return '';
    return `<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}${+s.rest_seconds>0||+p.rest_seconds>0?` · відпочинок ${+p.rest_seconds>0?formatSetRest(p.rest_seconds):'—'} → ${+s.rest_seconds>0?formatSetRest(s.rest_seconds):'—'}`:''}</div>`;
