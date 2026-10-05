@@ -124,6 +124,7 @@ function lyftaShouldSuggestProgression(x,d,prevSets=[]){
     let p=prevSets.find(v=>+v.set_number===n);
     if(!p)return false;
     let target=targets[n-1]??targets[targets.length-1]??(+x?.target_rir||0);
+    if(!(+p.weight>0))return false;
     if((+p.reps||0)<upper)return false;
     if(Number.isFinite(+target)&&(+p.rir||0)<+target)return false;
   }
