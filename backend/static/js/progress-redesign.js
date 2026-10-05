@@ -142,8 +142,9 @@ function progressWorkoutData(d,sid){
  sets.forEach(x=>{let key=String(+x.program_id||0)+'::'+String(x.exercise||'');(groups[key]||(groups[key]=[])).push(x)});
  let exercises=Object.values(groups).map(xs=>{
    xs=xs.slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
-   let pid=+xs[0].program_id||0;
-   return {pid,name:xs[0].exercise||planned.get(pid)||'Вправа',planned:planned.get(pid)||'',sets:xs,order:order.has(pid)?order.get(pid):999};
+   let pid=+xs[0].program_id||0,name=xs[0].exercise||planned.get(pid)||'Вправа';
+   let aux=(d.aux_sets||[]).filter(a=>a.day===day&&(+a.program_id===pid||String(a.exercise||'').trim().toLocaleLowerCase('uk-UA')===String(name||'').trim().toLocaleLowerCase('uk-UA')));
+   return {pid,name,planned:planned.get(pid)||'',sets:xs,aux,order:order.has(pid)?order.get(pid):999};
  }).sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name,'uk'));
  return {workout,day,exercises};
 }
@@ -219,7 +220,14 @@ function progressWorkoutDetailHTML(d,sid){
  let review=s.trainer_reviewed?'<div class="calendar-review-done"><strong>Перевірено тренером ✓</strong>'+(s.trainer_comment?'<div>'+esc(s.trainer_comment)+'</div>':'')+'</div>':'';
  let exercises=data.exercises.length?data.exercises.map(x=>{
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
-   return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+x.sets.map(set=>'<div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(set.reps)+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>').join('')+'</div></div>';
+   let warm=(x.aux||[]).filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
+   let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(a.reps)+'</span>').join('')+'</div>':'';
+   let setsHTML=x.sets.map(set=>{
+     let drops=(x.aux||[]).filter(a=>a.kind==='drop'&&+a.parent_set_number===+set.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
+     return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(set.reps)+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>'
+       +drops.map((a,i)=>'<div class="progress-workout-drop"><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(a.weight)+' кг × '+esc(a.reps)+'</strong></div>').join('')+'</div>';
+   }).join('');
+   return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div>'+warmHTML+'<div class="progress-workout-sets">'+setsHTML+'</div></div>';
  }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
  return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
 }
