@@ -2029,14 +2029,14 @@ def write_program_template_payload(db,template_id:int,x:ProgramTemplateSaveIn):
         exercise=item.exercise.strip()
         if day not in day_names: raise HTTPException(400,"Вправа прив'язана до невідомого дня")
         if not exercise: raise HTTPException(400,"Назва вправи не може бути порожньою")
-        alternatives=(item.alternatives_json or "[]").strip() or "[]"
-        try:
-            parsed=json.loads(alternatives)
-        except Exception:
-            raise HTTPException(400,"Некоректний список альтернативних вправ")
-        if not isinstance(parsed,list) or any(not isinstance(v,str) for v in parsed):
-            raise HTTPException(400,"Некоректний список альтернативних вправ")
-        alternatives=json.dumps([v.strip() for v in parsed if v.strip()],ensure_ascii=False)
+        alternatives=normalize_program_alternatives(item.alternatives_json,{
+            "sets":item.sets,
+            "reps":item.reps,
+            "target_rir":item.target_rir,
+            "rest_seconds":item.rest_seconds,
+            "rest_text":item.rest_text,
+            "rir_by_set":item.rir_by_set,
+        })
         normalized_items.append((day,exercise,item,alternatives))
     if not normalized_items: raise HTTPException(400,"Шаблон має містити хоча б одну вправу")
     used_days={row[0] for row in normalized_items}
