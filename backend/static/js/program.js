@@ -372,7 +372,7 @@ function programHTML(d){
      </div>
    </div>
    <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
-   <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">＋ Додати вправу</button>
+   <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">Зберегти вправу</button>
  </div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
@@ -429,7 +429,7 @@ function toggleNewExerciseSupersetBuilder(force=null){
  let show=force===null?host.classList.contains('hidden'):!!force,save=document.querySelector('.trainer-program-editor>.trainer-program-add');
  host.classList.toggle('hidden',!show);
  if(btn){btn.classList.toggle('active',show);btn.textContent=show?'✓ Суперсет':'＋ Додати суперсет'}
- if(save)save.textContent=show?'＋ Додати суперсет':'＋ Додати вправу';
+ if(save)save.textContent=show?'Зберегти суперсет':'Зберегти вправу';
  if(show)setTimeout(()=>document.getElementById('ssInlineEx')?.focus(),30);
 }
 
@@ -546,7 +546,7 @@ async function addExercise(button=null){
 
 function addSupersetExercise(sourceId,dayName){
  document.getElementById('supersetModal')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">＋ Додати в суперсет</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">Зберегти вправу</button></div></div>`);
  setTimeout(()=>document.getElementById('ssex')?.focus(),30);
 }
 
