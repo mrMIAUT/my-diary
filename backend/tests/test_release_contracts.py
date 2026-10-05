@@ -9,6 +9,7 @@ CORE = (ROOT / "backend" / "static" / "js" / "core.js").read_text(encoding="utf-
 TRAINER = (ROOT / "backend" / "static" / "js" / "trainer.js").read_text(encoding="utf-8")
 PROGRAM = (ROOT / "backend" / "static" / "js" / "program.js").read_text(encoding="utf-8")
 WORKOUT = (ROOT / "backend" / "static" / "js" / "workout.js").read_text(encoding="utf-8")
+RESULTS = (ROOT / "backend" / "static" / "js" / "results.js").read_text(encoding="utf-8")
 TRAINING_REDESIGN = (ROOT / "backend" / "static" / "js" / "training-redesign.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
@@ -245,6 +246,11 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("function workoutEffectiveExercise", WORKOUT)
         self.assertIn("workoutChoiceSummary", WORKOUT)
         self.assertIn("updateProgramTemplateAlternativeField", TRAINER)
+
+    def test_review_link_switches_to_training_tab(self):
+        self.assertIn("function focusTrainerPendingSession", RESULTS)
+        self.assertIn("showTrainerClientTab('program',programBtn,false)", RESULTS)
+        self.assertIn('trainerPendingReviewQueue .trainer-review-card[data-session="', RESULTS)
 
     def test_program_superset_creation_and_append_order(self):
         self.assertIn("superset_with_id:int=Field(default=0,ge=0)", APP)
