@@ -232,11 +232,14 @@ function openTrainerWorkoutCalendar(day,sid=0){
 }
 
 function focusTrainerPendingSession(sid){
- let card=document.querySelector('#trainerPendingReviewQueue .trainer-review-card[data-session="'+(+sid||0)+'"]');
+ let id=+sid||0;
+ let programBtn=document.querySelector('.trainer-client-tabs [data-tab="program"]');
+ if(programBtn)showTrainerClientTab('program',programBtn,false);
+ let card=document.querySelector('#trainerPendingReviewQueue .trainer-review-card[data-session="'+id+'"]');
  if(!card)return;
  let btn=card.querySelector('.trainer-review-toggle'),body=card.querySelector('.trainer-review-detail');
  if(body?.classList.contains('hidden')&&btn)toggleTrainerPendingReview(btn);
- setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'center'}),40);
+ requestAnimationFrame(()=>setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'center'}),40));
 }
 
 function trainerTrainingTabHTML(d){
