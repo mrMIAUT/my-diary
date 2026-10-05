@@ -87,16 +87,17 @@ function redesignTrainingProgramHTML(d,cid,groups){
   let completed=Math.min(days.length,cycle.done.length),pct=days.length?Math.round(completed/days.length*100):0;
   return '<div class="redesign-training-overview">'+(todayBannerDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayBannerDay)+' виконано'+(todayDuration!==undefined&&todayDuration!==null?' · ⏱ '+esc(formatWorkoutDuration(todayDuration)):'')+'. Наступне тренування — за планом.</small></div></div>':'')
     +'<div class="redesign-training-summary"><div><span>Поточний цикл</span><strong>'+completed+' з '+days.length+'</strong></div><div class="redesign-training-cycle"><i style="width:'+pct+'%"></i></div><b>'+pct+'%</b></div>'
-    +'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle,todayCompletedDay)}).join('')+'</div>'
     +'<div class="redesign-training-help">'
-      +'<button onclick="toggleClientPanel(\'trainingRulesBody\',this)"><span class="client-home-today-icon">'+uiIcon('run')+'</span><span><strong>Розминка та правила</strong><small>RIR, робочі підходи, суперсети</small></span><span class="redesign-training-rule-chevron">⌄</span></button>'
+      +'<button onclick="toggleClientPanel(\'trainingRulesBody\',this)"><span class="client-home-today-icon">'+uiIcon('run')+'</span><span><strong>Розминка та правила</strong><small>RIR, підходи, дроп-сети, суперсети</small></span><span class="redesign-training-rule-chevron">⌄</span></button>'
       +'<div id="trainingRulesBody" class="hidden redesign-training-help-body">'
-        +'<div class="redesign-rule-item"><b>1</b><div><strong>Розминка</strong><p>Перед тренуванням виконуємо загальну розминку. Перед вправами за потреби додаємо розминочні підходи.</p></div></div>'
-        +'<div class="redesign-rule-item"><b>2</b><div><strong>Робочі підходи</strong><p>У програму вносимо тільки робочі підходи. Розминочні підходи записувати не потрібно.</p></div></div>'
+        +'<div class="redesign-rule-item"><b>1</b><div><strong>Розминка</strong><p>Перед тренуванням виконуємо загальну розминку. Перед вправами за потреби робимо розминочні підходи, поступово підводячись до робочої ваги.</p></div></div>'
+        +'<div class="redesign-rule-item"><b>2</b><div><strong>Робочі підходи</strong><p>У програмі вказані робочі підходи. Розминочні підходи можна вносити за бажанням — вони не враховуються як робочі та не впливають на прогресію.</p></div></div>'
         +'<div class="redesign-rule-item"><b>3</b><div><strong>RIR</strong><p>Показує, скільки повторів залишилося б у запасі до відмови. RIR 2 — приблизно ще 2 повтори.</p></div></div>'
-        +'<div class="redesign-rule-item"><b>4</b><div><strong>Суперсет</strong><p>Дві вправи виконуються одна за одною без звичайного відпочинку між ними. Відпочинок — після обох вправ.</p></div></div>'
+        +'<div class="redesign-rule-item"><b>4</b><div><strong>Дроп-сет</strong><p>Після робочого підходу зменшуємо вагу й без звичайного відпочинку продовжуємо вправу. За потреби можна додати кілька дропів.</p></div></div>'
+        +'<div class="redesign-rule-item"><b>5</b><div><strong>Суперсет</strong><p>Дві вправи виконуються одна за одною без звичайного відпочинку між ними. Відпочинок — після обох вправ.</p></div></div>'
       +'</div>'
     +'</div>'
+    +'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle,todayCompletedDay)}).join('')+'</div>'
   +'</div>';
 }
 
