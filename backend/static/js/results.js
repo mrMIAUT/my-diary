@@ -89,7 +89,7 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
      +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
      +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(String(a.reps??0))+'</span>').join('')+'</div>':'')
      +'<div class="trainer-review-sets">'+cur.map(s=>{
-       let p=prev.find(z=>+z.set_number===+s.set_number),deltaHTML='';
+       let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>+z.set_number===+s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode),deltaHTML='';
        if(p){
          let dw=(+s.weight||0)-(+p.weight||0),dr=(+s.reps||0)-(+p.reps||0),deltas=[];
          if(dw!==0)deltas.push('<i class="'+(dw>0?'delta-up':'delta-down')+'">'+(dw>0?'+':'')+fmtProgress(dw)+' кг</i>');
