@@ -10,11 +10,46 @@ function rirPlan(x){
 
 function restLabel(x){let t=String(x.rest_text||'').trim();if(t)return t.replace(/\s*(хв|min|мин)\.?$/i,'')+' хв';let s=+x.rest_seconds||0;if(!s)return '';let m=s/60;return (Number.isInteger(m)?m:m.toFixed(1))+' хв'}
 
+const REPEAT_MODE_OPTIONS=[
+ ['normal','Звичайно'],
+ ['total','Загалом'],
+ ['per_leg','На кожну ногу'],
+ ['per_arm','На кожну руку'],
+ ['per_side','На кожну сторону']
+];
+function normalizeRepeatMode(value){
+ let mode=String(value||'normal').trim();
+ return REPEAT_MODE_OPTIONS.some(x=>x[0]===mode)?mode:'normal';
+}
+function repeatModeLabel(value){
+ let mode=normalizeRepeatMode(value);
+ return (REPEAT_MODE_OPTIONS.find(x=>x[0]===mode)||REPEAT_MODE_OPTIONS[0])[1];
+}
+function repeatModeSuffix(value){
+ let mode=normalizeRepeatMode(value);
+ return mode==='normal'?'':mode==='total'?' загалом':mode==='per_leg'?' на кожну ногу':mode==='per_arm'?' на кожну руку':' на кожну сторону';
+}
+function repeatModeShortLabel(value){
+ let mode=normalizeRepeatMode(value);
+ return mode==='normal'?'':mode==='total'?'загалом':mode==='per_leg'?'на кожну ногу':mode==='per_arm'?'на кожну руку':'на кожну сторону';
+}
+function repeatModeSelectHTML(id,value='normal',cls=''){
+ let current=normalizeRepeatMode(value);
+ return '<select'+(id?' id="'+esc(id)+'"':'')+(cls?' class="'+esc(cls)+'"':'')+'>'+REPEAT_MODE_OPTIONS.map(x=>'<option value="'+x[0]+'"'+(x[0]===current?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>';
+}
+function repeatPlanText(x){
+ return String(x?.reps??'')+repeatModeSuffix(x?.repeat_mode);
+}
+function repeatResultText(value,mode='normal'){
+ return String(value??'')+repeatModeSuffix(mode);
+}
+
 function normalizeProgramAlternative(value,fallback={}){
  let raw=value&&typeof value==='object'&&!Array.isArray(value)?value:{exercise:String(value||'')};
  let exercise=String(raw.exercise||raw.name||'').trim();
  let sets=Math.max(1,+raw.sets||+fallback.sets||3);
  let reps=String(raw.reps??fallback.reps??'8-12').trim()||'8-12';
+ let repeatMode=normalizeRepeatMode(raw.repeat_mode??fallback.repeat_mode??'normal');
  let rirBySet=String(raw.rir_by_set??fallback.rir_by_set??'').trim();
  let target=Number.isFinite(+raw.target_rir)?+raw.target_rir:(Number.isFinite(+fallback.target_rir)?+fallback.target_rir:2);
  if(!rirBySet)rirBySet=Array.from({length:sets},()=>target).join(',');
@@ -24,6 +59,7 @@ function normalizeProgramAlternative(value,fallback={}){
    exercise,
    sets,
    reps,
+   repeat_mode:repeatMode,
    target_rir:Math.max(0,Math.min(10,target)),
    rir_by_set:rirBySet,
    rest_seconds:Math.max(0,+raw.rest_seconds||+fallback.rest_seconds||0),
@@ -64,6 +100,7 @@ function programAlternativeFallbackForContainer(containerId){
    return {
      sets:+document.getElementById('editSets')?.value||3,
      reps:document.getElementById('editReps')?.value||'8-12',
+     repeat_mode:document.getElementById('editRepeatMode')?.value||'normal',
      rir_by_set:document.getElementById('editRirSet')?.value||'2,2,2',
      rest_text:document.getElementById('editRest')?.value||''
    };
@@ -72,6 +109,7 @@ function programAlternativeFallbackForContainer(containerId){
    return {
      sets:+document.getElementById('ssInlineSets')?.value||3,
      reps:document.getElementById('ssInlineReps')?.value||'8-12',
+     repeat_mode:document.getElementById('ssInlineRepeatMode')?.value||'normal',
      rir_by_set:document.getElementById('ssInlineRirSet')?.value||'2,2,2',
      rest_text:document.getElementById('resttext')?.value||'2'
    };
@@ -79,6 +117,7 @@ function programAlternativeFallbackForContainer(containerId){
  return {
    sets:+document.getElementById('st')?.value||3,
    reps:document.getElementById('rp')?.value||'8-12',
+   repeat_mode:document.getElementById('repeatmode')?.value||'normal',
    rir_by_set:document.getElementById('rirset')?.value||'2,2,2',
    rest_text:document.getElementById('resttext')?.value||'2'
  };
@@ -94,6 +133,7 @@ function programAlternativeRowHTML(value='',fallback={}){
    <div class="trainer-program-alternative-params">
      <label><span>Підходи</span><input class="trainer-program-alternative-sets" type="number" min="1" max="100" value="${esc(String(v.sets))}"></label>
      <label><span>Повтори</span><input class="trainer-program-alternative-reps" value="${esc(v.reps)}" placeholder="8-12"></label>
+     <label><span>Як рахувати</span>${repeatModeSelectHTML('',v.repeat_mode,'trainer-program-alternative-repeat-mode')}</label>
      <label><span>RIR по підходах</span><input class="trainer-program-alternative-rir" value="${esc(v.rir_by_set)}" placeholder="2,2,1"></label>
      <label><span>Відпочинок</span><input class="trainer-program-alternative-rest" value="${esc(v.rest_text)}" placeholder="2-3 хв"></label>
    </div>
@@ -128,11 +168,12 @@ function collectProgramAlternatives(containerId,main=''){
    if(!value||key===mainKey||seen.has(key))return;
    let sets=Math.max(1,+row.querySelector('.trainer-program-alternative-sets')?.value||1);
    let reps=String(row.querySelector('.trainer-program-alternative-reps')?.value||'8-12').trim()||'8-12';
+   let repeat_mode=normalizeRepeatMode(row.querySelector('.trainer-program-alternative-repeat-mode')?.value);
    let rir=String(row.querySelector('.trainer-program-alternative-rir')?.value||'').trim();
    let first=rir.split(',').map(v=>v.trim()).find(Boolean),target=first!==undefined&&Number.isFinite(+first)?+first:2;
    let rest=String(row.querySelector('.trainer-program-alternative-rest')?.value||'').trim();
    seen.add(key);
-   out.push({exercise:value,sets,reps,target_rir:Math.max(0,Math.min(10,target)),rir_by_set:rir,rest_seconds:0,rest_text:rest});
+   out.push({exercise:value,sets,reps,repeat_mode,target_rir:Math.max(0,Math.min(10,target)),rir_by_set:rir,rest_seconds:0,rest_text:rest});
  });
  return out;
 }
@@ -142,7 +183,7 @@ function alternativesTrainerHTML(x){
  if(!a.length)return '';
  let html=a.map(v=>{
    let tech=exerciseTechniqueUrl(v.exercise),rest=restLabel(v),rir=rirPlan(v).join(' / ');
-   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-chip-top"><span class="alternative-name">'+esc(v.exercise)+'</span>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small></span>';
+   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-chip-top"><span class="alternative-name">'+esc(v.exercise)+'</span>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span><small>'+v.sets+' × '+esc(repeatPlanText(v))+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small></span>';
  }).join('');
  return '<div class="exercise-alternatives"><strong>Альтернативи</strong><div>'+html+'</div></div>';
 }
