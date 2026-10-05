@@ -16011,3 +16011,31 @@ body.eplan-redesign.client-ui #alternativeExerciseModal .alternative-modal-list>
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+body.eplan-redesign.client-ui .redesign-training-alt-chip.detailed{
+  display:inline-grid!important;
+  grid-template-columns:auto auto!important;
+  grid-template-areas:"name tech" "meta meta"!important;
+  align-items:center!important;
+  gap:2px 7px!important;
+  padding:5px 8px!important;
+  border-radius:11px!important;
+  background:#eef3f8!important;
+  overflow:visible!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip.detailed>i{
+  grid-area:name!important;
+  min-height:0!important;
+  padding:0!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip.detailed>small{
+  grid-area:meta!important;
+  color:#7c899c!important;
+  font-size:8.5px!important;
+  line-height:1.2!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui .redesign-training-alt-chip.detailed>.redesign-training-alt-tech{
+  grid-area:tech!important;
+}
