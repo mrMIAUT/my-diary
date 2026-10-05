@@ -2558,7 +2558,8 @@ body.eplan-redesign.client-ui .lyfta-drop-zone{
   display:none!important;margin:7px 0 0 42px!important;padding:8px!important;
   border-left:2px solid #d8e3ef!important;border-radius:0 10px 10px 0!important;background:#fafbfd!important;
 }
-body.eplan-redesign.client-ui .lyfta-drop-zone.is-visible{
+body.eplan-redesign.client-ui .lyfta-drop-zone.is-visible,
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-drop-zone{
   display:block!important;
 }
 body.eplan-redesign.client-ui .lyfta-drop-list{
