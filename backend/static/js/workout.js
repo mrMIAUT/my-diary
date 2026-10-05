@@ -231,36 +231,67 @@ async function finishWorkout(cid,sid,button=null){
  }
 }
 
+function workoutWeekStartISO(day=isoToday()){
+ let raw=String(day||isoToday()).slice(0,10),d=new Date(raw+'T12:00:00');
+ if(Number.isNaN(d.getTime()))return raw;
+ let weekday=(d.getDay()+6)%7;
+ d.setDate(d.getDate()-weekday);
+ let local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+ return local.toISOString().slice(0,10);
+}
+
+function workoutSessionProgramIds(session){
+ try{
+   let snapshot=JSON.parse(session?.program_snapshot||'[]');
+   if(!Array.isArray(snapshot))return [];
+   return snapshot.map(x=>+x.id).filter(x=>Number.isInteger(x)&&x>0).sort((a,b)=>a-b);
+ }catch(e){return []}
+}
+
+function workoutSessionMatchesCurrentProgram(d,session){
+ let dayName=String(session?.day_name||'').trim();
+ if(!dayName)return false;
+ let current=(d?.program||[]).filter(x=>String(x.day_name||'').trim()===dayName);
+ if(!current.length)return false;
+
+ let currentIds=current.map(x=>+x.id).filter(x=>Number.isInteger(x)&&x>0).sort((a,b)=>a-b);
+ let snapshotIds=workoutSessionProgramIds(session);
+ if(snapshotIds.length&&currentIds.length){
+   return snapshotIds.length===currentIds.length&&snapshotIds.every((id,i)=>id===currentIds[i]);
+ }
+
+ // Legacy/manual fallback: if a session has no usable snapshot, only count it
+ // when its saved result rows still point at exercises from the current day.
+ let workoutDay=sessionDay(session);
+ if(workoutDay&&currentIds.length){
+   let currentSet=new Set(currentIds);
+   let performed=[...new Set((d?.result_sets||[])
+     .filter(x=>x.day===workoutDay)
+     .map(x=>+x.program_id)
+     .filter(x=>Number.isInteger(x)&&x>0))];
+   if(performed.length)return performed.every(id=>currentSet.has(id));
+ }
+ return false;
+}
+
 function workoutCycleState(d,groups){
  let days=Object.keys(groups||{}),done=[];
  if(!days.length)return {done,next:null};
- let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&days.includes(x.day_name)).slice().sort((a,b)=>new Date(a.finished_at||a.started_at||0)-new Date(b.finished_at||b.started_at||0));
- if(!sessions.length)return {done,next:days[0]};
 
- // Build cycles chronologically. Once every planned day has been completed,
- // close that cycle and start collecting the next one.
- let seen=new Set(),lastCycleFinished=null;
- for(let i=0;i<sessions.length;i++){
-   let day=sessions[i].day_name;
-   seen.add(day);
-   if(seen.size===days.length){
-     lastCycleFinished=sessions[i];
-     seen.clear();
-   }
- }
+ // A training cycle is the current calendar week (Monday-Sunday).
+ // Previous weeks never carry completion into a fresh week.
+ let weekStart=workoutWeekStartISO(),today=isoToday();
+ let sessions=(d.workout_sessions||[]).filter(x=>{
+   let day=sessionDay(x);
+   return x.status==='finished'
+     &&days.includes(x.day_name)
+     &&day&&day>=weekStart&&day<=today
+     &&workoutSessionMatchesCurrentProgram(d,x);
+ });
 
- // If a new cycle already has completed workouts, show only those.
- if(seen.size){
-   done=days.filter(day=>seen.has(day));
-   return {done,next:days.find(day=>!seen.has(day))||days[0]};
- }
-
- // A just-finished cycle remains at 100% for the rest of that day.
- // From the next calendar day it becomes a fresh 0% cycle with Day 1 available.
- if(lastCycleFinished&&sessionDay(lastCycleFinished)===isoToday()){
-   return {done:days.slice(),next:days[0]};
- }
- return {done:[],next:days[0]};
+ let seen=new Set(sessions.map(x=>x.day_name));
+ done=days.filter(day=>seen.has(day));
+ return {done,next:days.find(day=>!seen.has(day))||null};
 }
 function workoutDayButtons(d,cid,groups){
  let cycle=workoutCycleState(d,groups);
