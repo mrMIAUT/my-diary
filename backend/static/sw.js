@@ -1,4 +1,4 @@
-const VERSION='eplan-v164';
+const VERSION='eplan-v165';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -25,10 +25,10 @@ const APP_SHELL_URLS=[
   '/static/js/nutrition-redesign.js?v=163',
   '/static/js/more-redesign.js?v=163',
   '/static/js/measurements.js?v=160',
-  '/static/js/workout.js?v=165',
+  '/static/js/workout.js?v=166',
   '/static/js/training-redesign.js?v=162',
   '/static/js/timer.js?v=160',
-  '/static/js/workout-lyfta.js?v=161',
+  '/static/js/workout-lyfta.js?v=162',
   '/static/js/notifications.js?v=164',
   '/static/js/app.js?v=160',
   '/static/js/pwa.js?v=159',
