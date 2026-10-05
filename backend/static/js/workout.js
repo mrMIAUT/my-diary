@@ -83,6 +83,7 @@ function todaySets(d,pid){
 
 
 function completedExerciseHTML(x,d,cid){
+ x=workoutEffectiveExercise(x);
  let done=todaySets(d,x.id),total=workoutExerciseSetCount(x,d);
  if(!done.length)return setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
  let performed=done[0]?.exercise||x.exercise;
@@ -233,6 +234,7 @@ function saveWorkoutDraftSetCount(sid,pid,count){
  try{localStorage.setItem(k,JSON.stringify(d))}catch(e){}
 }
 function workoutExerciseSetCount(x,d){
+ x=workoutEffectiveExercise(x);
  let planned=Math.max(1,+x?.sets||1),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x?.id),draftCount=+draft.__set_count||0;
  let actual=Math.max(0,...todaySets(d,x?.id).map(s=>+s.set_number||0));
  return Math.max(planned,draftCount,actual);
@@ -240,6 +242,7 @@ function workoutExerciseSetCount(x,d){
 function addWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
  if(!x||!sid)return;
+ x=workoutEffectiveExercise(x);
  let count=workoutExerciseSetCount(x,d);
  if(count>=100)return alert('Досягнуто максимальну кількість підходів.');
  saveWorkoutDraftSetCount(sid,pid,count+1);
@@ -252,6 +255,7 @@ function addWorkoutExtraSet(cid,pid){
 function removeWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
  if(!x||!sid)return;
+ x=workoutEffectiveExercise(x);
  let planned=Math.max(1,+x.sets||1),count=workoutExerciseSetCount(x,d);
  if(count<=planned)return;
  let draft=readWorkoutDraft(sid,pid),row=draft[count]||{};
@@ -552,8 +556,8 @@ function activeExercisesHTML(items,d,cid){
  let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false){
-  let doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=workoutExerciseName(x),shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
-  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${x.sets} × ${esc(x.reps)}</span>${restLabel(x)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(x))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(x).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(x,d,cid)}</div></div>`;
+  let effective=workoutEffectiveExercise(x),doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
+  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(effective.reps)}</span>${restLabel(effective)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(effective))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
