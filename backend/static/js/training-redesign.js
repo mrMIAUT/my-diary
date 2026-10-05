@@ -19,7 +19,7 @@ function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
     +'<div class="redesign-training-exercise-copy">'
       +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong></div>'
       +(mainTech?'<div class="redesign-training-technique">'+techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link')+'</div>':'')
-      +'<small>'+x.sets+' × '+esc(x.reps)+(rest?' · '+esc(rest):'')+'</small>'
+      +'<small>'+x.sets+' × '+esc(repeatPlanText(x))+(rest?' · '+esc(rest):'')+'</small>'
       +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){
         let tech=exerciseTechniqueUrl(v.exercise),altRest=restLabel(v),altRir=rirPlan(v).join(' / ');
         return '<span class="redesign-training-alt-chip detailed"><i>'+esc(v.exercise)+'</i><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(altRir)+(altRest?' · '+esc(altRest):'')+'</small>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'redesign-training-alt-tech'):'')+'</span>';
