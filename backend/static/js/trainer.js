@@ -247,7 +247,7 @@ function programTemplateAlternatives(item){
 
 function setProgramTemplateAlternatives(item,xs){
   if(!item)return;
-  item.alternatives_json=JSON.stringify((xs||[]).map(x=>normalizeProgramAlternative(x,item)).filter(x=>x.exercise));
+  item.alternatives_json=JSON.stringify((xs||[]).map(x=>normalizeProgramAlternative(x,item)));
 }
 
 function programTemplateAlternativesEditorHTML(item,di,ii){
