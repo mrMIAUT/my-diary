@@ -555,16 +555,18 @@ async function selectWorkoutExercise(pid,cid,index){
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
- function card(x,inner=false){
+ function card(x,inner=false,showRest=true){
   let effective=workoutEffectiveExercise(x),doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
-  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(effective.reps)}</span>${restLabel(effective)?`<span class="workout-plan-meta">Відпочинок ${esc(restLabel(effective))}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
+  let rest=showRest?restLabel(effective):'';
+  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(effective.reps)}</span>${rest?`<span class="workout-plan-meta">Відпочинок ${esc(rest)}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
  }
  for(let x of items){
   if(used.has(x.id))continue;
   if(x.superset_group){
-   let pair=items.filter(y=>y.superset_group===x.superset_group);pair.forEach(y=>used.add(y.id));
-   html+=`<div class="workout-live-superset"><div class="workout-live-superset-head"><strong>Суперсет</strong><span>виконати вправи по черзі</span></div><div class="workout-live-superset-body">${pair.map((y,i)=>card(y,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
-  }else{used.add(x.id);html+=card(x)}
+   let pair=orderedSupersetItems(items.filter(y=>y.superset_group===x.superset_group));pair.forEach(y=>used.add(y.id));
+   let effectivePair=pair.map(workoutEffectiveExercise),superRest=supersetRestLabel(effectivePair);
+   html+=`<div class="workout-live-superset"><div class="workout-live-superset-head"><strong>Суперсет</strong><span>виконати вправи по черзі${superRest?' · Відпочинок '+esc(superRest):''}</span></div><div class="workout-live-superset-body">${pair.map((y,i)=>card(y,true,false)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+  }else{used.add(x.id);html+=card(x,false,true)}
  }
  return html;
 }
