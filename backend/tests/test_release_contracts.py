@@ -210,6 +210,17 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("(+p.reps||0)<upper", WORKOUT_LYFTA)
         self.assertIn("(+p.rir||0)<+target", WORKOUT_LYFTA)
 
+    def test_optional_warmup_and_drop_sets(self):
+        self.assertIn("CREATE TABLE IF NOT EXISTS workout_aux_sets", APP)
+        self.assertIn('"aux_sets":"SELECT * FROM workout_aux_sets', APP)
+        self.assertIn("WorkoutAuxSetIn", APP)
+        self.assertIn("kind not in (\"warmup\",\"drop\")", APP)
+        self.assertIn("lyftaWarmupRowsHTML", WORKOUT_LYFTA)
+        self.assertIn("lyftaDropRowsHTML", WORKOUT_LYFTA)
+        self.assertIn("Додати розминочні підходи", WORKOUT_LYFTA)
+        self.assertIn("Додати дроп-сет", WORKOUT_LYFTA)
+        self.assertIn("collectWorkoutAuxSets", WORKOUT)
+
     def test_completed_badge_and_template_alternatives_ui(self):
         self.assertIn("workout-live-toggle-side", WORKOUT)
         self.assertIn("exercise-done-badge compact", WORKOUT)
