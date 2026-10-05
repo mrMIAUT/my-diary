@@ -216,6 +216,9 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("programTemplateAlternativesEditorHTML", TRAINER)
         self.assertIn("addProgramTemplateAlternative", TRAINER)
         self.assertIn("openProgramExercisePicker", TRAINER)
+        self.assertIn("trainer-program-exercise-field trainer-template-editor-exercise", TRAINER)
+        self.assertIn("trainer-program-alternative-row trainer-template-alternative-row", TRAINER)
+        self.assertIn("Обрати з бібліотеки", TRAINER)
         self.assertNotIn("Вправа 1; Вправа 2", TRAINER)
 
     def test_index_shell_assets_exist_and_are_cached(self):
