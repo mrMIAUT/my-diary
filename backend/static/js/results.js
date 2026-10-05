@@ -81,8 +81,8 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
          if(!deltas.length)deltas.push('<i class="delta-same">без змін</i>');
          deltaHTML='<span class="trainer-review-set-deltas">'+deltas.join('')+'</span>';
        }
-       let currentMeta='<span class="trainer-review-set-meta"><span class="trainer-review-rir">RIR '+esc(String(s.rir??'—'))+'</span>'+(+s.rest_seconds>0?'<span class="trainer-review-rest">⏱ '+esc(formatSetRest(s.rest_seconds))+'</span>':'')+'</span>';
-       let previousMeta=p?'<span class="trainer-review-set-meta previous"><span class="trainer-review-rir">RIR '+esc(String(p.rir??'—'))+'</span>'+(+p.rest_seconds>0?'<span class="trainer-review-rest">⏱ '+esc(formatSetRest(p.rest_seconds))+'</span>':'')+'</span>':'';
+       let currentMeta='<span class="trainer-review-set-meta"><span class="trainer-review-rir">RIR '+esc(String(s.rir??'—'))+'</span>'+(+s.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(s.rest_seconds))+'</span>':'')+'</span>';
+       let previousMeta=p?'<span class="trainer-review-set-meta previous"><span class="trainer-review-rir">RIR '+esc(String(p.rir??'—'))+'</span>'+(+p.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(formatSetRest(p.rest_seconds))+'</span>':'')+'</span>':'';
        return '<section class="trainer-review-set-block"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.weight??0))+' кг × '+esc(String(s.reps??0))+'</b>'+currentMeta+'</div>'
          +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.weight??0))+' кг × '+esc(String(p.reps??0))+'</strong>'+previousMeta+deltaHTML+'</div>':'')
        +'</section>';
