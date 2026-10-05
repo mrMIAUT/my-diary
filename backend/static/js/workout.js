@@ -491,22 +491,35 @@ function selectClientProgramDay(day,cid){
 
 function workoutExerciseName(x){return window.workoutExerciseChoices[x.id]||x.exercise}
 
+function workoutEffectiveExercise(x){
+ let chosen=workoutExerciseName(x);
+ if(!chosen||chosen===x.exercise)return x;
+ let alt=exerciseAlternativeConfigs(x).find(v=>v.exercise===chosen);
+ if(!alt)return {...x,exercise:chosen};
+ return {...x,...alt,exercise:chosen,id:x.id,client_id:x.client_id,day_name:x.day_name,superset_group:x.superset_group,superset_order:x.superset_order};
+}
+
+function workoutChoiceSummary(v){
+ let rest=restLabel(v),rir=rirPlan(v).join(' / ');
+ return v.sets+' × '+esc(v.reps)+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'');
+}
+
 function chooseWorkoutExercise(pid,cid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
- let opts=[x.exercise,...exerciseAlternatives(x)],cur=workoutExerciseName(x);
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="alternativeExerciseModal"><div class="card swap-choice-card"><div class="edit-exercise-head"><div><h2>Замінити вправу</h2><p class="muted" style="margin:4px 0 0">Обери один із дозволених варіантів.</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="alternative-modal-list">${opts.map((v,i)=>`<button class="${v===cur?'alternative-current':'dark'}" onclick="pickWorkoutExerciseScope(${pid},${cid},${i})">${i===0?'За планом: ':''}${esc(v)}</button>`).join('')}</div></div></div>`);
+ let configs=[normalizeProgramAlternative({exercise:x.exercise,sets:x.sets,reps:x.reps,target_rir:x.target_rir,rir_by_set:x.rir_by_set,rest_seconds:x.rest_seconds,rest_text:x.rest_text},x),...exerciseAlternativeConfigs(x)],cur=workoutExerciseName(x);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="alternativeExerciseModal"><div class="card swap-choice-card"><div class="edit-exercise-head"><div><h2>Замінити вправу</h2><p class="muted" style="margin:4px 0 0">Обери один із дозволених варіантів.</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="alternative-modal-list">${configs.map((v,i)=>`<button class="${v.exercise===cur?'alternative-current':'dark'}" onclick="pickWorkoutExerciseScope(${pid},${cid},${i})"><strong>${i===0?'За планом: ':''}${esc(v.exercise)}</strong><small>${workoutChoiceSummary(v)}</small></button>`).join('')}</div></div></div>`);
 }
 
 function pickWorkoutExerciseScope(pid,cid,index){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
- let opts=[x.exercise,...exerciseAlternatives(x)],chosen=opts[index]||x.exercise;
+ let configs=[normalizeProgramAlternative({exercise:x.exercise,sets:x.sets,reps:x.reps,target_rir:x.target_rir,rir_by_set:x.rir_by_set,rest_seconds:x.rest_seconds,rest_text:x.rest_text},x),...exerciseAlternativeConfigs(x)],chosen=(configs[index]||configs[0]).exercise;
  let card=document.querySelector('#alternativeExerciseModal .swap-choice-card');if(!card)return;
  card.innerHTML=`<div class="edit-exercise-head"><div><span class="swap-step-label">Обрана вправа</span><h2>${esc(chosen)}</h2><p class="muted" style="margin:4px 0 0">Як застосувати цю заміну?</p></div><button class="dark edit-exercise-close" onclick="alternativeExerciseModal.remove()">✕</button></div><div class="swap-scope-actions"><button onclick="applyWorkoutExerciseChoice(${pid},${cid},${index},'today')"><strong>Тільки сьогодні</strong><span>Поточна програма не зміниться</span></button><button onclick="applyWorkoutExerciseChoice(${pid},${cid},${index},'program')"><strong>Замінити в програмі</strong><span>Ця вправа стане основною надалі</span></button></div><button class="dark swap-back-btn" onclick="alternativeExerciseModal.remove();chooseWorkoutExercise(${pid},${cid})">← Назад до вправ</button>`;
 }
 
 async function applyWorkoutExerciseChoice(pid,cid,index,scope){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);if(!x)return;
- let opts=[x.exercise,...exerciseAlternatives(x)],chosen=opts[index]||x.exercise;
+ let configs=[normalizeProgramAlternative({exercise:x.exercise,sets:x.sets,reps:x.reps,target_rir:x.target_rir,rir_by_set:x.rir_by_set,rest_seconds:x.rest_seconds,rest_text:x.rest_text},x),...exerciseAlternativeConfigs(x)],chosen=(configs[index]||configs[0]).exercise;
  if(scope==='program'){
    try{
      await api('/program/'+pid+'/client-exercise',{method:'PATCH',body:JSON.stringify({exercise:chosen})});
