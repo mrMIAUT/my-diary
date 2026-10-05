@@ -1993,6 +1993,74 @@ def get_program_template(template_id:int,user:AuthUser=Depends(require_trainer))
     t["items"]=rows("SELECT * FROM program_template_items WHERE template_id=? ORDER BY day_name,sort,id",(template_id,))
     return t
 
+def write_program_template_payload(db,template_id:int,x:ProgramTemplateSaveIn):
+    name=x.name.strip()
+    if not name: raise HTTPException(400,"Вкажіть назву шаблону")
+    ordered_days=sorted(x.days,key=lambda d:(d.sort,d.day_name))
+    day_names=[]
+    for d in ordered_days:
+        day=d.day_name.strip()
+        if not day: raise HTTPException(400,"Назва тренувального дня не може бути порожньою")
+        if day in day_names: raise HTTPException(400,"Назви тренувальних днів мають бути унікальними")
+        day_names.append(day)
+    normalized_items=[]
+    for item in sorted(x.items,key=lambda i:(day_names.index(i.day_name.strip()) if i.day_name.strip() in day_names else 9999,i.sort,i.exercise)):
+        day=item.day_name.strip()
+        exercise=item.exercise.strip()
+        if day not in day_names: raise HTTPException(400,"Вправа прив'язана до невідомого дня")
+        if not exercise: raise HTTPException(400,"Назва вправи не може бути порожньою")
+        alternatives=(item.alternatives_json or "[]").strip() or "[]"
+        try:
+            parsed=json.loads(alternatives)
+        except Exception:
+            raise HTTPException(400,"Некоректний список альтернативних вправ")
+        if not isinstance(parsed,list) or any(not isinstance(v,str) for v in parsed):
+            raise HTTPException(400,"Некоректний список альтернативних вправ")
+        alternatives=json.dumps([v.strip() for v in parsed if v.strip()],ensure_ascii=False)
+        normalized_items.append((day,exercise,item,alternatives))
+    if not normalized_items: raise HTTPException(400,"Шаблон має містити хоча б одну вправу")
+    used_days={row[0] for row in normalized_items}
+    if any(day not in used_days for day in day_names):
+        raise HTTPException(400,"Кожен тренувальний день має містити хоча б одну вправу")
+    db.execute("UPDATE program_templates SET name=%s,description=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",
+               (name,x.description.strip(),template_id))
+    db.execute("DELETE FROM program_template_items WHERE template_id=%s",(template_id,))
+    db.execute("DELETE FROM program_template_days WHERE template_id=%s",(template_id,))
+    for pos,d in enumerate(ordered_days,1):
+        db.execute("INSERT INTO program_template_days(template_id,day_name,title,sort) VALUES(%s,%s,%s,%s)",
+                   (template_id,d.day_name.strip(),d.title.strip(),pos))
+    for day,exercise,item,alternatives in normalized_items:
+        db.execute("""INSERT INTO program_template_items(
+            template_id,day_name,exercise,sets,reps,target_rir,sort,superset_group,superset_order,
+            technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (template_id,day,exercise,item.sets,item.reps.strip() or "8-12",item.target_rir,item.sort,
+             item.superset_group.strip(),item.superset_order,safe_technique_url(item.technique_url or ""),
+             item.rest_seconds,item.rest_text.strip(),item.rir_by_set.strip(),alternatives))
+
+@app.put("/api/trainer/program-templates/{template_id}")
+def update_program_template(template_id:int,x:ProgramTemplateSaveIn,user:AuthUser=Depends(require_trainer)):
+    with con() as db:
+        row=db.execute("SELECT id FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",
+                       (template_id,user.user_id)).fetchone()
+        if not row: raise HTTPException(404,"Шаблон не знайдено")
+        write_program_template_payload(db,template_id,x)
+        db.commit()
+    return {"ok":True,"id":template_id}
+
+@app.post("/api/trainer/program-templates/{template_id}/copy")
+def copy_program_template(template_id:int,x:ProgramTemplateSaveIn,user:AuthUser=Depends(require_trainer)):
+    with con() as db:
+        row=db.execute("SELECT id FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",
+                       (template_id,user.user_id)).fetchone()
+        if not row: raise HTTPException(404,"Шаблон не знайдено")
+        new_id=db.execute("""INSERT INTO program_templates(trainer_id,name,description)
+                             VALUES(%s,%s,%s) RETURNING id""",
+                          (user.user_id,x.name.strip(),x.description.strip())).fetchone()["id"]
+        write_program_template_payload(db,new_id,x)
+        db.commit()
+    return {"ok":True,"id":new_id}
+
 @app.delete("/api/trainer/program-templates/{template_id}")
 def delete_program_template(template_id:int,user:AuthUser=Depends(require_trainer)):
     with con() as db:
