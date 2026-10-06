@@ -29,8 +29,36 @@ function calculate(){
   const strategy=adjustment===0?'підтримання':(adjustment<0?'дефіцит '+Math.abs(adjustment)+'%':'профіцит '+adjustment+'%');
   const result=$('result');
   result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b> Калорії можуть змінюватися в межах поточного циклу, але сама ціль змінюється лише після вашого підтвердження.</p><details class="note"><summary>Як розраховано?</summary><p>Mifflin–St Jeor · '+strategy+'. '+(bf?'Вказаний % жиру використано як додатковий модифікатор стартової рекомендації. ':'')+'Досвід: '+$('experience').selectedOptions[0].textContent+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
-  result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+  result.classList.add('show');$('currentTarget').value=kcal;setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);syncAdjust();
+
+function adapt(){
+ const error=$('adaptError'),result=$('adaptResult');error.style.display='none';
+ const w1=Number($('week1Weight').value),w2=Number($('week2Weight').value),avg=Number($('avgCalories').value),days=Number($('loggedDays').value),target=Number($('currentTarget').value),g=$('goal').value;
+ if(!w1||!w2||!avg||!target||w1<35||w1>300||w2<35||w2>300||avg<800||avg>7000||target<800||target>7000){error.textContent='Перевір введені дані.';error.style.display='block';return}
+ if(days<5){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ ЗМІН</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Недостатньо даних про харчування. Для корекції потрібно щонайменше 5 днів із 7 із записаним раціоном.</p>';result.classList.add('show');return}
+ const change=(w2-w1)/w1;
+ let desired=0;
+ if(g==='loss') desired=-0.005;
+ else if(g==='gain') desired=$('experience').value==='advanced'?0.0015:0.0025;
+ else if(g==='recomp') desired=-0.001;
+ const tolerance=g==='maintain'?0.002:0.0025;
+ const diff=change-desired;
+ let delta=0,reason='Динаміка відповідає поточній цілі.';
+ if(Math.abs(diff)>tolerance){
+   if(g==='loss'){delta=diff>0?-100:100;}
+   else if(g==='gain'){delta=diff<0?100:-100;}
+   else if(g==='recomp'){delta=diff>0?-100:100;}
+   else {delta=change>0?-100:100;}
+   reason='Середня вага рухається не в тому діапазоні, який очікується для обраної цілі.';
+ }
+ const adherence=Math.abs(avg-target)/target;
+ if(adherence>.12){delta=0;reason='Спочатку варто стабілізувати фактичне харчування ближче до поточної цілі — зараз різниця занадто велика для надійної корекції.';}
+ const next=Math.max(1200,Math.round((target+delta)/10)*10);
+ const title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
+ result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Є ПЛАН оцінює середню вагу, а не окреме зважування, і змінює ціль невеликими кроками. У повній версії корекція буде виконуватися лише після достатнього періоду спостереження.</p>';
+ result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);syncAdjust();
 })();
