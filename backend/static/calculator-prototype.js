@@ -2,7 +2,15 @@
 const $=id=>document.getElementById(id);
 function showError(message){const e=$('calcError');e.textContent=message;e.style.display='block'}
 function recommendedAdjust(g,bf,exp){
- if(g==='loss'){if(bf){if(bf>=30)return -20;if(bf>=20)return -15;return exp==='advanced'?-10:-15}return exp==='advanced'?-10:-15}
+ const h=Number($('height').value)||0,w=Number($('weight').value)||0,bmi=h&&w?w/Math.pow(h/100,2):0;
+ if(g==='loss'){
+  // Product starting heuristic informed by obesity energy-deficit evidence; the 28-day cycle adapts from real response.
+  if(bf){if(bf>=35)return -25;if(bf>=30)return -20;if(bf>=25)return -15;if(bf>=20)return -15;return exp==='advanced'?-10:-15}
+  if(bmi>=40)return -20;
+  if(bmi>=35)return -20;
+  if(bmi>=30)return -15;
+  return exp==='advanced'?-10:-15;
+ }
  if(g==='recomp') return bf?(bf>=25?-10:bf>=18?-5:0):-5;
  if(g==='gain') return exp==='advanced'?5:(bf&&bf>=25?0:5);
  return 0;
@@ -86,5 +94,5 @@ function stopGoal(){
  result.classList.add('show');
  $('confirmStop').onclick=()=>{result.innerHTML='<span class="kicker">ЦІЛЬ ЗУПИНЕНО</span><p class="note">Автоматичні корекції призупинено. Коли будете готові, оберіть нову ціль і почніть новий цикл.</p>';$('adaptResult').classList.remove('show')};
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);syncAdjust();
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);syncAdjust();
 })();
