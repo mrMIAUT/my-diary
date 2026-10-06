@@ -50,19 +50,30 @@ function adapt(){
   if(!target||target<800||target>7000){error.textContent='Перевір поточну ціль калорій.';error.style.display='block';return}
   const data=rows.map((r,i)=>({day:i+1,w:Number(r.querySelector('.dayWeight').value)||0,k:Number(r.querySelector('.dayCalories').value)||0}));
   const weights=data.filter(x=>x.w>=35&&x.w<=300),foods=data.filter(x=>x.k>=800&&x.k<=7000);
-  if(data.length<14||weights.length<10||foods.length<10){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Потрібно щонайменше 14 днів спостереження та достатньо записів ваги й харчування. Є ПЛАН продовжить збирати дані.</p>';result.classList.add('show');return}
+  const wait=msg=>{result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+msg+'</p>';result.classList.add('show')};
+  if(data.length<14||weights.length<10||foods.length<10){wait('Є ПЛАН ще збирає дані. Потрібно щонайменше 14 днів спостереження, 10 записів ваги та 10 днів харчування.');return}
   const first=weights.filter(x=>x.day<=7),last=weights.filter(x=>x.day>data.length-7);
-  if(first.length<5||last.length<5){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Для надійного тренду потрібно щонайменше 5 зважувань у першому та останньому 7-денному вікні.</p>';result.classList.add('show');return}
+  if(first.length<5||last.length<5){wait('Потрібно щонайменше 5 зважувань у першому та останньому 7-денному вікні.');return}
   const mean=a=>a.reduce((s,x)=>s+x,0)/a.length,firstAvg=mean(first.map(x=>x.w)),lastAvg=mean(last.map(x=>x.w)),avgCalories=mean(foods.map(x=>x.k));
+  const adherence=Math.abs(avgCalories-target)/target;
+  if(adherence>.10){wait('Фактичне харчування помітно відрізняється від поточної цілі. Спочатку варто стабілізувати виконання плану, щоб корекція була обґрунтованою.');return}
   const change=(lastAvg-firstAvg)/firstAvg;
   let desired=0;if(g==='loss')desired=-0.005;else if(g==='gain')desired=$('experience').value==='advanced'?0.0015:0.0025;else if(g==='recomp')desired=-0.001;
   const tolerance=g==='maintain'?0.002:0.0025,diff=change-desired;
-  let delta=0,reason='Динаміка відповідає поточній цілі.';
-  if(Math.abs(diff)>tolerance){if(g==='loss')delta=diff>0?-100:100;else if(g==='gain')delta=diff<0?100:-100;else if(g==='recomp')delta=diff>0?-100:100;else delta=change>0?-100:100;reason='Стійкий тренд середньої ваги не відповідає обраній цілі.'}
-  if(Math.abs(avgCalories-target)/target>.12){delta=0;reason='Фактичне харчування поки занадто відрізняється від цілі. Спочатку потрібно стабілізувати виконання плану.'}
+  let delta=0,reason='Динаміка відповідає поточній цілі. Змінювати калорійність зараз не потрібно.';
+  if(Math.abs(diff)>tolerance){
+   if(g==='loss')delta=diff>0?-100:100;
+   else if(g==='gain')delta=diff<0?100:-100;
+   else if(g==='recomp')delta=diff>0?-100:100;
+   else delta=change>0?-100:100;
+   reason='Є стійке відхилення від очікуваної динаміки для обраної цілі.';
+  }
   const next=Math.max(1200,Math.round((target+delta)/10)*10),title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
-  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Оцінено '+weights.length+' записів ваги та '+foods.length+' днів харчування. Рішення базується на 7-денних середніх, а не на одному зважуванні.</p>';
-  result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+  const action=delta===0?'':'<div style="display:flex;gap:8px;margin-top:14px"><button type="button" id="acceptAdapt" style="margin:0">Прийняти '+next.toLocaleString('uk-UA')+' ккал</button><button type="button" id="keepAdapt" style="margin:0;background:#eef4ff;color:#245cae">Залишити '+target.toLocaleString('uk-UA')+'</button></div>';
+  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Проаналізовано '+weights.length+' записів ваги та '+foods.length+' днів харчування. Наступну автоматичну перевірку в повній версії Є ПЛАН робитиме не раніше ніж через 7 днів після прийнятої корекції.</p>'+action;
+  result.classList.add('show');
+  if(delta!==0){$('acceptAdapt').onclick=()=>{$('currentTarget').value=next;result.innerHTML='<span class="kicker">НОВУ ЦІЛЬ ПРИЙНЯТО</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Є ПЛАН продовжить збирати дані. Наступна корекція — лише після нового періоду спостереження.</p>'};$('keepAdapt').onclick=()=>{result.innerHTML='<span class="kicker">ПОТОЧНУ ЦІЛЬ ЗАЛИШЕНО</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Рекомендацію не застосовано. Є ПЛАН продовжить спостерігати за динамікою.</p>'}}
+  setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){const e=$('adaptError');e.textContent='Помилка перевірки цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block'}
 }
 $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('addDayBtn').addEventListener('click',()=>{if(adaptiveDays<21){adaptiveDays++;renderDays()}});renderDays();syncAdjust();
