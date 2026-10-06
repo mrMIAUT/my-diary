@@ -130,12 +130,62 @@ window.openNutritionTargetsModal = function(cid){
   document.getElementById('nutritionTargetsModal')?.remove();
   let c=(window.currentClientData||{}).client||{};
   document.body.insertAdjacentHTML('beforeend',
-    '<div class="modal" id="nutritionTargetsModal"><div class="card redesign-nutrition-modal nutrition-targets-modal">'
-    +'<div class="between"><div><h2>Цілі харчування</h2><p class="muted">Вкажи свої орієнтири на день.</p></div><button class="dark" onclick="nutritionTargetsModal.remove()">✕</button></div>'
-    +'<div class="grid"><input id="targetKcal" type="number" inputmode="numeric" value="'+(+c.kcal||'')+'" placeholder="Ккал"><input id="targetProtein" type="number" inputmode="numeric" value="'+(+c.protein||'')+'" placeholder="Білки, г"><input id="targetFat" type="number" inputmode="numeric" value="'+(+c.fat||'')+'" placeholder="Жири, г"><input id="targetCarbs" type="number" inputmode="numeric" value="'+(+c.carbs||'')+'" placeholder="Вуглеводи, г"></div>'
-    +'<p class="muted nutrition-targets-hint">Ці значення задаєш ти сам. Якщо підключиш персональний план харчування, цілі буде задавати тренер.</p>'
-    +'<button style="width:100%;margin-top:14px" onclick="saveNutritionTargets('+cid+',this)">Зберегти цілі</button>'
+    '<div class="modal" id="nutritionTargetsModal"><div class="card redesign-nutrition-modal nutrition-targets-modal nutrition-calculator-modal">'
+    +'<div class="between"><div><h2>Розрахунок калорій і БЖВ</h2><p class="muted">Стартовий орієнтир, який потім можна коригувати за динамікою ваги.</p></div><button class="dark" onclick="nutritionTargetsModal.remove()">✕</button></div>'
+    +'<div class="nutrition-calc-grid">'
+      +'<label><span>Стать</span><select id="calcSex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>'
+      +'<label><span>Вік</span><input id="calcAge" type="number" inputmode="numeric" min="18" max="100" placeholder="років"></label>'
+      +'<label><span>Зріст</span><input id="calcHeight" type="number" inputmode="decimal" min="120" max="230" placeholder="см"></label>'
+      +'<label><span>Вага</span><input id="calcWeight" type="number" inputmode="decimal" min="35" max="300" placeholder="кг"></label>'
+      +'<label><span>Жир, % <small>(необов’язково)</small></span><input id="calcBodyFat" type="number" inputmode="decimal" min="3" max="60" placeholder="%"></label>'
+      +'<label><span>Активність</span><select id="calcActivity"><option value="1.2">Мінімальна</option><option value="1.375">Легка · 1–3 тренування/тиж.</option><option value="1.55" selected>Середня · 3–5 тренувань/тиж.</option><option value="1.725">Висока · 6–7 тренувань/тиж.</option><option value="1.9">Дуже висока</option></select></label>'
+      +'<label class="nutrition-calc-wide"><span>Ціль</span><select id="calcGoal"><option value="loss">Зниження ваги</option><option value="maintain" selected>Підтримання</option><option value="gain">Набір м’язової маси</option></select></label>'
+    +'</div>'
+    +'<button class="nutrition-calc-button" onclick="calculateNutritionTargets()">Розрахувати</button>'
+    +'<div id="nutritionCalcResult"></div>'
+    +'<details class="nutrition-calc-manual"><summary>Ввести цілі вручну</summary><div class="grid"><input id="targetKcal" type="number" inputmode="numeric" value="'+(+c.kcal||'')+'" placeholder="Ккал"><input id="targetProtein" type="number" inputmode="numeric" value="'+(+c.protein||'')+'" placeholder="Білки, г"><input id="targetFat" type="number" inputmode="numeric" value="'+(+c.fat||'')+'" placeholder="Жири, г"><input id="targetCarbs" type="number" inputmode="numeric" value="'+(+c.carbs||'')+'" placeholder="Вуглеводи, г"></div><button style="width:100%;margin-top:14px" onclick="saveNutritionTargets('+cid+',this)">Зберегти вручну</button></details>'
     +'</div></div>');
+};
+
+window.calculateNutritionTargets = function(){
+  let sex=document.getElementById('calcSex')?.value,
+      age=+document.getElementById('calcAge')?.value,
+      height=+document.getElementById('calcHeight')?.value,
+      weight=+document.getElementById('calcWeight')?.value,
+      bodyFat=+document.getElementById('calcBodyFat')?.value||0,
+      activity=+document.getElementById('calcActivity')?.value,
+      goal=document.getElementById('calcGoal')?.value;
+  if(!age||!height||!weight||age<18||age>100||height<120||height>230||weight<35||weight>300)return alert('Перевір вік, зріст і вагу.');
+  if(bodyFat&&(bodyFat<3||bodyFat>60))return alert('Перевір відсоток жиру.');
+  let leanMass=bodyFat?weight*(1-bodyFat/100):null;
+  let bmr=leanMass ? 370+21.6*leanMass : (10*weight+6.25*height-5*age+(sex==='male'?5:-161));
+  let maintenance=bmr*activity;
+  let factor=goal==='loss'?0.85:goal==='gain'?1.08:1;
+  let kcal=Math.round(maintenance*factor/10)*10;
+  let proteinBase=leanMass||weight;
+  let protein=Math.round(proteinBase*(goal==='loss'?2.2:goal==='gain'?1.8:1.8));
+  let fat=Math.round(weight*(goal==='loss'?0.8:0.9));
+  let carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
+  window.pendingNutritionTargets={kcal,protein,fat,carbs};
+  let method=leanMass?'Katch–McArdle · з урахуванням сухої маси':'Mifflin–St Jeor · за загальною масою';
+  let goalText=goal==='loss'?'дефіцит 15%':goal==='gain'?'профіцит 8%':'підтримання';
+  document.getElementById('nutritionCalcResult').innerHTML=
+    '<div class="nutrition-calc-result"><span class="nutrition-kicker">Твій стартовий орієнтир</span><strong class="nutrition-calc-kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong>'
+    +'<div class="nutrition-calc-macros"><span><b>'+protein+'</b> г<small>Білки</small></span><span><b>'+fat+'</b> г<small>Жири</small></span><span><b>'+carbs+'</b> г<small>Вуглеводи</small></span></div>'
+    +'<p>'+method+' · '+goalText+'. Білок '+(leanMass?'розраховано від сухої маси':'тимчасово розраховано від маси тіла')+'.</p>'
+    +'<button onclick="applyCalculatedNutritionTargets(this)">Застосувати ці цілі</button></div>';
+};
+
+window.applyCalculatedNutritionTargets = async function(btn){
+  let cid=(window.currentClientData||{}).client?.id||session?.client_id,body=window.pendingNutritionTargets;
+  if(!cid||!body)return;
+  if(btn){btn.disabled=true;btn.textContent='Зберігаємо…'}
+  try{
+    await api('/client/'+cid+'/nutrition-targets',{method:'PATCH',body:JSON.stringify(body)});
+    document.getElementById('nutritionTargetsModal')?.remove();
+    let d=await loadClientData(cid);window.currentClientData=d;
+    await showClientNutrition(cid);
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='Застосувати ці цілі'} alert(e.message||'Не вдалося зберегти цілі.');}
 };
 
 window.saveNutritionTargets = async function(cid,btn){
@@ -153,7 +203,7 @@ window.saveNutritionTargets = async function(cid,btn){
     let d=await loadClientData(cid);window.currentClientData=d;
     await showClientNutrition(cid);
   }catch(e){
-    if(btn){btn.disabled=false;btn.textContent='Зберегти цілі'}
+    if(btn){btn.disabled=false;btn.textContent='Зберегти вручну'}
     alert(e.message||'Не вдалося зберегти цілі.');
   }
 };
