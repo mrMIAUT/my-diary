@@ -67,5 +67,18 @@ function adapt(){
   setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){const e=$('adaptError');e.textContent='Помилка перегляду цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block'}
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);syncAdjust();
+
+function changeGoal(){
+ const result=$('goalActionResult'),goal=$('goal');
+ result.innerHTML='<span class="kicker">НОВА ЦІЛЬ</span><p class="note" style="margin-top:8px">Оберіть новий етап. Поточний цикл буде завершено, а розрахунок почнеться заново за актуальними даними.</p><select id="newGoal" style="margin-top:8px"><option value="maintain">Підтримання форми</option><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція тіла</option><option value="gain">Набір м’язової маси</option></select><button type="button" id="confirmGoal">Підтвердити нову ціль</button>';
+ result.classList.add('show');
+ $('confirmGoal').onclick=()=>{const v=$('newGoal').value;goal.value=v;syncAdjust();$('adaptResult').classList.remove('show');result.innerHTML='<span class="kicker">ЦІЛЬ ЗМІНЕНО</span><p class="note">Попередній цикл завершено. Нова ціль: <b>'+goal.selectedOptions[0].textContent+'</b>. Натисніть «Розрахувати», щоб отримати нову стартову калорійність за актуальними параметрами.</p>';result.scrollIntoView({behavior:'smooth',block:'nearest'})};
+}
+function stopGoal(){
+ const result=$('goalActionResult');
+ result.innerHTML='<span class="kicker">ЗУПИНИТИ ЦІЛЬ?</span><p class="note">Автоматичні 28-денні перегляди та рекомендації калорій буде призупинено. Дані поточного циклу не використовуватимуться для нової корекції.</p><button type="button" id="confirmStop">Так, зупинити</button>';
+ result.classList.add('show');
+ $('confirmStop').onclick=()=>{result.innerHTML='<span class="kicker">ЦІЛЬ ЗУПИНЕНО</span><p class="note">Автоматичні корекції призупинено. Коли будете готові, оберіть нову ціль і почніть новий цикл.</p>';$('adaptResult').classList.remove('show')};
+}
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);syncAdjust();
 })();
