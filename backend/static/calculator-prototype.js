@@ -16,16 +16,26 @@ function calculate(){
   const strengthDaily=(strength*5*w)/7;
   const cardioDaily=(cardio*cardioMin*0.07*w)/7;
   const tdee=base+stepKcal+strengthDaily+cardioDaily;
-  const factor=g==='loss'?.85:g==='recomp'?.95:g==='gain'?1.08:1;
+  let factor=1, strategy='підтримання';
+  if(g==='loss'){
+    const deficit=bf?(bf>=30?.20:bf>=20?.17:.12):.15;
+    factor=1-deficit; strategy='дефіцит '+Math.round(deficit*100)+'%';
+  }else if(g==='recomp'){
+    const deficit=bf?(bf>=25?.10:bf>=18?.05:0):.05;
+    factor=1-deficit; strategy=deficit?'невеликий дефіцит '+Math.round(deficit*100)+'%':'біля підтримання';
+  }else if(g==='gain'){
+    const surplus=bf?(bf>=25?0:.05):.05;
+    factor=1+surplus; strategy=surplus?'помірний профіцит '+Math.round(surplus*100)+'%':'біля підтримання';
+  }
   const kcal=Math.round(tdee*factor/10)*10;
   const proteinRate=g==='loss'||g==='recomp'?2.0:g==='gain'?1.8:1.8;
   const protein=Math.round(w*proteinRate);
   const fat=Math.max(Math.round(w*.8),50);
   const carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
   const method=ffm?'Cunningham · за безжировою масою':'Mifflin–St Jeor · без % жиру';
-  const goal=g==='loss'?'дефіцит 15%':g==='recomp'?'невеликий дефіцит 5%':g==='gain'?'профіцит 8%':'підтримання';
+  const goal=strategy;
   const result=$('result');
-  result.innerHTML='<span class="kicker">СТАРТОВИЙ ОРІЄНТИР</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note">'+method+' · '+goal+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень. Це стартова оцінка; надалі Є ПЛАН зможе уточнювати її за реальною динамікою ваги та харчування.</p>';
+  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note">'+method+' · '+goal+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень. <b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b></p>';
   result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
