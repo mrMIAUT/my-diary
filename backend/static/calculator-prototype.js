@@ -1,6 +1,18 @@
 (function(){
 const $=id=>document.getElementById(id);
 function showError(message){const e=$('calcError');e.textContent=message;e.style.display='block'}
+function recommendedAdjust(g,bf){
+ if(g==='loss') return bf?(bf>=30?-20:bf>=20?-15:-10):-15;
+ if(g==='recomp') return bf?(bf>=25?-10:bf>=18?-5:0):-5;
+ if(g==='gain') return bf&&bf>=25?0:5;
+ return 0;
+}
+function syncAdjust(){
+ const g=$('goal').value,bf=Number($('bf').value)||0,rec=recommendedAdjust(g,bf),sel=$('adjust');
+ const values=g==='loss'?[-5,-10,-15,-20,-25]:g==='recomp'?[0,-5,-10]:g==='gain'?[0,5,10,15]:[0];
+ sel.innerHTML=values.map(v=>'<option value="'+v+'"'+(v===rec?' selected':'')+'>'+(v>0?'+':'')+v+'%'+(v===rec?' · рекомендовано':'')+'</option>').join('');
+ $('adjustHint').textContent=g==='maintain'?'Підтримання без дефіциту чи профіциту.':'Можна змінити рекомендований стартовий відсоток.';
+}
 function calculate(){
  try{
   $('calcError').style.display='none';
@@ -16,17 +28,9 @@ function calculate(){
   const strengthDaily=(strength*5*w)/7;
   const cardioDaily=(cardio*cardioMin*0.07*w)/7;
   const tdee=base+stepKcal+strengthDaily+cardioDaily;
-  let factor=1, strategy='підтримання';
-  if(g==='loss'){
-    const deficit=bf?(bf>=30?.20:bf>=20?.17:.12):.15;
-    factor=1-deficit; strategy='дефіцит '+Math.round(deficit*100)+'%';
-  }else if(g==='recomp'){
-    const deficit=bf?(bf>=25?.10:bf>=18?.05:0):.05;
-    factor=1-deficit; strategy=deficit?'невеликий дефіцит '+Math.round(deficit*100)+'%':'біля підтримання';
-  }else if(g==='gain'){
-    const surplus=bf?(bf>=25?0:.05):.05;
-    factor=1+surplus; strategy=surplus?'помірний профіцит '+Math.round(surplus*100)+'%':'біля підтримання';
-  }
+  const adjustment=Number($('adjust').value)||0;
+  const factor=1+adjustment/100;
+  const strategy=adjustment===0?'підтримання':(adjustment<0?'дефіцит '+Math.abs(adjustment)+'%':'профіцит '+adjustment+'%');
   const kcal=Math.round(tdee*factor/10)*10;
   const proteinRate=g==='loss'||g==='recomp'?2.0:g==='gain'?1.8:1.8;
   const protein=Math.round(w*proteinRate);
@@ -39,5 +43,8 @@ function calculate(){
   result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
+$('goal').addEventListener('change',syncAdjust);
+$('bf').addEventListener('input',syncAdjust);
 $('calcBtn').addEventListener('click',calculate);
+syncAdjust();
 })();
