@@ -10,7 +10,7 @@ function calculate(){
   if(bf&&(bf<3||bf>60)){showError('Перевір відсоток жиру.');return}
   if(steps<0||steps>50000||strength<0||strength>7||cardio<0||cardio>7||cardioMin<0||cardioMin>240){showError('Перевір дані активності.');return}
   const ffm=bf?w*(1-bf/100):null;
-  const rmr=ffm?500+22*ffm:10*w+6.25*h-5*age+(sex==='male'?5:-161);
+  const rmr=10*w+6.25*h-5*age+(sex==='male'?5:-161);
   const base=rmr*1.2;
   const stepKcal=steps*w*0.0005;
   const strengthDaily=(strength*5*w)/7;
@@ -32,10 +32,10 @@ function calculate(){
   const protein=Math.round(w*proteinRate);
   const fat=Math.max(Math.round(w*.8),50);
   const carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
-  const method=ffm?'Cunningham · за безжировою масою':'Mifflin–St Jeor · без % жиру';
+  const method='Mifflin–St Jeor';
   const goal=strategy;
   const result=$('result');
-  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note">'+method+' · '+goal+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень. <b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b></p>';
+  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b></p><details class="note"><summary>Як розраховано?</summary><p>'+method+' · '+goal+'. '+(bf?'Вказаний % жиру використано для персоналізації цілі, але не для заміни базової формули. ':'')+'Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
   result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
