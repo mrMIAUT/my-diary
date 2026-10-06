@@ -33,48 +33,39 @@ function calculate(){
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
 
-let adaptiveDays=14;
-function renderDays(){
- const box=$('dailyRows'),old=[...box.querySelectorAll('.dayRow')].map(r=>({w:r.querySelector('.dayWeight').value,k:r.querySelector('.dayCalories').value}));
- box.innerHTML='<div style="display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;margin-bottom:8px;font-size:12px;font-weight:800;color:#7b8797"><span>День</span><span>Вага, кг</span><span>Ккал</span></div>';
- for(let i=0;i<adaptiveDays;i++){
-  const d=document.createElement('div');d.className='dayRow';d.style.cssText='display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center';
-  d.innerHTML='<b style="font-size:13px;color:#718096">'+(i+1)+'</b><input class="dayWeight" type="number" inputmode="decimal" placeholder="кг" value="'+(old[i]?.w||'')+'"><input class="dayCalories" type="number" inputmode="numeric" placeholder="ккал" value="'+(old[i]?.k||'')+'">';
-  box.appendChild(d);
- }
-}
 function adapt(){
  try{
   const error=$('adaptError'),result=$('adaptResult');error.style.display='none';
-  const target=Number($('currentTarget').value),g=$('goal').value,rows=[...document.querySelectorAll('.dayRow')];
-  if(!target||target<800||target>7000){error.textContent='Перевір поточну ціль калорій.';error.style.display='block';return}
-  const data=rows.map((r,i)=>({day:i+1,w:Number(r.querySelector('.dayWeight').value)||0,k:Number(r.querySelector('.dayCalories').value)||0}));
-  const weights=data.filter(x=>x.w>=35&&x.w<=300),foods=data.filter(x=>x.k>=800&&x.k<=7000);
+  const n=id=>Number($(id).value)||0,target=n('currentTarget'),weights=['cycleW1','cycleW2','cycleW3','cycleW4','cycleW5'].map(n),avgCalories=n('cycleCalories'),foodDays=n('cycleFoodDays'),steps=n('cycleSteps'),planned=n('cyclePlannedWorkouts'),done=n('cycleDoneWorkouts'),waistStart=n('waistStart'),waistEnd=n('waistEnd'),g=$('goal').value;
   const wait=msg=>{result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+msg+'</p>';result.classList.add('show')};
-  if(data.length<14||weights.length<10||foods.length<10){wait('Є ПЛАН ще збирає дані. Потрібно щонайменше 14 днів спостереження, 10 записів ваги та 10 днів харчування.');return}
-  const first=weights.filter(x=>x.day<=7),last=weights.filter(x=>x.day>data.length-7);
-  if(first.length<5||last.length<5){wait('Потрібно щонайменше 5 зважувань у першому та останньому 7-денному вікні.');return}
-  const mean=a=>a.reduce((s,x)=>s+x,0)/a.length,firstAvg=mean(first.map(x=>x.w)),lastAvg=mean(last.map(x=>x.w)),avgCalories=mean(foods.map(x=>x.k));
-  const adherence=Math.abs(avgCalories-target)/target;
-  if(adherence>.10){wait('Фактичне харчування помітно відрізняється від поточної цілі. Спочатку варто стабілізувати виконання плану, щоб корекція була обґрунтованою.');return}
-  const change=(lastAvg-firstAvg)/firstAvg;
-  let desired=0;if(g==='loss')desired=-0.005;else if(g==='gain')desired=$('experience').value==='advanced'?0.0015:0.0025;else if(g==='recomp')desired=-0.001;
-  const tolerance=g==='maintain'?0.002:0.0025,diff=change-desired;
-  let delta=0,reason='Динаміка відповідає поточній цілі. Змінювати калорійність зараз не потрібно.';
-  if(Math.abs(diff)>tolerance){
-   if(g==='loss')delta=diff>0?-100:100;
-   else if(g==='gain')delta=diff<0?100:-100;
-   else if(g==='recomp')delta=diff>0?-100:100;
-   else delta=change>0?-100:100;
-   reason='Є стійке відхилення від очікуваної динаміки для обраної цілі.';
+  if(!target||target<800||target>7000||weights.some(x=>x<35||x>300)){error.textContent='Перевір поточну ціль та 5 контрольних зважувань.';error.style.display='block';return}
+  if(foodDays<21||!avgCalories){wait('Недостатньо даних про харчування. Для місячного перегляду потрібно щонайменше 21 день із записаним раціоном.');return}
+  if(Math.abs(avgCalories-target)/target>.10){wait('Фактична середня калорійність помітно відрізняється від призначеної. Спочатку потрібно стабілізувати виконання плану.');return}
+  if(planned>0&&done/planned<.7){wait('Виконано менше 70% запланованих силових тренувань. Зараз зміна калорій може маскувати проблему з виконанням плану.');return}
+  const startAvg=(weights[0]+weights[1])/2,endAvg=(weights[3]+weights[4])/2,weightChange=(endAvg-startAvg)/startAvg,waistChange=waistStart&&waistEnd?waistEnd-waistStart:null;
+  let delta=0,reason='Поточна калорійність відповідає динаміці. Змінювати її зараз не потрібно.';
+  if(g==='loss'){
+   if(weightChange>-.01 && !(waistChange!==null&&waistChange<=-1)) {delta=-100;reason='За 28 днів немає достатньої динаміки ваги або талії для цілі зменшення жиру.'}
+   else if(weightChange<-.04){delta=100;reason='За цикл маса знизилася швидко. Пропонуємо трохи підвищити калорійність.'}
+  }else if(g==='recomp'){
+   const waistImproved=waistChange!==null&&waistChange<=-1;
+   if(Math.abs(weightChange)<=.015&&waistImproved){reason='Вага відносно стабільна, а талія зменшилася. Для рекомпозиції це хороший сигнал — калорійність залишаємо.'}
+   else if(weightChange>.015&&!waistImproved){delta=-100;reason='Вага зростає, а талія не покращується. Пропонуємо невелике зниження калорійності.'}
+   else if(weightChange<-.03){delta=100;reason='Для рекомпозиції маса знижується занадто помітно. Пропонуємо невелике підвищення калорійності.'}
+  }else if(g==='gain'){
+   if(weightChange<.005){delta=100;reason='За 28 днів маса майже не змінилася при цілі набору.'}
+   else if(weightChange>.025){delta=-100;reason='Маса зростає швидше, ніж потрібно для консервативного набору.'}
+  }else{
+   if(weightChange>.015){delta=-100;reason='За цикл є стійкий ріст маси при цілі підтримання.'}
+   else if(weightChange<-.015){delta=100;reason='За цикл є стійке зниження маси при цілі підтримання.'}
   }
-  const next=Math.max(1200,Math.round((target+delta)/10)*10),title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
+  const next=Math.max(1200,Math.round((target+delta)/10)*10),title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ',waistInfo=waistChange===null?'':' Талія: '+(waistChange>0?'+':'')+waistChange.toFixed(1)+' см.';
   const action=delta===0?'':'<div style="display:flex;gap:8px;margin-top:14px"><button type="button" id="acceptAdapt" style="margin:0">Прийняти '+next.toLocaleString('uk-UA')+' ккал</button><button type="button" id="keepAdapt" style="margin:0;background:#eef4ff;color:#245cae">Залишити '+target.toLocaleString('uk-UA')+'</button></div>';
-  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Проаналізовано '+weights.length+' записів ваги та '+foods.length+' днів харчування. Наступну автоматичну перевірку в повній версії Є ПЛАН робитиме не раніше ніж через 7 днів після прийнятої корекції.</p>'+action;
+  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Проаналізовано 28-денний цикл: 5 контрольних зважувань, '+foodDays+' днів харчування'+waistInfo+(steps?' Середня активність: '+steps.toLocaleString('uk-UA')+' кроків/день.':'')+'</p>'+action;
   result.classList.add('show');
-  if(delta!==0){$('acceptAdapt').onclick=()=>{$('currentTarget').value=next;result.innerHTML='<span class="kicker">НОВУ ЦІЛЬ ПРИЙНЯТО</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Є ПЛАН продовжить збирати дані. Наступна корекція — лише після нового періоду спостереження.</p>'};$('keepAdapt').onclick=()=>{result.innerHTML='<span class="kicker">ПОТОЧНУ ЦІЛЬ ЗАЛИШЕНО</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Рекомендацію не застосовано. Є ПЛАН продовжить спостерігати за динамікою.</p>'}}
+  if(delta!==0){$('acceptAdapt').onclick=()=>{$('currentTarget').value=next;result.innerHTML='<span class="kicker">НОВУ ЦІЛЬ ПРИЙНЯТО</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Починається новий 28-денний цикл спостереження.</p>'};$('keepAdapt').onclick=()=>{result.innerHTML='<span class="kicker">ПОТОЧНУ ЦІЛЬ ЗАЛИШЕНО</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Рекомендацію не застосовано. Наступний плановий перегляд — після нового циклу.</p>'}}
   setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
- }catch(err){const e=$('adaptError');e.textContent='Помилка перевірки цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block'}
+ }catch(err){const e=$('adaptError');e.textContent='Помилка перегляду цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block'}
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('addDayBtn').addEventListener('click',()=>{if(adaptiveDays<21){adaptiveDays++;renderDays()}});renderDays();syncAdjust();
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);syncAdjust();
 })();
