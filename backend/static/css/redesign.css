@@ -16324,3 +16324,18 @@ body.eplan-redesign.client-ui .lyfta-set-head>span>small{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* Trainer bottom navigation scroll stability — iOS */
+body.eplan-redesign.trainer-ui .trainer-bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:calc(9px + env(safe-area-inset-bottom, 0px))!important;
+  -webkit-transform:translate3d(-50%,0,0)!important;
+  transform:translate3d(-50%,0,0)!important;
+  z-index:950!important;
+  will-change:transform;
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+}
