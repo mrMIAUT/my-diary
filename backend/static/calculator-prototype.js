@@ -34,6 +34,7 @@ function calculate(){
 }
 
 function adapt(){
+ try{
  const error=$('adaptError'),result=$('adaptResult');error.style.display='none';
  const w1=Number($('week1Weight').value),w2=Number($('week2Weight').value),avg=Number($('avgCalories').value),days=Number($('loggedDays').value),target=Number($('currentTarget').value),g=$('goal').value;
  if(!w1||!w2||!avg||!target||w1<35||w1>300||w2<35||w2>300||avg<800||avg>7000||target<800||target>7000){error.textContent='Перевір введені дані.';error.style.display='block';return}
@@ -59,6 +60,7 @@ function adapt(){
  const title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Є ПЛАН оцінює середню вагу, а не окреме зважування, і змінює ціль невеликими кроками. У повній версії корекція буде виконуватися лише після достатнього періоду спостереження.</p>';
  result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+ }catch(err){const e=$('adaptError');e.textContent='Помилка перевірки цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block';}
 }
 $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);syncAdjust();
 })();
