@@ -27,7 +27,7 @@ except Exception:
     webpush=None; WebPushException=Exception; ec=None; serialization=None
 
 BASE=Path(__file__).resolve().parent
-DATABASE_URL=os.environ["DATABASE_URL"]
+DATABASE_URL=os.environ.get("DATABASE_URL")\nPROTOTYPE_MODE=not bool(DATABASE_URL)
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
@@ -1025,8 +1025,7 @@ def init():
         migrate_credentials(c)
         c.commit()
 
-init()
-
+if DATABASE_URL:\n    init()\n
 # TEMP_STAGING_PROFILE_SNAPSHOT
 def _log_staging_profile_snapshot():
     if "staging" not in str(DATABASE_URL).lower():
@@ -1052,8 +1051,7 @@ def _log_staging_profile_snapshot():
     except Exception as exc:
         logger.warning("STAGING_PROFILE_SNAPSHOT_ERROR %s",type(exc).__name__)
 
-_log_staging_profile_snapshot()
-
+if DATABASE_URL:\n    _log_staging_profile_snapshot()\n
 
 def password_input_schema(schema:dict):
     # Compatibility-only input: add_client() uses its own random initial secret.
@@ -1380,7 +1378,7 @@ def apple_touch_icon():
 @app.get("/manifest.webmanifest")
 def web_manifest(): return FileResponse(BASE/"static"/"manifest.webmanifest",media_type="application/manifest+json")
 @app.get("/health")
-def health(): return {"status":"online","version":"V3","database":"postgresql"}
+def health(): return {"status":"online","version":"EPLAN-1.2-prototype" if PROTOTYPE_MODE else "V3","database":"prototype-none" if PROTOTYPE_MODE else "postgresql"}
 
 @app.post("/api/login")
 def login(x:Login,request:Request,response:Response):
