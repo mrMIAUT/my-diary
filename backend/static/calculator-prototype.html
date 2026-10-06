@@ -14,11 +14,9 @@
 <label class="wide">Ціль<select id="goal"><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція тіла</option><option value="maintain" selected>Підтримання форми</option><option value="gain">Набір м’язової маси</option></select></label>
 <label class="wide" id="adjustWrap">Калорійність для вашої цілі<select id="adjust"></select><small id="adjustHint" style="font-weight:500;color:#7b8797"></small></label>
 </div><button id="calcBtn" type="button">Розрахувати</button><div class="result" id="result"></div><p id="calcError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-<section class="card"><span class="badge">АДАПТАЦІЯ</span><h1 style="font-size:22px">Перевірка цілі</h1><p>Демонстрація майбутньої адаптації. Введіть середні дані двох послідовних 7-денних періодів. Дані не зберігаються.</p><div class="grid">
-<label>Середня вага · тиждень 1<input id="week1Weight" type="number" inputmode="decimal" placeholder="кг"></label>
-<label>Середня вага · тиждень 2<input id="week2Weight" type="number" inputmode="decimal" placeholder="кг"></label>
-<label>Середні калорії / день<input id="avgCalories" type="number" inputmode="numeric" placeholder="ккал"></label>
-<label>Днів із записаним харчуванням<select id="loggedDays"><option value="7">7</option><option value="6">6</option><option value="5">5</option><option value="4">4</option><option value="3">3</option></select></label>
+<section class="card"><span class="badge">АДАПТАЦІЯ</span><h1 style="font-size:22px">Перевірка цілі</h1><p>Демонстрація майбутньої адаптації. Внесіть щоденну вагу та фактичні калорії за 14–21 день. Дані не зберігаються.</p>
 <label class="wide">Поточна ціль калорій<input id="currentTarget" type="number" inputmode="numeric" placeholder="ккал/день"></label>
-</div><button id="adaptBtn" type="button">Перевірити ціль</button><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=12" defer></script></body></html>
+<div id="dailyRows" style="margin-top:16px"></div>
+<button id="addDayBtn" type="button" style="background:#eef4ff;color:#245cae;margin-top:10px">+ Додати день</button>
+<button id="adaptBtn" type="button">Перевірити ціль</button><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
+</main><script src="/static/calculator-prototype.js?v=13" defer></script></body></html>
