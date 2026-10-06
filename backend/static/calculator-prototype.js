@@ -20,12 +20,6 @@ function syncAdjust(){
  $('adjustHint').textContent=g==='maintain'?'Підтримання без дефіциту чи профіциту.':'Стартова рекомендація. Її можна змінити вручну.';
  syncTarget();
 }
-function paceText(g,w,exp){
- if(g==='loss'){const lo=w*(exp==='advanced'?.003:.005),hi=w*(exp==='advanced'?.005:.0075);return 'Орієнтовний темп: −'+lo.toFixed(2)+'–'+hi.toFixed(2)+' кг/тиждень';}
- if(g==='gain'){const lo=w*(exp==='advanced'?.001:.0025),hi=w*(exp==='advanced'?.0025:.005);return 'Орієнтовний темп: +'+lo.toFixed(2)+'–'+hi.toFixed(2)+' кг/тиждень';}
- if(g==='recomp')return 'Орієнтир: вага може змінюватися мало — оцінюємо також талію та прогрес у тренуваннях.';
- return 'Орієнтир: стабільна середня вага без стійкого тренду вгору або вниз.';
-}
 function calculate(){
  try{
   $('calcError').style.display='none';
