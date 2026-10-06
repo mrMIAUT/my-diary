@@ -7,29 +7,19 @@ function recommendedAdjust(g,bf,exp){
  if(g==='gain') return exp==='advanced'?5:(bf&&bf>=25?0:5);
  return 0;
 }
-function syncTarget(){
- const g=$('goal').value,input=$('targetWeight'),hint=$('targetHint');
- if(g==='loss'){input.style.display='block';input.placeholder='Бажана вага, кг';hint.textContent='Коли орієнтир буде досягнуто, Є ПЛАН запропонує переглянути наступну ціль.'}
- else if(g==='gain'){input.style.display='block';input.placeholder='Орієнтир ваги, кг';hint.textContent='Орієнтир допомагає завершити цикл набору та зробити новий розрахунок.'}
- else {input.style.display='none';input.value='';hint.textContent=g==='recomp'?'Для рекомпозиції важливіша динаміка ваги, талії та тренувань, а не одна цільова вага.':'Є ПЛАН перевірятиме, чи вага залишається стабільною.'}
-}
 function syncAdjust(){
  const g=$('goal').value,bf=Number($('bf').value)||0,exp=$('experience').value,rec=recommendedAdjust(g,bf,exp),sel=$('adjust');
  const values=g==='loss'?[-5,-10,-15,-20,-25]:g==='recomp'?[0,-5,-10]:g==='gain'?[0,5,10,15]:[0];
  sel.innerHTML=values.map(v=>'<option value="'+v+'"'+(v===rec?' selected':'')+'>'+(v>0?'+':'')+v+'%'+(v===rec?' · рекомендовано':'')+'</option>').join('');
  $('adjustHint').textContent=g==='maintain'?'Підтримання без дефіциту чи профіциту.':'Стартова рекомендація. Її можна змінити вручну.';
- syncTarget();
 }
 function calculate(){
  try{
   $('calcError').style.display='none';
-  const sex=$('sex').value,age=Number($('age').value),h=Number($('height').value),w=Number($('weight').value),bf=Number($('bf').value)||0,g=$('goal').value,exp=$('experience').value,target=Number($('targetWeight').value)||0;
+  const sex=$('sex').value,age=Number($('age').value),h=Number($('height').value),w=Number($('weight').value),bf=Number($('bf').value)||0,g=$('goal').value,exp=$('experience').value;
   const steps=Number($('steps').value),strength=Number($('strength').value),cardio=Number($('cardio').value),cardioMin=Number($('cardioMin').value);
   if(!age||!h||!w||age<18||age>100||h<120||h>230||w<35||w>300){showError('Перевір вік, зріст і вагу.');return}
   if(bf&&(bf<3||bf>60)){showError('Перевір відсоток жиру.');return}
-  if(target&&(target<35||target>300)){showError('Перевір орієнтир ваги.');return}
-  if(g==='loss'&&target>=w&&target){showError('Для зменшення жиру орієнтир ваги має бути нижчим за поточну вагу.');return}
-  if(g==='gain'&&target<=w&&target){showError('Для набору орієнтир ваги має бути вищим за поточну вагу.');return}
   if(steps<0||steps>50000||strength<0||strength>7||cardio<0||cardio>7||cardioMin<0||cardioMin>240){showError('Перевір дані активності.');return}
   const rmr=10*w+6.25*h-5*age+(sex==='male'?5:-161);
   const base=rmr*1.2,stepKcal=steps*w*0.0005,strengthDaily=(strength*5*w)/7,cardioDaily=(cardio*cardioMin*0.07*w)/7;
@@ -37,9 +27,8 @@ function calculate(){
   const kcal=Math.round(tdee*(1+adjustment/100)/10)*10;
   const proteinRate=g==='loss'||g==='recomp'?2.0:1.8,protein=Math.round(w*proteinRate),fat=Math.max(Math.round(w*.8),50),carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
   const strategy=adjustment===0?'підтримання':(adjustment<0?'дефіцит '+Math.abs(adjustment)+'%':'профіцит '+adjustment+'%');
-  const targetLine=target?'<p class="note">Орієнтир циклу: <b>'+target.toLocaleString('uk-UA')+' кг</b>. Після досягнення Є ПЛАН запропонує обрати наступну ціль і перерахує її за актуальними даними.</p>':'';
   const result=$('result');
-  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><div class="pace">'+paceText(g,w,exp)+'</div>'+targetLine+'<p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b> Калорії можуть змінюватися в межах поточного циклу, але сама ціль змінюється лише після вашого підтвердження.</p><details class="note"><summary>Як розраховано?</summary><p>Mifflin–St Jeor · '+strategy+'. '+(bf?'Вказаний % жиру використано як додатковий модифікатор стартової рекомендації. ':'')+'Досвід: '+$('experience').selectedOptions[0].textContent+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
+  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div>'<p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b> Калорії можуть змінюватися в межах поточного циклу, але сама ціль змінюється лише після вашого підтвердження.</p><details class="note"><summary>Як розраховано?</summary><p>Mifflin–St Jeor · '+strategy+'. '+(bf?'Вказаний % жиру використано як додатковий модифікатор стартової рекомендації. ':'')+'Досвід: '+$('experience').selectedOptions[0].textContent+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
   result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
