@@ -33,34 +33,37 @@ function calculate(){
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
 
+let adaptiveDays=14;
+function renderDays(){
+ const box=$('dailyRows'),old=[...box.querySelectorAll('.dayRow')].map(r=>({w:r.querySelector('.dayWeight').value,k:r.querySelector('.dayCalories').value}));
+ box.innerHTML='<div style="display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;margin-bottom:8px;font-size:12px;font-weight:800;color:#7b8797"><span>День</span><span>Вага, кг</span><span>Ккал</span></div>';
+ for(let i=0;i<adaptiveDays;i++){
+  const d=document.createElement('div');d.className='dayRow';d.style.cssText='display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center';
+  d.innerHTML='<b style="font-size:13px;color:#718096">'+(i+1)+'</b><input class="dayWeight" type="number" inputmode="decimal" placeholder="кг" value="'+(old[i]?.w||'')+'"><input class="dayCalories" type="number" inputmode="numeric" placeholder="ккал" value="'+(old[i]?.k||'')+'">';
+  box.appendChild(d);
+ }
+}
 function adapt(){
  try{
- const error=$('adaptError'),result=$('adaptResult');error.style.display='none';
- const w1=Number($('week1Weight').value),w2=Number($('week2Weight').value),avg=Number($('avgCalories').value),days=Number($('loggedDays').value),target=Number($('currentTarget').value),g=$('goal').value;
- if(!w1||!w2||!avg||!target||w1<35||w1>300||w2<35||w2>300||avg<800||avg>7000||target<800||target>7000){error.textContent='Перевір введені дані.';error.style.display='block';return}
- if(days<5){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ ЗМІН</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Недостатньо даних про харчування. Для корекції потрібно щонайменше 5 днів із 7 із записаним раціоном.</p>';result.classList.add('show');return}
- const change=(w2-w1)/w1;
- let desired=0;
- if(g==='loss') desired=-0.005;
- else if(g==='gain') desired=$('experience').value==='advanced'?0.0015:0.0025;
- else if(g==='recomp') desired=-0.001;
- const tolerance=g==='maintain'?0.002:0.0025;
- const diff=change-desired;
- let delta=0,reason='Динаміка відповідає поточній цілі.';
- if(Math.abs(diff)>tolerance){
-   if(g==='loss'){delta=diff>0?-100:100;}
-   else if(g==='gain'){delta=diff<0?100:-100;}
-   else if(g==='recomp'){delta=diff>0?-100:100;}
-   else {delta=change>0?-100:100;}
-   reason='Середня вага рухається не в тому діапазоні, який очікується для обраної цілі.';
- }
- const adherence=Math.abs(avg-target)/target;
- if(adherence>.12){delta=0;reason='Спочатку варто стабілізувати фактичне харчування ближче до поточної цілі — зараз різниця занадто велика для надійної корекції.';}
- const next=Math.max(1200,Math.round((target+delta)/10)*10);
- const title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
- result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Є ПЛАН оцінює середню вагу, а не окреме зважування, і змінює ціль невеликими кроками. У повній версії корекція буде виконуватися лише після достатнього періоду спостереження.</p>';
- result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
- }catch(err){const e=$('adaptError');e.textContent='Помилка перевірки цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block';}
+  const error=$('adaptError'),result=$('adaptResult');error.style.display='none';
+  const target=Number($('currentTarget').value),g=$('goal').value,rows=[...document.querySelectorAll('.dayRow')];
+  if(!target||target<800||target>7000){error.textContent='Перевір поточну ціль калорій.';error.style.display='block';return}
+  const data=rows.map((r,i)=>({day:i+1,w:Number(r.querySelector('.dayWeight').value)||0,k:Number(r.querySelector('.dayCalories').value)||0}));
+  const weights=data.filter(x=>x.w>=35&&x.w<=300),foods=data.filter(x=>x.k>=800&&x.k<=7000);
+  if(data.length<14||weights.length<10||foods.length<10){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Потрібно щонайменше 14 днів спостереження та достатньо записів ваги й харчування. Є ПЛАН продовжить збирати дані.</p>';result.classList.add('show');return}
+  const first=weights.filter(x=>x.day<=7),last=weights.filter(x=>x.day>data.length-7);
+  if(first.length<5||last.length<5){result.innerHTML='<span class="kicker">ПОКИ ЩО БЕЗ КОРЕКЦІЇ</span><strong class="kcal">'+target.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">Для надійного тренду потрібно щонайменше 5 зважувань у першому та останньому 7-денному вікні.</p>';result.classList.add('show');return}
+  const mean=a=>a.reduce((s,x)=>s+x,0)/a.length,firstAvg=mean(first.map(x=>x.w)),lastAvg=mean(last.map(x=>x.w)),avgCalories=mean(foods.map(x=>x.k));
+  const change=(lastAvg-firstAvg)/firstAvg;
+  let desired=0;if(g==='loss')desired=-0.005;else if(g==='gain')desired=$('experience').value==='advanced'?0.0015:0.0025;else if(g==='recomp')desired=-0.001;
+  const tolerance=g==='maintain'?0.002:0.0025,diff=change-desired;
+  let delta=0,reason='Динаміка відповідає поточній цілі.';
+  if(Math.abs(diff)>tolerance){if(g==='loss')delta=diff>0?-100:100;else if(g==='gain')delta=diff<0?100:-100;else if(g==='recomp')delta=diff>0?-100:100;else delta=change>0?-100:100;reason='Стійкий тренд середньої ваги не відповідає обраній цілі.'}
+  if(Math.abs(avgCalories-target)/target>.12){delta=0;reason='Фактичне харчування поки занадто відрізняється від цілі. Спочатку потрібно стабілізувати виконання плану.'}
+  const next=Math.max(1200,Math.round((target+delta)/10)*10),title=delta===0?'ЗАЛИШАЄМО БЕЗ ЗМІН':'РЕКОМЕНДОВАНА КОРЕКЦІЯ';
+  result.innerHTML='<span class="kicker">'+title+'</span><strong class="kcal">'+next.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><p class="note">'+reason+'</p><p class="note">Оцінено '+weights.length+' записів ваги та '+foods.length+' днів харчування. Рішення базується на 7-денних середніх, а не на одному зважуванні.</p>';
+  result.classList.add('show');setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+ }catch(err){const e=$('adaptError');e.textContent='Помилка перевірки цілі: '+(err&&err.message?err.message:'невідома помилка');e.style.display='block'}
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);syncAdjust();
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('addDayBtn').addEventListener('click',()=>{if(adaptiveDays<21){adaptiveDays++;renderDays()}});renderDays();syncAdjust();
 })();
