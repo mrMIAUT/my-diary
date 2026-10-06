@@ -14,9 +14,17 @@
 <label class="wide">Ціль<select id="goal"><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція тіла</option><option value="maintain" selected>Підтримання форми</option><option value="gain">Набір м’язової маси</option></select></label>
 <label class="wide" id="adjustWrap">Калорійність для вашої цілі<select id="adjust"></select><small id="adjustHint" style="font-weight:500;color:#7b8797"></small></label>
 </div><button id="calcBtn" type="button">Розрахувати</button><div class="result" id="result"></div><p id="calcError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-<section class="card"><span class="badge">АДАПТАЦІЯ</span><h1 style="font-size:22px">Перевірка цілі</h1><p>Демонстрація майбутньої адаптації. Внесіть щоденну вагу та фактичні калорії за 14–21 день. Дані не зберігаються.</p>
+<section class="card"><span class="badge">28 ДНІВ</span><h1 style="font-size:22px">Перегляд цілі</h1><p>Раз на 28 днів Є ПЛАН оцінює вагу, харчування, активність, тренування та заміри й лише після цього пропонує корекцію.</p>
+<div class="grid">
 <label class="wide">Поточна ціль калорій<input id="currentTarget" type="number" inputmode="numeric" placeholder="ккал/день"></label>
-<div id="dailyRows" style="margin-top:16px"></div>
-<button id="addDayBtn" type="button" style="background:#eef4ff;color:#245cae;margin-top:10px">+ Додати день</button>
-<button id="adaptBtn" type="button">Перевірити ціль</button><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=15" defer></script></body></html>
+<label>Вага · старт<input id="cycleW1" type="number" inputmode="decimal" placeholder="кг"></label><label>Вага · 7 день<input id="cycleW2" type="number" inputmode="decimal" placeholder="кг"></label>
+<label>Вага · 14 день<input id="cycleW3" type="number" inputmode="decimal" placeholder="кг"></label><label>Вага · 21 день<input id="cycleW4" type="number" inputmode="decimal" placeholder="кг"></label>
+<label>Вага · 28 день<input id="cycleW5" type="number" inputmode="decimal" placeholder="кг"></label><label>Середні ккал / день<input id="cycleCalories" type="number" inputmode="numeric" placeholder="ккал"></label>
+<label>Днів харчування<select id="cycleFoodDays"><option value="28">28</option><option value="25">25–27</option><option value="21">21–24</option><option value="14">14–20</option><option value="7">менше 14</option></select></label>
+<label>Середні кроки / день<input id="cycleSteps" type="number" inputmode="numeric" placeholder="кроків"></label>
+<label>Заплановано силових<input id="cyclePlannedWorkouts" type="number" inputmode="numeric" placeholder="за 28 днів"></label><label>Виконано силових<input id="cycleDoneWorkouts" type="number" inputmode="numeric" placeholder="за 28 днів"></label>
+<label>Талія · старт<input id="waistStart" type="number" inputmode="decimal" placeholder="см"></label><label>Талія · 28 день<input id="waistEnd" type="number" inputmode="decimal" placeholder="см"></label>
+</div>
+<p class="note">У повній версії харчування, кроки та тренування підтягуватимуться автоматично. Користувачеві залишаться контрольне зважування раз на тиждень і заміри раз на 28 днів.</p>
+<button id="adaptBtn" type="button">Переглянути ціль</button><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
+</main><script src="/static/calculator-prototype.js?v=16" defer></script></body></html>
