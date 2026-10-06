@@ -27,7 +27,8 @@ except Exception:
     webpush=None; WebPushException=Exception; ec=None; serialization=None
 
 BASE=Path(__file__).resolve().parent
-DATABASE_URL=os.environ.get("DATABASE_URL")\nPROTOTYPE_MODE=not bool(DATABASE_URL)
+DATABASE_URL=os.environ.get("DATABASE_URL")
+PROTOTYPE_MODE=not bool(DATABASE_URL)
 UPLOADS=BASE/"uploads"
 UPLOADS.mkdir(exist_ok=True)
 
@@ -1025,7 +1026,9 @@ def init():
         migrate_credentials(c)
         c.commit()
 
-if DATABASE_URL:\n    init()\n
+if DATABASE_URL:
+    init()
+
 # TEMP_STAGING_PROFILE_SNAPSHOT
 def _log_staging_profile_snapshot():
     if "staging" not in str(DATABASE_URL).lower():
@@ -1051,7 +1054,9 @@ def _log_staging_profile_snapshot():
     except Exception as exc:
         logger.warning("STAGING_PROFILE_SNAPSHOT_ERROR %s",type(exc).__name__)
 
-if DATABASE_URL:\n    _log_staging_profile_snapshot()\n
+if DATABASE_URL:
+    _log_staging_profile_snapshot()
+
 
 def password_input_schema(schema:dict):
     # Compatibility-only input: add_client() uses its own random initial secret.
@@ -2163,7 +2168,9 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
         for item in x.meals:
             txt=item.content.strip()
             if txt: parts.append(f"Прийом їжі {item.meal_number}, варіант {item.variant_number}: {txt}")
-        legacy="\n\n".join(parts)
+        legacy="
+
+".join(parts)
     with con() as c:
         c.execute("UPDATE clients SET kcal=%s,protein=%s,fat=%s,carbs=%s,meal_plan=%s WHERE id=%s",(x.kcal,x.protein,x.fat,x.carbs,legacy,cid))
         c.execute("DELETE FROM nutrition_plan_items WHERE client_id=%s",(cid,))
@@ -2719,7 +2726,9 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
     if client_info:
         full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
         client_name=full_name or client_info.get("name") or "Клієнт"
-        send_telegram(f"🏋️ {client_name} почав тренування\n{x.day_name}\n{today}")
+        send_telegram(f"🏋️ {client_name} почав тренування
+{x.day_name}
+{today}")
     return session
 
 @app.post("/api/workout/{sid}/finish")
@@ -2750,7 +2759,9 @@ def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
                 client_name=full_name or client_info.get("name") or "Клієнт"
                 workout_day=str(session.get("day_name") or "Тренування")
                 workout_date=str(session.get("workout_day") or "")[:10] or str(kyiv_today())
-                send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
+                send_telegram(f"✅ {client_name} завершив тренування
+{workout_day}
+{workout_date}")
                 add_notification(session["client_id"],"trainer","workout_finished",
                     f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
                     "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
