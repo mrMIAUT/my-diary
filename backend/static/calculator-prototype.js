@@ -25,10 +25,16 @@ function calculate(){
   const base=rmr*1.2,stepKcal=steps*w*0.0005,strengthDaily=(strength*5*w)/7,cardioDaily=(cardio*cardioMin*0.07*w)/7;
   const tdee=base+stepKcal+strengthDaily+cardioDaily,adjustment=Number($('adjust').value)||0;
   const kcal=Math.round(tdee*(1+adjustment/100)/10)*10;
-  const proteinRate=g==='loss'||g==='recomp'?2.0:1.8,protein=Math.round(w*proteinRate),fat=Math.max(Math.round(w*.8),50),carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
+  const bmi=w/Math.pow(h/100,2),bmi30Weight=30*Math.pow(h/100,2),ffm=bf?w*(1-bf/100):0;
+  let macroWeight=w,proteinBasis='фактичної маси тіла';
+  if(bmi>=30){macroWeight=Math.min(w,bmi30Weight);proteinBasis='скоригованої маси тіла (межа BMI 30)';
+   if(bf&&ffm>0){const ffmGuard=Math.min(w,Math.max(ffm,bmi30Weight*.8));macroWeight=Math.min(macroWeight,Math.max(ffmGuard,ffm));proteinBasis='скоригованої маси з урахуванням складу тіла'}
+  }
+  const proteinRate=g==='loss'||g==='recomp'?2.0:1.8,protein=Math.round(macroWeight*proteinRate);
+  const fatWeight=bmi>=30?macroWeight:w,fat=Math.max(Math.round(fatWeight*.8),50),carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
   const strategy=adjustment===0?'підтримання':(adjustment<0?'дефіцит '+Math.abs(adjustment)+'%':'профіцит '+adjustment+'%');
   const result=$('result');
-  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b> Калорії можуть змінюватися в межах поточного циклу, але сама ціль змінюється лише після вашого підтвердження.</p><details class="note"><summary>Як розраховано?</summary><p>Mifflin–St Jeor · '+strategy+'. '+(bf?'Вказаний % жиру використано як додатковий модифікатор стартової рекомендації. ':'')+'Досвід: '+$('experience').selectedOptions[0].textContent+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
+  result.innerHTML='<span class="kicker">ВАША СТАРТОВА ЦІЛЬ</span><strong class="kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong><div class="macros"><div class="macro"><b>'+protein+'</b> г<small>Білки</small></div><div class="macro"><b>'+fat+'</b> г<small>Жири</small></div><div class="macro"><b>'+carbs+'</b> г<small>Вуглеводи</small></div></div><p class="note"><b>Є ПЛАН скоригує ціль за вашою реальною динамікою.</b> Калорії можуть змінюватися в межах поточного циклу, але сама ціль змінюється лише після вашого підтвердження.</p><details class="note"><summary>Як розраховано?</summary><p>Mifflin–St Jeor · '+strategy+'. Білок розраховано від '+proteinBasis+'. '+(bmi>=30?'Для БЖВ фактичну масу не використано напряму, щоб надлишкова жирова маса не завищувала білок і жири. ':'')+(bf?'Вказаний % жиру використано як додатковий сигнал складу тіла. ':'')+'Досвід: '+$('experience').selectedOptions[0].textContent+'. Активність: '+steps.toLocaleString('uk-UA')+' кроків/день, '+strength+' силових і '+cardio+' кардіо/тиждень.</p></details>';
   result.classList.add('show');$('currentTarget').value=kcal;setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
  }catch(err){showError('Помилка калькулятора: '+(err&&err.message?err.message:'невідома помилка'))}
 }
