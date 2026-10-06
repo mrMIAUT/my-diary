@@ -1361,10 +1361,16 @@ def _app_index():
     })
 
 @app.get("/")
-def home(): return _app_index()
+def home():
+    if PROTOTYPE_MODE:
+        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+    return _app_index()
 
 @app.get("/app")
-def pwa_app(): return _app_index()
+def pwa_app():
+    if PROTOTYPE_MODE:
+        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+    return _app_index()
 
 @app.get("/pwa-reset")
 def pwa_reset():
@@ -2168,9 +2174,7 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
         for item in x.meals:
             txt=item.content.strip()
             if txt: parts.append(f"Прийом їжі {item.meal_number}, варіант {item.variant_number}: {txt}")
-        legacy="
-
-".join(parts)
+        legacy="\n\n".join(parts)
     with con() as c:
         c.execute("UPDATE clients SET kcal=%s,protein=%s,fat=%s,carbs=%s,meal_plan=%s WHERE id=%s",(x.kcal,x.protein,x.fat,x.carbs,legacy,cid))
         c.execute("DELETE FROM nutrition_plan_items WHERE client_id=%s",(cid,))
@@ -2726,9 +2730,7 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
     if client_info:
         full_name=((client_info.get("first_name") or "")+" "+(client_info.get("last_name") or "")).strip()
         client_name=full_name or client_info.get("name") or "Клієнт"
-        send_telegram(f"🏋️ {client_name} почав тренування
-{x.day_name}
-{today}")
+        send_telegram(f"🏋️ {client_name} почав тренування\n{x.day_name}\n{today}")
     return session
 
 @app.post("/api/workout/{sid}/finish")
@@ -2759,9 +2761,7 @@ def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
                 client_name=full_name or client_info.get("name") or "Клієнт"
                 workout_day=str(session.get("day_name") or "Тренування")
                 workout_date=str(session.get("workout_day") or "")[:10] or str(kyiv_today())
-                send_telegram(f"✅ {client_name} завершив тренування
-{workout_day}
-{workout_date}")
+                send_telegram(f"✅ {client_name} завершив тренування\n{workout_day}\n{workout_date}")
                 add_notification(session["client_id"],"trainer","workout_finished",
                     f"{client_name} завершив тренування «{workout_day}». Потрібно перевірити.",
                     "results",workout_date,0,sid,"Є ПЛАН · Тренування завершено")
