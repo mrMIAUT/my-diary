@@ -373,9 +373,31 @@ function renderProgramExercisePickerResults(){
  }).join('');
 }
 
+function programDayMeta(d,day){
+ return (d?.program_days||[]).find(v=>String(v.day_name||'')===String(day||''))||null;
+}
 function programDayTitle(d,day){
- let x=(d?.program_days||[]).find(v=>v.day_name===day);
+ let x=programDayMeta(d,day);
  return String(x?.title||'').trim();
+}
+function programDayKind(d,day){return String(programDayMeta(d,day)?.kind||'standard').toLowerCase()}
+function programDayIsExtra(d,day){return programDayKind(d,day)==='extra'}
+function programDayIsAvailable(d,day){
+ let m=programDayMeta(d,day);
+ if(!m||String(m.kind||'standard').toLowerCase()!=='extra')return true;
+ if(String(m.status||'active').toLowerCase()!=='active')return false;
+ let until=String(m.active_until||'').slice(0,10);
+ return !until||until>=isoToday();
+}
+function programDayExtraModeLabel(m){
+ if(!m)return '';
+ return String(m.extra_mode||'once').toLowerCase()==='temporary'?'Тимчасово':'Разово';
+}
+function programDayExtraStatusLabel(m){
+ if(!m)return '';
+ let until=String(m.active_until||'').slice(0,10),expired=until&&until<isoToday();
+ if(expired)return 'Термін завершено';
+ return String(m.status||'active').toLowerCase()==='active'?'Активне':'Призупинено';
 }
 
 function trainerProgramExerciseTitleHTML(name){
@@ -384,9 +406,10 @@ function trainerProgramExerciseTitleHTML(name){
 }
 
 function programHTML(d){
- let groups={}; d.program.forEach(x=>(groups[x.day_name]??=[]).push(x));
+ let groups={}; (d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
+ (d.program_days||[]).forEach(m=>{if(String(m.kind||'standard').toLowerCase()==='extra'&&!groups[m.day_name])groups[m.day_name]=[]});
  let form=`<div class="card trainer-program-editor">
-   <div class="trainer-program-editor-head"><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div>
+   <div class="trainer-program-editor-head"><div><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div><button type="button" class="trainer-extra-day-create" onclick="openExtraTrainingDayModal()">＋ Додаткове тренування</button></div>
    <div class="trainer-program-editor-grid">
      <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
      <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
@@ -419,7 +442,7 @@ function programHTML(d){
  </div>`;
  let entries=Object.entries(groups);
  let list=entries.length?entries.map(([day,xs],di)=>{
-   let bodyId='programDay_'+di,title=programDayTitle(d,day),blocks=[];
+   let bodyId='programDay_'+di,title=programDayTitle(d,day),meta=programDayMeta(d,day),isExtra=programDayIsExtra(d,day),blocks=[];
    xs.forEach(x=>{
      if(x.superset_group){
        let b=blocks.find(v=>v.group===x.superset_group);
@@ -453,18 +476,111 @@ function programHTML(d){
      }).join('');
      return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
    }).join('');
-   return `<div class="card program-day-card" data-program-day="${esc(day)}">
+   let extraBadge=isExtra?`<span class="trainer-extra-day-badges"><b>Додаткове</b><em>${esc(programDayExtraModeLabel(meta))}</em><i class="${programDayIsAvailable(d,day)?'active':'paused'}">${esc(programDayExtraStatusLabel(meta))}</i></span>`:'';
+   let extraActions=isExtra?`<div class="trainer-extra-day-actions">
+      <button type="button" class="dark" data-day="${esc(day)}" onclick="toggleExtraTrainingDayStatus(this.dataset.day,this)">${programDayIsAvailable(d,day)?'Призупинити':'Активувати'}</button>
+      <button type="button" class="dark" data-day="${esc(day)}" onclick="openExtraTrainingDayModal(this.dataset.day)">Налаштування</button>
+      <button type="button" class="trainer-extra-promote" data-day="${esc(day)}" onclick="promoteExtraTrainingDay(this.dataset.day,this)">Додати до основного плану</button>
+      <button type="button" class="dark" data-day="${esc(day)}" onclick="openDuplicateProgramDayModal(this.dataset.day)">Дублювати</button>
+      <button type="button" class="danger" data-day="${esc(day)}" onclick="deleteProgramDay(this.dataset.day,this)">Видалити день</button>
+    </div>`:'';
+   let emptyExtra=isExtra&&!rows?`<div class="trainer-extra-day-empty"><span>У цьому додатковому тренуванні ще немає вправ.</span><button type="button" data-day="${esc(day)}" onclick="useProgramDayInEditor(this.dataset.day)">Додати вправу</button></div>`:'';
+   return `<div class="card program-day-card ${isExtra?'trainer-extra-day-card':''}" data-program-day="${esc(day)}">
      <div class="program-day-header-row">
        <button class="program-day-head" data-day="${esc(day)}" onclick="toggleProgramDay('${bodyId}',this)">
-         <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
+         <span class="program-day-heading"><span class="trainer-program-day-title-row"><h2>${esc(day)}</h2>${extraBadge}</span>${title?`<small>${esc(title)}</small>`:''}</span>
          <span class="program-day-arrow">⌄</span>
        </button>
        <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
      </div>
-     <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${rows}</div>
+     <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${extraActions}${emptyExtra}${rows}</div>
    </div>`;
  }).join(''):'<div class="card muted">Програма ще порожня.</div>';
  return form+list;
+}
+
+function useProgramDayInEditor(day){
+ let d=window.currentClientData||{},meta=programDayMeta(d,day);
+ let dayInput=document.getElementById('dn'),titleInput=document.getElementById('dntitle');
+ if(dayInput)dayInput.value=day;
+ if(titleInput)titleInput.value=meta?.title||'';
+ document.querySelector('.trainer-program-editor')?.scrollIntoView({behavior:'smooth',block:'start'});
+ setTimeout(()=>document.getElementById('ex')?.focus(),250);
+}
+
+function extraTrainingDayFormModeChanged(){
+ let mode=document.getElementById('extraDayMode')?.value||'once',wrap=document.getElementById('extraDayUntilWrap');
+ if(wrap)wrap.classList.toggle('hidden',mode!=='temporary');
+}
+
+function openExtraTrainingDayModal(day=''){
+ let d=window.currentClientData||{},meta=day?programDayMeta(d,day):null,isEdit=!!day;
+ let title=meta?.title||'',mode=String(meta?.extra_mode||'once'),status=String(meta?.status||'active'),until=String(meta?.active_until||'').slice(0,10);
+ document.getElementById('extraTrainingDayModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-extra-day-modal" id="extraTrainingDayModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-extra-day-modal-card"><div class="edit-exercise-head"><div><small>ДОДАТКОВЕ ТРЕНУВАННЯ</small><h2>${isEdit?'Налаштування':'Створити день'}</h2></div><button type="button" class="dark edit-exercise-close" onclick="extraTrainingDayModal.remove()">✕</button></div><div class="trainer-extra-day-form"><label><span>День</span><input id="extraDayName" value="${esc(day)}" ${isEdit?'readonly':''} placeholder="Напр. Додатковий день"></label><label><span>Назва</span><input id="extraDayTitle" value="${esc(title)}" placeholder="Напр. Груди + руки"></label><label><span>Режим</span><select id="extraDayMode" onchange="extraTrainingDayFormModeChanged()"><option value="once" ${mode==='once'?'selected':''}>Разово</option><option value="temporary" ${mode==='temporary'?'selected':''}>Тимчасово</option></select></label><label><span>Статус</span><select id="extraDayStatus"><option value="active" ${status==='active'?'selected':''}>Активне</option><option value="paused" ${status==='paused'?'selected':''}>Призупинено</option></select></label><label id="extraDayUntilWrap" class="${mode==='temporary'?'':'hidden'}"><span>Доступне до</span><input id="extraDayUntil" type="date" value="${esc(until)}"></label></div><p class="trainer-extra-day-note">Разовий день автоматично призупиниться після завершення. Тимчасовий можна залишити активним до потрібної дати.</p><button type="button" class="trainer-extra-day-save" onclick="saveExtraTrainingDay(this)">${isEdit?'Зберегти':'Створити тренування'}</button></div></div>`);
+}
+
+async function saveExtraTrainingDay(button=null){
+ let d=window.currentClientData||{},cid=d.client?.id||selected,day=(document.getElementById('extraDayName')?.value||'').trim(),title=(document.getElementById('extraDayTitle')?.value||'').trim(),mode=document.getElementById('extraDayMode')?.value||'once',status=document.getElementById('extraDayStatus')?.value||'active',until=(document.getElementById('extraDayUntil')?.value||'').trim();
+ if(!day)return alert('Вкажи назву дня.');
+ let restore=setActionLoading(button,'Зберігаємо…');
+ try{
+   await api('/program-day-settings',{method:'PUT',body:JSON.stringify({client_id:cid,day_name:day,title,kind:'extra',extra_mode:mode,status,active_until:mode==='temporary'&&until?until:null})});
+   extraTrainingDayModal.remove();
+   let fresh=await loadClientData(cid);window.currentClientData=fresh;
+   let pane=document.getElementById('program');
+   if(pane){pane.innerHTML=trainerTrainingTabHTML(fresh);reopenTrainerProgramDay(day)}
+   else await openClient(cid,'program');
+ }catch(e){restore();alert(e.message||'Не вдалося зберегти додаткове тренування')}
+}
+
+async function toggleExtraTrainingDayStatus(day,button=null){
+ let d=window.currentClientData||{},m=programDayMeta(d,day);if(!m)return;
+ let status=programDayIsAvailable(d,day)?'paused':'active',restore=setActionLoading(button,status==='active'?'Активуємо…':'Призупиняємо…');
+ try{
+   await api('/program-day-settings',{method:'PUT',body:JSON.stringify({client_id:d.client.id,day_name:day,title:m.title||'',kind:'extra',extra_mode:m.extra_mode||'once',status,active_until:m.active_until||null})});
+   let fresh=await loadClientData(d.client.id);window.currentClientData=fresh;
+   let pane=document.getElementById('program');if(pane){pane.innerHTML=trainerTrainingTabHTML(fresh);reopenTrainerProgramDay(day)}
+ }catch(e){restore();alert(e.message||'Не вдалося змінити статус')}
+}
+
+async function promoteExtraTrainingDay(day,button=null){
+ if(!confirm('Додати цей день до основного плану? Він почне враховуватися у поточному циклі тренувань.'))return;
+ let d=window.currentClientData||{},m=programDayMeta(d,day);if(!m)return;
+ let restore=setActionLoading(button,'Додаємо…');
+ try{
+   await api('/program-day-settings',{method:'PUT',body:JSON.stringify({client_id:d.client.id,day_name:day,title:m.title||'',kind:'standard',extra_mode:'once',status:'active',active_until:null})});
+   let fresh=await loadClientData(d.client.id);window.currentClientData=fresh;
+   let pane=document.getElementById('program');if(pane){pane.innerHTML=trainerTrainingTabHTML(fresh);reopenTrainerProgramDay(day)}
+ }catch(e){restore();alert(e.message||'Не вдалося додати день до основного плану')}
+}
+
+function openDuplicateProgramDayModal(day){
+ document.getElementById('duplicateProgramDayModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-extra-day-modal" id="duplicateProgramDayModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-extra-day-modal-card"><div class="edit-exercise-head"><div><small>ДУБЛЮВАННЯ</small><h2>${esc(day)}</h2></div><button type="button" class="dark edit-exercise-close" onclick="duplicateProgramDayModal.remove()">✕</button></div><label class="trainer-day-title-field"><span>Новий день</span><input id="duplicateProgramDayName" placeholder="Напр. Додатковий день 2"></label><label class="trainer-day-title-field"><span>Назва</span><input id="duplicateProgramDayTitle" placeholder="Необов’язково"></label><button type="button" class="trainer-extra-day-save" data-day="${esc(day)}" onclick="duplicateProgramDay(this.dataset.day,this)">Створити копію</button></div></div>`);
+ setTimeout(()=>document.getElementById('duplicateProgramDayName')?.focus(),30);
+}
+
+async function duplicateProgramDay(day,button=null){
+ let d=window.currentClientData||{},target=(document.getElementById('duplicateProgramDayName')?.value||'').trim(),title=(document.getElementById('duplicateProgramDayTitle')?.value||'').trim();
+ if(!target)return alert('Вкажи назву нового дня.');
+ let restore=setActionLoading(button,'Копіюємо…');
+ try{
+   await api('/program-day/duplicate',{method:'POST',body:JSON.stringify({client_id:d.client.id,source_day:day,target_day:target,target_title:title})});
+   duplicateProgramDayModal.remove();
+   let fresh=await loadClientData(d.client.id);window.currentClientData=fresh;
+   let pane=document.getElementById('program');if(pane){pane.innerHTML=trainerTrainingTabHTML(fresh);reopenTrainerProgramDay(target)}
+ }catch(e){restore();alert(e.message||'Не вдалося дублювати день')}
+}
+
+async function deleteProgramDay(day,button=null){
+ if(!confirm('Видалити цей додатковий день з поточного плану? Історія вже виконаних тренувань залишиться.'))return;
+ let d=window.currentClientData||{},restore=setActionLoading(button,'Видаляємо…');
+ try{
+   await api('/program-day/'+d.client.id+'?day_name='+encodeURIComponent(day),{method:'DELETE'});
+   let fresh=await loadClientData(d.client.id);window.currentClientData=fresh;
+   let pane=document.getElementById('program');if(pane)pane.innerHTML=trainerTrainingTabHTML(fresh);
+ }catch(e){restore();alert(e.message||'Не вдалося видалити день')}
 }
 
 function toggleNewExerciseSupersetBuilder(force=null){
