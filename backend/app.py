@@ -2736,7 +2736,8 @@ def duplicate_program_day(x:ProgramDayDuplicateIn,user:AuthUser=Depends(require_
     if source==target: raise HTTPException(400,"Нова назва дня має відрізнятися")
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
-        if c.execute("SELECT 1 FROM program WHERE client_id=%s AND day_name=%s LIMIT 1",(x.client_id,target)).fetchone():
+        if (c.execute("SELECT 1 FROM program WHERE client_id=%s AND day_name=%s LIMIT 1",(x.client_id,target)).fetchone()
+            or c.execute("SELECT 1 FROM program_days WHERE client_id=%s AND day_name=%s",(x.client_id,target)).fetchone()):
             raise HTTPException(409,"Тренувальний день з такою назвою вже існує")
         src=c.execute("SELECT * FROM program_days WHERE client_id=%s AND day_name=%s",(x.client_id,source)).fetchone()
         rows_src=[dict(r) for r in c.execute("SELECT * FROM program WHERE client_id=%s AND day_name=%s ORDER BY sort,id",(x.client_id,source)).fetchall()]
