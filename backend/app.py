@@ -1521,22 +1521,32 @@ def _usda_item(food:dict):
     name=str(food.get("description") or "").strip()
     if not name:return None
     brand=str(food.get("brandOwner") or food.get("brandName") or "").strip()
+    kcal=_usda_nutrient(food,"1008","energy")
+    protein=_usda_nutrient(food,"1003","protein")
+    fat=_usda_nutrient(food,"1004","total lipid (fat)")
+    carbs=_usda_nutrient(food,"1005","carbohydrate, by difference")
+    # Search results occasionally contain incomplete/bad branded nutrition.
+    # Do not let obviously impossible records reach the diary prototype.
+    if kcal<=0:return None
+    if any(v<0 or v>100 for v in (protein,fat,carbs)):return None
+    macro_kcal=protein*4+fat*9+carbs*4
+    if macro_kcal>max(kcal*1.45,kcal+120):return None
     return {
         "source":"usda","source_label":"USDA FoodData Central","source_id":str(food.get("fdcId") or ""),
         "barcode":str(food.get("gtinUpc") or ""),"name":name[:240],"brand":brand[:180],
-        "kcal_100":_usda_nutrient(food,"1008","energy"),
-        "protein_100":_usda_nutrient(food,"1003","protein"),
-        "fat_100":_usda_nutrient(food,"1004","total lipid (fat)"),
-        "carbs_100":_usda_nutrient(food,"1005","carbohydrate, by difference"),
+        "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
         "data_type":str(food.get("dataType") or ""),
     }
 
-def _usda_search(query:str,limit:int):
+USDA_GENERIC_TYPES=["Foundation","Survey (FNDDS)","SR Legacy"]
+USDA_BRANDED_TYPES=["Branded"]
+
+def _usda_search(query:str,limit:int,data_types=None):
     if not query or not USDA_API_KEY:return []
     url="https://api.nal.usda.gov/fdc/v1/foods/search?api_key="+urllib.parse.quote(USDA_API_KEY)
     payload=_food_fetch_json(url,{
-        "query":query,"pageSize":min(8,max(1,limit)),
-        "dataType":["Foundation","Survey (FNDDS)","SR Legacy","Branded"],
+        "query":query,"pageSize":min(12,max(1,limit)),
+        "dataType":data_types or USDA_GENERIC_TYPES,
     }) or {}
     items=[]
     for food in payload.get("foods") or []:
@@ -1632,9 +1642,12 @@ def _food_rank(query:str,items:list):
             brand_hits=_food_tokens(item.get("brand") or "") & qtokens
             score+=35+(70 if brand_hits else 0)
         else:
-            score+=65 if not off_brand_hit else 15
-            if str(item.get("data_type") or "").lower() in ("foundation","survey (fndds)","sr legacy"):
-                score+=12
+            data_type=str(item.get("data_type") or "").lower()
+            is_generic=data_type in ("foundation","survey (fndds)","sr legacy")
+            score+=(88 if is_generic else (50 if not off_brand_hit else 10))
+            if is_generic:
+                score+=18
+                if not (item.get("brand") or "").strip():score+=15
         # A broad "сир" query should mean cheese, not every snack whose flavour
         # happens to contain the word "сир". Keep actual cheese products first.
         if query=="сир":
@@ -1687,10 +1700,17 @@ def prototype_food_search(
         for query in variants[1:]:
             if len(off_items)<limit:
                 off_items.extend(_off_search(query,limit-len(off_items)))
+        # Generic USDA records first. Branded USDA is only a fallback; this
+        # prevents a generic query from becoming a wall of US supermarket SKUs.
         for query in variants:
             uq=usda_food_query(query)
             if uq and len(usda_items)<limit:
-                usda_items.extend(_usda_search(uq,limit-len(usda_items)))
+                usda_items.extend(_usda_search(uq,limit-len(usda_items),USDA_GENERIC_TYPES))
+        if len(usda_items)<max(3,limit//2):
+            for query in variants:
+                uq=usda_food_query(query)
+                if uq and len(usda_items)<limit:
+                    usda_items.extend(_usda_search(uq,limit-len(usda_items),USDA_BRANDED_TYPES))
     items=_food_rank(normalized,off_items+usda_items)[:limit]
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
