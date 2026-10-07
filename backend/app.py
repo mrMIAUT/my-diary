@@ -1721,6 +1721,17 @@ def _intent_score(query:str,item:dict):
         score-=150
     return score
 
+def _intent_bucket(query:str,item:dict):
+    """0 = core food, 1 = related subtype, 2 = unrelated/noisy mention."""
+    rule=_intent_rule(query)
+    if not rule:return 0
+    low=(item.get("name") or "").lower().strip()
+    if any(marker in low for marker in rule["noise"]):return 2
+    if rule["secondary"] and any(token in low for token in rule["secondary"]):return 1
+    if any(low.startswith(prefix) for prefix in rule["starts"]):return 0
+    if any(token in low for token in rule["contains"]):return 1
+    return 2
+
 def _is_generic_dish_noise(query:str,item:dict):
     if query!="сир" or item.get("source")!="usda":return False
     low=(item.get("name") or "").lower()
@@ -1771,7 +1782,10 @@ def _food_rank(query:str,items:list):
             if any(marker in low_name for marker in ("чипс","брускет","сухар","крекер","соус","смак сир")):
                 score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
-    ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
+    if _intent_rule(query):
+        ranked.sort(key=lambda x:(_intent_bucket(query,x),-x["_score"],x.get("brand")!="" ,x.get("name","")))
+    else:
+        ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
     # For a generic cheese search, prepared USDA dishes are fallback-only.
     if query=="сир":
         clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
@@ -1795,8 +1809,9 @@ def prototype_food_search(
         return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode","page":1,"has_more":False}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
-    # Fetch one extra per source so the client can expose a real "Показати ще".
-    fetch_limit=min(FOOD_SEARCH_MAX_RESULTS,limit+1)
+    # Search a wider candidate pool, then rank down to the visible page.
+    # This prevents the first 8 raw OFF hits from deciding the UI order.
+    fetch_limit=min(FOOD_SEARCH_MAX_RESULTS,max(limit+1,24))
     # In the Ukrainian app, country-filtered OFF results come first. We then
     # supplement them with global OFF results before falling back to USDA.
     ua_off_items=_off_search(normalized,fetch_limit,page,"Ukraine")
@@ -1833,7 +1848,8 @@ def prototype_food_search(
                 if uq and len(usda_items)<fetch_limit:
                     usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,page))
     ranked=_food_rank(normalized,off_items+usda_items)
-    has_more=len(ranked)>limit or len(off_items)>=fetch_limit or len(usda_items)>=fetch_limit
+    has_more=(len(ranked)>limit or len(ua_off_items)>=fetch_limit or
+              len(global_off_items)>=fetch_limit or len(usda_items)>=fetch_limit)
     items=ranked[:limit]
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
