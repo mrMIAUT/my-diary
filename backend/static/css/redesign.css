@@ -16914,11 +16914,11 @@ body.eplan-redesign.trainer-ui .trainer-extra-manager-create{
   flex:0 0 auto;
   min-height:40px;
   padding:9px 13px!important;
-  border:0!important;
+  border:1px solid #c7dcfb!important;
   border-radius:12px!important;
-  background:#1677ff!important;
-  color:#fff!important;
-  box-shadow:0 8px 18px rgba(22,119,255,.16)!important;
+  background:#edf5ff!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
   font-size:10px!important;
   font-weight:900!important;
 }
