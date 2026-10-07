@@ -1547,6 +1547,49 @@ def _usda_search(query:str,limit:int):
 def _food_tokens(value:str):
     return {x for x in "".join(ch if (ch.isalnum() or ch in "%") else " " for ch in value.lower()).split() if len(x)>1}
 
+FOOD_GENERIC_QUERY_TOKENS={
+    "сир","кисломолочний","твердий","рис","басматі","куряча","грудка","філе",
+    "молоко","йогурт","тунець","яйце","яйця","банан","яблуко","гречка",
+    "арахісова","паста","вівсяні","пластівці","cheese","cottage","rice",
+    "chicken","breast","milk","yogurt","tuna","egg","eggs","oats","peanut","butter",
+}
+
+def _off_brand_matches(query:str,items:list):
+    qtokens=_food_tokens(query)
+    matches=[]
+    for item in items:
+        if item.get("source")!="off":continue
+        brand_tokens=_food_tokens(item.get("brand") or "")
+        # Ignore generic food words and numeric fat percentages when deciding
+        # whether the user explicitly named a brand.
+        meaningful={t for t in (qtokens & brand_tokens)
+                    if t not in FOOD_GENERIC_QUERY_TOKENS and not t.rstrip("%").replace(".","",1).isdigit()}
+        if meaningful:matches.append(item)
+    return matches
+
+def _food_duplicate_signature(item:dict):
+    brand_tokens=tuple(sorted(_food_tokens(item.get("brand") or "")))
+    macros=tuple(round(_food_num(item.get(key)),1) for key in ("kcal_100","protein_100","fat_100","carbs_100"))
+    return brand_tokens,macros
+
+def _food_name_similarity(a:str,b:str):
+    ta=_food_tokens(a);tb=_food_tokens(b)
+    if not ta or not tb:return 0.0
+    return len(ta&tb)/max(1,len(ta|tb))
+
+def _dedupe_food_items(items:list):
+    kept=[]
+    for item in items:
+        duplicate=False
+        sig=_food_duplicate_signature(item)
+        for existing in kept:
+            if item.get("source")!="off" or existing.get("source")!="off":continue
+            if sig!=_food_duplicate_signature(existing):continue
+            if _food_name_similarity(item.get("name") or "",existing.get("name") or "")>=0.55:
+                duplicate=True;break
+        if not duplicate:kept.append(item)
+    return kept
+
 def _food_rank(query:str,items:list):
     qtokens=_food_tokens(query)
     off_brand_hit=False
@@ -1585,7 +1628,7 @@ def _food_rank(query:str,items:list):
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
     for item in ranked:item.pop("_score",None)
-    return ranked
+    return _dedupe_food_items(ranked)
 
 @app.get("/api/prototype/foods/search")
 def prototype_food_search(
@@ -1601,21 +1644,37 @@ def prototype_food_search(
         return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode"}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
-    off_items=[]
+    # Start with the localized query. If OFF clearly recognizes a brand named by
+    # the user (e.g. "Молокія сир 5%"), keep the result set brand-focused and do
+    # not pollute it with fuzzy USDA matches such as unrelated "95% lean" foods.
+    off_items=_off_search(normalized,limit)
+    brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
-    # OFF gets the original localized query first and an English fallback only
-    # when needed. USDA gets the English-normalized variants.
-    for query in variants:
-        if len(off_items)<limit:
-            off_items.extend(_off_search(query,limit-len(off_items)))
-    for query in variants:
-        uq=usda_food_query(query)
-        if uq and len(usda_items)<limit:
-            usda_items.extend(_usda_search(uq,limit-len(usda_items)))
+    if brand_matches:
+        # Keep only OFF candidates that match the named brand. This makes a
+        # brand query deterministic even when OFF itself returns broad results.
+        matched_brand_tokens=set()
+        qtokens=_food_tokens(normalized)
+        for item in brand_matches:
+            matched_brand_tokens.update(_food_tokens(item.get("brand") or "") & qtokens)
+        off_items=[
+            item for item in off_items
+            if _food_tokens(item.get("brand") or "") & matched_brand_tokens
+        ]
+    else:
+        # No brand intent was recognized: broaden OFF and use USDA for generic
+        # foods such as "сир", "рис басматі" or "куряча грудка".
+        for query in variants[1:]:
+            if len(off_items)<limit:
+                off_items.extend(_off_search(query,limit-len(off_items)))
+        for query in variants:
+            uq=usda_food_query(query)
+            if uq and len(usda_items)<limit:
+                usda_items.extend(_usda_search(uq,limit-len(usda_items)))
     items=_food_rank(normalized,off_items+usda_items)[:limit]
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
-        "items":items,"mode":"text",
+        "items":items,"mode":"text","brand_query":bool(brand_matches),
         "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
     }
 
