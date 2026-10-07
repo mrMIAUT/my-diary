@@ -405,11 +405,102 @@ function trainerProgramExerciseTitleHTML(name){
  return '<span class="trainer-program-name-marquee'+(long?' is-long':'')+'" title="'+esc(value)+'"><span class="trainer-program-name-track"><strong>'+esc(value)+'</strong>'+(long?'<strong aria-hidden="true">'+esc(value)+'</strong>':'')+'</span></span>';
 }
 
+function trainerProgramBlocksHTML(xs,day){
+ let blocks=[];
+ (xs||[]).forEach(x=>{
+   if(x.superset_group){
+     let b=blocks.find(v=>v.group===x.superset_group);
+     if(b)b.items.push(x);else blocks.push({group:x.superset_group,items:[x]});
+   }else blocks.push({group:'',items:[x]});
+ });
+ return blocks.map((b,bi)=>{
+   let first=b.items[0],isSuper=!!b.group;
+   let moveUp=bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')" aria-label="Перемістити вище">↑</button>`:'';
+   let moveDown=bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')" aria-label="Перемістити нижче">↓</button>`:'';
+   let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
+   let normalBlockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
+   let supersetMoveActions=isSuper?`<span class="trainer-exercise-head-actions trainer-superset-inline-move">${moveUp}${moveDown}</span>`:'';
+   let superRest=isSuper?supersetRestLabel(b.items):'';
+   let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span>${superRest?`<small>Відпочинок ${esc(superRest)}</small>`:''}</div>`:'';
+   let info=superHead+b.items.map((x,xi)=>{
+     let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
+     let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
+     return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
+       <div class="trainer-exercise-head">
+         <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}">${trainerProgramExerciseTitleHTML(x.exercise)}${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
+         ${itemActions}
+       </div>
+       <div class="trainer-exercise-body">
+         <div class="muted">${x.sets} підходи × ${esc(repeatPlanText(x))}</div>
+         ${programExtraHTML(x,!isSuper)}
+         ${alternativesTrainerHTML(x)}
+         <div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div>
+       </div>
+     </div>`;
+   }).join('');
+   return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
+ }).join('');
+}
+
+function trainerStandardProgramDayCardHTML(d,day,xs,index){
+ let bodyId='programDay_'+index,title=programDayTitle(d,day),rows=trainerProgramBlocksHTML(xs,day);
+ return `<div class="card program-day-card" data-program-day="${esc(day)}">
+   <div class="program-day-header-row">
+     <button class="program-day-head" data-day="${esc(day)}" onclick="toggleProgramDay('${bodyId}',this)">
+       <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
+       <span class="program-day-arrow">⌄</span>
+     </button>
+     <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
+   </div>
+   <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${rows}</div>
+ </div>`;
+}
+
+function trainerExtraProgramDayCardHTML(d,day,xs,index){
+ let meta=programDayMeta(d,day),title=programDayTitle(d,day)||'Додаткове тренування',bodyId='extraProgramDay_'+index,rows=trainerProgramBlocksHTML(xs,day);
+ let available=programDayIsAvailable(d,day),until=String(meta?.active_until||'').slice(0,10);
+ let statusClass=available?'active':'paused',status=programDayExtraStatusLabel(meta);
+ let empty=!rows?`<div class="trainer-extra-day-empty"><div><strong>Ще немає вправ</strong><span>Додай вправи, щоб клієнт міг виконати це тренування.</span></div><button type="button" data-day="${esc(day)}" onclick="useProgramDayInEditor(this.dataset.day)">Додати вправу</button></div>`:'';
+ return `<article class="trainer-extra-manager-item ${statusClass}" data-program-day="${esc(day)}">
+   <button type="button" class="trainer-extra-manager-main" onclick="toggleProgramDay('${bodyId}',this)">
+     <span class="trainer-extra-manager-icon">＋</span>
+     <span class="trainer-extra-manager-copy"><strong>${esc(day)}</strong><small>${esc(title)}</small><em>${esc(programDayExtraModeLabel(meta))}${until?' · до '+esc(formatProgressDate(until)):''}</em></span>
+     <span class="trainer-extra-manager-status ${statusClass}">${esc(status)}</span>
+     <span class="program-day-arrow">⌄</span>
+   </button>
+   <div id="${bodyId}" data-program-day-body="${esc(day)}" class="trainer-extra-manager-body hidden">
+     <div class="trainer-extra-manager-actions">
+       <button type="button" class="trainer-extra-action ${available?'pause':'activate'}" data-day="${esc(day)}" onclick="toggleExtraTrainingDayStatus(this.dataset.day,this)">${available?'Призупинити':'Активувати'}</button>
+       <button type="button" class="trainer-extra-action" data-day="${esc(day)}" onclick="openExtraTrainingDayModal(this.dataset.day)">Налаштування</button>
+       <button type="button" class="trainer-extra-action" data-day="${esc(day)}" onclick="openDuplicateProgramDayModal(this.dataset.day)">Дублювати</button>
+       <button type="button" class="trainer-extra-action promote" data-day="${esc(day)}" onclick="promoteExtraTrainingDay(this.dataset.day,this)">Додати до основного плану</button>
+       <button type="button" class="trainer-extra-action delete" data-day="${esc(day)}" onclick="deleteProgramDay(this.dataset.day,this)">Видалити</button>
+     </div>
+     ${empty}
+     ${rows?'<div class="trainer-extra-manager-exercises">'+rows+'</div>':''}
+   </div>
+ </article>`;
+}
+
+function trainerExtraTrainingPanelHTML(d,groups){
+ let extra=(d.program_days||[]).filter(m=>String(m.kind||'standard').toLowerCase()==='extra');
+ return `<section class="card trainer-extra-manager">
+   <div class="trainer-extra-manager-head">
+     <div><span class="trainer-extra-manager-kicker">ГНУЧКИЙ ПЛАН</span><h2>Додаткові тренування</h2><p>Разові або тимчасові дні поза основним циклом.</p></div>
+     <button type="button" class="trainer-extra-manager-create" onclick="openExtraTrainingDayModal()">＋ Створити</button>
+   </div>
+   ${extra.length
+     ?'<div class="trainer-extra-manager-list">'+extra.map((m,i)=>trainerExtraProgramDayCardHTML(d,m.day_name,groups[m.day_name]||[],i)).join('')+'</div>'
+     :'<div class="trainer-extra-manager-empty"><span>＋</span><div><strong>Додаткових тренувань ще немає</strong><small>Створи день, який можна активувати лише коли він потрібен клієнту.</small></div></div>'}
+ </section>`;
+}
+
 function programHTML(d){
  let groups={}; (d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
  (d.program_days||[]).forEach(m=>{if(String(m.kind||'standard').toLowerCase()==='extra'&&!groups[m.day_name])groups[m.day_name]=[]});
+ let extraPanel=trainerExtraTrainingPanelHTML(d,groups);
  let form=`<div class="card trainer-program-editor">
-   <div class="trainer-program-editor-head"><div><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div><button type="button" class="trainer-extra-day-create" onclick="openExtraTrainingDayModal()">＋ Додаткове тренування</button></div>
+   <div class="trainer-program-editor-head"><div><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div></div>
    <div class="trainer-program-editor-grid">
      <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
      <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
@@ -440,63 +531,9 @@ function programHTML(d){
    <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
    <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">Зберегти вправу</button>
  </div>`;
- let entries=Object.entries(groups);
- let list=entries.length?entries.map(([day,xs],di)=>{
-   let bodyId='programDay_'+di,title=programDayTitle(d,day),meta=programDayMeta(d,day),isExtra=programDayIsExtra(d,day),blocks=[];
-   xs.forEach(x=>{
-     if(x.superset_group){
-       let b=blocks.find(v=>v.group===x.superset_group);
-       if(b)b.items.push(x);else blocks.push({group:x.superset_group,items:[x]});
-     }else blocks.push({group:'',items:[x]});
-   });
-   let rows=blocks.map((b,bi)=>{
-     let first=b.items[0],isSuper=!!b.group;
-     let moveUp=bi>0?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'up')" aria-label="Перемістити вище">↑</button>`:'';
-     let moveDown=bi<blocks.length-1?`<button class="dark move-btn" data-day="${esc(day)}" onclick="event.stopPropagation();moveProgramBlock(this.dataset.day,${bi},'down')" aria-label="Перемістити нижче">↓</button>`:'';
-     let addToSuperset=!isSuper?`<button class="dark trainer-exercise-add-super" title="Додати вправу в суперсет" data-day="${esc(first.day_name)}" onclick="event.stopPropagation();addSupersetExercise(${first.id},this.dataset.day)" aria-label="Додати вправу в суперсет">＋</button>`:'';
-     let normalBlockActions=!isSuper?`<span class="trainer-exercise-head-actions">${moveUp}${moveDown}${addToSuperset}</span>`:'';
-     let supersetMoveActions=isSuper?`<span class="trainer-exercise-head-actions trainer-superset-inline-move">${moveUp}${moveDown}</span>`:'';
-     let superRest=isSuper?supersetRestLabel(b.items):'';
-     let superHead=isSuper?`<div class="trainer-superset-head"><span>Суперсет</span>${superRest?`<small>Відпочинок ${esc(superRest)}</small>`:''}</div>`:'';
-     let info=superHead+b.items.map((x,xi)=>{
-       let tech=exerciseTechniqueUrl(x.exercise,x.technique_url);
-       let itemActions=!isSuper&&xi===0?normalBlockActions:(isSuper&&xi===0?supersetMoveActions:'');
-       return `<div class="${isSuper?'superset-inner':'trainer-exercise-shell'}">
-         <div class="trainer-exercise-head">
-           <div class="trainer-program-title-line ${isSuper?'superset-title-line':''}">${trainerProgramExerciseTitleHTML(x.exercise)}${tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):''}</div>
-           ${itemActions}
-         </div>
-         <div class="trainer-exercise-body">
-           <div class="muted">${x.sets} підходи × ${esc(repeatPlanText(x))}</div>
-           ${programExtraHTML(x,!isSuper)}
-           ${alternativesTrainerHTML(x)}
-           <div class="inner-actions"><button class="dark" onclick="event.stopPropagation();editExercise(${x.id})">✏️ Редагувати</button><button class="danger" onclick="event.stopPropagation();deleteExercise(${x.id})">Видалити</button></div>
-         </div>
-       </div>`;
-     }).join('');
-     return `<div class="exercise program-block trainer-exercise-card ${isSuper?'superset-block':''}"><div class="program-block-info">${info}</div></div>`;
-   }).join('');
-   let extraBadge=isExtra?`<span class="trainer-extra-day-badges"><b>Додаткове</b><em>${esc(programDayExtraModeLabel(meta))}</em><i class="${programDayIsAvailable(d,day)?'active':'paused'}">${esc(programDayExtraStatusLabel(meta))}</i></span>`:'';
-   let extraActions=isExtra?`<div class="trainer-extra-day-actions">
-      <button type="button" class="dark" data-day="${esc(day)}" onclick="toggleExtraTrainingDayStatus(this.dataset.day,this)">${programDayIsAvailable(d,day)?'Призупинити':'Активувати'}</button>
-      <button type="button" class="dark" data-day="${esc(day)}" onclick="openExtraTrainingDayModal(this.dataset.day)">Налаштування</button>
-      <button type="button" class="trainer-extra-promote" data-day="${esc(day)}" onclick="promoteExtraTrainingDay(this.dataset.day,this)">Додати до основного плану</button>
-      <button type="button" class="dark" data-day="${esc(day)}" onclick="openDuplicateProgramDayModal(this.dataset.day)">Дублювати</button>
-      <button type="button" class="danger" data-day="${esc(day)}" onclick="deleteProgramDay(this.dataset.day,this)">Видалити день</button>
-    </div>`:'';
-   let emptyExtra=isExtra&&!rows?`<div class="trainer-extra-day-empty"><span>У цьому додатковому тренуванні ще немає вправ.</span><button type="button" data-day="${esc(day)}" onclick="useProgramDayInEditor(this.dataset.day)">Додати вправу</button></div>`:'';
-   return `<div class="card program-day-card ${isExtra?'trainer-extra-day-card':''}" data-program-day="${esc(day)}">
-     <div class="program-day-header-row">
-       <button class="program-day-head" data-day="${esc(day)}" onclick="toggleProgramDay('${bodyId}',this)">
-         <span class="program-day-heading"><span class="trainer-program-day-title-row"><h2>${esc(day)}</h2>${extraBadge}</span>${title?`<small>${esc(title)}</small>`:''}</span>
-         <span class="program-day-arrow">⌄</span>
-       </button>
-       <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
-     </div>
-     <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${extraActions}${emptyExtra}${rows}</div>
-   </div>`;
- }).join(''):'<div class="card muted">Програма ще порожня.</div>';
- return form+list;
+ let standardEntries=Object.entries(groups).filter(([day])=>!programDayIsExtra(d,day));
+ let list=standardEntries.length?standardEntries.map(([day,xs],di)=>trainerStandardProgramDayCardHTML(d,day,xs,di)).join(''):'<div class="card muted">Основна програма ще порожня.</div>';
+ return extraPanel+form+list;
 }
 
 function useProgramDayInEditor(day){
