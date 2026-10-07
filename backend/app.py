@@ -1484,6 +1484,10 @@ def _off_item(product:dict):
     name=html.unescape(str(product.get("product_name_uk") or product.get("product_name") or product.get("product_name_en") or "")).strip()
     if not name:return None
     brand=html.unescape(str(product.get("brands") or "")).strip()
+    # Some OFF records contain the product name again in the brand field.
+    # Hide that noisy duplicate instead of showing e.g. "Тунець" / "Тунець".
+    if brand and _food_tokens(brand)==_food_tokens(name):
+        brand=""
     countries=[str(x).lower() for x in (product.get("countries_tags") or [])]
     kcal=_food_num(nutr.get("energy-kcal_100g"))
     if not kcal:
