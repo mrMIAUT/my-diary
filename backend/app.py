@@ -1523,16 +1523,20 @@ def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
 def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
     """Collect a bounded search window before ranking.
 
-    OFF's raw page order is not our UI ranking. Pulling a few pages lets EPLAN
-    compare Ukrainian brands that may otherwise sit on OFF page 2/3 against
-    foreign products from page 1.
+    Do not infer "last OFF page" from the number of validated items: broken or
+    incomplete OFF records are filtered by _off_item, so a raw 24-item page can
+    legitimately leave fewer than 24 usable items.
     """
     items=[]
+    empty_pages=0
     for source_page in range(1,max(1,pages)+1):
         batch=_off_search(query,page_size,source_page,country)
-        if not batch:break
+        if not batch:
+            empty_pages+=1
+            if empty_pages>=2:break
+            continue
+        empty_pages=0
         items.extend(batch)
-        if len(batch)<page_size:break
     return _dedupe_food_items(items)
 
 def _off_barcode(barcode:str):
@@ -1668,9 +1672,16 @@ FOOD_INTENT_RULES={
     "молоко":{
         "starts":("молоко","milk"),
         "contains":("молоко","milk"),
-        "secondary":("згущене молоко","молоко згущене","condensed milk"),
-        "noise":("сир","cheese","печиво","cookie","тістечко","cake","шоколад","chocolate",
-                 "батон","bar","сметана","cream","йогурт","yogurt"),
+        "secondary":(
+            "згущене молоко","молоко згущене","condensed milk",
+            "сгущенное молоко","молоко сгущенное","молоко сгущен",
+        ),
+        "noise":(
+            "сир","cheese","печиво","cookie","тістечко","cake","шоколад","chocolate",
+            "батон","bar","сметана","cream","йогурт","yogurt","кефір","кефир",
+            "kefir","oat milk","овсяное молоко","вівсяне молоко","мигдальне молоко",
+            "миндальное молоко","almond milk","soy milk","соевое молоко","соєве молоко",
+        ),
     },
     "сир":{
         "starts":("сир","cheese","cottage cheese","paneer"),
@@ -1828,7 +1839,7 @@ def prototype_food_search(
     # own page order leaks into EPLAN and good Ukrainian brands appear only
     # after "Показати ще".
     fetch_limit=24
-    ua_off_items=_off_collect(normalized,"Ukraine",pages=3,page_size=24)
+    ua_off_items=_off_collect(normalized,"Ukraine",pages=5,page_size=24)
     global_off_items=[]
     if len(ua_off_items)<limit*3:
         global_off_items=_off_collect(normalized,None,pages=2,page_size=24)
@@ -1862,6 +1873,11 @@ def prototype_food_search(
                 if uq and len(usda_items)<fetch_limit:
                     usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,1))
     ranked=_food_rank(normalized,off_items+usda_items)
+    if _intent_rule(normalized):
+        core=[x for x in ranked if _intent_bucket(normalized,x)==0]
+        secondary=[x for x in ranked if _intent_bucket(normalized,x)==1]
+        noisy=[x for x in ranked if _intent_bucket(normalized,x)==2]
+        ranked=core+secondary+noisy
     start=(page-1)*limit
     end=start+limit
     items=ranked[start:end]
