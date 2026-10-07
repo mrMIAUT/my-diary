@@ -1177,8 +1177,17 @@ class CompletedWorkoutSetIn(BaseModel):
     reps:int=Field(ge=1,le=MAX_REPS)
     rir:int=Field(ge=0,le=MAX_RIR)
     rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+class CompletedWorkoutAuxSetIn(BaseModel):
+    program_id:int
+    exercise:str=Field(max_length=255)
+    kind:str=Field(max_length=16)
+    parent_set_number:int|None=Field(default=None,ge=1,le=MAX_SET_COUNT)
+    aux_number:int=Field(default=1,ge=1,le=50)
+    weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
+    reps:int=Field(ge=1,le=MAX_REPS)
 class CompletedWorkoutEditIn(BaseModel):
     sets:List[CompletedWorkoutSetIn]=Field(default_factory=list,max_length=500)
+    aux_sets:List[CompletedWorkoutAuxSetIn]=Field(default_factory=list,max_length=500)
 class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
@@ -3189,12 +3198,32 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
         keys=[(int(item.program_id),int(item.set_number)) for item in x.sets]
         if len(keys)!=len(set(keys)):
             raise HTTPException(400,"Номери підходів однієї вправи не мають повторюватися")
+        set_numbers_by_program={}
         for item in x.sets:
-            if int(item.program_id) not in allowed:
+            pid=int(item.program_id)
+            if pid not in allowed:
                 raise HTTPException(400,"Вправа не належить цьому тренуванню")
             if not item.exercise.strip():
                 raise HTTPException(400,"Назва вправи порожня")
+            set_numbers_by_program.setdefault(pid,set()).add(int(item.set_number))
+        aux_keys=[]
+        for item in x.aux_sets:
+            pid=int(item.program_id)
+            kind=(item.kind or "").strip().lower()
+            if pid not in allowed:
+                raise HTTPException(400,"Додатковий підхід не належить цьому тренуванню")
+            if not item.exercise.strip():
+                raise HTTPException(400,"Назва вправи порожня")
+            if kind not in ("warmup","drop"):
+                raise HTTPException(400,"Невідомий тип додаткового підходу")
+            parent=None if kind=="warmup" else item.parent_set_number
+            if kind=="drop" and (parent is None or int(parent) not in set_numbers_by_program.get(pid,set())):
+                raise HTTPException(400,"Дроп-сет має бути прив'язаний до збереженого робочого підходу")
+            aux_keys.append((pid,kind,parent,int(item.aux_number)))
+        if len(aux_keys)!=len(set(aux_keys)):
+            raise HTTPException(400,"Номери додаткових підходів не мають повторюватися")
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND day=%s",(client_id,workout_day))
+        c.execute("DELETE FROM workout_aux_sets WHERE client_id=%s AND day=%s",(client_id,workout_day))
         for item in x.sets:
             mode=allowed[int(item.program_id)]
             c.execute("""INSERT INTO result_sets(
@@ -3202,6 +3231,16 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
                          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                       (client_id,item.program_id,item.exercise.strip(),workout_day,item.set_number,
                        item.weight,item.reps,item.rir,item.rest_seconds,mode))
+        for item in x.aux_sets:
+            pid=int(item.program_id)
+            kind=(item.kind or "").strip().lower()
+            parent=None if kind=="warmup" else item.parent_set_number
+            mode=allowed[pid]
+            c.execute("""INSERT INTO workout_aux_sets(
+                         client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps,repeat_mode)
+                         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                      (client_id,pid,item.exercise.strip(),workout_day,kind,parent,item.aux_number,
+                       item.weight,item.reps,mode))
         c.execute("""UPDATE workout_sessions
                      SET trainer_reviewed=FALSE,trainer_comment=''
                      WHERE id=%s""",(sid,))
@@ -3215,7 +3254,7 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
             add_notification(client_id,"trainer","workout_updated",
                 f"{client_name} відредагував результати завершеного тренування. Потрібно перевірити повторно.",
                 "results",workout_day,0,sid,"Є ПЛАН · Тренування оновлено")
-    return {"ok":True,"set_count":len(x.sets),"day":workout_day}
+    return {"ok":True,"set_count":len(x.sets),"aux_set_count":len(x.aux_sets),"day":workout_day}
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn,user:AuthUser=Depends(require_client)):
