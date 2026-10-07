@@ -16540,3 +16540,112 @@ body.eplan-redesign.client-ui .finish-summary-reopen{
     padding:14px;
   }
 }
+
+
+/* Completed workout auxiliary sets editor */
+body.eplan-redesign.client-ui .completed-workout-edit-aux-section{
+  margin:0 0 12px;
+  padding:10px;
+  border:1px solid #e3eaf4;
+  border-radius:13px;
+  background:#f7f9fc;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:7px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-title>span{
+  color:#55667f;
+  font-size:10px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-title>small{
+  color:#98a3b3;
+  font-size:8.5px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-warmup-holder,
+body.eplan-redesign.client-ui .completed-workout-edit-drop-holder{
+  display:grid;
+  gap:6px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-row{
+  display:grid;
+  grid-template-columns:68px minmax(0,1fr) minmax(0,1fr) 32px;
+  gap:6px;
+  align-items:center;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-row>span{
+  color:#708099;
+  font-size:9px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-row.drop>span{
+  color:#687b95;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-row input{
+  width:100%;
+  min-width:0;
+  height:36px;
+  padding:7px 6px!important;
+  border-radius:10px!important;
+  text-align:center;
+  font-size:11px!important;
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-aux-row>button{
+  width:32px;
+  height:32px;
+  min-width:32px;
+  padding:0!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#8390a3!important;
+  border:1px solid #dce4ee!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+}
+body.eplan-redesign.client-ui .completed-workout-add-warmup,
+body.eplan-redesign.client-ui .completed-workout-add-drop{
+  width:100%;
+  min-height:34px;
+  padding:7px 9px!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+  font-size:9.5px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui .completed-workout-add-warmup{
+  margin-top:7px;
+  background:#fff!important;
+  color:#5d7190!important;
+  border:1px solid #dfe7f1!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-set-group{
+  padding-bottom:8px;
+  border-bottom:1px solid #e7edf5;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-set-group:last-child{
+  border-bottom:0;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-drop-holder{
+  margin:6px 0 0 24px;
+}
+body.eplan-redesign.client-ui .completed-workout-add-drop{
+  width:auto;
+  margin:6px 0 0 24px;
+  background:#f1f5fb!important;
+  color:#61758f!important;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .completed-workout-edit-aux-row{
+    grid-template-columns:56px minmax(0,1fr) minmax(0,1fr) 30px;
+    gap:4px;
+  }
+  body.eplan-redesign.client-ui .completed-workout-edit-drop-holder,
+  body.eplan-redesign.client-ui .completed-workout-add-drop{
+    margin-left:18px;
+  }
+}
