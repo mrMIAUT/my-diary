@@ -636,11 +636,11 @@ function toggleProgramDay(id,btn){
 
 function reopenTrainerProgramDay(dayName){
  let pane=document.getElementById('program');if(!pane)return;
- let cards=[...pane.querySelectorAll('.program-day-card')];
+ let cards=[...pane.querySelectorAll('[data-program-day]')];
  let card=cards.find(x=>x.dataset.programDay===String(dayName||''));
  if(!card)return;
  let body=card.querySelector('[data-program-day-body]');
- let btn=card.querySelector('.program-day-head');
+ let btn=card.querySelector('.program-day-head,.trainer-extra-manager-main');
  if(body)body.classList.remove('hidden');
  let arrow=btn?.querySelector('.program-day-arrow');
  if(arrow)arrow.textContent='⌃';
