@@ -1567,15 +1567,34 @@ def _off_brand_matches(query:str,items:list):
         if meaningful:matches.append(item)
     return matches
 
+FOOD_BRAND_NOISE={
+    "тов","прАТ".lower(),"пат","ат","компанія","компания","виробник","manufacturer",
+    "молокозавод","молочний","завод","llc","ltd","inc","company",
+}
+FOOD_NAME_NOISE={"жир","жиру","fat","масовою","часткою","м.д.ж"}
+
 def _food_duplicate_signature(item:dict):
-    brand_tokens=tuple(sorted(_food_tokens(item.get("brand") or "")))
     macros=tuple(round(_food_num(item.get(key)),1) for key in ("kcal_100","protein_100","fat_100","carbs_100"))
-    return brand_tokens,macros
+    return macros
+
+def _core_brand_tokens(value:str):
+    return {t for t in _food_tokens(value) if t not in FOOD_BRAND_NOISE and not t.isdigit()}
+
+def _core_name_tokens(value:str):
+    return {t for t in _food_tokens(value)
+            if t not in FOOD_NAME_NOISE
+            and not t.rstrip("%").replace(".","",1).isdigit()}
 
 def _food_name_similarity(a:str,b:str):
-    ta=_food_tokens(a);tb=_food_tokens(b)
+    ta=_core_name_tokens(a);tb=_core_name_tokens(b)
     if not ta or not tb:return 0.0
     return len(ta&tb)/max(1,len(ta|tb))
+
+def _same_food_brand(a:dict,b:dict):
+    ba=_core_brand_tokens(a.get("brand") or "")
+    bb=_core_brand_tokens(b.get("brand") or "")
+    if not ba or not bb:return False
+    return bool(ba & bb)
 
 def _dedupe_food_items(items:list):
     kept=[]
@@ -1585,7 +1604,8 @@ def _dedupe_food_items(items:list):
         for existing in kept:
             if item.get("source")!="off" or existing.get("source")!="off":continue
             if sig!=_food_duplicate_signature(existing):continue
-            if _food_name_similarity(item.get("name") or "",existing.get("name") or "")>=0.55:
+            if not _same_food_brand(item,existing):continue
+            if _food_name_similarity(item.get("name") or "",existing.get("name") or "")>=0.5:
                 duplicate=True;break
         if not duplicate:kept.append(item)
     return kept
