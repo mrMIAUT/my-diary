@@ -1681,6 +1681,7 @@ FOOD_INTENT_RULES={
             "батон","bar","сметана","cream","йогурт","yogurt","кефір","кефир",
             "kefir","oat milk","овсяное молоко","вівсяне молоко","мигдальне молоко",
             "миндальное молоко","almond milk","soy milk","соевое молоко","соєве молоко",
+            "пряник","пряники","gingerbread","цукер","конфет","candy","wafer","вафл",
         ),
     },
     "сир":{
@@ -1752,6 +1753,13 @@ def _intent_bucket(query:str,item:dict):
     rule=_intent_rule(query)
     if not rule:return 0
     low=(item.get("name") or "").lower().strip()
+    # Morphological catch-all for condensed milk in Ukrainian/Russian/English.
+    # It must never compete with ordinary drinking milk merely because the name
+    # starts with "молоко".
+    if query.startswith("молоко") and (
+        "згущ" in low or "сгущ" in low or "condensed" in low
+    ):
+        return 1
     if any(marker in low for marker in rule["noise"]):return 2
     if rule["secondary"] and any(token in low for token in rule["secondary"]):return 1
     if any(low.startswith(prefix) for prefix in rule["starts"]):return 0
