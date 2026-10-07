@@ -1719,7 +1719,10 @@ FOOD_INTENT_RULES={
     "вівсяні пластівці":{
         "starts":("вівсяні пластівці","oats","oat flakes","rolled oats"),
         "contains":("вівсяні","oats","oat"),
-        "secondary":(),
+        "secondary":(
+            "strawberry","полуниц","клубник","banana","банан","chocolate","шоколад",
+            "berries","ягод","fruit","фрукт",
+        ),
         "noise":("cookie","печиво","bar","батон","granola","гранола"),
     },
     "куряча грудка":{
