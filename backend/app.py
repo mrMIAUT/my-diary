@@ -1494,11 +1494,17 @@ def _off_item(product:dict):
         "ukraine":("en:ukraine" in countries),
     }
 
-def _off_search(query:str,limit:int,page:int=1):
+def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
     fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags"
+    country_filter=""
+    if country:
+        country_filter=(
+            "&tagtype_0=countries&tag_contains_0=contains"
+            f"&tag_0={urllib.parse.quote(country)}"
+        )
     url=("https://world.openfoodfacts.org/cgi/search.pl?action=process&search_simple=1&json=1"
          f"&page={max(1,page)}&page_size={min(24,max(1,limit))}&fields={urllib.parse.quote(fields)}"
-         f"&search_terms={urllib.parse.quote(query)}")
+         f"&search_terms={urllib.parse.quote(query)}"+country_filter)
     payload=_food_fetch_json(url) or {}
     items=[]
     for product in payload.get("products") or []:
@@ -1708,7 +1714,13 @@ def prototype_food_search(
     variants=food_search_variants(raw)
     # Fetch one extra per source so the client can expose a real "Показати ще".
     fetch_limit=min(FOOD_SEARCH_MAX_RESULTS,limit+1)
-    off_items=_off_search(normalized,fetch_limit,page)
+    # In the Ukrainian app, country-filtered OFF results come first. We then
+    # supplement them with global OFF results before falling back to USDA.
+    ua_off_items=_off_search(normalized,fetch_limit,page,"Ukraine")
+    global_off_items=[]
+    if len(ua_off_items)<fetch_limit:
+        global_off_items=_off_search(normalized,fetch_limit-len(ua_off_items),page)
+    off_items=_dedupe_food_items(ua_off_items+global_off_items)
     brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
     if brand_matches:
@@ -1723,7 +1735,11 @@ def prototype_food_search(
     else:
         for query in variants[1:]:
             if len(off_items)<fetch_limit:
-                off_items.extend(_off_search(query,fetch_limit-len(off_items),page))
+                extra_ua=_off_search(query,fetch_limit-len(off_items),page,"Ukraine")
+                off_items=_dedupe_food_items(off_items+extra_ua)
+            if len(off_items)<fetch_limit:
+                extra_global=_off_search(query,fetch_limit-len(off_items),page)
+                off_items=_dedupe_food_items(off_items+extra_global)
         for query in variants:
             uq=usda_food_query(query)
             if uq and len(usda_items)<fetch_limit:
