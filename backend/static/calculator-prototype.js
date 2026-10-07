@@ -189,7 +189,7 @@ const PREP_PATTERNS=[
  {category:'fish',base:'carp',re:/короп|карп|carp/},
  {category:'fish',base:'sardine',re:/сардин|sardine/},
  {category:'grain',base:'basmati rice',re:/басмат|basmati/},
- {category:'grain',base:'rice',re:/\bрис\b|\brice\b/},
+ {category:'grain',base:'rice',re:/рис|rice/},
  {category:'grain',base:'buckwheat',re:/греч|buckwheat/},
  {category:'grain',base:'bulgur',re:/булгур|bulgur/},
  {category:'grain',base:'couscous',re:/кускус|couscous/},
@@ -200,7 +200,7 @@ const PREP_PATTERNS=[
  {category:'potato',base:'potato',re:/картоп|картоф|potato/},
  {category:'pasta',base:'spaghetti',re:/спагет|spaghett/},
  {category:'pasta',base:'macaroni',re:/макарон|macaroni/},
- {category:'pasta',base:'pasta',re:/паст[аи]\b|pasta/},
+ {category:'pasta',base:'pasta',re:/паст[аи]|pasta/},
 ];
 const PREPARED_MARKERS=/консерв|у розсол|в розсол|у власному соку|в масл|в олі|копчен|сушен|в'ялен|вялен|варен|запеч|гриль|fried|cooked|smoked|cured|ready to eat|hotdog|хот-дог|сосиск/;
 const PREP_OPTIONS={

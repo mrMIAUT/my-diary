@@ -1718,7 +1718,12 @@ FOOD_INTENT_RULES={
         "starts":("рис","rice","basmati rice"),
         "contains":("рис","rice","basmati"),
         "secondary":(),
-        "noise":("cracker","крекер","chips","чипс","pudding","пудинг","milk rice"),
+        "noise":(
+            "cracker","крекер","chips","чипс","pudding","пудинг","milk rice",
+            "rice cake","rice cakes","рисовий хлібець","рисовые хлебцы",
+            "rice flakes","рисові пластівці","рисовые хлопья",
+            "chocolate","шоколад","snack","снек",
+        ),
     },
     "вівсяні пластівці":{
         "starts":("вівсяні пластівці","oats","oat flakes","rolled oats"),
