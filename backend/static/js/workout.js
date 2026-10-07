@@ -259,7 +259,9 @@ function workoutExerciseSetCount(x,d){
  x=workoutEffectiveExercise(x);
  let planned=Math.max(1,+x?.sets||1),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x?.id),draftCount=+draft.__set_count||0;
  let actual=Math.max(0,...todaySets(d,x?.id).map(s=>+s.set_number||0));
- return Math.max(planned,draftCount,actual);
+ // An explicit draft count wins while the user is editing saved results, so an
+ // added set can be removed even though the old persisted row still exists until Save.
+ return draftCount>0?Math.max(planned,draftCount):Math.max(planned,actual);
 }
 function addWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
