@@ -1733,11 +1733,12 @@ FOOD_INTENT_RULES={
         "contains":("куряча грудка","chicken breast"),
         "secondary":(
             "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
-            "сиров'ялен","сыровялен","cured","smoked","копчен",
+            "сиров'ялен","сыровялен","cured","smoked","копчен","сушен","dried",
         ),
         "noise":(
             "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
             "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
+            "hotdog","hot dog","хот-дог","хотдог","sausage","сосиск",
         ),
     },
     "куряче філе":{
@@ -1745,11 +1746,12 @@ FOOD_INTENT_RULES={
         "contains":("куряче філе","chicken breast","chicken fillet","куриное филе"),
         "secondary":(
             "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
-            "сиров'ялен","сыровялен","cured","smoked","копчен",
+            "сиров'ялен","сыровялен","cured","smoked","копчен","сушен","dried",
         ),
         "noise":(
             "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
             "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
+            "hotdog","hot dog","хот-дог","хотдог","sausage","сосиск",
         ),
     },
 }

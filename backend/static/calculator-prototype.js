@@ -168,7 +168,7 @@ async function searchFoods(query,append=false){
 
 function isChickenFood(item){
  const low=((item&&item.name)||'').toLowerCase();
- return /кур(яча|ине|иное|иный)|chicken/.test(low)&&(low.includes('філе')||low.includes('филе')||low.includes('груд')||low.includes('breast'));
+ return /кур(яча|яче|ине|иное|иный)|chicken/.test(low)&&(low.includes('філе')||low.includes('филе')||low.includes('груд')||low.includes('breast'));
 }
 function prepControlsHtml(){
  return '<div class="foodPrep" id="foodPrepBox">'
