@@ -109,7 +109,7 @@ function redesignHomeTrainersHTML(trainers,cid){
 }
 
 function redesignClientHomeHTML(d,c,cid,groups,trainers=[]){
-  let days=Object.keys(groups||{});
+  let days=Object.keys(groups||{}).filter(function(day){return !programDayIsExtra(d,day)});
   let cycle=workoutCycleState(d,groups||{});
   let sessions=d.workout_sessions||[];
   let active=sessions.find(function(x){return x.status==='training'});
@@ -123,12 +123,12 @@ function redesignClientHomeHTML(d,c,cid,groups,trainers=[]){
 
   let weekStart=redesignWeekStartISO();
   let weekDone=sessions.filter(function(x){
-    return x.status==='finished' && sessionDay(x) && sessionDay(x)>=weekStart;
+    return x.status==='finished' && String(x.day_kind||'standard')!=='extra' && sessionDay(x) && sessionDay(x)>=weekStart;
   }).length;
   let weekDates=[];
   let ws=new Date(weekStart+'T12:00:00');
   for(let i=0;i<7;i++){let q=new Date(ws);q.setDate(ws.getDate()+i);weekDates.push(q.toISOString().slice(0,10))}
-  let finishedDates=new Set(sessions.filter(function(x){return x.status==='finished'&&sessionDay(x)}).map(sessionDay));
+  let finishedDates=new Set(sessions.filter(function(x){return x.status==='finished'&&String(x.day_kind||'standard')!=='extra'&&sessionDay(x)}).map(sessionDay));
   let weekBars=weekDates.map(function(day,i){return '<i class="'+(finishedDates.has(day)?'done':'')+'" style="height:'+(i===3?'24':'16')+'px"></i>'}).join('');
 
   let completedInCycle=Math.min(days.length,cycle.done.length);
