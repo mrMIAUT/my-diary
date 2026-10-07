@@ -1360,6 +1360,218 @@ def _app_index():
         "Pragma":"no-cache", "Expires":"0"
     })
 
+
+# EPLAN 1.2 isolated product-search prototype.
+# No product data is written to PostgreSQL here: PROTOTYPE_MODE intentionally
+# runs without DATABASE_URL so experiments cannot touch production data.
+FOOD_HTTP_TIMEOUT_SECONDS=4.5
+FOOD_HTTP_MAX_BYTES=1_500_000
+FOOD_SEARCH_MAX_RESULTS=12
+FOOD_USER_AGENT=os.environ.get("FOOD_API_USER_AGENT","EPLAN/1.2 product-search prototype")
+USDA_API_KEY=os.environ.get("USDA_API_KEY","DEMO_KEY")
+
+FOOD_QUERY_REPLACEMENTS={
+    "творог":"сир кисломолочний",
+    "творог 5%":"сир кисломолочний 5%",
+    "молокия":"молокія",
+    "яготинское":"яготинське",
+    "галичина":"галичина",
+    "овсянка":"вівсяні пластівці",
+    "овсяные хлопья":"вівсяні пластівці",
+    "куриная грудка":"куряча грудка",
+    "куриное филе":"куряче філе",
+    "арахисовая паста":"арахісова паста",
+    "рис басмати":"рис басматі",
+    "тунец":"тунець",
+    "яйца":"яйця",
+    "яйцо":"яйце",
+}
+FOOD_USDA_ALIASES=(
+    ("сир кисломолочний","cottage cheese"),
+    ("вівсяні пластівці","oats"),
+    ("куряча грудка","chicken breast"),
+    ("куряче філе","chicken breast"),
+    ("арахісова паста","peanut butter"),
+    ("рис басматі","basmati rice"),
+    ("тунець","tuna"),
+    ("яйця","eggs"),
+    ("яйце","egg"),
+    ("банан","banana"),
+    ("яблуко","apple"),
+    ("гречка","buckwheat"),
+    ("рис","rice"),
+    ("молоко","milk"),
+    ("йогурт","yogurt"),
+    ("лосось","salmon"),
+)
+
+def _food_num(value,default=0.0):
+    try:
+        value=float(value)
+        if value<0 or value>1_000_000:return default
+        return round(value,2)
+    except (TypeError,ValueError):
+        return default
+
+def normalize_food_query(value:str):
+    q=" ".join((value or "").strip().lower().replace("ё","е").split())
+    for src,dst in sorted(FOOD_QUERY_REPLACEMENTS.items(),key=lambda item:len(item[0]),reverse=True):
+        q=q.replace(src,dst)
+    return q[:120]
+
+def usda_food_query(value:str):
+    q=value
+    for src,dst in FOOD_USDA_ALIASES:
+        if src in q:q=q.replace(src,dst)
+    return q
+
+def _food_fetch_json(url:str,payload=None):
+    data=None
+    headers={"User-Agent":FOOD_USER_AGENT,"Accept":"application/json"}
+    if payload is not None:
+        data=json.dumps(payload,separators=(",",":")).encode("utf-8")
+        headers["Content-Type"]="application/json"
+    request=urllib.request.Request(url,data=data,headers=headers,method="POST" if data is not None else "GET")
+    try:
+        with urllib.request.urlopen(request,timeout=FOOD_HTTP_TIMEOUT_SECONDS) as response:
+            raw=response.read(FOOD_HTTP_MAX_BYTES+1)
+            if len(raw)>FOOD_HTTP_MAX_BYTES:
+                safe_log("food_source_response_too_large",logging.WARNING,status_code=getattr(response,"status",0))
+                return None
+            return json.loads(raw.decode("utf-8"))
+    except (urllib.error.URLError,urllib.error.HTTPError,TimeoutError,ValueError,json.JSONDecodeError) as exc:
+        safe_log("food_source_unavailable",logging.WARNING,error_type=type(exc).__name__)
+        return None
+
+def _off_item(product:dict):
+    nutr=product.get("nutriments") or {}
+    name=(product.get("product_name_uk") or product.get("product_name") or product.get("product_name_en") or "").strip()
+    if not name:return None
+    kcal=_food_num(nutr.get("energy-kcal_100g"))
+    if not kcal:
+        kj=_food_num(nutr.get("energy_100g"))
+        if kj:kcal=round(kj/4.184,2)
+    return {
+        "source":"off","source_label":"Open Food Facts","source_id":str(product.get("code") or ""),
+        "barcode":str(product.get("code") or ""),"name":name[:240],
+        "brand":str(product.get("brands") or "").strip()[:180],
+        "kcal_100":kcal,"protein_100":_food_num(nutr.get("proteins_100g")),
+        "fat_100":_food_num(nutr.get("fat_100g")),"carbs_100":_food_num(nutr.get("carbohydrates_100g")),
+    }
+
+def _off_search(query:str,limit:int):
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments"
+    url=("https://world.openfoodfacts.org/cgi/search.pl?action=process&search_simple=1&json=1"
+         f"&page_size={min(10,max(1,limit))}&fields={urllib.parse.quote(fields)}"
+         f"&search_terms={urllib.parse.quote(query)}")
+    payload=_food_fetch_json(url) or {}
+    items=[]
+    for product in payload.get("products") or []:
+        item=_off_item(product)
+        if item:items.append(item)
+    return items
+
+def _off_barcode(barcode:str):
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments"
+    url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
+    payload=_food_fetch_json(url) or {}
+    if int(payload.get("status") or 0)!=1:return []
+    item=_off_item(payload.get("product") or {})
+    return [item] if item else []
+
+def _usda_nutrient(food:dict,number:str,*names):
+    wanted={x.lower() for x in names}
+    for nutrient in food.get("foodNutrients") or []:
+        num=str(nutrient.get("nutrientNumber") or "")
+        name=str(nutrient.get("nutrientName") or nutrient.get("name") or "").lower()
+        unit=str(nutrient.get("unitName") or "").upper()
+        if num==number or name in wanted:
+            if number=="1008" and unit and unit!="KCAL":continue
+            return _food_num(nutrient.get("value"))
+    return 0.0
+
+def _usda_item(food:dict):
+    name=str(food.get("description") or "").strip()
+    if not name:return None
+    brand=str(food.get("brandOwner") or food.get("brandName") or "").strip()
+    return {
+        "source":"usda","source_label":"USDA FoodData Central","source_id":str(food.get("fdcId") or ""),
+        "barcode":str(food.get("gtinUpc") or ""),"name":name[:240],"brand":brand[:180],
+        "kcal_100":_usda_nutrient(food,"1008","energy"),
+        "protein_100":_usda_nutrient(food,"1003","protein"),
+        "fat_100":_usda_nutrient(food,"1004","total lipid (fat)"),
+        "carbs_100":_usda_nutrient(food,"1005","carbohydrate, by difference"),
+        "data_type":str(food.get("dataType") or ""),
+    }
+
+def _usda_search(query:str,limit:int):
+    if not query or not USDA_API_KEY:return []
+    url="https://api.nal.usda.gov/fdc/v1/foods/search?api_key="+urllib.parse.quote(USDA_API_KEY)
+    payload=_food_fetch_json(url,{
+        "query":query,"pageSize":min(8,max(1,limit)),
+        "dataType":["Foundation","Survey (FNDDS)","SR Legacy","Branded"],
+    }) or {}
+    items=[]
+    for food in payload.get("foods") or []:
+        item=_usda_item(food)
+        if item:items.append(item)
+    return items
+
+def _food_tokens(value:str):
+    return {x for x in "".join(ch if (ch.isalnum() or ch in "%") else " " for ch in value.lower()).split() if len(x)>1}
+
+def _food_rank(query:str,items:list):
+    qtokens=_food_tokens(query)
+    off_brand_hit=False
+    for item in items:
+        if item.get("source")!="off":continue
+        brand_tokens=_food_tokens(item.get("brand") or "")
+        if brand_tokens & qtokens:
+            off_brand_hit=True
+            break
+    ranked=[]
+    seen=set()
+    for item in items:
+        key=(item.get("barcode") or "",item.get("source"),item.get("source_id"))
+        if key in seen:continue
+        seen.add(key)
+        text_tokens=_food_tokens((item.get("name") or "")+" "+(item.get("brand") or ""))
+        overlap=len(qtokens & text_tokens)/max(1,len(qtokens))
+        score=overlap*60
+        if item.get("source")=="off":
+            brand_hits=_food_tokens(item.get("brand") or "") & qtokens
+            score+=35+(70 if brand_hits else 0)
+        else:
+            score+=65 if not off_brand_hit else 15
+            if str(item.get("data_type") or "").lower() in ("foundation","survey (fndds)","sr legacy"):
+                score+=12
+        item=dict(item);item["_score"]=round(score,2);ranked.append(item)
+    ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
+    for item in ranked:item.pop("_score",None)
+    return ranked
+
+@app.get("/api/prototype/foods/search")
+def prototype_food_search(
+    q:str=Query(...,min_length=2,max_length=120),
+    limit:int=Query(default=8,ge=1,le=FOOD_SEARCH_MAX_RESULTS),
+):
+    if not PROTOTYPE_MODE:
+        raise HTTPException(404,"Прототип пошуку недоступний")
+    raw=q.strip()
+    compact="".join(ch for ch in raw if ch.isdigit())
+    if raw.replace(" ","").isdigit() and 8<=len(compact)<=14:
+        items=_off_barcode(compact)
+        return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode"}
+    normalized=normalize_food_query(raw)
+    off_items=_off_search(normalized,limit)
+    usda_items=_usda_search(usda_food_query(normalized),limit)
+    items=_food_rank(normalized,off_items+usda_items)[:limit]
+    return {
+        "query":raw,"normalized_query":normalized,"items":items,"mode":"text",
+        "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
+    }
+
+
 @app.get("/")
 def home():
     if PROTOTYPE_MODE:

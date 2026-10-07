@@ -94,5 +94,66 @@ function stopGoal(){
  result.classList.add('show');
  $('confirmStop').onclick=()=>{result.innerHTML='<span class="kicker">ЦІЛЬ ЗУПИНЕНО</span><p class="note">Автоматичні корекції призупинено. Коли будете готові, оберіть нову ціль і почніть новий цикл.</p>';$('adaptResult').classList.remove('show')};
 }
-$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);syncAdjust();
+$('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);
+
+let foodItems=[],selectedFood=null;
+const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const foodFmt=value=>{
+ const n=Number(value)||0;
+ return n.toLocaleString('uk-UA',{maximumFractionDigits:n<10?1:0});
+};
+function foodResultLabel(item){
+ const brand=item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':'';
+ const macro='<span class="foodMacros">'+foodFmt(item.kcal_100)+' ккал<br>Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</span>';
+ return '<span><strong>'+foodEsc(item.name)+'</strong>'+brand+'<span class="foodSource">'+foodEsc(item.source_label||item.source)+'</span></span>'+macro;
+}
+function renderFoodResults(items){
+ const box=$('foodResults'),portion=$('foodPortion');selectedFood=null;portion.classList.remove('show');portion.innerHTML='';
+ if(!items.length){box.innerHTML='';$('foodStatus').textContent='Нічого не знайдено. Спробуй уточнити бренд або назву.';return}
+ $('foodStatus').textContent='Знайдено '+items.length+' варіант'+(items.length===1?'':'ів')+'. Обери продукт.';
+ box.innerHTML=items.map((item,i)=>'<button type="button" class="foodItem" data-food-index="'+i+'">'+foodResultLabel(item)+'</button>').join('');
+ box.querySelectorAll('[data-food-index]').forEach(btn=>btn.onclick=()=>selectFood(Number(btn.dataset.foodIndex)));
+}
+async function searchFoods(query){
+ const q=String(query||$('foodQuery').value||'').trim();
+ if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
+ $('foodQuery').value=q;$('foodStatus').textContent='Шукаємо в Open Food Facts та USDA…';$('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
+ $('foodSearchBtn').disabled=true;
+ try{
+  const response=await fetch('/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8',{headers:{'Accept':'application/json'}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
+  foodItems=Array.isArray(data.items)?data.items:[];
+  renderFoodResults(foodItems);
+  if(data.normalized_query&&data.normalized_query.toLowerCase()!==q.toLowerCase())$('foodStatus').textContent+=' Запит нормалізовано: «'+data.normalized_query+'».';
+ }catch(err){
+  $('foodStatus').textContent='Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
+ }finally{$('foodSearchBtn').disabled=false}
+}
+function selectFood(index){
+ const item=foodItems[index];if(!item)return;selectedFood=item;
+ const portion=$('foodPortion');
+ portion.innerHTML='<div class="foodPortionHead"><div><span class="kicker">ОБРАНИЙ ПРОДУКТ</span><strong>'+foodEsc(item.name)+'</strong>'+(item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':'')+'</div><span class="foodSource">'+foodEsc(item.source_label||item.source)+'</span></div>'
+  +'<div class="foodPer100">На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</div>'
+  +'<div class="foodGramRow"><label>Кількість, г<input id="foodGrams" type="number" inputmode="decimal" min="1" max="5000" value="100"></label><div><span class="kicker">ПОРЦІЯ</span><b id="foodPortionName">100 г</b></div></div>'
+  +'<div class="foodTotals"><span><b id="foodKcal">0</b>ккал</span><span><b id="foodProtein">0</b>білки, г</span><span><b id="foodFat">0</b>жири, г</span><span><b id="foodCarbs">0</b>вуглеводи, г</span></div>'
+  +'<p class="note">У повній версії кнопка «Додати» збереже цю порцію в щоденник і автоматично додасть її до БЖВ дня.</p>';
+ portion.classList.add('show');
+ $('foodGrams').addEventListener('input',updateFoodPortion);updateFoodPortion();
+ setTimeout(()=>portion.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+function updateFoodPortion(){
+ if(!selectedFood)return;
+ const grams=Math.max(0,Math.min(5000,Number($('foodGrams').value)||0)),factor=grams/100;
+ $('foodPortionName').textContent=foodFmt(grams)+' г';
+ $('foodKcal').textContent=foodFmt(selectedFood.kcal_100*factor);
+ $('foodProtein').textContent=foodFmt(selectedFood.protein_100*factor);
+ $('foodFat').textContent=foodFmt(selectedFood.fat_100*factor);
+ $('foodCarbs').textContent=foodFmt(selectedFood.carbs_100*factor);
+}
+$('foodSearchBtn').addEventListener('click',()=>searchFoods());
+$('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
+document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener('click',()=>searchFoods(btn.dataset.foodQuery)));
+
+syncAdjust();
 })();
