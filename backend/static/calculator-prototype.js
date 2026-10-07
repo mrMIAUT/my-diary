@@ -97,7 +97,7 @@ function stopGoal(){
 $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);
 
 let foodItems=[],selectedFood=null,foodPage=1,foodActiveQuery='',foodHasMore=false;
-const FOOD_CACHE_KEY='eplan12-food-cache-v1';
+const FOOD_CACHE_KEY='eplan12-food-cache-v2';
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function foodKey(item){return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''))}
 function loadFoodCache(){
@@ -143,7 +143,7 @@ function renderFoodResults(items){
 async function searchFoods(query,append=false){
  const q=String(query||$('foodQuery').value||'').trim();
  if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
- if(!append){foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=cachedFoodMatches(q);$('foodResults').innerHTML='';$('foodPortion').classList.remove('show')}
+ if(!append){foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=[];$('foodResults').innerHTML='';$('foodPortion').classList.remove('show')}
  $('foodQuery').value=q;$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо в Open Food Facts та USDA…';
  $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
  try{
@@ -152,13 +152,16 @@ async function searchFoods(query,append=false){
   if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
   const incoming=Array.isArray(data.items)?data.items:[];
   saveFoodCache(incoming);
-  foodItems=mergeFoodItems(foodItems,incoming);
+  // Fresh server ranking is authoritative. Cache is fallback-only.
+  foodItems=append?mergeFoodItems(foodItems,incoming):incoming;
   foodHasMore=Boolean(data.has_more);
   renderFoodResults(foodItems);
   if(data.normalized_query&&data.normalized_query.toLowerCase()!==q.toLowerCase())$('foodStatus').textContent+=' Запит нормалізовано: «'+data.normalized_query+'».';
  }catch(err){
+  if(!append)foodItems=cachedFoodMatches(q);
   if(!foodItems.length)$('foodStatus').textContent='Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
   else $('foodStatus').textContent='Показано кешовані результати. Зовнішній пошук тимчасово недоступний.';
+  foodHasMore=false;
   renderFoodResults(foodItems);
  }finally{$('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false}
 }

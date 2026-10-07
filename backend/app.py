@@ -1485,12 +1485,20 @@ def _off_item(product:dict):
     if not kcal:
         kj=_food_num(nutr.get("energy_100g"))
         if kj:kcal=round(kj/4.184,2)
+    protein=_food_num(nutr.get("proteins_100g"))
+    fat=_food_num(nutr.get("fat_100g"))
+    carbs=_food_num(nutr.get("carbohydrates_100g"))
+    # Contributor-entered OFF records can be incomplete. A diary must not offer
+    # an item that would silently add 0 kcal / 0 macros.
+    if kcal<=0:return None
+    if any(v<0 or v>100 for v in (protein,fat,carbs)):return None
+    macro_kcal=protein*4+fat*9+carbs*4
+    if macro_kcal>max(kcal*1.5,kcal+140):return None
     return {
         "source":"off","source_label":"Open Food Facts","source_id":str(product.get("code") or ""),
         "barcode":str(product.get("code") or ""),"name":name[:240],
         "brand":brand[:180],
-        "kcal_100":kcal,"protein_100":_food_num(nutr.get("proteins_100g")),
-        "fat_100":_food_num(nutr.get("fat_100g")),"carbs_100":_food_num(nutr.get("carbohydrates_100g")),
+        "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
         "ukraine":("en:ukraine" in countries),
     }
 
