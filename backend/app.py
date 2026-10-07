@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 import os
 import json, hashlib, hmac, secrets, urllib.request, urllib.error, urllib.parse
-import io, logging, stat, warnings, html
+import io, logging, stat, warnings, html, re
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta, timezone
@@ -1420,8 +1420,12 @@ def _food_num(value,default=0.0):
 
 def normalize_food_query(value:str):
     q=" ".join((value or "").strip().lower().replace("ё","е").split())
+    # Replace only complete words/phrases. A plain str.replace made Russian
+    # "тунец" match inside already-correct Ukrainian "тунець", producing
+    # "тунецьь". Word boundaries also protect future bilingual aliases.
     for src,dst in sorted(FOOD_QUERY_REPLACEMENTS.items(),key=lambda item:len(item[0]),reverse=True):
-        q=q.replace(src,dst)
+        pattern=r"(?<!\w)"+re.escape(src)+r"(?!\w)"
+        q=re.sub(pattern,dst,q)
     return q[:120]
 
 def usda_food_query(value:str):
