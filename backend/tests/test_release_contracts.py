@@ -324,6 +324,13 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Скасувати завершення", PROGRESS_REDESIGN)
         self.assertIn("finish-summary-recovery-actions", WORKOUT)
         self.assertIn("(cancel|reopen|results)", CORE)
+        self.assertIn("class CompletedWorkoutAuxSetIn", APP)
+        self.assertIn("aux_sets:List[CompletedWorkoutAuxSetIn]", APP)
+        self.assertIn("DELETE FROM workout_aux_sets WHERE client_id=%s AND day=%s", APP)
+        self.assertIn("function completedWorkoutEditAuxRowHTML", PROGRESS_REDESIGN)
+        self.assertIn("function addCompletedWorkoutDrop", PROGRESS_REDESIGN)
+        self.assertIn("function addCompletedWorkoutWarmup", PROGRESS_REDESIGN)
+        self.assertIn("aux_sets:auxSets", PROGRESS_REDESIGN)
 
     def test_index_shell_assets_exist_and_are_cached(self):
         urls = re.findall(r'(?:src|href)="(/(?:static/[^"]+|manifest\.webmanifest[^"]*))"', INDEX)
