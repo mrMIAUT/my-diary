@@ -244,6 +244,7 @@ PUBLIC_API_ROUTES={
     ("GET","/api/push/public-key"),
     ("GET","/api/prototype/foods/search"),
     ("GET","/api/prototype/foods/chicken-preparation"),
+    ("GET","/api/prototype/foods/preparation"),
 }
 
 def api_session_boundary(request:Request):
@@ -1973,6 +1974,129 @@ def _resolve_chicken_preparation(mode:str):
             "fallback":False,"oil_separate":bool(cfg.get("oil_separate"))}
     CHICKEN_PREP_CACHE[mode]=result
     return result
+
+
+PREP_ALLOWED_BASES={
+    "meat":{
+        "chicken breast","turkey breast","beef","pork","veal","lamb","rabbit","duck",
+    },
+    "fish":{
+        "tuna","salmon","trout","cod","hake","pollock","mackerel","herring","tilapia","carp","sardine",
+    },
+    "grain":{
+        "rice","basmati rice","buckwheat","bulgur","couscous","quinoa","barley","millet","oats",
+    },
+    "potato":{"potato"},
+    "pasta":{"pasta","spaghetti","macaroni"},
+}
+PREP_ALLOWED_MODES={
+    "meat":{"raw","boiled","steamed","grilled","baked","fried"},
+    "fish":{"raw","boiled","steamed","grilled","baked","fried"},
+    "grain":{"dry","boiled","steamed"},
+    "potato":{"raw","boiled","steamed","baked","fried"},
+    "pasta":{"dry","boiled"},
+}
+PREP_MODE_LABELS={
+    "raw":"Сире","dry":"Сухе","boiled":"Варене","steamed":"На парі",
+    "grilled":"Гриль","baked":"Запечене","fried":"Смажене",
+}
+PREP_CACHE={}
+
+def _prep_queries(base:str,mode:str):
+    if mode=="raw":
+        return (f"{base} raw",base),("raw","uncooked"),("cooked","fried","roasted","grilled","boiled")
+    if mode=="dry":
+        return (f"{base} dry uncooked",f"{base} uncooked",base),("dry","uncooked"),("cooked","prepared")
+    if mode=="boiled":
+        return (f"{base} cooked boiled",f"{base} boiled",f"{base} cooked"),("boiled","cooked"),("fried","breaded")
+    if mode=="steamed":
+        return (f"{base} steamed",f"{base} cooked"),("steamed",),("fried","breaded")
+    if mode=="grilled":
+        return (f"{base} grilled",f"{base} cooked grilled",f"{base} cooked"),("grilled",),("fried","breaded")
+    if mode=="baked":
+        return (f"{base} baked",f"{base} roasted",f"{base} cooked"),("baked","roasted"),("fried","breaded")
+    if mode=="fried":
+        # Use a plain cooked profile and add the actual oil separately in EPLAN.
+        # This avoids double-counting oil already included in a database "fried" food.
+        return (f"{base} cooked",f"{base} boiled",base),("cooked",),("fried","breaded","with sauce")
+    return (base,),(),()
+
+def _prep_candidate_score(item:dict,base:str,mode:str,prefer:tuple,reject:tuple):
+    low=(item.get("name") or "").lower()
+    score=0
+    base_tokens=[t for t in base.lower().split() if len(t)>1]
+    score+=sum(70 for token in base_tokens if token in low)
+    if base in low:score+=80
+    if not (item.get("brand") or "").strip():score+=15
+    hits=sum(1 for token in prefer if token in low)
+    score+=hits*50
+    score-=sum(1 for token in reject if token in low)*80
+    if any(token in low for token in (
+        "sandwich","salad","soup","pizza","casserole","with sauce","breaded",
+        "restaurant","fast food","babyfood",
+    )):
+        score-=140
+    # For cooked grain/pasta, prefer plain records over mixed dishes.
+    if mode in ("boiled","steamed") and any(token in low for token in ("plain","without salt")):
+        score+=15
+    return score,hits
+
+def _resolve_food_preparation(category:str,base:str,mode:str):
+    key=(category,base,mode)
+    cached=PREP_CACHE.get(key)
+    if cached:return cached
+    queries,prefer,reject=_prep_queries(base,mode)
+    candidates=[]
+    seen=set()
+    for query in queries:
+        for item in _usda_search(query,24,USDA_GENERIC_TYPES,1):
+            source_id=item.get("source_id")
+            if source_id and source_id in seen:continue
+            if source_id:seen.add(source_id)
+            candidates.append(item)
+    # Preserve the proven chicken fallback if the external lookup is unavailable.
+    if not candidates and category=="meat" and base=="chicken breast" and mode in CHICKEN_PREPARATIONS:
+        return _resolve_chicken_preparation(mode)
+    if not candidates:
+        result={
+            "category":category,"base":base,"mode":mode,
+            "label":PREP_MODE_LABELS.get(mode,mode),"item":None,
+            "approximate":True,"oil_separate":mode=="fried",
+        }
+        PREP_CACHE[key]=result
+        return result
+    scored=[]
+    for item in candidates:
+        score,hits=_prep_candidate_score(item,base,mode,prefer,reject)
+        scored.append((score,hits,item))
+    scored.sort(key=lambda row:(-row[0],-row[1],row[2].get("name","")))
+    _,hits,best=scored[0]
+    approximate=(hits==0 or mode=="fried")
+    result={
+        "category":category,"base":base,"mode":mode,
+        "label":PREP_MODE_LABELS.get(mode,mode),"item":best,
+        "approximate":approximate,"oil_separate":mode=="fried",
+    }
+    PREP_CACHE[key]=result
+    return result
+
+@app.get("/api/prototype/foods/preparation")
+def prototype_food_preparation(
+    category:str=Query(...,min_length=3,max_length=12),
+    base:str=Query(...,min_length=3,max_length=40),
+    mode:str=Query(...,min_length=3,max_length=12),
+):
+    if not PROTOTYPE_MODE:
+        raise HTTPException(404,"Прототип пошуку недоступний")
+    category=category.lower().strip()
+    base=base.lower().strip()
+    mode=mode.lower().strip()
+    if category not in PREP_ALLOWED_BASES or base not in PREP_ALLOWED_BASES[category]:
+        raise HTTPException(400,"Невідома категорія продукту")
+    if mode not in PREP_ALLOWED_MODES.get(category,set()):
+        raise HTTPException(400,"Невідомий спосіб приготування")
+    return _resolve_food_preparation(category,base,mode)
+
 
 @app.get("/api/prototype/foods/chicken-preparation")
 def prototype_chicken_preparation(
