@@ -194,23 +194,30 @@ function setPrepStatus(data,usedMode){
   el.textContent='Точного профілю USDA не знайдено. Тимчасово використано дані вибраного продукту.';
   return;
  }
- const approx=data.approximate?' · найближчий доступний профіль':'';
- el.textContent=(usedMode==='raw'?'Розрахунок за сирою вагою':'Профіль: '+(data.label||''))+' · USDA FoodData Central'+approx;
+ const approx=data.approximate?' · орієнтовно':'';
+ const source=data.fallback?'резервний довідковий профіль':'USDA FoodData Central';
+ el.textContent='Профіль: '+(data.label||'')+' · '+source+approx;
 }
 async function refreshChickenProfile(){
  if(!selectedFood||!isChickenFood(selectedFood))return;
  const prep=$('foodPrepMode'),basis=$('foodWeightBasis');
  foodPrepMode=prep?prep.value:'raw';foodWeightBasis=basis?basis.value:'raw';
  const oilBox=$('foodOilBox');if(oilBox)oilBox.hidden=foodPrepMode!=='fried';
- const usedMode=(foodWeightBasis==='raw'||foodPrepMode==='raw')?'raw':foodPrepMode;
- if($('foodPrepStatus'))$('foodPrepStatus').textContent='Завантажуємо профіль USDA…';
+ // If the user weighed the food raw, the concrete product label is the best
+ // source. Cooking method does not change the amount logged from that raw weight.
+ if(foodWeightBasis==='raw'||foodPrepMode==='raw'){
+  activeFoodProfile=selectedFood;
+  if($('foodPrepStatus'))$('foodPrepStatus').textContent='Зважено до приготування · використовуємо БЖВ з етикетки вибраного продукту. Спосіб приготування не змінює цей розрахунок.';
+  updateFoodPer100();updateFoodPortion();return;
+ }
+ if($('foodPrepStatus'))$('foodPrepStatus').textContent='Завантажуємо профіль готового філе…';
  try{
-  const data=await loadChickenPrep(usedMode);
+  const data=await loadChickenPrep(foodPrepMode);
   activeFoodProfile=(data&&data.item)?data.item:selectedFood;
-  setPrepStatus(data,usedMode);
+  setPrepStatus(data,foodPrepMode);
  }catch(err){
   activeFoodProfile=selectedFood;
-  if($('foodPrepStatus'))$('foodPrepStatus').textContent='USDA тимчасово недоступна — використано дані вибраного продукту.';
+  if($('foodPrepStatus'))$('foodPrepStatus').textContent='Профіль готового продукту тимчасово недоступний.';
  }
  updateFoodPer100();updateFoodPortion();
 }

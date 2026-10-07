@@ -1904,6 +1904,24 @@ CHICKEN_PREPARATIONS={
     },
 }
 CHICKEN_PREP_CACHE={}
+CHICKEN_PREP_FALLBACK={
+    "raw":{"kcal_100":120.0,"protein_100":22.5,"fat_100":2.6,"carbs_100":0.0},
+    "boiled":{"kcal_100":151.0,"protein_100":29.0,"fat_100":3.0,"carbs_100":0.0},
+    "steamed":{"kcal_100":151.0,"protein_100":29.0,"fat_100":3.0,"carbs_100":0.0},
+    "grilled":{"kcal_100":165.0,"protein_100":31.0,"fat_100":3.6,"carbs_100":0.0},
+    "baked":{"kcal_100":165.0,"protein_100":31.0,"fat_100":3.6,"carbs_100":0.0},
+    "fried":{"kcal_100":165.0,"protein_100":31.0,"fat_100":3.6,"carbs_100":0.0},
+}
+
+def _fallback_chicken_item(mode:str):
+    values=CHICKEN_PREP_FALLBACK[mode]
+    return {
+        "source":"reference","source_label":"USDA reference",
+        "source_id":"fallback-chicken-"+mode,"barcode":"",
+        "name":"Chicken breast, generic cooked profile",
+        "brand":"","data_type":"reference",
+        **values,
+    }
 
 def _chicken_candidate_score(item:dict,mode:str):
     low=(item.get("name") or "").lower()
@@ -1934,8 +1952,11 @@ def _resolve_chicken_preparation(mode:str):
             if key:seen.add(key)
             candidates.append(item)
     if not candidates:
-        result={"mode":mode,"label":cfg["label"],"item":None,"approximate":True,
-                "oil_separate":bool(cfg.get("oil_separate"))}
+        result={
+            "mode":mode,"label":cfg["label"],"item":_fallback_chicken_item(mode),
+            "approximate":True,"fallback":True,
+            "oil_separate":bool(cfg.get("oil_separate")),
+        }
         CHICKEN_PREP_CACHE[mode]=result
         return result
     scored=[]
@@ -1949,7 +1970,7 @@ def _resolve_chicken_preparation(mode:str):
     # we still return the closest generic cooked breast but label it approximate.
     approximate=(hits==0 and mode not in ("fried",))
     result={"mode":mode,"label":cfg["label"],"item":best,"approximate":approximate,
-            "oil_separate":bool(cfg.get("oil_separate"))}
+            "fallback":False,"oil_separate":bool(cfg.get("oil_separate"))}
     CHICKEN_PREP_CACHE[mode]=result
     return result
 
