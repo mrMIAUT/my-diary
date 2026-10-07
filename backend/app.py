@@ -1380,7 +1380,9 @@ FOOD_QUERY_REPLACEMENTS={
     "овсянка":"вівсяні пластівці",
     "овсяные хлопья":"вівсяні пластівці",
     "куриная грудка":"куряча грудка",
+    "грудка куриная":"куряча грудка",
     "куриное филе":"куряче філе",
+    "филе куриное":"куряче філе",
     "арахисовая паста":"арахісова паста",
     "рис басмати":"рис басматі",
     "тунец":"тунець",
@@ -1728,14 +1730,26 @@ FOOD_INTENT_RULES={
     "куряча грудка":{
         "starts":("куряча грудка","chicken breast"),
         "contains":("куряча грудка","chicken breast"),
-        "secondary":(),
-        "noise":("sandwich","pizza","salad","салат","soup","суп"),
+        "secondary":(
+            "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
+            "сиров'ялен","сыровялен","cured","smoked","копчен",
+        ),
+        "noise":(
+            "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
+            "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
+        ),
     },
     "куряче філе":{
-        "starts":("куряче філе","chicken breast","chicken fillet"),
-        "contains":("куряче філе","chicken breast","chicken fillet"),
-        "secondary":(),
-        "noise":("sandwich","pizza","salad","салат","soup","суп"),
+        "starts":("куряче філе","chicken breast","chicken fillet","куриное филе"),
+        "contains":("куряче філе","chicken breast","chicken fillet","куриное филе"),
+        "secondary":(
+            "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
+            "сиров'ялен","сыровялен","cured","smoked","копчен",
+        ),
+        "noise":(
+            "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
+            "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
+        ),
     },
 }
 
@@ -1757,6 +1771,11 @@ def _intent_score(query:str,item:dict):
         score-=95
     if any(marker in low for marker in rule["noise"]):
         score-=150
+    if query in ("куряча грудка","куряче філе"):
+        if any(token in low for token in ("raw","сире","сыра","сырой","свіже","свежее","fresh")):
+            score+=45
+        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
+            score+=20
     return score
 
 def _intent_bucket(query:str,item:dict):
