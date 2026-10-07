@@ -311,6 +311,20 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Обрати з бібліотеки", TRAINER)
         self.assertNotIn("Вправа 1; Вправа 2", TRAINER)
 
+    def test_completed_workout_can_be_edited_and_reopened(self):
+        self.assertIn('class CompletedWorkoutEditIn', APP)
+        self.assertIn('@app.patch("/api/workout/{sid}/results")', APP)
+        self.assertIn('@app.post("/api/workout/{sid}/reopen")', APP)
+        self.assertIn("Скасувати завершення можна лише в день тренування", APP)
+        self.assertIn("trainer_reviewed=FALSE,trainer_comment=''", APP)
+        self.assertIn("function openCompletedWorkoutEditor", PROGRESS_REDESIGN)
+        self.assertIn("function saveCompletedWorkoutEdit", PROGRESS_REDESIGN)
+        self.assertIn("function reopenCompletedWorkout", PROGRESS_REDESIGN)
+        self.assertIn("Редагувати тренування", PROGRESS_REDESIGN)
+        self.assertIn("Скасувати завершення", PROGRESS_REDESIGN)
+        self.assertIn("finish-summary-recovery-actions", WORKOUT)
+        self.assertIn("(cancel|reopen|results)", CORE)
+
     def test_index_shell_assets_exist_and_are_cached(self):
         urls = re.findall(r'(?:src|href)="(/(?:static/[^"]+|manifest\.webmanifest[^"]*))"', INDEX)
         shell_urls = [u for u in urls if u.endswith(".js") or ".js?" in u or u.endswith(".css") or ".css?" in u or "manifest.webmanifest" in u]

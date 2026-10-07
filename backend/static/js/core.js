@@ -225,9 +225,9 @@ function offResponse(path,opt,localSid){
 function offCanQueue(path,opt){
  let m=(opt.method||'GET').toUpperCase();
  if(m==='GET'||!session||session.role!=='client'||!offlineScope())return false;
- // Early workout cancellation is deliberately server-only: its 2-minute
- // window and "no saved sets" rule must be checked authoritatively.
- if(/^\/workout\/-?\d+\/cancel$/.test(path))return false;
+ // Workout lifecycle/history recovery is deliberately server-only.
+ // These actions depend on authoritative session status, calendar day and review state.
+ if(/^\/workout\/-?\d+\/(cancel|reopen|results)$/.test(path))return false;
  return !logoutPending&&!path.startsWith('/login')&&!path.startsWith('/logout')&&!path.startsWith('/session')&&!path.startsWith('/password-reset')&&!path.includes('/screenshot')&&!path.startsWith('/notifications')&&!path.startsWith('/push/');
 }
 

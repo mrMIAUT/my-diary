@@ -16339,3 +16339,204 @@ body.eplan-redesign.trainer-ui .trainer-bottom-nav{
   -webkit-backface-visibility:hidden;
   backface-visibility:hidden;
 }
+
+
+/* Completed workout recovery + editor */
+body.eplan-redesign.client-ui .completed-workout-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px;
+  margin:12px 0 14px;
+}
+body.eplan-redesign.client-ui .completed-workout-actions button{
+  min-height:46px;
+  padding:10px 12px;
+  border-radius:14px;
+  font-size:11px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  background:#1677ff!important;
+  color:#fff!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-btn .ui-icon{
+  width:17px;
+  height:17px;
+}
+body.eplan-redesign.client-ui .completed-workout-reopen-btn{
+  background:#fff!important;
+  color:#4b5d77!important;
+  border:1px solid #d7e1ee!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-modal{
+  z-index:12050;
+  padding:12px;
+  align-items:flex-start;
+  overflow:auto;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-card{
+  width:min(100%,520px);
+  max-height:calc(100dvh - 24px);
+  margin:0 auto;
+  padding:18px;
+  overflow:auto;
+  border-radius:22px!important;
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 42px;
+  gap:12px;
+  align-items:start;
+  margin-bottom:14px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-head small{
+  display:block;
+  margin-bottom:3px;
+  color:#1677ff;
+  font-size:10px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-head h2{
+  margin:0;
+  color:#0a1738;
+  font-size:24px;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-head p{
+  margin:6px 0 0;
+  color:#75839a;
+  font-size:11px;
+  line-height:1.45;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-head>button{
+  width:42px;
+  height:42px;
+  min-width:42px;
+  padding:0!important;
+  border-radius:13px!important;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-list{
+  display:grid;
+  gap:10px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise{
+  padding:13px;
+  border:1px solid #e0e8f2;
+  border-radius:17px;
+  background:#fbfcff;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise-head>div{
+  min-width:0;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise-head strong{
+  display:block;
+  color:#0a1738!important;
+  font-size:13px;
+  line-height:1.3;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise-head small{
+  display:block;
+  margin-top:3px;
+  color:#7c899c;
+  font-size:9.5px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-exercise-head>span{
+  flex:0 0 auto;
+  padding:4px 7px;
+  border-radius:999px;
+  background:#eef4ff;
+  color:#4f6f99;
+  font-size:9px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-labels,
+body.eplan-redesign.client-ui .completed-workout-edit-set{
+  display:grid;
+  grid-template-columns:24px repeat(3,minmax(0,1fr));
+  gap:6px;
+  align-items:center;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-labels{
+  margin-bottom:5px;
+  color:#8995a7;
+  font-size:8.5px;
+  font-weight:800;
+  text-align:center;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-sets{
+  display:grid;
+  gap:6px;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-set-number{
+  display:grid;
+  place-items:center;
+  color:#66758c;
+  font-size:10px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .completed-workout-edit-set input{
+  width:100%;
+  min-width:0;
+  height:40px;
+  padding:8px 6px!important;
+  border-radius:11px!important;
+  text-align:center;
+  font-size:12px!important;
+}
+body.eplan-redesign.client-ui .completed-workout-add-set{
+  width:100%;
+  margin-top:8px;
+  min-height:38px;
+  padding:8px 10px!important;
+  border-radius:11px!important;
+  background:#eef4ff!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+}
+body.eplan-redesign.client-ui .completed-workout-save{
+  width:100%;
+  min-height:48px;
+  margin-top:14px;
+  border-radius:14px!important;
+}
+body.eplan-redesign.client-ui .finish-summary-recovery-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+body.eplan-redesign.client-ui .finish-summary-recovery-actions button{
+  min-height:44px;
+  padding:9px 10px;
+  border-radius:13px;
+  font-size:10.5px;
+}
+body.eplan-redesign.client-ui .finish-summary-reopen{
+  background:#fff!important;
+  color:#53647d!important;
+  border:1px solid #d9e2ed!important;
+  box-shadow:none!important;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .completed-workout-actions,
+  body.eplan-redesign.client-ui .finish-summary-recovery-actions{
+    grid-template-columns:1fr;
+  }
+  body.eplan-redesign.client-ui .completed-workout-edit-card{
+    padding:14px;
+  }
+}

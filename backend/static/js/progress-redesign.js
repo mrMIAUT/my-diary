@@ -146,7 +146,7 @@ function progressWorkoutData(d,sid){
    let aux=(d.aux_sets||[]).filter(a=>a.day===day&&(+a.program_id===pid||String(a.exercise||'').trim().toLocaleLowerCase('uk-UA')===String(name||'').trim().toLocaleLowerCase('uk-UA')));
    return {pid,name,planned:planned.get(pid)||'',sets:xs,aux,order:order.has(pid)?order.get(pid):999};
  }).sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name,'uk'));
- return {workout,day,exercises};
+ return {workout,day,plan,exercises};
 }
 
 function progressVolumeNumber(v){
@@ -221,6 +221,8 @@ function progressWorkoutDetailHTML(d,sid){
  if(!data)return '<div class="redesign-empty-panel"><strong>Тренування не знайдено</strong><span>Повернись до списку тренувань і спробуй ще раз.</span></div>';
  let s=data.workout,duration=(+s.duration_seconds||0)>0?formatWorkoutDuration(+s.duration_seconds||0):'—';
  let review=s.trainer_reviewed?'<div class="calendar-review-done"><strong>Перевірено тренером ✓</strong>'+(s.trainer_comment?'<div>'+esc(s.trainer_comment)+'</div>':'')+'</div>':'';
+ let canReopen=data.day===isoToday();
+ let actions='<div class="completed-workout-actions"><button type="button" class="completed-workout-edit-btn" onclick="openCompletedWorkoutEditor('+sid+')">'+uiIcon('edit')+'<span>Редагувати тренування</span></button>'+(canReopen?'<button type="button" class="completed-workout-reopen-btn" onclick="reopenCompletedWorkout('+sid+',this)">Скасувати завершення</button>':'')+'</div>';
  let exercises=data.exercises.length?data.exercises.map(x=>{
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
    let warm=(x.aux||[]).filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
@@ -232,7 +234,107 @@ function progressWorkoutDetailHTML(d,sid){
    }).join('');
    return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+x.sets.length+' '+(x.sets.length===1?'підхід':x.sets.length<5?'підходи':'підходів')+'</span></div>'+warmHTML+'<div class="progress-workout-sets">'+setsHTML+'</div></div>';
  }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
- return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
+ return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+actions+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
+}
+
+function completedWorkoutEditSetRowHTML(n,set={},targetRir=2){
+ let value=v=>v===undefined||v===null?'':esc(String(v));
+ let rest=set.rest_seconds===undefined||set.rest_seconds===null?'':String(set.rest_seconds);
+ return '<div class="completed-workout-edit-set" data-set-number="'+n+'" data-rest-seconds="'+esc(rest)+'">'
+   +'<span class="completed-workout-edit-set-number">'+n+'</span>'
+   +'<input data-field="weight" type="number" min="0" step="0.5" inputmode="decimal" value="'+value(set.weight)+'" placeholder="кг" aria-label="Вага, підхід '+n+'">'
+   +'<input data-field="reps" type="number" min="1" step="1" inputmode="numeric" value="'+value(set.reps)+'" placeholder="повт." aria-label="Повтори, підхід '+n+'">'
+   +'<input data-field="rir" type="number" min="0" max="10" step="1" inputmode="numeric" value="'+value(set.rir)+'" placeholder="'+value(targetRir)+'" aria-label="RIR, підхід '+n+'">'
+  +'</div>';
+}
+
+function completedWorkoutEditorExerciseHTML(p,data){
+ let pid=+p.id||0,existing=(data.exercises||[]).find(x=>+x.pid===pid),exercise=existing?.name||p.exercise||'Вправа';
+ let current=(existing?.sets||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+ let count=Math.max(1,+p.sets||0,...current.map(x=>+x.set_number||0));
+ let rirValues=typeof rirPlan==='function'?rirPlan(p):Array.from({length:count},()=>+p.target_rir||0);
+ let rows='';
+ for(let n=1;n<=count;n++)rows+=completedWorkoutEditSetRowHTML(n,current.find(x=>+x.set_number===n)||{},rirValues[n-1]??(+p.target_rir||0));
+ return '<section class="completed-workout-edit-exercise" data-program-id="'+pid+'" data-exercise="'+esc(exercise)+'" data-target-rir="'+esc(String(+p.target_rir||0))+'">'
+   +'<div class="completed-workout-edit-exercise-head"><div><strong>'+esc(exercise)+'</strong>'+(existing?.planned&&existing.planned!==exercise?'<small>За планом: '+esc(existing.planned)+'</small>':'')+'</div><span>'+count+' підх.</span></div>'
+   +'<div class="completed-workout-edit-labels"><span></span><span>Вага</span><span>Повтори</span><span>RIR</span></div>'
+   +'<div class="completed-workout-edit-sets">'+rows+'</div>'
+   +'<button type="button" class="completed-workout-add-set" onclick="addCompletedWorkoutEditSet(this)">+ Додати підхід</button>'
+  +'</section>';
+}
+
+function openCompletedWorkoutEditor(sid){
+ let d=window.currentClientData||{},data=progressWorkoutData(d,sid);
+ if(!data)return alert('Тренування не знайдено.');
+ let plan=(data.plan||[]).slice();
+ if(!plan.length){
+   plan=(data.exercises||[]).map(x=>({id:x.pid,exercise:x.name,sets:Math.max(1,...(x.sets||[]).map(s=>+s.set_number||0)),target_rir:2}));
+ }
+ if(!plan.length)return alert('У цьому тренуванні немає вправ для редагування.');
+ document.getElementById('completedWorkoutEditModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend','<div class="modal completed-workout-edit-modal" id="completedWorkoutEditModal" onclick="if(event.target===this)this.remove()">'
+   +'<div class="card completed-workout-edit-card">'
+     +'<div class="completed-workout-edit-head"><div><small>'+esc(formatProgressDate(data.day))+'</small><h2>Редагувати тренування</h2><p>Внеси фактичні ваги, повтори та RIR. Порожні підходи не зберігаються.</p></div><button type="button" class="dark" aria-label="Закрити" onclick="completedWorkoutEditModal.remove()">✕</button></div>'
+     +'<div class="completed-workout-edit-list">'+plan.map(p=>completedWorkoutEditorExerciseHTML(p,data)).join('')+'</div>'
+     +'<button type="button" class="completed-workout-save" onclick="saveCompletedWorkoutEdit('+sid+',this)">Зберегти зміни</button>'
+   +'</div></div>');
+}
+
+function addCompletedWorkoutEditSet(button){
+ let card=button?.closest('.completed-workout-edit-exercise'),holder=card?.querySelector('.completed-workout-edit-sets');if(!card||!holder)return;
+ let rows=[...holder.querySelectorAll('.completed-workout-edit-set')],n=Math.max(0,...rows.map(x=>+x.dataset.setNumber||0))+1;
+ if(n>20)return alert('Максимум 20 підходів.');
+ holder.insertAdjacentHTML('beforeend',completedWorkoutEditSetRowHTML(n,{},+card.dataset.targetRir||0));
+ card.querySelector('.completed-workout-edit-exercise-head>span').textContent=n+' підх.';
+}
+
+async function saveCompletedWorkoutEdit(sid,button=null){
+ let modal=document.getElementById('completedWorkoutEditModal');if(!modal)return;
+ let sets=[];
+ for(const card of modal.querySelectorAll('.completed-workout-edit-exercise')){
+   let pid=+card.dataset.programId||0,exercise=card.dataset.exercise||'';
+   for(const row of card.querySelectorAll('.completed-workout-edit-set')){
+     let weight=String(row.querySelector('[data-field="weight"]')?.value||'').trim();
+     let reps=String(row.querySelector('[data-field="reps"]')?.value||'').trim();
+     let rir=String(row.querySelector('[data-field="rir"]')?.value||'').trim();
+     if(!weight&&!reps&&!rir)continue;
+     if(weight===''||reps===''||rir==='')return alert('Заповни вагу, повтори та RIR у кожному внесеному підході.');
+     let rest=String(row.dataset.restSeconds||'').trim();
+     sets.push({program_id:pid,exercise,set_number:+row.dataset.setNumber,weight:+weight,reps:+reps,rir:+rir,rest_seconds:rest===''?null:+rest});
+   }
+ }
+ if(!sets.length)return alert('Заповни хоча б один підхід.');
+ let restore=setActionLoading(button,'Зберігаємо…');
+ try{
+   await api('/workout/'+sid+'/results',{method:'PATCH',body:JSON.stringify({sets})});
+   modal.remove();
+   window.currentClientData=await loadClientData(session.client_id);
+   await openProgressWorkout(sid,false);
+ }catch(e){
+   restore();
+   alert(e?.message||'Не вдалося зберегти зміни.');
+ }
+}
+
+async function reopenCompletedWorkout(sid,button=null){
+ let d=window.currentClientData||{},data=progressWorkoutData(d,sid);
+ if(!data)return alert('Тренування не знайдено.');
+ if(data.day!==isoToday())return alert('Скасувати завершення можна лише в день тренування. Для минулих тренувань скористайся редагуванням.');
+ if(!confirm('Скасувати завершення і повернути тренування в активне? Уже внесені підходи збережуться.'))return;
+ let restore=setActionLoading(button,'Повертаємо…');
+ try{
+   let reopened=await api('/workout/'+sid+'/reopen',{method:'POST'});
+   document.getElementById('completedWorkoutEditModal')?.remove();
+   document.getElementById('finishSummaryModal')?.remove();
+   let cid=session?.client_id;
+   if(cid&&reopened?.id){let k=offlineLocalScopeKey();if(k)localStorage.setItem('eplanActiveWorkoutV2_'+k+'_'+cid,JSON.stringify(reopened));}
+   window.currentClientData=await loadClientData(cid);
+   window.clientTrainingTab='program';
+   await showClientTraining(cid);
+ }catch(e){
+   restore();
+   alert(e?.message||'Не вдалося скасувати завершення тренування.');
+ }
 }
 
 async function openProgressWorkout(sid,pushHistory=true){
