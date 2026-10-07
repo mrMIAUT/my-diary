@@ -68,30 +68,43 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
  let day=sessionDay(session),dayName=session.day_name||'Тренування';
  let snap=sessionProgramForDate(d,dayName,day);
  let sets=(d.result_sets||[]).filter(x=>x.day===day);
+ let skipped=(d.skipped_sets||[]).filter(x=>x.day===day);
  let prevSets=previousDay?(d.result_sets||[]).filter(x=>x.day===previousDay):[];
- let exercises=(snap||[]).filter(x=>sets.some(s=>+s.program_id===+x.id));
+ let exercises=(snap||[]).filter(x=>sets.some(s=>+s.program_id===+x.id)||skipped.some(s=>+s.program_id===+x.id));
  if(!exercises.length){
    let grouped={};
    sets.forEach(s=>{
      let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
      if(!grouped[key])grouped[key]={id:+s.program_id||0,exercise:s.exercise||'Вправа'};
    });
+   skipped.forEach(s=>{
+     let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
+     if(!grouped[key])grouped[key]={id:+s.program_id||0,exercise:s.exercise||'Вправа'};
+   });
    exercises=Object.values(grouped);
  }
- if(!exercises.length)return '<div class="trainer-review-empty-detail">Немає збережених підходів для цього тренування.</div>';
+ if(!exercises.length)return '<div class="trainer-review-empty-detail">Немає збережених або пропущених підходів для цього тренування.</div>';
  let norm=v=>String(v||'').trim().toLocaleLowerCase('uk-UA');
  return exercises.map(x=>{
    let cur=uniqueResultSets(sets.filter(s=>+s.program_id===+x.id)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
    if(!cur.length){
      cur=uniqueResultSets(sets.filter(s=>norm(s.exercise)===norm(x.exercise))).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
    }
+   let skippedCur=skipped.filter(s=>+s.program_id===+x.id||norm(s.exercise)===norm(x.exercise)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   let skippedNums=new Set(skippedCur.map(s=>+s.set_number||0));
+   let curMap=new Map(cur.map(s=>[+s.set_number,s]));
+   let rowNumbers=[...new Set([...cur.map(s=>+s.set_number||0),...skippedCur.map(s=>+s.set_number||0)])].filter(Boolean).sort((a,b)=>a-b);
    let prev=uniqueResultSets(prevSets.filter(s=>+s.program_id===+x.id||norm(s.exercise)===norm(x.exercise))).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
    let aux=(d.aux_sets||[]).filter(a=>a.day===day&&(+a.program_id===+x.id||norm(a.exercise)===norm(x.exercise)));
    let warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
    return '<div class="trainer-review-exercise">'
-     +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+cur.length+' підходи</span></div>'
+     +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+rowNumbers.length+' підходи</span></div>'
      +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||cur[0]?.repeat_mode||x.repeat_mode))+'</span>').join('')+'</div>':'')
-     +'<div class="trainer-review-sets">'+cur.map(s=>{
+     +'<div class="trainer-review-sets">'+rowNumbers.map(n=>{
+       if(skippedNums.has(n)){
+         return '<section class="trainer-review-set-block skipped"><div class="trainer-review-set-current trainer-review-set skipped"><small>Підхід '+esc(String(n))+'</small><b>Пропущено</b><span class="trainer-review-set-meta"><span class="trainer-review-rir">Клієнт не виконував цей підхід</span></span></div></section>';
+       }
+       let s=curMap.get(n);if(!s)return '';
        let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>+z.set_number===+s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode),deltaHTML='';
        if(p){
          let dw=(+s.weight||0)-(+p.weight||0),dr=(+s.reps||0)-(+p.reps||0),deltas=[];
