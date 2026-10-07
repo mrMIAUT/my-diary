@@ -243,6 +243,7 @@ PUBLIC_API_ROUTES={
     ("POST","/api/password-reset/request"), ("POST","/api/password-reset/confirm"),
     ("GET","/api/push/public-key"),
     ("GET","/api/prototype/foods/search"),
+    ("GET","/api/prototype/foods/chicken-preparation"),
 }
 
 def api_session_boundary(request:Request):
@@ -1857,6 +1858,110 @@ def _food_rank(query:str,items:list):
         ranked=clean+noisy
     for item in ranked:item.pop("_score",None)
     return _dedupe_food_items(ranked)
+
+
+CHICKEN_PREPARATIONS={
+    "raw":{
+        "label":"Сире",
+        "queries":("chicken breast meat only raw","chicken breast raw"),
+        "prefer":("raw",),
+        "reject":("cooked","roasted","grilled","fried","breaded"),
+    },
+    "boiled":{
+        "label":"Варене",
+        "queries":("chicken breast cooked boiled","chicken breast boiled"),
+        "prefer":("boiled","cooked"),
+        "reject":("breaded","fried","skin"),
+    },
+    "steamed":{
+        "label":"На парі",
+        "queries":("chicken breast steamed","chicken breast cooked"),
+        "prefer":("steamed",),
+        "reject":("breaded","fried","skin"),
+    },
+    "grilled":{
+        "label":"Гриль",
+        "queries":("chicken breast grilled","chicken breast cooked grilled"),
+        "prefer":("grilled",),
+        "reject":("breaded","fried","skin"),
+    },
+    "baked":{
+        "label":"Запечене",
+        "queries":("chicken breast roasted","chicken breast baked"),
+        "prefer":("roasted","baked"),
+        "reject":("breaded","fried","skin"),
+    },
+    # For frying we deliberately use plain cooked breast and account for oil as
+    # a separate ingredient in the UI. We do not guess oil absorption.
+    "fried":{
+        "label":"Смажене",
+        "queries":("chicken breast meat only cooked","chicken breast cooked"),
+        "prefer":("cooked",),
+        "reject":("breaded","sandwich","salad","skin"),
+        "oil_separate":True,
+    },
+}
+CHICKEN_PREP_CACHE={}
+
+def _chicken_candidate_score(item:dict,mode:str):
+    low=(item.get("name") or "").lower()
+    cfg=CHICKEN_PREPARATIONS[mode]
+    score=0
+    if "chicken" in low:score+=60
+    if "breast" in low:score+=80
+    if "meat only" in low:score+=35
+    if "skinless" in low or "without skin" in low:score+=15
+    if not (item.get("brand") or "").strip():score+=12
+    prefer_hits=sum(1 for token in cfg["prefer"] if token in low)
+    score+=prefer_hits*45
+    score-=sum(1 for token in cfg["reject"] if token in low)*70
+    if any(token in low for token in ("sandwich","salad","soup","pizza","with sauce","breaded")):
+        score-=120
+    return score,prefer_hits
+
+def _resolve_chicken_preparation(mode:str):
+    cached=CHICKEN_PREP_CACHE.get(mode)
+    if cached:return cached
+    cfg=CHICKEN_PREPARATIONS[mode]
+    candidates=[]
+    seen=set()
+    for query in cfg["queries"]:
+        for item in _usda_search(query,24,USDA_GENERIC_TYPES,1):
+            key=item.get("source_id")
+            if key and key in seen:continue
+            if key:seen.add(key)
+            candidates.append(item)
+    if not candidates:
+        result={"mode":mode,"label":cfg["label"],"item":None,"approximate":True,
+                "oil_separate":bool(cfg.get("oil_separate"))}
+        CHICKEN_PREP_CACHE[mode]=result
+        return result
+    scored=[]
+    for item in candidates:
+        score,hits=_chicken_candidate_score(item,mode)
+        scored.append((score,hits,item))
+    scored.sort(key=lambda row:(-row[0],-row[1],row[2].get("name","")))
+    _,hits,best=scored[0]
+    # Exact means the preparation keyword is actually present. Some USDA/FNDDS
+    # categories do not expose a distinct steamed/grilled record; in that case
+    # we still return the closest generic cooked breast but label it approximate.
+    approximate=(hits==0 and mode not in ("fried",))
+    result={"mode":mode,"label":cfg["label"],"item":best,"approximate":approximate,
+            "oil_separate":bool(cfg.get("oil_separate"))}
+    CHICKEN_PREP_CACHE[mode]=result
+    return result
+
+@app.get("/api/prototype/foods/chicken-preparation")
+def prototype_chicken_preparation(
+    mode:str=Query(default="raw",min_length=3,max_length=12),
+):
+    if not PROTOTYPE_MODE:
+        raise HTTPException(404,"Прототип пошуку недоступний")
+    mode=mode.lower().strip()
+    if mode not in CHICKEN_PREPARATIONS:
+        raise HTTPException(400,"Невідомий спосіб приготування")
+    return _resolve_chicken_preparation(mode)
+
 
 @app.get("/api/prototype/foods/search")
 def prototype_food_search(

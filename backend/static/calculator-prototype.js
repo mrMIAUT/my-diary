@@ -96,7 +96,7 @@ function stopGoal(){
 }
 $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);
 
-let foodItems=[],selectedFood=null,foodPage=1,foodActiveQuery='',foodHasMore=false;
+let foodItems=[],selectedFood=null,activeFoodProfile=null,foodPage=1,foodActiveQuery='',foodHasMore=false,foodPrepMode='raw',foodWeightBasis='raw',foodPrepCache={};
 const FOOD_CACHE_KEY='eplan12-food-cache-v2';
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function foodKey(item){return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''))}
@@ -165,27 +165,99 @@ async function searchFoods(query,append=false){
   renderFoodResults(foodItems);
  }finally{$('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false}
 }
+
+function isChickenFood(item){
+ const low=((item&&item.name)||'').toLowerCase();
+ return /кур(яча|ине|иное|иный)|chicken/.test(low)&&(low.includes('філе')||low.includes('филе')||low.includes('груд')||low.includes('breast'));
+}
+function prepControlsHtml(){
+ return '<div class="foodPrep" id="foodPrepBox">'
+  +'<div class="foodPrepGrid">'
+  +'<label>Спосіб приготування<select id="foodPrepMode"><option value="raw">Сире</option><option value="boiled">Варене</option><option value="steamed">На парі</option><option value="grilled">Гриль</option><option value="baked">Запечене</option><option value="fried">Смажене</option></select></label>'
+  +'<label>Коли зважено<select id="foodWeightBasis"><option value="raw">До приготування</option><option value="cooked">Після приготування</option></select></label>'
+  +'</div>'
+  +'<div class="foodOil" id="foodOilBox" hidden><label>Олія, що потрапила у порцію, г<input id="foodOilGrams" type="number" inputmode="decimal" min="0" max="200" value="0"></label></div>'
+  +'<div class="foodPrepStatus" id="foodPrepStatus">Завантажуємо профіль USDA для сирого філе…</div>'
+  +'</div>';
+}
+async function loadChickenPrep(mode){
+ if(foodPrepCache[mode])return foodPrepCache[mode];
+ const response=await fetch('/api/prototype/foods/chicken-preparation?mode='+encodeURIComponent(mode),{headers:{'Accept':'application/json'}});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося завантажити спосіб приготування');
+ foodPrepCache[mode]=data;
+ return data;
+}
+function setPrepStatus(data,usedMode){
+ const el=$('foodPrepStatus');if(!el)return;
+ if(!data||!data.item){
+  el.textContent='Точного профілю USDA не знайдено. Тимчасово використано дані вибраного продукту.';
+  return;
+ }
+ const approx=data.approximate?' · найближчий доступний профіль':'';
+ el.textContent=(usedMode==='raw'?'Розрахунок за сирою вагою':'Профіль: '+(data.label||''))+' · USDA FoodData Central'+approx;
+}
+async function refreshChickenProfile(){
+ if(!selectedFood||!isChickenFood(selectedFood))return;
+ const prep=$('foodPrepMode'),basis=$('foodWeightBasis');
+ foodPrepMode=prep?prep.value:'raw';foodWeightBasis=basis?basis.value:'raw';
+ const oilBox=$('foodOilBox');if(oilBox)oilBox.hidden=foodPrepMode!=='fried';
+ const usedMode=(foodWeightBasis==='raw'||foodPrepMode==='raw')?'raw':foodPrepMode;
+ if($('foodPrepStatus'))$('foodPrepStatus').textContent='Завантажуємо профіль USDA…';
+ try{
+  const data=await loadChickenPrep(usedMode);
+  activeFoodProfile=(data&&data.item)?data.item:selectedFood;
+  setPrepStatus(data,usedMode);
+ }catch(err){
+  activeFoodProfile=selectedFood;
+  if($('foodPrepStatus'))$('foodPrepStatus').textContent='USDA тимчасово недоступна — використано дані вибраного продукту.';
+ }
+ updateFoodPer100();updateFoodPortion();
+}
+function updateFoodPer100(){
+ const item=activeFoodProfile||selectedFood;if(!item)return;
+ const el=$('foodPer100');if(el)el.textContent='На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100);
+}
 function selectFood(index){
- const item=foodItems[index];if(!item)return;selectedFood=item;
- const portion=$('foodPortion');
+ const item=foodItems[index];if(!item)return;selectedFood=item;activeFoodProfile=item;foodPrepMode='raw';foodWeightBasis='raw';
+ const portion=$('foodPortion'),chicken=isChickenFood(item);
  portion.innerHTML='<div class="foodPortionHead"><div><span class="kicker">ОБРАНИЙ ПРОДУКТ</span><strong>'+foodEsc(item.name)+'</strong>'+(item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':'')+'</div><span class="foodSource">'+foodEsc(item.source_label||item.source)+'</span></div>'
-  +'<div class="foodPer100">На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</div>'
+  +'<div class="foodPer100" id="foodPer100">На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</div>'
+  +(chicken?prepControlsHtml():'')
   +'<div class="foodGramRow"><label>Кількість, г<input id="foodGrams" type="number" inputmode="decimal" min="1" max="5000" value="100"></label><div><span class="kicker">ПОРЦІЯ</span><b id="foodPortionName">100 г</b></div></div>'
   +'<div class="foodTotals"><span><b id="foodKcal">0</b>ккал</span><span><b id="foodProtein">0</b>білки, г</span><span><b id="foodFat">0</b>жири, г</span><span><b id="foodCarbs">0</b>вуглеводи, г</span></div>'
-  +'<p class="note">У повній версії кнопка «Додати» збереже цю порцію в щоденник і автоматично додасть її до БЖВ дня.</p>';
+  +(chicken?'<p class="note">Якщо зважено <b>до приготування</b>, ЄПЛАН рахує за сирим профілем. Якщо <b>після</b> — за окремим профілем способу приготування. Для смаження олія додається окремо, без формули «вбирання».</p>':'<p class="note">У повній версії кнопка «Додати» збереже цю порцію в щоденник і автоматично додасть її до БЖВ дня.</p>');
  portion.classList.add('show');
- $('foodGrams').addEventListener('input',updateFoodPortion);updateFoodPortion();
+ $('foodGrams').addEventListener('input',updateFoodPortion);
+ if(chicken){
+  $('foodPrepMode').addEventListener('change',refreshChickenProfile);
+  $('foodWeightBasis').addEventListener('change',refreshChickenProfile);
+  $('foodOilGrams').addEventListener('input',updateFoodPortion);
+  refreshChickenProfile();
+ }else updateFoodPortion();
  setTimeout(()=>portion.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
 function updateFoodPortion(){
- if(!selectedFood)return;
+ const item=activeFoodProfile||selectedFood;if(!item)return;
  const grams=Math.max(0,Math.min(5000,Number($('foodGrams').value)||0)),factor=grams/100;
+ let kcal=(Number(item.kcal_100)||0)*factor;
+ let protein=(Number(item.protein_100)||0)*factor;
+ let fat=(Number(item.fat_100)||0)*factor;
+ let carbs=(Number(item.carbs_100)||0)*factor;
+ const oilInput=$('foodOilGrams');
+ if(isChickenFood(selectedFood)&&foodPrepMode==='fried'&&oilInput){
+  const oil=Math.max(0,Math.min(200,Number(oilInput.value)||0));
+  // Oil is a separate ingredient: 1 g fat ≈ 9 kcal. We do not estimate
+  // absorption from pan amount, because that would create false precision.
+  kcal+=oil*9;fat+=oil;
+ }
  $('foodPortionName').textContent=foodFmt(grams)+' г';
- $('foodKcal').textContent=foodFmt(selectedFood.kcal_100*factor);
- $('foodProtein').textContent=foodFmt(selectedFood.protein_100*factor);
- $('foodFat').textContent=foodFmt(selectedFood.fat_100*factor);
- $('foodCarbs').textContent=foodFmt(selectedFood.carbs_100*factor);
+ $('foodKcal').textContent=foodFmt(kcal);
+ $('foodProtein').textContent=foodFmt(protein);
+ $('foodFat').textContent=foodFmt(fat);
+ $('foodCarbs').textContent=foodFmt(carbs);
 }
+
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
 $('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
 $('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;foodPage+=1;searchFoods(foodActiveQuery,true)});
