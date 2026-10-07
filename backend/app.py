@@ -2007,6 +2007,103 @@ PREP_MODE_LABELS={
 }
 PREP_CACHE={}
 
+# Generic fallback profiles are used only when no suitable external cooked
+# profile is available. They keep raw/dry label values from being incorrectly
+# reused for a cooked weight. All such results are explicitly marked approximate.
+PREP_FALLBACK={
+    "rice":{
+        "boiled":(130.0,2.7,0.3,28.2),"steamed":(130.0,2.7,0.3,28.2),
+    },
+    "basmati rice":{
+        "boiled":(121.0,3.5,0.4,25.2),"steamed":(121.0,3.5,0.4,25.2),
+    },
+    "buckwheat":{
+        "boiled":(92.0,3.4,0.6,19.9),"steamed":(92.0,3.4,0.6,19.9),
+    },
+    "bulgur":{
+        "boiled":(83.0,3.1,0.2,18.6),"steamed":(83.0,3.1,0.2,18.6),
+    },
+    "couscous":{
+        "boiled":(112.0,3.8,0.2,23.2),"steamed":(112.0,3.8,0.2,23.2),
+    },
+    "quinoa":{
+        "boiled":(120.0,4.4,1.9,21.3),"steamed":(120.0,4.4,1.9,21.3),
+    },
+    "barley":{
+        "boiled":(123.0,2.3,0.4,28.2),"steamed":(123.0,2.3,0.4,28.2),
+    },
+    "millet":{
+        "boiled":(119.0,3.5,1.0,23.7),"steamed":(119.0,3.5,1.0,23.7),
+    },
+    "oats":{
+        "boiled":(71.0,2.5,1.5,12.0),"steamed":(71.0,2.5,1.5,12.0),
+    },
+    "pasta":{
+        "boiled":(157.0,5.8,0.9,30.9),
+    },
+    "spaghetti":{
+        "boiled":(158.0,5.8,0.9,30.9),
+    },
+    "macaroni":{
+        "boiled":(158.0,5.8,0.9,30.9),
+    },
+    "potato":{
+        "boiled":(87.0,1.9,0.1,20.1),"steamed":(87.0,1.9,0.1,20.1),
+        "baked":(93.0,2.5,0.1,21.2),"fried":(93.0,2.5,0.1,21.2),
+    },
+    "chicken breast":{
+        "boiled":(151.0,29.0,3.0,0.0),"steamed":(151.0,29.0,3.0,0.0),
+        "grilled":(165.0,31.0,3.6,0.0),"baked":(165.0,31.0,3.6,0.0),
+        "fried":(165.0,31.0,3.6,0.0),
+    },
+    "turkey breast":{
+        "boiled":(147.0,30.1,2.1,0.0),"steamed":(147.0,30.1,2.1,0.0),
+        "grilled":(159.0,30.0,3.5,0.0),"baked":(159.0,30.0,3.5,0.0),
+        "fried":(159.0,30.0,3.5,0.0),
+    },
+    "beef":{
+        "boiled":(250.0,26.0,15.0,0.0),"steamed":(250.0,26.0,15.0,0.0),
+        "grilled":(250.0,26.0,15.0,0.0),"baked":(250.0,26.0,15.0,0.0),
+        "fried":(250.0,26.0,15.0,0.0),
+    },
+    "pork":{
+        "boiled":(242.0,27.0,14.0,0.0),"steamed":(242.0,27.0,14.0,0.0),
+        "grilled":(242.0,27.0,14.0,0.0),"baked":(242.0,27.0,14.0,0.0),
+        "fried":(242.0,27.0,14.0,0.0),
+    },
+    "salmon":{
+        "boiled":(206.0,22.0,12.0,0.0),"steamed":(206.0,22.0,12.0,0.0),
+        "grilled":(206.0,22.0,12.0,0.0),"baked":(206.0,22.0,12.0,0.0),
+        "fried":(206.0,22.0,12.0,0.0),
+    },
+    "tuna":{
+        "boiled":(132.0,29.0,1.0,0.0),"steamed":(132.0,29.0,1.0,0.0),
+        "grilled":(132.0,29.0,1.0,0.0),"baked":(132.0,29.0,1.0,0.0),
+        "fried":(132.0,29.0,1.0,0.0),
+    },
+    "cod":{
+        "boiled":(89.0,19.9,0.7,0.0),"steamed":(89.0,19.9,0.7,0.0),
+        "grilled":(89.0,19.9,0.7,0.0),"baked":(89.0,19.9,0.7,0.0),
+        "fried":(89.0,19.9,0.7,0.0),
+    },
+    "hake":{
+        "boiled":(90.0,19.0,1.2,0.0),"steamed":(90.0,19.0,1.2,0.0),
+        "grilled":(90.0,19.0,1.2,0.0),"baked":(90.0,19.0,1.2,0.0),
+        "fried":(90.0,19.0,1.2,0.0),
+    },
+}
+
+def _generic_fallback_item(category:str,base:str,mode:str):
+    values=(PREP_FALLBACK.get(base) or {}).get(mode)
+    if not values:return None
+    kcal,protein,fat,carbs=values
+    return {
+        "source":"reference","source_label":"reference",
+        "source_id":f"fallback-{category}-{base}-{mode}","barcode":"",
+        "name":f"{base} {mode} generic profile","brand":"","data_type":"reference",
+        "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
+    }
+
 def _prep_queries(base:str,mode:str):
     if mode=="raw":
         return (f"{base} raw",base),("raw","uncooked"),("cooked","fried","roasted","grilled","boiled")
@@ -2063,10 +2160,11 @@ def _resolve_food_preparation(category:str,base:str,mode:str):
     if not candidates and category=="meat" and base=="chicken breast" and mode in CHICKEN_PREPARATIONS:
         return _resolve_chicken_preparation(mode)
     if not candidates:
+        fallback=_generic_fallback_item(category,base,mode)
         result={
             "category":category,"base":base,"mode":mode,
-            "label":PREP_MODE_LABELS.get(mode,mode),"item":None,
-            "approximate":True,"oil_separate":mode=="fried",
+            "label":PREP_MODE_LABELS.get(mode,mode),"item":fallback,
+            "approximate":True,"fallback":bool(fallback),"oil_separate":mode=="fried",
         }
         PREP_CACHE[key]=result
         return result
@@ -2076,11 +2174,18 @@ def _resolve_food_preparation(category:str,base:str,mode:str):
         scored.append((score,hits,item))
     scored.sort(key=lambda row:(-row[0],-row[1],row[2].get("name","")))
     _,hits,best=scored[0]
-    approximate=(hits==0 or mode=="fried")
+    fallback=_generic_fallback_item(category,base,mode)
+    if hits==0 and fallback:
+        best=fallback
+        approximate=True
+        used_fallback=True
+    else:
+        approximate=(hits==0 or mode=="fried")
+        used_fallback=False
     result={
         "category":category,"base":base,"mode":mode,
         "label":PREP_MODE_LABELS.get(mode,mode),"item":best,
-        "approximate":approximate,"oil_separate":mode=="fried",
+        "approximate":approximate,"fallback":used_fallback,"oil_separate":mode=="fried",
     }
     PREP_CACHE[key]=result
     return result
