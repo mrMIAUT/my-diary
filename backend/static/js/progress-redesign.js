@@ -248,18 +248,46 @@ function completedWorkoutEditSetRowHTML(n,set={},targetRir=2){
   +'</div>';
 }
 
+function completedWorkoutEditAuxRowHTML(kind,index,aux={},parentSet=0){
+ let value=v=>v===undefined||v===null?'':esc(String(v));
+ let label=kind==='warmup'?'Розм. '+index:'Дроп '+index;
+ return '<div class="completed-workout-edit-aux-row '+kind+'" data-kind="'+kind+'" data-aux-number="'+index+'" data-parent-set="'+(+parentSet||0)+'">'
+   +'<span>'+label+'</span>'
+   +'<input data-field="weight" type="number" min="0" step="0.5" inputmode="decimal" value="'+value(aux.weight)+'" placeholder="кг" aria-label="Вага, '+label+'">'
+   +'<input data-field="reps" type="number" min="1" step="1" inputmode="numeric" value="'+value(aux.reps)+'" placeholder="повт." aria-label="Повтори, '+label+'">'
+   +'<button type="button" aria-label="Видалити '+label+'" onclick="removeCompletedWorkoutAuxRow(this)">✕</button>'
+  +'</div>';
+}
+
+function completedWorkoutEditWorkGroupHTML(n,set={},targetRir=2,aux=[]){
+ let drops=(aux||[]).filter(a=>a.kind==='drop'&&+a.parent_set_number===+n).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
+ return '<div class="completed-workout-edit-set-group" data-work-set-group="'+n+'">'
+   +completedWorkoutEditSetRowHTML(n,set,targetRir)
+   +'<div class="completed-workout-edit-drop-holder" data-drop-holder="'+n+'">'
+     +drops.map((a,i)=>completedWorkoutEditAuxRowHTML('drop',+a.aux_number||i+1,a,n)).join('')
+   +'</div>'
+   +'<button type="button" class="completed-workout-add-drop" data-parent-set="'+n+'" onclick="addCompletedWorkoutDrop(this)">+ Додати дроп-сет</button>'
+  +'</div>';
+}
+
 function completedWorkoutEditorExerciseHTML(p,data){
  let pid=+p.id||0,existing=(data.exercises||[]).find(x=>+x.pid===pid),exercise=existing?.name||p.exercise||'Вправа';
- let current=(existing?.sets||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+ let current=(existing?.sets||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0)),aux=(existing?.aux||[]).slice();
+ let warmups=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
  let count=Math.max(1,+p.sets||0,...current.map(x=>+x.set_number||0));
  let rirValues=typeof rirPlan==='function'?rirPlan(p):Array.from({length:count},()=>+p.target_rir||0);
  let rows='';
- for(let n=1;n<=count;n++)rows+=completedWorkoutEditSetRowHTML(n,current.find(x=>+x.set_number===n)||{},rirValues[n-1]??(+p.target_rir||0));
+ for(let n=1;n<=count;n++)rows+=completedWorkoutEditWorkGroupHTML(n,current.find(x=>+x.set_number===n)||{},rirValues[n-1]??(+p.target_rir||0),aux);
  return '<section class="completed-workout-edit-exercise" data-program-id="'+pid+'" data-exercise="'+esc(exercise)+'" data-target-rir="'+esc(String(+p.target_rir||0))+'">'
    +'<div class="completed-workout-edit-exercise-head"><div><strong>'+esc(exercise)+'</strong>'+(existing?.planned&&existing.planned!==exercise?'<small>За планом: '+esc(existing.planned)+'</small>':'')+'</div><span>'+count+' підх.</span></div>'
+   +'<div class="completed-workout-edit-aux-section warmup">'
+     +'<div class="completed-workout-edit-aux-title"><span>Розминка</span><small>необов’язково</small></div>'
+     +'<div class="completed-workout-edit-warmup-holder">'+warmups.map((a,i)=>completedWorkoutEditAuxRowHTML('warmup',+a.aux_number||i+1,a,0)).join('')+'</div>'
+     +'<button type="button" class="completed-workout-add-warmup" onclick="addCompletedWorkoutWarmup(this)">+ Додати розминочний підхід</button>'
+   +'</div>'
    +'<div class="completed-workout-edit-labels"><span></span><span>Вага</span><span>Повтори</span><span>RIR</span></div>'
    +'<div class="completed-workout-edit-sets">'+rows+'</div>'
-   +'<button type="button" class="completed-workout-add-set" onclick="addCompletedWorkoutEditSet(this)">+ Додати підхід</button>'
+   +'<button type="button" class="completed-workout-add-set" onclick="addCompletedWorkoutEditSet(this)">+ Додати робочий підхід</button>'
   +'</section>';
 }
 
@@ -274,39 +302,71 @@ function openCompletedWorkoutEditor(sid){
  document.getElementById('completedWorkoutEditModal')?.remove();
  document.body.insertAdjacentHTML('beforeend','<div class="modal completed-workout-edit-modal" id="completedWorkoutEditModal" onclick="if(event.target===this)this.remove()">'
    +'<div class="card completed-workout-edit-card">'
-     +'<div class="completed-workout-edit-head"><div><small>'+esc(formatProgressDate(data.day))+'</small><h2>Редагувати тренування</h2><p>Внеси фактичні ваги, повтори та RIR. Порожні підходи не зберігаються.</p></div><button type="button" class="dark" aria-label="Закрити" onclick="completedWorkoutEditModal.remove()">✕</button></div>'
+     +'<div class="completed-workout-edit-head"><div><small>'+esc(formatProgressDate(data.day))+'</small><h2>Редагувати тренування</h2><p>Внеси фактичні ваги, повтори та RIR. Розминка й дроп-сети також зберігаються.</p></div><button type="button" class="dark" aria-label="Закрити" onclick="completedWorkoutEditModal.remove()">✕</button></div>'
      +'<div class="completed-workout-edit-list">'+plan.map(p=>completedWorkoutEditorExerciseHTML(p,data)).join('')+'</div>'
      +'<button type="button" class="completed-workout-save" onclick="saveCompletedWorkoutEdit('+sid+',this)">Зберегти зміни</button>'
    +'</div></div>');
+}
+
+function nextCompletedWorkoutAuxNumber(holder){
+ let nums=[...holder.querySelectorAll('.completed-workout-edit-aux-row')].map(x=>+x.dataset.auxNumber||0);
+ return Math.max(0,...nums)+1;
+}
+
+function addCompletedWorkoutWarmup(button){
+ let card=button?.closest('.completed-workout-edit-exercise'),holder=card?.querySelector('.completed-workout-edit-warmup-holder');if(!holder)return;
+ let n=nextCompletedWorkoutAuxNumber(holder);if(n>50)return alert('Максимум 50 розминочних підходів.');
+ holder.insertAdjacentHTML('beforeend',completedWorkoutEditAuxRowHTML('warmup',n,{},0));
+}
+
+function addCompletedWorkoutDrop(button){
+ let group=button?.closest('.completed-workout-edit-set-group'),holder=group?.querySelector('.completed-workout-edit-drop-holder');if(!holder)return;
+ let parent=+button.dataset.parentSet||+group.dataset.workSetGroup||0,n=nextCompletedWorkoutAuxNumber(holder);
+ if(n>50)return alert('Максимум 50 дроп-сетів до підходу.');
+ holder.insertAdjacentHTML('beforeend',completedWorkoutEditAuxRowHTML('drop',n,{},parent));
+}
+
+function removeCompletedWorkoutAuxRow(button){
+ button?.closest('.completed-workout-edit-aux-row')?.remove();
 }
 
 function addCompletedWorkoutEditSet(button){
  let card=button?.closest('.completed-workout-edit-exercise'),holder=card?.querySelector('.completed-workout-edit-sets');if(!card||!holder)return;
  let rows=[...holder.querySelectorAll('.completed-workout-edit-set')],n=Math.max(0,...rows.map(x=>+x.dataset.setNumber||0))+1;
  if(n>20)return alert('Максимум 20 підходів.');
- holder.insertAdjacentHTML('beforeend',completedWorkoutEditSetRowHTML(n,{},+card.dataset.targetRir||0));
+ holder.insertAdjacentHTML('beforeend',completedWorkoutEditWorkGroupHTML(n,{},+card.dataset.targetRir||0,[]));
  card.querySelector('.completed-workout-edit-exercise-head>span').textContent=n+' підх.';
 }
 
 async function saveCompletedWorkoutEdit(sid,button=null){
  let modal=document.getElementById('completedWorkoutEditModal');if(!modal)return;
- let sets=[];
+ let sets=[],auxSets=[];
  for(const card of modal.querySelectorAll('.completed-workout-edit-exercise')){
-   let pid=+card.dataset.programId||0,exercise=card.dataset.exercise||'';
+   let pid=+card.dataset.programId||0,exercise=card.dataset.exercise||'',savedNumbers=new Set();
    for(const row of card.querySelectorAll('.completed-workout-edit-set')){
      let weight=String(row.querySelector('[data-field="weight"]')?.value||'').trim();
      let reps=String(row.querySelector('[data-field="reps"]')?.value||'').trim();
      let rir=String(row.querySelector('[data-field="rir"]')?.value||'').trim();
      if(!weight&&!reps&&!rir)continue;
-     if(weight===''||reps===''||rir==='')return alert('Заповни вагу, повтори та RIR у кожному внесеному підході.');
-     let rest=String(row.dataset.restSeconds||'').trim();
-     sets.push({program_id:pid,exercise,set_number:+row.dataset.setNumber,weight:+weight,reps:+reps,rir:+rir,rest_seconds:rest===''?null:+rest});
+     if(weight===''||reps===''||rir==='')return alert('Заповни вагу, повтори та RIR у кожному внесеному робочому підході.');
+     let setNumber=+row.dataset.setNumber,rest=String(row.dataset.restSeconds||'').trim();
+     savedNumbers.add(setNumber);
+     sets.push({program_id:pid,exercise,set_number:setNumber,weight:+weight,reps:+reps,rir:+rir,rest_seconds:rest===''?null:+rest});
+   }
+   for(const row of card.querySelectorAll('.completed-workout-edit-aux-row')){
+     let kind=row.dataset.kind||'',parent=+row.dataset.parentSet||0;
+     let weight=String(row.querySelector('[data-field="weight"]')?.value||'').trim();
+     let reps=String(row.querySelector('[data-field="reps"]')?.value||'').trim();
+     if(!weight&&!reps)continue;
+     if(weight===''||reps==='')return alert('Заповни вагу та повтори у кожному внесеному '+(kind==='drop'?'дроп-сеті':'розминочному підході')+'.');
+     if(kind==='drop'&&!savedNumbers.has(parent))return alert('Спочатку заповни робочий підхід '+parent+', до якого доданий дроп-сет.');
+     auxSets.push({program_id:pid,exercise,kind,parent_set_number:kind==='drop'?parent:null,aux_number:+row.dataset.auxNumber||1,weight:+weight,reps:+reps});
    }
  }
- if(!sets.length)return alert('Заповни хоча б один підхід.');
+ if(!sets.length)return alert('Заповни хоча б один робочий підхід.');
  let restore=setActionLoading(button,'Зберігаємо…');
  try{
-   await api('/workout/'+sid+'/results',{method:'PATCH',body:JSON.stringify({sets})});
+   await api('/workout/'+sid+'/results',{method:'PATCH',body:JSON.stringify({sets,aux_sets:auxSets})});
    modal.remove();
    window.currentClientData=await loadClientData(session.client_id);
    await openProgressWorkout(sid,false);
