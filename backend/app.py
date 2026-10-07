@@ -1628,6 +1628,16 @@ def _dedupe_food_items(items:list):
         if not duplicate:kept.append(item)
     return kept
 
+FOOD_GENERIC_DISH_MARKERS={
+    "sandwich","bread","dip","ball","spread","dessert","sauce","with wine",
+    "crackers","cracker","chips","chip","pizza","burger","casserole",
+}
+
+def _is_generic_dish_noise(query:str,item:dict):
+    if query!="сир" or item.get("source")!="usda":return False
+    low=(item.get("name") or "").lower()
+    return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
+
 def _food_rank(query:str,items:list):
     qtokens=_food_tokens(query)
     off_brand_hit=False
@@ -1650,27 +1660,34 @@ def _food_rank(query:str,items:list):
             brand_hits=_food_tokens(item.get("brand") or "") & qtokens
             score+=35+(70 if brand_hits else 0)
             brand_low=(item.get("brand") or "").lower()
-            if item.get("ukraine"):score+=32
-            if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):score+=24
+            if item.get("ukraine"):score+=95
+            if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):score+=70
         else:
             data_type=str(item.get("data_type") or "").lower()
             is_generic=data_type in ("foundation","survey (fndds)","sr legacy")
-            score+=(88 if is_generic else (50 if not off_brand_hit else 10))
+            score+=(58 if is_generic else (34 if not off_brand_hit else 8))
             if is_generic:
-                score+=18
-                if not (item.get("brand") or "").strip():score+=15
-        # A broad "сир" query should mean cheese, not every snack whose flavour
-        # happens to contain the word "сир". Keep actual cheese products first.
+                score+=10
+                if not (item.get("brand") or "").strip():score+=8
+        # A broad "сир" query in the Ukrainian app should prioritize actual
+        # cheese products sold in Ukraine, not prepared US dishes containing cheese.
         if query=="сир":
             low_name=(item.get("name") or "").lower()
-            if item.get("source")=="usda" and "cheese" in low_name:
-                score+=70
+            if item.get("source")=="off" and (item.get("ukraine") or any(hint in (item.get("brand") or "").lower() for hint in UKRAINIAN_BRAND_HINTS)):
+                score+=85
             elif low_name.startswith("сир") or low_name.startswith("cheese"):
-                score+=45
+                score+=35
+            if _is_generic_dish_noise(query,item):
+                score-=120
             if any(marker in low_name for marker in ("чипс","брускет","сухар","крекер","соус","смак сир")):
-                score-=65
+                score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
+    # For a generic cheese search, prepared USDA dishes are fallback-only.
+    if query=="сир":
+        clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
+        noisy=[x for x in ranked if _is_generic_dish_noise(query,x)]
+        ranked=clean+noisy
     for item in ranked:item.pop("_score",None)
     return _dedupe_food_items(ranked)
 
