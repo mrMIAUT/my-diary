@@ -16871,3 +16871,431 @@ body.eplan-redesign.client-ui .redesign-start-workout.extra{
     grid-column:auto;
   }
 }
+
+
+/* Extra training manager v2 */
+body.eplan-redesign.trainer-ui .trainer-extra-manager{
+  margin-bottom:14px;
+  padding:18px;
+  border:1px solid #d7e3f2!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)!important;
+  box-shadow:0 8px 26px rgba(22,54,96,.06)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-head>div{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-kicker{
+  display:block;
+  margin-bottom:5px;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-head h2{
+  margin:0;
+  color:#0a1738;
+  font-size:20px;
+  line-height:1.1;
+  letter-spacing:-.02em;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-head p{
+  margin:6px 0 0;
+  color:#7d8ca2;
+  font-size:10px;
+  line-height:1.4;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-create{
+  flex:0 0 auto;
+  min-height:40px;
+  padding:9px 13px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  box-shadow:0 8px 18px rgba(22,119,255,.16)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-empty{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-top:14px;
+  padding:13px;
+  border:1px dashed #cbd8e9;
+  border-radius:15px;
+  background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-empty>span{
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  border-radius:10px;
+  background:#edf5ff;
+  color:#1677ff;
+  font-size:19px;
+  font-weight:500;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-empty>div{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-empty strong{
+  color:#182946;
+  font-size:10.5px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-empty small{
+  color:#8b98aa;
+  font-size:9px;
+  line-height:1.35;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-list{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-item{
+  overflow:hidden;
+  border:1px solid #dce6f3;
+  border-radius:16px;
+  background:#fff;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-item.active{
+  border-color:#c5dcfb;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-item.paused{
+  background:#fbfcfe;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-main{
+  width:100%;
+  min-height:78px;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto 18px;
+  gap:10px;
+  align-items:center;
+  padding:12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  box-shadow:none!important;
+  text-align:left;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-icon{
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:#eaf3ff;
+  color:#1677ff;
+  font-size:20px;
+  font-weight:600;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-copy{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-copy strong{
+  overflow:hidden;
+  color:#0a1738;
+  font-size:13px;
+  font-weight:900;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-copy small{
+  overflow:hidden;
+  color:#6f7f96;
+  font-size:10px;
+  font-weight:750;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-copy em{
+  color:#9aa5b4;
+  font-size:8.5px;
+  font-style:normal;
+  font-weight:700;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-status{
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-weight:900;
+  white-space:nowrap;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-status.active{
+  background:#eaf8f0;
+  color:#168553;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-status.paused{
+  background:#fff3e9;
+  color:#b36c23;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-main .program-day-arrow{
+  color:#8190a5;
+  font-size:16px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-body{
+  padding:0 12px 12px;
+  border-top:1px solid #edf1f6;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-body.hidden{display:none!important}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  padding:11px 0;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions .trainer-extra-action{
+  min-height:34px;
+  padding:7px 10px!important;
+  border:1px solid #dbe5f1!important;
+  border-radius:10px!important;
+  background:#f6f9fd!important;
+  color:#52647d!important;
+  box-shadow:none!important;
+  font-size:9px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions .trainer-extra-action.activate{
+  border-color:#bfe7d1!important;
+  background:#eefaf3!important;
+  color:#168553!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions .trainer-extra-action.pause{
+  background:#f8fafc!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions .trainer-extra-action.promote{
+  border-color:#c2d9fb!important;
+  background:#edf5ff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-actions .trainer-extra-action.delete{
+  margin-left:auto;
+  border-color:#f1d2d2!important;
+  background:#fff6f6!important;
+  color:#c45d5d!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-exercises{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-manager-exercises .trainer-exercise-card{
+  margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border:1px dashed #cad8ea;
+  border-radius:13px;
+  background:#f9fbfe;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty>div{
+  display:grid;
+  gap:2px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty strong{
+  color:#334661;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty span{
+  color:#8b98aa;
+  font-size:9px;
+  line-height:1.35;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty button{
+  min-height:34px;
+  padding:7px 10px!important;
+  border:1px solid #c7dcfb!important;
+  border-radius:10px!important;
+  background:#edf5ff!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+
+/* Modern extra-training sheet */
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal{
+  z-index:12050!important;
+  align-items:flex-end!important;
+  padding:0!important;
+  background:rgba(8,17,35,.58)!important;
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card{
+  width:min(100%,560px)!important;
+  max-height:min(88dvh,760px)!important;
+  margin:0 auto!important;
+  padding:20px 18px calc(18px + env(safe-area-inset-bottom))!important;
+  overflow:auto;
+  border:0!important;
+  border-radius:26px 26px 0 0!important;
+  background:#fff!important;
+  box-shadow:0 -12px 42px rgba(10,23,56,.18)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 44px!important;
+  gap:12px!important;
+  align-items:start!important;
+  margin:0 0 16px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-head>div{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-head small{
+  display:block!important;
+  margin:0 0 4px!important;
+  color:#1677ff!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-head h2{
+  margin:0!important;
+  color:#0a1738!important;
+  font-size:26px!important;
+  line-height:1.08!important;
+  letter-spacing:-.025em!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-close{
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+  border:1px solid #dbe5f0!important;
+  border-radius:13px!important;
+  background:#f3f7fc!important;
+  color:#183253!important;
+  box-shadow:none!important;
+  font-size:18px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label,
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .trainer-day-title-field{
+  display:grid!important;
+  gap:6px!important;
+  margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label:first-child,
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label:nth-child(2),
+body.eplan-redesign.trainer-ui .trainer-extra-day-form #extraDayUntilWrap{
+  grid-column:1/-1;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label>span,
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .trainer-day-title-field>span{
+  color:#64758d!important;
+  font-size:9px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form input,
+body.eplan-redesign.trainer-ui .trainer-extra-day-form select,
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .trainer-day-title-field input{
+  width:100%!important;
+  min-height:48px!important;
+  padding:11px 13px!important;
+  border:1px solid #d8e3f0!important;
+  border-radius:13px!important;
+  outline:0!important;
+  background:#f8fbff!important;
+  color:#0a1738!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form input:focus,
+body.eplan-redesign.trainer-ui .trainer-extra-day-form select:focus,
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .trainer-day-title-field input:focus{
+  border-color:#8bbaff!important;
+  background:#fff!important;
+  box-shadow:0 0 0 3px rgba(22,119,255,.08)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form input[readonly]{
+  color:#728196!important;
+  background:#f2f5f9!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-note{
+  margin:12px 0 0!important;
+  padding:10px 11px!important;
+  border-radius:11px!important;
+  background:#f4f8fd!important;
+  color:#74839a!important;
+  font-size:9.5px!important;
+  line-height:1.45!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-save{
+  width:100%!important;
+  min-height:48px!important;
+  margin-top:14px!important;
+  padding:10px 14px!important;
+  border:0!important;
+  border-radius:13px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  box-shadow:0 10px 22px rgba(22,119,255,.16)!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui #duplicateProgramDayModal .trainer-day-title-field+ .trainer-day-title-field{
+  margin-top:10px!important;
+}
+
+@media(min-width:700px){
+  body.eplan-redesign.trainer-ui .trainer-extra-day-modal{align-items:center!important;padding:24px!important}
+  body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card{border-radius:24px!important}
+}
+@media(max-width:480px){
+  body.eplan-redesign.trainer-ui .trainer-extra-manager{
+    padding:15px;
+    border-radius:19px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-manager-head{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-manager-create{
+    align-self:start;
+    padding:8px 10px!important;
+  }
+}
+@media(max-width:370px){
+  body.eplan-redesign.trainer-ui .trainer-extra-manager-main{
+    grid-template-columns:34px minmax(0,1fr) 18px;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-manager-status{
+    grid-column:2;
+    justify-self:start;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-manager-main .program-day-arrow{
+    grid-column:3;
+    grid-row:1/3;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-day-form{
+    grid-template-columns:1fr!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-day-form label:first-child,
+  body.eplan-redesign.trainer-ui .trainer-extra-day-form label:nth-child(2),
+  body.eplan-redesign.trainer-ui .trainer-extra-day-form #extraDayUntilWrap{
+    grid-column:auto;
+  }
+}
