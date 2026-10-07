@@ -17299,3 +17299,144 @@ body.eplan-redesign.trainer-ui #duplicateProgramDayModal .trainer-day-title-fiel
     grid-column:auto;
   }
 }
+
+
+/* Trainer review completion modal */
+body.eplan-redesign.trainer-ui .trainer-review-complete-modal{
+  z-index:12060!important;
+  align-items:flex-end!important;
+  padding:0!important;
+  background:rgba(8,17,35,.56)!important;
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-card{
+  width:min(100%,520px)!important;
+  margin:0 auto!important;
+  padding:20px 18px calc(18px + env(safe-area-inset-bottom))!important;
+  border:0!important;
+  border-radius:26px 26px 0 0!important;
+  background:#fff!important;
+  box-shadow:0 -12px 42px rgba(10,23,56,.18)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:#eaf8f0;
+  color:#168553;
+  font-size:22px;
+  font-weight:900;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-close{
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  padding:0!important;
+  border:1px solid #dbe5f0!important;
+  border-radius:13px!important;
+  background:#f3f7fc!important;
+  color:#183253!important;
+  box-shadow:none!important;
+  font-size:18px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-kicker{
+  display:block;
+  margin-bottom:5px;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-card h2{
+  margin:0;
+  color:#0a1738!important;
+  font-size:26px!important;
+  line-height:1.08!important;
+  letter-spacing:-.025em;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-card>p{
+  margin:8px 0 0;
+  color:#74839a;
+  font-size:11px;
+  line-height:1.45;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-next{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:16px;
+  padding:12px 13px;
+  border:1px solid #dce6f2;
+  border-radius:14px;
+  background:#f8fbff;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-next span{
+  color:#62738b;
+  font-size:10.5px;
+  font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-next strong{
+  display:grid;
+  place-items:center;
+  min-width:32px;
+  height:32px;
+  padding:0 9px;
+  border-radius:999px;
+  background:#eaf3ff;
+  color:#1677ff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-actions{
+  display:grid;
+  gap:8px;
+  margin-top:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-actions button{
+  width:100%!important;
+  min-height:48px!important;
+  padding:10px 14px!important;
+  border-radius:13px!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-primary{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  border:0!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  box-shadow:0 10px 22px rgba(22,119,255,.16)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-primary span{
+  font-size:16px;
+  line-height:1;
+}
+body.eplan-redesign.trainer-ui .trainer-review-complete-secondary{
+  border:1px solid #d8e3f0!important;
+  background:#f3f7fc!important;
+  color:#334a68!important;
+  box-shadow:none!important;
+}
+@media(min-width:700px){
+  body.eplan-redesign.trainer-ui .trainer-review-complete-modal{
+    align-items:center!important;
+    padding:24px!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-review-complete-card{
+    border-radius:24px!important;
+  }
+}

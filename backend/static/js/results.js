@@ -26,7 +26,10 @@ async function reviewWorkout(sid,cid,useComment=true,button=null){
    if(currentRemaining>0){
      setTimeout(openFirstPendingWorkout,160);
    }else if(remaining>0){
-     setTimeout(()=>{document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="nextReviewModal"><div class="card"><h2>Тренування перевірено ✓</h2><p class="muted">У цього клієнта все перевірено. Ще очікують перевірки: ${remaining}</p><button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступний клієнт →</button><button class="dark" style="width:100%;margin-top:8px" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div>`)},120);
+     setTimeout(()=>{
+       document.getElementById('nextReviewModal')?.remove();
+       document.body.insertAdjacentHTML('beforeend',`<div class="modal trainer-review-complete-modal" id="nextReviewModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-review-complete-card"><div class="trainer-review-complete-top"><div class="trainer-review-complete-icon">✓</div><button type="button" class="trainer-review-complete-close" aria-label="Закрити" onclick="nextReviewModal.remove()">✕</button></div><span class="trainer-review-complete-kicker">ПЕРЕВІРКА ЗАВЕРШЕНА</span><h2>Тренування перевірено</h2><p>У цього клієнта все перевірено.</p><div class="trainer-review-complete-next"><span>Ще очікують перевірки</span><strong>${remaining}</strong></div><div class="trainer-review-complete-actions"><button type="button" class="trainer-review-complete-primary" onclick="nextReviewModal.remove();openNextPendingClient(${cid})">Наступний клієнт <span>→</span></button><button type="button" class="trainer-review-complete-secondary" onclick="nextReviewModal.remove()">Залишитися тут</button></div></div></div>`);
+     },120);
    }
  }catch(e){restore();alert(e.message||'Не вдалося позначити тренування перевіреним. Спробуй ще раз.')}
 }
