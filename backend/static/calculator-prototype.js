@@ -120,7 +120,7 @@ async function searchFoods(query){
  $('foodQuery').value=q;$('foodStatus').textContent='Шукаємо в Open Food Facts та USDA…';$('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
  $('foodSearchBtn').disabled=true;
  try{
-  const response=await fetch('/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8',{headers:{'Accept':'application/json'}});
+  const response=await fetch('/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8',{headers:{'Accept':'application/json'}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
   foodItems=Array.isArray(data.items)?data.items:[];

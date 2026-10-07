@@ -1550,7 +1550,7 @@ def _food_rank(query:str,items:list):
     for item in ranked:item.pop("_score",None)
     return ranked
 
-@app.get("/api/prototype/foods/search")
+@app.get("/prototype/foods/search")
 def prototype_food_search(
     q:str=Query(...,min_length=2,max_length=120),
     limit:int=Query(default=8,ge=1,le=FOOD_SEARCH_MAX_RESULTS),
