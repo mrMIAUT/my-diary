@@ -1367,7 +1367,7 @@ def _app_index():
 # runs without DATABASE_URL so experiments cannot touch production data.
 FOOD_HTTP_TIMEOUT_SECONDS=4.5
 FOOD_HTTP_MAX_BYTES=1_500_000
-FOOD_SEARCH_MAX_RESULTS=12
+FOOD_SEARCH_MAX_RESULTS=24
 FOOD_USER_AGENT=os.environ.get("FOOD_API_USER_AGENT","EPLAN/1.2 product-search prototype")
 USDA_API_KEY=os.environ.get("USDA_API_KEY","DEMO_KEY")
 
@@ -1467,6 +1467,12 @@ def _food_fetch_json(url:str,payload=None):
         safe_log("food_source_unavailable",logging.WARNING,error_type=type(exc).__name__)
         return None
 
+UKRAINIAN_BRAND_HINTS={
+    "молокія","яготинське","галичина","своя лінія","розумний вибір",
+    "de luxe","день у день","премія","повна чаша","верес","торчин",
+    "чумак","roshen","рошен","том","комо","золотий резерв","serenada",
+}
+
 def _off_item(product:dict):
     nutr=product.get("nutriments") or {}
     # OFF occasionally returns HTML entities in contributor-entered names.
@@ -1474,6 +1480,7 @@ def _off_item(product:dict):
     name=html.unescape(str(product.get("product_name_uk") or product.get("product_name") or product.get("product_name_en") or "")).strip()
     if not name:return None
     brand=html.unescape(str(product.get("brands") or "")).strip()
+    countries=[str(x).lower() for x in (product.get("countries_tags") or [])]
     kcal=_food_num(nutr.get("energy-kcal_100g"))
     if not kcal:
         kj=_food_num(nutr.get("energy_100g"))
@@ -1484,12 +1491,13 @@ def _off_item(product:dict):
         "brand":brand[:180],
         "kcal_100":kcal,"protein_100":_food_num(nutr.get("proteins_100g")),
         "fat_100":_food_num(nutr.get("fat_100g")),"carbs_100":_food_num(nutr.get("carbohydrates_100g")),
+        "ukraine":("en:ukraine" in countries),
     }
 
-def _off_search(query:str,limit:int):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments"
+def _off_search(query:str,limit:int,page:int=1):
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags"
     url=("https://world.openfoodfacts.org/cgi/search.pl?action=process&search_simple=1&json=1"
-         f"&page_size={min(10,max(1,limit))}&fields={urllib.parse.quote(fields)}"
+         f"&page={max(1,page)}&page_size={min(24,max(1,limit))}&fields={urllib.parse.quote(fields)}"
          f"&search_terms={urllib.parse.quote(query)}")
     payload=_food_fetch_json(url) or {}
     items=[]
@@ -1541,11 +1549,11 @@ def _usda_item(food:dict):
 USDA_GENERIC_TYPES=["Foundation","Survey (FNDDS)","SR Legacy"]
 USDA_BRANDED_TYPES=["Branded"]
 
-def _usda_search(query:str,limit:int,data_types=None):
+def _usda_search(query:str,limit:int,data_types=None,page:int=1):
     if not query or not USDA_API_KEY:return []
     url="https://api.nal.usda.gov/fdc/v1/foods/search?api_key="+urllib.parse.quote(USDA_API_KEY)
     payload=_food_fetch_json(url,{
-        "query":query,"pageSize":min(12,max(1,limit)),
+        "query":query,"pageSize":min(24,max(1,limit)),"pageNumber":max(1,page),
         "dataType":data_types or USDA_GENERIC_TYPES,
     }) or {}
     items=[]
@@ -1641,6 +1649,9 @@ def _food_rank(query:str,items:list):
         if item.get("source")=="off":
             brand_hits=_food_tokens(item.get("brand") or "") & qtokens
             score+=35+(70 if brand_hits else 0)
+            brand_low=(item.get("brand") or "").lower()
+            if item.get("ukraine"):score+=32
+            if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):score+=24
         else:
             data_type=str(item.get("data_type") or "").lower()
             is_generic=data_type in ("foundation","survey (fndds)","sr legacy")
@@ -1667,6 +1678,7 @@ def _food_rank(query:str,items:list):
 def prototype_food_search(
     q:str=Query(...,min_length=2,max_length=120),
     limit:int=Query(default=8,ge=1,le=FOOD_SEARCH_MAX_RESULTS),
+    page:int=Query(default=1,ge=1,le=50),
 ):
     if not PROTOTYPE_MODE:
         raise HTTPException(404,"Прототип пошуку недоступний")
@@ -1674,18 +1686,15 @@ def prototype_food_search(
     compact="".join(ch for ch in raw if ch.isdigit())
     if raw.replace(" ","").isdigit() and 8<=len(compact)<=14:
         items=_off_barcode(compact)
-        return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode"}
+        return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode","page":1,"has_more":False}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
-    # Start with the localized query. If OFF clearly recognizes a brand named by
-    # the user (e.g. "Молокія сир 5%"), keep the result set brand-focused and do
-    # not pollute it with fuzzy USDA matches such as unrelated "95% lean" foods.
-    off_items=_off_search(normalized,limit)
+    # Fetch one extra per source so the client can expose a real "Показати ще".
+    fetch_limit=min(FOOD_SEARCH_MAX_RESULTS,limit+1)
+    off_items=_off_search(normalized,fetch_limit,page)
     brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
     if brand_matches:
-        # Keep only OFF candidates that match the named brand. This makes a
-        # brand query deterministic even when OFF itself returns broad results.
         matched_brand_tokens=set()
         qtokens=_food_tokens(normalized)
         for item in brand_matches:
@@ -1695,26 +1704,25 @@ def prototype_food_search(
             if _food_tokens(item.get("brand") or "") & matched_brand_tokens
         ]
     else:
-        # No brand intent was recognized: broaden OFF and use USDA for generic
-        # foods such as "сир", "рис басматі" or "куряча грудка".
         for query in variants[1:]:
-            if len(off_items)<limit:
-                off_items.extend(_off_search(query,limit-len(off_items)))
-        # Generic USDA records first. Branded USDA is only a fallback; this
-        # prevents a generic query from becoming a wall of US supermarket SKUs.
+            if len(off_items)<fetch_limit:
+                off_items.extend(_off_search(query,fetch_limit-len(off_items),page))
         for query in variants:
             uq=usda_food_query(query)
-            if uq and len(usda_items)<limit:
-                usda_items.extend(_usda_search(uq,limit-len(usda_items),USDA_GENERIC_TYPES))
+            if uq and len(usda_items)<fetch_limit:
+                usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_GENERIC_TYPES,page))
         if len(usda_items)<max(3,limit//2):
             for query in variants:
                 uq=usda_food_query(query)
-                if uq and len(usda_items)<limit:
-                    usda_items.extend(_usda_search(uq,limit-len(usda_items),USDA_BRANDED_TYPES))
-    items=_food_rank(normalized,off_items+usda_items)[:limit]
+                if uq and len(usda_items)<fetch_limit:
+                    usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,page))
+    ranked=_food_rank(normalized,off_items+usda_items)
+    has_more=len(ranked)>limit or len(off_items)>=fetch_limit or len(usda_items)>=fetch_limit
+    items=ranked[:limit]
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
         "items":items,"mode":"text","brand_query":bool(brand_matches),
+        "page":page,"has_more":has_more,
         "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
     }
 

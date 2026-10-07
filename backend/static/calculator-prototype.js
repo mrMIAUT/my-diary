@@ -96,8 +96,33 @@ function stopGoal(){
 }
 $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input',syncAdjust);$('experience').addEventListener('change',syncAdjust);$('height').addEventListener('input',syncAdjust);$('weight').addEventListener('input',syncAdjust);$('calcBtn').addEventListener('click',calculate);$('adaptBtn').addEventListener('click',adapt);$('changeGoalBtn').addEventListener('click',changeGoal);$('stopGoalBtn').addEventListener('click',stopGoal);
 
-let foodItems=[],selectedFood=null;
+let foodItems=[],selectedFood=null,foodPage=1,foodActiveQuery='',foodHasMore=false;
+const FOOD_CACHE_KEY='eplan12-food-cache-v1';
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function foodKey(item){return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''))}
+function loadFoodCache(){
+ try{const x=JSON.parse(localStorage.getItem(FOOD_CACHE_KEY)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}
+}
+function saveFoodCache(items){
+ try{
+  const merged=[...items,...loadFoodCache()],seen=new Set(),out=[];
+  for(const item of merged){const k=foodKey(item);if(!k||seen.has(k))continue;seen.add(k);out.push(item);if(out.length>=200)break}
+  localStorage.setItem(FOOD_CACHE_KEY,JSON.stringify(out));
+ }catch(_){}
+}
+function cachedFoodMatches(query){
+ const tokens=String(query||'').toLowerCase().split(/\s+/).filter(x=>x.length>1&&!/^\d+%?$/.test(x));
+ if(!tokens.length)return [];
+ return loadFoodCache().filter(item=>{
+  const hay=((item.name||'')+' '+(item.brand||'')).toLowerCase();
+  return tokens.every(t=>hay.includes(t));
+ }).slice(0,8);
+}
+function mergeFoodItems(a,b){
+ const seen=new Set(),out=[];
+ for(const item of [...a,...b]){const k=foodKey(item);if(!k||seen.has(k))continue;seen.add(k);out.push(item)}
+ return out;
+}
 const foodFmt=value=>{
  const n=Number(value)||0;
  return n.toLocaleString('uk-UA',{maximumFractionDigits:n<10?1:0});
@@ -109,26 +134,33 @@ function foodResultLabel(item){
 }
 function renderFoodResults(items){
  const box=$('foodResults'),portion=$('foodPortion');selectedFood=null;portion.classList.remove('show');portion.innerHTML='';
- if(!items.length){box.innerHTML='';$('foodStatus').textContent='Нічого не знайдено. Спробуй уточнити бренд або назву.';return}
- $('foodStatus').textContent='Знайдено '+items.length+' варіант'+(items.length===1?'':'ів')+'. Обери продукт.';
+ if(!items.length){box.innerHTML='';$('foodStatus').textContent='Нічого не знайдено. Спробуй уточнити бренд або назву.';$('foodMoreBtn').hidden=true;return}
+ $('foodStatus').textContent='Показано '+items.length+' варіант'+(items.length===1?'':'ів')+'. Обери продукт.';
  box.innerHTML=items.map((item,i)=>'<button type="button" class="foodItem" data-food-index="'+i+'">'+foodResultLabel(item)+'</button>').join('');
  box.querySelectorAll('[data-food-index]').forEach(btn=>btn.onclick=()=>selectFood(Number(btn.dataset.foodIndex)));
+ $('foodMoreBtn').hidden=!foodHasMore;
 }
-async function searchFoods(query){
+async function searchFoods(query,append=false){
  const q=String(query||$('foodQuery').value||'').trim();
  if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
- $('foodQuery').value=q;$('foodStatus').textContent='Шукаємо в Open Food Facts та USDA…';$('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
- $('foodSearchBtn').disabled=true;
+ if(!append){foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=cachedFoodMatches(q);$('foodResults').innerHTML='';$('foodPortion').classList.remove('show')}
+ $('foodQuery').value=q;$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо в Open Food Facts та USDA…';
+ $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
  try{
-  const response=await fetch('/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8',{headers:{'Accept':'application/json'}});
+  const response=await fetch('/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8&page='+foodPage,{headers:{'Accept':'application/json'}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
-  foodItems=Array.isArray(data.items)?data.items:[];
+  const incoming=Array.isArray(data.items)?data.items:[];
+  saveFoodCache(incoming);
+  foodItems=mergeFoodItems(foodItems,incoming);
+  foodHasMore=Boolean(data.has_more);
   renderFoodResults(foodItems);
   if(data.normalized_query&&data.normalized_query.toLowerCase()!==q.toLowerCase())$('foodStatus').textContent+=' Запит нормалізовано: «'+data.normalized_query+'».';
  }catch(err){
-  $('foodStatus').textContent='Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
- }finally{$('foodSearchBtn').disabled=false}
+  if(!foodItems.length)$('foodStatus').textContent='Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
+  else $('foodStatus').textContent='Показано кешовані результати. Зовнішній пошук тимчасово недоступний.';
+  renderFoodResults(foodItems);
+ }finally{$('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false}
 }
 function selectFood(index){
  const item=foodItems[index];if(!item)return;selectedFood=item;
@@ -153,6 +185,7 @@ function updateFoodPortion(){
 }
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
 $('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
+$('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;foodPage+=1;searchFoods(foodActiveQuery,true)});
 document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener('click',()=>searchFoods(btn.dataset.foodQuery)));
 
 syncAdjust();
