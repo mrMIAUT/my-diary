@@ -412,15 +412,16 @@ function workoutSessionMatchesCurrentProgram(d,session){
 }
 
 function workoutCycleState(d,groups){
- let days=Object.keys(groups||{}),done=[];
+ let days=Object.keys(groups||{}).filter(day=>!programDayIsExtra(d,day)),done=[];
  if(!days.length)return {done,next:null};
 
- // A training cycle is the current calendar week (Monday-Sunday).
- // Previous weeks never carry completion into a fresh week.
+ // Only standard plan days count toward the weekly cycle. Extra sessions never
+ // advance the main program, even if the extra day is promoted later.
  let weekStart=workoutWeekStartISO(),today=isoToday();
  let sessions=(d.workout_sessions||[]).filter(x=>{
    let day=sessionDay(x);
    return x.status==='finished'
+     &&String(x.day_kind||'standard')!=='extra'
      &&days.includes(x.day_name)
      &&day&&day>=weekStart&&day<=today
      &&workoutSessionMatchesCurrentProgram(d,x);
@@ -432,7 +433,7 @@ function workoutCycleState(d,groups){
 }
 function workoutDayButtons(d,cid,groups){
  let cycle=workoutCycleState(d,groups);
- return Object.keys(groups).map(day=>{
+ return Object.keys(groups).filter(day=>!programDayIsExtra(d,day)).map(day=>{
    let cls=previewWorkoutDay===day?'preview-selected':cycle.done.includes(day)?'workout-cycle-done':day===cycle.next?'dark workout-cycle-next':'dark';
    let mark=cycle.done.includes(day)?' ✓':'';
    return `<button class="${cls}" data-day="${esc(day)}" onclick="previewWorkout(this.dataset.day,${cid})">${esc(day)}${mark}</button>`;
@@ -461,7 +462,7 @@ function todayGuidanceHTML(d,cid,groups){
 
 
 function clientTrainingProgramHTML(d,cid,groups){
- let days=Object.entries(groups||{});
+ let days=Object.entries(groups||{}).filter(([day])=>!programDayIsExtra(d,day));
  if(!days.length)return `<div class="card"><h2>Твоя програма тренувань</h2><p class="muted">Тренер ще не додав тренування до програми.</p></div>`;
  if(previewWorkoutDay && !groups[previewWorkoutDay]) previewWorkoutDay=null;
  let buttons=days.map(([day])=>`<button type="button" class="client-program-tab ${previewWorkoutDay===day?'active':''}" data-day="${esc(day)}" onclick="selectClientProgramDay(this.dataset.day,${cid})">${esc(day)}</button>`).join('');

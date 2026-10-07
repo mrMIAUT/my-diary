@@ -332,6 +332,33 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("function addCompletedWorkoutWarmup", PROGRESS_REDESIGN)
         self.assertIn("aux_sets:auxSets", PROGRESS_REDESIGN)
 
+    def test_extra_training_days_are_separate_from_main_cycle(self):
+        self.assertIn("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS kind", APP)
+        self.assertIn("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS extra_mode", APP)
+        self.assertIn("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS status", APP)
+        self.assertIn("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS active_until", APP)
+        self.assertIn("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS day_kind", APP)
+        self.assertIn('@app.put("/api/program-day-settings")', APP)
+        self.assertIn('@app.post("/api/program-day/duplicate")', APP)
+        self.assertIn('@app.delete("/api/program-day/{cid}")', APP)
+        self.assertIn("Додаткове тренування призупинено тренером", APP)
+        self.assertIn("meta.get(\"extra_mode\")==\"once\"", APP)
+        self.assertIn("SET status='paused'", APP)
+        self.assertIn("COALESCE(day_kind,'standard')='standard'", APP)
+        self.assertIn("function programDayIsExtra", PROGRAM)
+        self.assertIn("function openExtraTrainingDayModal", PROGRAM)
+        self.assertIn("function toggleExtraTrainingDayStatus", PROGRAM)
+        self.assertIn("function promoteExtraTrainingDay", PROGRAM)
+        self.assertIn("function duplicateProgramDay", PROGRAM)
+        self.assertIn("function deleteProgramDay", PROGRAM)
+        self.assertIn("!programDayIsExtra(d,day)", WORKOUT)
+        self.assertIn("String(x.day_kind||'standard')!=='extra'", WORKOUT)
+        self.assertIn("redesign-extra-training-section", TRAINING_REDESIGN)
+        self.assertIn("redesignExtraTrainingDayCard", TRAINING_REDESIGN)
+        self.assertIn("Не впливають на основний цикл", TRAINING_REDESIGN)
+        self.assertIn("!programDayIsExtra(d,day)", HOME)
+        self.assertIn("day_kind:dayKind", CORE)
+
     def test_index_shell_assets_exist_and_are_cached(self):
         urls = re.findall(r'(?:src|href)="(/(?:static/[^"]+|manifest\.webmanifest[^"]*))"', INDEX)
         shell_urls = [u for u in urls if u.endswith(".js") or ".js?" in u or u.endswith(".css") or ".css?" in u or "manifest.webmanifest" in u]

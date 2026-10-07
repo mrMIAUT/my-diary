@@ -200,8 +200,8 @@ async function offApply(path,opt,localSid){
  else if(path==='/history/nutrition'&&m==='POST'){d.nutrition=d.nutrition||[];let x=d.nutrition.find(x=>x.day===b.day);if(x)Object.assign(x,b);else d.nutrition.unshift({id:-Date.now(),...b})}
  else if(path==='/measurements'&&m==='POST'){d.measurements=d.measurements||[];d.measurements.push({id:-Date.now(),day:offToday(),...b})}
  else if(path==='/cardio'&&m==='POST'){d.cardio=d.cardio||[];let day=b.day||offToday(),x=d.cardio.find(x=>x.day===day);if(x)Object.assign(x,b,{day});else d.cardio.unshift({id:-Date.now(),...b,day})}
- else if(path==='/workout/start'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:localSid,client_id:cid,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0,program_snapshot:'[]'})}
- else if(/^\/workout\/-\d+\/finish$/.test(path)&&m==='POST'){let id=+path.split('/')[2],x=(d.workout_sessions||[]).find(x=>x.id==id);if(x){x.status='finished';x.finished_at=offToday()+' 13:00:00'}}
+ else if(path==='/workout/start'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];let meta=(d.program_days||[]).find(x=>x.day_name===b.day_name),dayKind=String(meta?.kind||'standard');d.workout_sessions.unshift({id:localSid,client_id:cid,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0,program_snapshot:'[]',day_kind:dayKind})}
+ else if(/^\/workout\/-\d+\/finish$/.test(path)&&m==='POST'){let id=+path.split('/')[2],x=(d.workout_sessions||[]).find(x=>x.id==id);if(x){x.status='finished';x.finished_at=offToday()+' 13:00:00';let meta=(d.program_days||[]).find(v=>v.day_name===x.day_name);if(String(meta?.kind||'')==='extra'&&String(meta?.extra_mode||'once')==='once')meta.status='paused'}}
  else if(path==='/history/workout'&&m==='POST'){d.workout_sessions=d.workout_sessions||[];d.workout_sessions.unshift({id:-Date.now(),client_id:cid,day_name:b.day_name,status:'finished',started_at:b.day+' 12:00:00',finished_at:b.day+' 13:00:00'});d.result_sets=d.result_sets||[];(b.sets||[]).forEach((x,i)=>{let p=(d.program||[]).find(v=>+v.id===+x.program_id),repeat_mode=p?.repeat_mode||'normal';d.result_sets.push({...x,id:-Date.now()-i,client_id:cid,repeat_mode,day:b.day})})}
  else if(path==='/comments'&&m==='POST'){d.comments=d.comments||[];d.comments.unshift({id:-Date.now(),created_at:new Date().toISOString(),...b})}
  else if(/^\/comments\/-?\d+$/.test(path)&&m==='PUT'){let id=+path.split('/').pop(),x=(d.comments||[]).find(x=>x.id==id);if(x)x.body=b.body}
@@ -216,7 +216,7 @@ async function offApply(path,opt,localSid){
 
 function offResponse(path,opt,localSid){
  let b=offBody(opt);
- if(path==='/workout/start')return {id:localSid,client_id:b.client_id,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0};
+ if(path==='/workout/start'){let d=window.currentClientData||{},meta=(d.program_days||[]).find(x=>x.day_name===b.day_name);return {id:localSid,client_id:b.client_id,day_name:b.day_name,status:'training',started_at:new Date().toISOString(),workout_day:offToday(),duration_seconds:0,day_kind:String(meta?.kind||'standard')};}
  if(/\/finish$/.test(path))return {ok:true,status:'finished'};
  if(path==='/nutrition'||path==='/measurements'||path==='/comments')return {id:-Date.now(),ok:true};
  return {ok:true,offline:true};

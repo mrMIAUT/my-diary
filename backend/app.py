@@ -776,6 +776,17 @@ def init():
             title TEXT DEFAULT '',
             PRIMARY KEY(client_id,day_name)
         )""")
+        c.execute("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'standard'")
+        c.execute("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS extra_mode TEXT NOT NULL DEFAULT 'once'")
+        c.execute("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'")
+        c.execute("ALTER TABLE program_days ADD COLUMN IF NOT EXISTS active_until DATE")
+        c.execute("""INSERT INTO program_days(client_id,day_name,title,kind,extra_mode,status)
+                     SELECT DISTINCT p.client_id,p.day_name,'','standard','once','active'
+                     FROM program p
+                     WHERE NOT EXISTS (
+                       SELECT 1 FROM program_days d
+                       WHERE d.client_id=p.client_id AND d.day_name=p.day_name
+                     )""")
         c.execute("""CREATE TABLE IF NOT EXISTS results(id SERIAL PRIMARY KEY,client_id INTEGER,exercise TEXT,day TEXT,weight DOUBLE PRECISION,reps INTEGER,sets INTEGER,rir INTEGER)""")
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER,rest_seconds INTEGER)""")
         c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS rest_seconds INTEGER")
@@ -851,6 +862,7 @@ def init():
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS trainer_comment TEXT DEFAULT ''")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS program_snapshot TEXT DEFAULT ''")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS workout_day DATE")
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS day_kind TEXT NOT NULL DEFAULT 'standard'")
         # Legacy live sessions used PostgreSQL CURRENT_TIMESTAMP in a timezone-naive column (UTC wall time).
         # Convert that timestamp to the Kyiv calendar day once; manual daytime history remains on the same date.
         c.execute("""UPDATE workout_sessions SET workout_day=((started_at AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Kyiv')::date WHERE workout_day IS NULL AND started_at IS NOT NULL""")
@@ -1155,6 +1167,19 @@ class ProgramDayTitleIn(BaseModel):
     client_id:int
     day_name:str=Field(max_length=128)
     title:str=Field(default="",max_length=255)
+class ProgramDaySettingsIn(BaseModel):
+    client_id:int
+    day_name:str=Field(max_length=128)
+    title:str=Field(default="",max_length=255)
+    kind:str=Field(default="standard",max_length=16)
+    extra_mode:str=Field(default="once",max_length=16)
+    status:str=Field(default="active",max_length=16)
+    active_until:date|None=None
+class ProgramDayDuplicateIn(BaseModel):
+    client_id:int
+    source_day:str=Field(max_length=128)
+    target_day:str=Field(max_length=128)
+    target_title:str=Field(default="",max_length=255)
 class ResultIn(BaseModel):
     client_id:int; exercise:str=Field(max_length=255); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); sets:int=Field(ge=1,le=MAX_SET_COUNT); rir:int=Field(ge=0,le=MAX_RIR)
 class SupersetIn(BaseModel):
@@ -1629,6 +1654,7 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
           COUNT(*) FILTER (WHERE status='finished') AS finished_count,
           COUNT(*) FILTER (
             WHERE status='finished'
+              AND COALESCE(day_kind,'standard')='standard'
               AND COALESCE(finished_at,started_at)>=CURRENT_TIMESTAMP-INTERVAL '28 days'
           ) AS workouts_28d,
           MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
@@ -1636,9 +1662,11 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         GROUP BY client_id
     ) w ON w.client_id=c.id
     LEFT JOIN (
-        SELECT client_id,COUNT(DISTINCT day_name) AS program_days_count
-        FROM program
-        GROUP BY client_id
+        SELECT p.client_id,COUNT(DISTINCT p.day_name) AS program_days_count
+        FROM program p
+        LEFT JOIN program_days d ON d.client_id=p.client_id AND d.day_name=p.day_name
+        WHERE COALESCE(d.kind,'standard')='standard'
+        GROUP BY p.client_id
     ) pd ON pd.client_id=c.id
     LEFT JOIN (
         SELECT client_id,
@@ -2514,6 +2542,9 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
+        c.execute("""INSERT INTO program_days(client_id,day_name,title,kind,extra_mode,status)
+                     VALUES(%s,%s,'','standard','once','active')
+                     ON CONFLICT(client_id,day_name) DO NOTHING""",(x.client_id,day))
         next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(x.client_id,day)).fetchone()["n"])
         superset_group=x.superset_group.strip()
         superset_order=x.superset_order
@@ -2549,6 +2580,9 @@ def add_program_superset_pair(x:ProgramSupersetPairIn,user:AuthUser=Depends(requ
     alts_b=normalize_program_alternatives(b.alternatives_json,{"sets":b.sets,"reps":b.reps,"repeat_mode":repeat_b,"target_rir":b.target_rir,"rest_seconds":b.rest_seconds,"rest_text":b.rest_text,"rir_by_set":b.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(a.client_id,))
+        c.execute("""INSERT INTO program_days(client_id,day_name,title,kind,extra_mode,status)
+                     VALUES(%s,%s,'','standard','once','active')
+                     ON CONFLICT(client_id,day_name) DO NOTHING""",(a.client_id,day_a))
         next_sort=int(c.execute("SELECT COALESCE(MAX(sort),0)+1 AS n FROM program WHERE client_id=%s AND day_name=%s",(a.client_id,day_a)).fetchone()["n"])
         first=c.execute("""INSERT INTO program(
             client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
@@ -2656,6 +2690,93 @@ def save_program_day_title(x:ProgramDayTitleIn,user:AuthUser=Depends(require_tra
         c.execute("""INSERT INTO program_days(client_id,day_name,title) VALUES(%s,%s,%s)
                      ON CONFLICT(client_id,day_name) DO UPDATE SET title=EXCLUDED.title""",
                   (x.client_id,day,title))
+        c.commit()
+    return {"ok":True}
+
+PROGRAM_DAY_KINDS={"standard","extra"}
+PROGRAM_DAY_EXTRA_MODES={"once","temporary"}
+PROGRAM_DAY_STATUSES={"active","paused"}
+
+def normalized_program_day_settings(x:ProgramDaySettingsIn):
+    day=x.day_name.strip()
+    if not day: raise HTTPException(400,"Вкажіть день")
+    kind=(x.kind or "standard").strip().lower()
+    mode=(x.extra_mode or "once").strip().lower()
+    status=(x.status or "active").strip().lower()
+    if kind not in PROGRAM_DAY_KINDS: raise HTTPException(400,"Некоректний тип тренувального дня")
+    if mode not in PROGRAM_DAY_EXTRA_MODES: raise HTTPException(400,"Некоректний режим додаткового тренування")
+    if status not in PROGRAM_DAY_STATUSES: raise HTTPException(400,"Некоректний статус тренувального дня")
+    active_until=x.active_until
+    if kind=="standard":
+        mode="once"; status="active"; active_until=None
+    elif mode=="temporary" and status=="active" and active_until and active_until<kyiv_today():
+        raise HTTPException(400,"Дата доступу вже минула")
+    return day,x.title.strip(),kind,mode,status,active_until
+
+@app.put("/api/program-day-settings")
+def save_program_day_settings(x:ProgramDaySettingsIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
+    day,title,kind,mode,status,active_until=normalized_program_day_settings(x)
+    with con() as c:
+        c.execute("""INSERT INTO program_days(client_id,day_name,title,kind,extra_mode,status,active_until)
+                     VALUES(%s,%s,%s,%s,%s,%s,%s)
+                     ON CONFLICT(client_id,day_name) DO UPDATE SET
+                       title=EXCLUDED.title,kind=EXCLUDED.kind,extra_mode=EXCLUDED.extra_mode,
+                       status=EXCLUDED.status,active_until=EXCLUDED.active_until""",
+                  (x.client_id,day,title,kind,mode,status,active_until))
+        c.commit()
+    return {"ok":True,"day_name":day,"kind":kind,"extra_mode":mode,"status":status,
+            "active_until":str(active_until) if active_until else None}
+
+@app.post("/api/program-day/duplicate")
+def duplicate_program_day(x:ProgramDayDuplicateIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,x.client_id)
+    source=x.source_day.strip(); target=x.target_day.strip()
+    if not source or not target: raise HTTPException(400,"Вкажіть початковий і новий день")
+    if source==target: raise HTTPException(400,"Нова назва дня має відрізнятися")
+    with con() as c:
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
+        if (c.execute("SELECT 1 FROM program WHERE client_id=%s AND day_name=%s LIMIT 1",(x.client_id,target)).fetchone()
+            or c.execute("SELECT 1 FROM program_days WHERE client_id=%s AND day_name=%s",(x.client_id,target)).fetchone()):
+            raise HTTPException(409,"Тренувальний день з такою назвою вже існує")
+        src=c.execute("SELECT * FROM program_days WHERE client_id=%s AND day_name=%s",(x.client_id,source)).fetchone()
+        rows_src=[dict(r) for r in c.execute("SELECT * FROM program WHERE client_id=%s AND day_name=%s ORDER BY sort,id",(x.client_id,source)).fetchall()]
+        if not rows_src and not src: raise HTTPException(404,"Тренувальний день не знайдено")
+        meta=dict(src) if src else {"title":"","kind":"standard","extra_mode":"once","status":"active","active_until":None}
+        title=x.target_title.strip() or ((meta.get("title") or source)+" — копія")
+        c.execute("""INSERT INTO program_days(client_id,day_name,title,kind,extra_mode,status,active_until)
+                     VALUES(%s,%s,%s,%s,%s,%s,%s)""",
+                  (x.client_id,target,title,meta.get("kind") or "standard",meta.get("extra_mode") or "once",
+                   meta.get("status") or "active",meta.get("active_until")))
+        for pos,item in enumerate(rows_src,1):
+            c.execute("""INSERT INTO program(
+                client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
+                technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+              (x.client_id,target,item.get("exercise") or "",item.get("sets") or 1,item.get("reps") or "8-12",
+               normalize_repeat_mode(item.get("repeat_mode")),item.get("target_rir") or 0,pos,
+               item.get("superset_group") or "",item.get("superset_order") or 0,
+               safe_technique_url(item.get("technique_url") or ""),item.get("rest_seconds") or 0,
+               item.get("rest_text") or "",item.get("rir_by_set") or "",item.get("alternatives_json") or "[]"))
+        c.commit()
+    return {"ok":True,"day_name":target}
+
+@app.delete("/api/program-day/{cid}")
+def delete_program_day(cid:int,day_name:str=Query(max_length=128),user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    day=day_name.strip()
+    if not day: raise HTTPException(400,"Вкажіть день")
+    with con() as c:
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(cid,))
+        active=c.execute("""SELECT id FROM workout_sessions
+                            WHERE client_id=%s AND day_name=%s AND status='training'
+                            LIMIT 1""",(cid,day)).fetchone()
+        if active: raise HTTPException(409,"Не можна видалити день, поки це тренування активне")
+        exists=c.execute("SELECT 1 FROM program WHERE client_id=%s AND day_name=%s LIMIT 1",(cid,day)).fetchone()
+        meta=c.execute("SELECT 1 FROM program_days WHERE client_id=%s AND day_name=%s",(cid,day)).fetchone()
+        if not exists and not meta: raise HTTPException(404,"Тренувальний день не знайдено")
+        c.execute("DELETE FROM program WHERE client_id=%s AND day_name=%s",(cid,day))
+        c.execute("DELETE FROM program_days WHERE client_id=%s AND day_name=%s",(cid,day))
         c.commit()
     return {"ok":True}
 
@@ -3027,13 +3148,24 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
                                       ORDER BY id DESC LIMIT 1""",(x.client_id,today)).fetchone()
                 if existing:
                     raise HTTPException(400,"Сьогодні тренування вже було розпочато. Нове тренування буде доступне завтра.")
+                day_meta=c.execute("""SELECT kind,extra_mode,status,active_until FROM program_days
+                                      WHERE client_id=%s AND day_name=%s""",(x.client_id,x.day_name)).fetchone()
+                day_kind=str((day_meta or {}).get("kind") or "standard").strip().lower()
+                if day_kind=="extra":
+                    if str((day_meta or {}).get("status") or "active").strip().lower()!="active":
+                        raise HTTPException(400,"Додаткове тренування призупинено тренером")
+                    active_until=(day_meta or {}).get("active_until")
+                    if active_until and active_until<kyiv_today():
+                        raise HTTPException(400,"Термін доступу до додаткового тренування завершився")
                 snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
                                                                   FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",(x.client_id,x.day_name)).fetchall()]
+                if not snapshot_rows:
+                    raise HTTPException(400,"У цьому тренуванні ще немає вправ")
                 for item in snapshot_rows:item["technique_url"]=safe_technique_url(item.get("technique_url") or "")
                 snapshot=json.dumps(snapshot_rows,ensure_ascii=False)
-                row=c.execute("""INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,workout_day)
-                                 VALUES(%s,%s,%s,%s,CAST(%s AS DATE)) RETURNING *""",
-                              (x.client_id,x.day_name,"training",snapshot,today)).fetchone()
+                row=c.execute("""INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,workout_day,day_kind)
+                                 VALUES(%s,%s,%s,%s,CAST(%s AS DATE),%s) RETURNING *""",
+                              (x.client_id,x.day_name,"training",snapshot,today,day_kind)).fetchone()
                 session=dict(row)
                 created=True
             c.commit()
@@ -3070,6 +3202,13 @@ def finish_workout(sid:int,user:AuthUser=Depends(require_client)):
                              SET status='finished',finished_at=COALESCE(finished_at,CURRENT_TIMESTAMP)
                              WHERE id=%s RETURNING *""",(sid,)).fetchone()
             finished=dict(row)
+            meta=c.execute("""SELECT kind,extra_mode FROM program_days
+                              WHERE client_id=%s AND day_name=%s FOR UPDATE""",
+                           (session["client_id"],session.get("day_name") or "")).fetchone()
+            if meta and meta.get("kind")=="extra" and meta.get("extra_mode")=="once":
+                c.execute("""UPDATE program_days SET status='paused'
+                             WHERE client_id=%s AND day_name=%s""",
+                          (session["client_id"],session.get("day_name") or ""))
         else:
             finished=session
         c.commit()
@@ -3152,6 +3291,9 @@ def reopen_finished_workout(sid:int,user:AuthUser=Depends(require_client)):
                              SET status='training',finished_at=NULL,trainer_reviewed=FALSE,trainer_comment=''
                              WHERE id=%s RETURNING *""",(sid,)).fetchone()
             reopened=dict(row)
+            c.execute("""UPDATE program_days SET status='active'
+                         WHERE client_id=%s AND day_name=%s AND kind='extra' AND extra_mode='once'""",
+                      (client_id,row.get("day_name") or ""))
             c.execute("""DELETE FROM notifications
                          WHERE client_id=%s AND recipient='trainer' AND kind='workout_finished'
                            AND target_session_id=%s""",(client_id,sid))
@@ -3306,8 +3448,8 @@ def historical_workout(x:HistoricalWorkoutIn,user:AuthUser=Depends(require_clien
                                                          FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",
                                                       (x.client_id,x.day_name)).fetchall()]
             snapshot_json=json.dumps(snapshot,ensure_ascii=False)
-            c.execute("""INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status,program_snapshot,workout_day)
-                         VALUES(%s,%s,CAST(%s AS TIMESTAMP),CAST(%s AS TIMESTAMP),'finished',%s,CAST(%s AS DATE))""",
+            c.execute("""INSERT INTO workout_sessions(client_id,day_name,started_at,finished_at,status,program_snapshot,workout_day,day_kind)
+                         VALUES(%s,%s,CAST(%s AS TIMESTAMP),CAST(%s AS TIMESTAMP),'finished',%s,CAST(%s AS DATE),'standard')""",
                       (x.client_id,x.day_name,day+" 12:00:00",day+" 13:00:00",snapshot_json,day))
             c.commit()
     except psycopg.errors.UniqueViolation:
