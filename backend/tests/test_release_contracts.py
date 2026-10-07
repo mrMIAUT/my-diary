@@ -232,6 +232,13 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-day-title-save", PROGRAM)
         self.assertNotIn('style="width:100%;margin-top:14px"', PROGRAM)
 
+    def test_review_completion_modal_uses_redesign_ui(self):
+        self.assertIn("trainer-review-complete-modal", RESULTS)
+        self.assertIn("trainer-review-complete-card", RESULTS)
+        self.assertIn("trainer-review-complete-primary", RESULTS)
+        self.assertIn("trainer-review-complete-secondary", RESULTS)
+        self.assertNotIn('button style="width:100%" onclick="nextReviewModal.remove();openNextPendingClient', RESULTS)
+
     def test_delete_exercise_stays_on_program_tab(self):
         self.assertIn("async function deleteExercise", PROGRAM)
         self.assertIn("pane.innerHTML=trainerTrainingTabHTML(fresh)", PROGRAM)
