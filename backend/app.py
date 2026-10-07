@@ -1520,6 +1520,21 @@ def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
         if item:items.append(item)
     return items
 
+def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
+    """Collect a bounded search window before ranking.
+
+    OFF's raw page order is not our UI ranking. Pulling a few pages lets EPLAN
+    compare Ukrainian brands that may otherwise sit on OFF page 2/3 against
+    foreign products from page 1.
+    """
+    items=[]
+    for source_page in range(1,max(1,pages)+1):
+        batch=_off_search(query,page_size,source_page,country)
+        if not batch:break
+        items.extend(batch)
+        if len(batch)<page_size:break
+    return _dedupe_food_items(items)
+
 def _off_barcode(barcode:str):
     fields="code,product_name,product_name_uk,product_name_en,brands,nutriments"
     url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
@@ -1809,15 +1824,14 @@ def prototype_food_search(
         return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode","page":1,"has_more":False}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
-    # Search a wider candidate pool, then rank down to the visible page.
-    # This prevents the first 8 raw OFF hits from deciding the UI order.
-    fetch_limit=min(FOOD_SEARCH_MAX_RESULTS,max(limit+1,24))
-    # In the Ukrainian app, country-filtered OFF results come first. We then
-    # supplement them with global OFF results before falling back to USDA.
-    ua_off_items=_off_search(normalized,fetch_limit,page,"Ukraine")
+    # Build a stable candidate window before UI pagination. Otherwise OFF's
+    # own page order leaks into EPLAN and good Ukrainian brands appear only
+    # after "Показати ще".
+    fetch_limit=24
+    ua_off_items=_off_collect(normalized,"Ukraine",pages=3,page_size=24)
     global_off_items=[]
-    if len(ua_off_items)<fetch_limit:
-        global_off_items=_off_search(normalized,fetch_limit-len(ua_off_items),page)
+    if len(ua_off_items)<limit*3:
+        global_off_items=_off_collect(normalized,None,pages=2,page_size=24)
     off_items=_dedupe_food_items(ua_off_items+global_off_items)
     brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
@@ -1832,29 +1846,31 @@ def prototype_food_search(
         ]
     else:
         for query in variants[1:]:
-            if len(off_items)<fetch_limit:
-                extra_ua=_off_search(query,fetch_limit-len(off_items),page,"Ukraine")
+            if len(off_items)<72:
+                extra_ua=_off_collect(query,"Ukraine",pages=2,page_size=24)
                 off_items=_dedupe_food_items(off_items+extra_ua)
-            if len(off_items)<fetch_limit:
-                extra_global=_off_search(query,fetch_limit-len(off_items),page)
+            if len(off_items)<48:
+                extra_global=_off_collect(query,None,pages=1,page_size=24)
                 off_items=_dedupe_food_items(off_items+extra_global)
         for query in variants:
             uq=usda_food_query(query)
             if uq and len(usda_items)<fetch_limit:
-                usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_GENERIC_TYPES,page))
+                usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_GENERIC_TYPES,1))
         if len(usda_items)<max(3,limit//2):
             for query in variants:
                 uq=usda_food_query(query)
                 if uq and len(usda_items)<fetch_limit:
-                    usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,page))
+                    usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,1))
     ranked=_food_rank(normalized,off_items+usda_items)
-    has_more=(len(ranked)>limit or len(ua_off_items)>=fetch_limit or
-              len(global_off_items)>=fetch_limit or len(usda_items)>=fetch_limit)
-    items=ranked[:limit]
+    start=(page-1)*limit
+    end=start+limit
+    items=ranked[start:end]
+    has_more=end<len(ranked)
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
         "items":items,"mode":"text","brand_query":bool(brand_matches),
         "page":page,"has_more":has_more,
+        "candidate_count":len(ranked),
         "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
     }
 
