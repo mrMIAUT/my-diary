@@ -1388,7 +1388,11 @@ FOOD_QUERY_REPLACEMENTS={
     "яйцо":"яйце",
 }
 FOOD_USDA_ALIASES=(
+    # Put specific phrases first so generic "сир" does not corrupt them.
     ("сир кисломолочний","cottage cheese"),
+    ("кисломолочний сир","cottage cheese"),
+    ("твердий сир","cheese"),
+    ("сир","cheese"),
     ("вівсяні пластівці","oats"),
     ("куряча грудка","chicken breast"),
     ("куряче філе","chicken breast"),
@@ -1425,6 +1429,25 @@ def usda_food_query(value:str):
     for src,dst in FOOD_USDA_ALIASES:
         if src in q:q=q.replace(src,dst)
     return q
+
+def food_search_variants(value:str):
+    """Return a small ordered set of queries for multilingual food lookup.
+
+    Keep the original Ukrainian/brand query first for Open Food Facts, then add
+    an English nutrient-database variant for generic foods. This avoids forcing
+    Ukrainian brands through English translation while still making queries
+    like "сир" useful in USDA.
+    """
+    normalized=normalize_food_query(value)
+    variants=[normalized]
+    english=usda_food_query(normalized)
+    if english and english not in variants:variants.append(english)
+    # Common ambiguity: Ukrainian "сир" may mean cheese; "сир кисломолочний"
+    # is already translated above to cottage cheese.
+    if normalized=="сир":
+        for fallback in ("cheese","cottage cheese"):
+            if fallback not in variants:variants.append(fallback)
+    return variants[:3]
 
 def _food_fetch_json(url:str,payload=None):
     data=None
@@ -1564,11 +1587,22 @@ def prototype_food_search(
         items=_off_barcode(compact)
         return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode"}
     normalized=normalize_food_query(raw)
-    off_items=_off_search(normalized,limit)
-    usda_items=_usda_search(usda_food_query(normalized),limit)
+    variants=food_search_variants(raw)
+    off_items=[]
+    usda_items=[]
+    # OFF gets the original localized query first and an English fallback only
+    # when needed. USDA gets the English-normalized variants.
+    for query in variants:
+        if len(off_items)<limit:
+            off_items.extend(_off_search(query,limit-len(off_items)))
+    for query in variants:
+        uq=usda_food_query(query)
+        if uq and len(usda_items)<limit:
+            usda_items.extend(_usda_search(uq,limit-len(usda_items)))
     items=_food_rank(normalized,off_items+usda_items)[:limit]
     return {
-        "query":raw,"normalized_query":normalized,"items":items,"mode":"text",
+        "query":raw,"normalized_query":normalized,"search_variants":variants,
+        "items":items,"mode":"text",
         "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
     }
 
