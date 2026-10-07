@@ -1169,6 +1169,16 @@ class WorkoutAuxSetIn(BaseModel):
     reps:int=Field(ge=1,le=MAX_REPS)
 class SetResultIn(BaseModel):
     client_id:int; program_id:int; exercise:str=Field(max_length=255); repeat_mode:str=Field(default="normal",max_length=16); sets:List[SetIn]=Field(max_length=100); aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
+class CompletedWorkoutSetIn(BaseModel):
+    program_id:int
+    exercise:str=Field(max_length=255)
+    set_number:int=Field(ge=1,le=MAX_SET_COUNT)
+    weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
+    reps:int=Field(ge=1,le=MAX_REPS)
+    rir:int=Field(ge=0,le=MAX_RIR)
+    rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+class CompletedWorkoutEditIn(BaseModel):
+    sets:List[CompletedWorkoutSetIn]=Field(default_factory=list,max_length=500)
 class NutIn(BaseModel):
     client_id:int; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class MeasureIn(BaseModel):
@@ -3100,6 +3110,112 @@ def cancel_workout(sid:int,user:AuthUser=Depends(require_client)):
         c.execute("DELETE FROM workout_sessions WHERE id=%s",(sid,))
         c.commit()
     return {"ok":True,"cancelled":True}
+
+@app.post("/api/workout/{sid}/reopen")
+def reopen_finished_workout(sid:int,user:AuthUser=Depends(require_client)):
+    session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    if not session:
+        raise HTTPException(404,"Тренування не знайдено")
+    authorize_client(user,session["client_id"])
+    require_active_client(session["client_id"],'workouts')
+    client_id=session["client_id"]
+    today=str(kyiv_today())
+    with con() as c:
+        if not c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone():
+            raise HTTPException(404,"Клієнта не знайдено")
+        row=c.execute("SELECT * FROM workout_sessions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
+        if not row:
+            raise HTTPException(404,"Тренування не знайдено")
+        if row["status"]=="training":
+            reopened=dict(row)
+        else:
+            if row["status"]!="finished":
+                raise HTTPException(400,"Можна скасувати завершення лише завершеного тренування")
+            workout_day=str(row.get("workout_day") or row.get("started_at") or "")[:10]
+            if workout_day!=today:
+                raise HTTPException(400,"Скасувати завершення можна лише в день тренування")
+            active=c.execute("""SELECT id FROM workout_sessions
+                                WHERE client_id=%s AND status='training' AND id<>%s
+                                ORDER BY id DESC LIMIT 1""",(client_id,sid)).fetchone()
+            if active:
+                raise HTTPException(400,"Уже є інше активне тренування")
+            row=c.execute("""UPDATE workout_sessions
+                             SET status='training',finished_at=NULL,trainer_reviewed=FALSE,trainer_comment=''
+                             WHERE id=%s RETURNING *""",(sid,)).fetchone()
+            reopened=dict(row)
+            c.execute("""DELETE FROM notifications
+                         WHERE client_id=%s AND recipient='trainer' AND kind='workout_finished'
+                           AND target_session_id=%s""",(client_id,sid))
+        c.commit()
+    return reopened
+
+@app.patch("/api/workout/{sid}/results")
+def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser=Depends(require_client)):
+    session=one("SELECT * FROM workout_sessions WHERE id=?",(sid,))
+    if not session:
+        raise HTTPException(404,"Тренування не знайдено")
+    authorize_client(user,session["client_id"])
+    require_active_client(session["client_id"],'workouts')
+    client_id=session["client_id"]
+    was_reviewed=bool(session.get("trainer_reviewed"))
+    workout_day=""
+    with con() as c:
+        if not c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(client_id,)).fetchone():
+            raise HTTPException(404,"Клієнта не знайдено")
+        row=c.execute("SELECT * FROM workout_sessions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
+        if not row:
+            raise HTTPException(404,"Тренування не знайдено")
+        if row["status"]!="finished":
+            raise HTTPException(400,"Редагувати результати можна лише у завершеному тренуванні")
+        workout_day=str(row.get("workout_day") or row.get("started_at") or "")[:10]
+        if not workout_day:
+            raise HTTPException(400,"Не вдалося визначити дату тренування")
+        try:
+            snapshot=json.loads(row.get("program_snapshot") or "[]")
+            if not isinstance(snapshot,list): snapshot=[]
+        except (TypeError,ValueError):
+            snapshot=[]
+        allowed={}
+        for item in snapshot:
+            try: pid=int(item.get("id") or 0)
+            except (TypeError,ValueError): pid=0
+            if pid>0:
+                allowed[pid]=normalize_repeat_mode(item.get("repeat_mode"))
+        if not allowed:
+            for item in c.execute("""SELECT id,repeat_mode FROM program
+                                     WHERE client_id=%s AND day_name=%s""",
+                                  (client_id,row.get("day_name") or "")).fetchall():
+                allowed[int(item["id"])]=normalize_repeat_mode(item.get("repeat_mode"))
+        keys=[(int(item.program_id),int(item.set_number)) for item in x.sets]
+        if len(keys)!=len(set(keys)):
+            raise HTTPException(400,"Номери підходів однієї вправи не мають повторюватися")
+        for item in x.sets:
+            if int(item.program_id) not in allowed:
+                raise HTTPException(400,"Вправа не належить цьому тренуванню")
+            if not item.exercise.strip():
+                raise HTTPException(400,"Назва вправи порожня")
+        c.execute("DELETE FROM result_sets WHERE client_id=%s AND day=%s",(client_id,workout_day))
+        for item in x.sets:
+            mode=allowed[int(item.program_id)]
+            c.execute("""INSERT INTO result_sets(
+                         client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
+                         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                      (client_id,item.program_id,item.exercise.strip(),workout_day,item.set_number,
+                       item.weight,item.reps,item.rir,item.rest_seconds,mode))
+        c.execute("""UPDATE workout_sessions
+                     SET trainer_reviewed=FALSE,trainer_comment=''
+                     WHERE id=%s""",(sid,))
+        c.commit()
+    if was_reviewed:
+        access=access_info(client_state(client_id))
+        if access["features"].get("trainer_review",False):
+            client_info=one("SELECT name,first_name,last_name FROM clients WHERE id=?",(client_id,))
+            full_name=(((client_info or {}).get("first_name") or "")+" "+((client_info or {}).get("last_name") or "")).strip()
+            client_name=full_name or (client_info or {}).get("name") or "Клієнт"
+            add_notification(client_id,"trainer","workout_updated",
+                f"{client_name} відредагував результати завершеного тренування. Потрібно перевірити повторно.",
+                "results",workout_day,0,sid,"Є ПЛАН · Тренування оновлено")
+    return {"ok":True,"set_count":len(x.sets),"day":workout_day}
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn,user:AuthUser=Depends(require_client)):
