@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 import os
 import json, hashlib, hmac, secrets, urllib.request, urllib.error, urllib.parse
-import io, logging, stat, warnings
+import io, logging, stat, warnings, html
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta, timezone
@@ -1469,8 +1469,11 @@ def _food_fetch_json(url:str,payload=None):
 
 def _off_item(product:dict):
     nutr=product.get("nutriments") or {}
-    name=(product.get("product_name_uk") or product.get("product_name") or product.get("product_name_en") or "").strip()
+    # OFF occasionally returns HTML entities in contributor-entered names.
+    # Decode once on the server; the frontend still escapes the final text.
+    name=html.unescape(str(product.get("product_name_uk") or product.get("product_name") or product.get("product_name_en") or "")).strip()
     if not name:return None
+    brand=html.unescape(str(product.get("brands") or "")).strip()
     kcal=_food_num(nutr.get("energy-kcal_100g"))
     if not kcal:
         kj=_food_num(nutr.get("energy_100g"))
@@ -1478,7 +1481,7 @@ def _off_item(product:dict):
     return {
         "source":"off","source_label":"Open Food Facts","source_id":str(product.get("code") or ""),
         "barcode":str(product.get("code") or ""),"name":name[:240],
-        "brand":str(product.get("brands") or "").strip()[:180],
+        "brand":brand[:180],
         "kcal_100":kcal,"protein_100":_food_num(nutr.get("proteins_100g")),
         "fat_100":_food_num(nutr.get("fat_100g")),"carbs_100":_food_num(nutr.get("carbohydrates_100g")),
     }
@@ -1569,6 +1572,16 @@ def _food_rank(query:str,items:list):
             score+=65 if not off_brand_hit else 15
             if str(item.get("data_type") or "").lower() in ("foundation","survey (fndds)","sr legacy"):
                 score+=12
+        # A broad "сир" query should mean cheese, not every snack whose flavour
+        # happens to contain the word "сир". Keep actual cheese products first.
+        if query=="сир":
+            low_name=(item.get("name") or "").lower()
+            if item.get("source")=="usda" and "cheese" in low_name:
+                score+=70
+            elif low_name.startswith("сир") or low_name.startswith("cheese"):
+                score+=45
+            if any(marker in low_name for marker in ("чипс","брускет","сухар","крекер","соус","смак сир")):
+                score-=65
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
     for item in ranked:item.pop("_score",None)
