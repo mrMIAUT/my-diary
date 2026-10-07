@@ -152,30 +152,63 @@ function lyftaDropRowsHTML(x,d,cid,parent,done){
   +'</div>';
 }
 
+function closeLyftaSetSwipes(except=null){
+ document.querySelectorAll('.lyfta-set-swipe.open').forEach(el=>{if(el!==except)el.classList.remove('open')});
+}
+function lyftaSetSwipeStart(event,el){
+ if(!el||(event.pointerType==='mouse'&&event.button!==0))return;
+ closeLyftaSetSwipes(el);
+ el.__swipe={x:event.clientX,y:event.clientY};
+}
+function lyftaSetSwipeMove(event,el){
+ let s=el?.__swipe;if(!s)return;
+ let dx=event.clientX-s.x,dy=event.clientY-s.y;
+ if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+ if(Math.abs(dx)<=Math.abs(dy)){el.__swipe=null;return}
+ if(dx<-18){el.classList.add('open');event.preventDefault()}
+ else if(dx>18){el.classList.remove('open');event.preventDefault()}
+}
+function lyftaSetSwipeEnd(event,el){
+ if(el)el.__swipe=null;
+}
+function toggleLyftaSetSwipe(el){
+ if(!el)return;
+ let open=!el.classList.contains('open');closeLyftaSetSwipes(el);el.classList.toggle('open',open);
+}
+
 function setRows(x,d,cid){
   let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x),mode=normalizeRepeatMode(x.repeat_mode);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName).filter(v=>normalizeRepeatMode(v.repeat_mode)===mode),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
-  let hasPrev=prev.length>0,total=workoutExerciseSetCount(x,d),planned=Math.max(1,+x.sets||1);
+  let hasPrev=prev.length>0,total=workoutExerciseSetCount(x,d),planned=Math.max(1,+x.sets||1),skippedSet=new Set(workoutSkippedSetNumbers(d,x.id));
   let modeLabel=repeatModeShortLabel(mode),h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори'+(modeLabel?'<small>'+esc(modeLabel)+'</small>':'')+'</span><span>RIR</span><span></span></div>';
   for(let n=1;n<=total;n++){
-    let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned;
+    let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned,skipped=!isExtra&&skippedSet.has(n);
     let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??rp[rp.length-1]??'';
-    h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'">'
-      +'<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+repeatResultText(p.reps,p.repeat_mode||mode)+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>'
-      +'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
+    let prevLine='<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+repeatResultText(p.reps,p.repeat_mode||mode)+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p&&!skipped?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>';
+    let rowHTML=skipped
+      ?'<div class="lyfta-set-row is-skipped"><div class="setnum">'+n+'</div><div class="lyfta-skipped-copy"><strong>Пропущено</strong><small>Підхід залишиться у плані</small></div><span class="lyfta-swipe-hint">← свайп</span></div>'
+      :'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
         +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
         +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+total+','+restAfterSet+',this)">✓</button>'
+       +'</div>';
+    let actionLabel=isExtra?'Видалити':(skipped?'Повернути':'Пропустити');
+    let actionClass=isExtra?'delete':(skipped?'restore':'skip');
+    let actionCall=isExtra
+      ?'removeWorkoutExtraSet('+cid+','+x.id+','+n+')'
+      :'toggleWorkoutPlannedSetSkipped('+cid+','+x.id+','+n+')';
+    h+='<div class="lyfta-set-wrap'+(done?' is-complete':'')+(isExtra?' is-extra':'')+(skipped?' is-skipped':'')+'">'
+      +'<div class="lyfta-set-swipe" data-set-action="'+actionClass+'">'
+        +'<div class="lyfta-set-action-tray '+actionClass+'"><button type="button" onclick="event.stopPropagation();'+actionCall+'">'+actionLabel+'</button></div>'
+        +'<div class="lyfta-set-swipe-content" onpointerdown="lyftaSetSwipeStart(event,this.parentElement)" onpointermove="lyftaSetSwipeMove(event,this.parentElement)" onpointerup="lyftaSetSwipeEnd(event,this.parentElement)" onpointercancel="lyftaSetSwipeEnd(event,this.parentElement)">'
+          +prevLine+rowHTML+(!skipped?lyftaDropRowsHTML(x,d,cid,n,done):'')
+        +'</div>'
       +'</div>'
-      +lyftaDropRowsHTML(x,d,cid,n,done)
     +'</div>';
   }
-  let extras=Math.max(0,total-planned);
-  let extraActions='<div class="lyfta-extra-set-actions"><button type="button" class="lyfta-add-set" onclick="addWorkoutExtraSet('+cid+','+x.id+')">＋ Додати підхід</button>'
-    +(extras?'<button type="button" class="lyfta-remove-set" onclick="removeWorkoutExtraSet('+cid+','+x.id+')">− Прибрати останній</button>':'')
-    +'</div>';
+  let extraActions='<div class="lyfta-extra-set-actions"><button type="button" class="lyfta-add-set" onclick="addWorkoutExtraSet('+cid+','+x.id+')">＋ Додати підхід</button><small>Свайп вліво: пропустити плановий або видалити доданий підхід</small></div>';
   return '<div class="lyfta-workout-tools">'
     +(hasPrev?'<button class="dark" onclick="lyftaCopyAllPrevious('+x.id+')">Повторити минуле</button>':'')
     +'<button class="dark" onclick="showExerciseProgressHistory('+x.id+')">Історія та графік</button>'
