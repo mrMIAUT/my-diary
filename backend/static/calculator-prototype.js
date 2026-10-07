@@ -224,11 +224,17 @@ async function refreshChickenProfile(){
 function updateFoodPer100(){
  const item=activeFoodProfile||selectedFood;if(!item)return;
  const el=$('foodPer100');if(el)el.textContent='На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100);
+ const badge=$('foodSourceBadge');
+ if(badge){
+  let label=item.source_label||item.source||'';
+  if(item.source==='reference')label='USDA reference · орієнтовно';
+  badge.textContent=label;
+ }
 }
 function selectFood(index){
  const item=foodItems[index];if(!item)return;selectedFood=item;activeFoodProfile=item;foodPrepMode='raw';foodWeightBasis='raw';
  const portion=$('foodPortion'),chicken=isChickenFood(item);
- portion.innerHTML='<div class="foodPortionHead"><div><span class="kicker">ОБРАНИЙ ПРОДУКТ</span><strong>'+foodEsc(item.name)+'</strong>'+(item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':'')+'</div><span class="foodSource">'+foodEsc(item.source_label||item.source)+'</span></div>'
+ portion.innerHTML='<div class="foodPortionHead"><div><span class="kicker">ОБРАНИЙ ПРОДУКТ</span><strong>'+foodEsc(item.name)+'</strong>'+(item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':'')+'</div><span class="foodSource" id="foodSourceBadge">'+foodEsc(item.source_label||item.source)+'</span></div>'
   +'<div class="foodPer100" id="foodPer100">На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</div>'
   +(chicken?prepControlsHtml():'')
   +'<div class="foodGramRow"><label>Кількість, г<input id="foodGrams" type="number" inputmode="decimal" min="1" max="5000" value="100"></label><div><span class="kicker">ПОРЦІЯ</span><b id="foodPortionName">100 г</b></div></div>'
