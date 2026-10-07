@@ -84,9 +84,11 @@ function todaySets(d,pid){
 
 function completedExerciseHTML(x,d,cid){
  x=workoutEffectiveExercise(x);
- let done=todaySets(d,x.id),total=workoutExerciseSetCount(x,d);
- if(!done.length)return setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
- let performed=done[0]?.exercise||x.exercise;
+ let done=todaySets(d,x.id),persistedSkipped=workoutSkippedSetsFor(d,x.id).map(s=>+s.set_number||0).filter(Boolean),total=workoutExerciseSetCount(x,d);
+ if(!done.length&&!persistedSkipped.length)return setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(workoutExerciseName(x))}" onclick="saveSets(${cid},${x.id},this.dataset.exercise,${total})">Закінчити вправу</button>`;
+ let performed=done[0]?.exercise||workoutSkippedSetsFor(d,x.id)[0]?.exercise||x.exercise;
+ let skippedSet=new Set(persistedSkipped),doneMap=new Map(done.map(s=>[+s.set_number,s]));
+ let shownNumbers=[...new Set([...done.map(s=>+s.set_number||0),...persistedSkipped])].filter(Boolean).sort((a,b)=>a-b);
  return `<div class="workout-completed-summary">
    <div class="workout-completed-summary-head">
      <span class="workout-completed-summary-icon">✓</span>
@@ -95,17 +97,27 @@ function completedExerciseHTML(x,d,cid){
    ${performed!==x.exercise?`<div class="workout-completed-replacement">Виконано: <strong>${esc(performed)}</strong><span>за планом ${esc(x.exercise)}</span></div>`:``}
    ${(()=>{let aux=workoutAuxSetsFor(d,x.id),warm=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return warm.length?`<div class="workout-completed-aux warmup"><small>Розминка</small>${warm.map(a=>`<span>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</span>`).join('')}</div>`:''})()}
    <div class="workout-completed-sets">
-     ${done.map(s=>{let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`}).join('')}
+     ${shownNumbers.map(n=>{
+       if(skippedSet.has(n))return `<div class="workout-completed-set skipped"><span>Підхід ${n}</span><strong>Пропущено</strong><em>не виконано</em></div>`;
+       let s=doneMap.get(n);if(!s)return '';
+       let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
+       return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`;
+     }).join('')}
    </div>
-   <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0))},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
+   <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0),...persistedSkipped)},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
  </div>`;
 }
 
 function editCompletedExercise(cid,pid,exercise,count,reps,targetRir){
- let d=window.currentClientData||{},done=todaySets(d,pid),body=$('#exerciseBody'+pid);if(!body)return;
- let h=`<div class="setrow"><div></div><div class="sethead">Вага, кг</div><div class="sethead">Повтори</div><div class="sethead">RIR</div></div>`;
- for(let n=1;n<=count;n++){let s=done.find(z=>z.set_number===n)||{};h+=`<div class="setrow"><div class="setnum">${n}</div><input id="w${pid}_${n}" type="number" step="0.5" value="${s.weight??''}" placeholder="кг"><input id="r${pid}_${n}" type="number" value="${s.reps??''}" placeholder="${esc(reps)}"><input id="i${pid}_${n}" type="number" value="${s.rir??''}" placeholder="${esc(String(targetRir??''))}" min="0" max="10"></div>`}
- body.innerHTML=h+`<br><button data-exercise="${esc(exercise)}" onclick="saveSets(${cid},${pid},this.dataset.exercise,${count})">Зберегти зміни</button>`;
+ let d=window.currentClientData||{},planned=(d.program||[]).find(v=>+v.id===+pid),x=planned?workoutEffectiveExercise(planned):null,done=todaySets(d,pid),body=$('#exerciseBody'+pid);
+ if(!body||!x)return;
+ let sid=workoutDraftSessionId(d);if(!sid)return alert('Редагування доступне лише під час активного тренування.');
+ let draft=readWorkoutDraft(sid,pid);
+ done.forEach(s=>{draft[s.set_number]={weight:s.weight,reps:s.reps,rir:s.rir,rest_seconds:s.rest_seconds,done:true}});
+ draft.__skipped=workoutSkippedSetsFor(d,pid).map(s=>+s.set_number||0).filter(Boolean);
+ draft.__set_count=Math.max(Math.max(1,+x.sets||1),+count||0,...done.map(s=>+s.set_number||0),...draft.__skipped);
+ persistWorkoutDraft(sid,pid,draft);
+ body.innerHTML=setRows(x,d,cid)+`<br><button class="workout-finish-exercise" data-exercise="${esc(exercise)}" onclick="saveSets(${cid},${pid},this.dataset.exercise,${draft.__set_count})">Зберегти зміни</button>`;
  body.classList.remove('hidden');
 }
 
@@ -146,6 +158,16 @@ function persistWorkoutDraft(sid,pid,draft){
 }
 function workoutAuxSetsFor(d,pid,day=workoutDataDay(d)){
  return (d?.aux_sets||[]).filter(x=>+x.program_id===+pid&&x.day===day);
+}
+function workoutSkippedSetsFor(d,pid,day=workoutDataDay(d)){
+ return (d?.skipped_sets||[]).filter(x=>+x.program_id===+pid&&x.day===day);
+}
+function workoutSkippedSetNumbers(d,pid){
+ let sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,pid);
+ if(Array.isArray(draft.__skipped)){
+   return [...new Set(draft.__skipped.map(Number).filter(n=>Number.isInteger(n)&&n>0))].sort((a,b)=>a-b);
+ }
+ return workoutSkippedSetsFor(d,pid).map(x=>+x.set_number||0).filter(Boolean).sort((a,b)=>a-b);
 }
 function workoutAuxDraftState(d,pid){
  let sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,pid),persisted=workoutAuxSetsFor(d,pid);
@@ -237,7 +259,9 @@ function workoutExerciseSetCount(x,d){
  x=workoutEffectiveExercise(x);
  let planned=Math.max(1,+x?.sets||1),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x?.id),draftCount=+draft.__set_count||0;
  let actual=Math.max(0,...todaySets(d,x?.id).map(s=>+s.set_number||0));
- return Math.max(planned,draftCount,actual);
+ // An explicit draft count wins while the user is editing saved results, so an
+ // added set can be removed even though the old persisted row still exists until Save.
+ return draftCount>0?Math.max(planned,draftCount):Math.max(planned,actual);
 }
 function addWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
@@ -252,24 +276,60 @@ function addWorkoutExtraSet(cid,pid){
    body.classList.remove('hidden');
  }
 }
-function removeWorkoutExtraSet(cid,pid){
+function removeWorkoutExtraSet(cid,pid,setNumber=0){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
  if(!x||!sid)return;
  x=workoutEffectiveExercise(x);
- let planned=Math.max(1,+x.sets||1),count=workoutExerciseSetCount(x,d);
- if(count<=planned)return;
- let draft=readWorkoutDraft(sid,pid),row=draft[count]||{};
- if(row.done)return alert('Завершений додатковий підхід спочатку потрібно відредагувати.');
- let hasValues=['weight','reps','rir'].some(k=>row[k]!==undefined&&row[k]!==null&&String(row[k]).trim()!=='');
- if(hasValues&&!confirm('Прибрати додатковий підхід разом із введеними даними?'))return;
- delete draft[count];draft.__set_count=count-1;
- try{let k=workoutDraftKey(sid,pid);if(k)localStorage.setItem(k,JSON.stringify(draft))}catch(e){}
- let body=document.getElementById('exerciseBody'+pid);
- if(body){
-   body.innerHTML=completedExerciseHTML(x,d,cid);
-   body.classList.remove('hidden');
+ let planned=Math.max(1,+x.sets||1),count=workoutExerciseSetCount(x,d),n=+setNumber||count;
+ if(n<=planned||n>count)return;
+ let draft=readWorkoutDraft(sid,pid),row=draft[n]||{};
+ let hasValues=!!row.done||['weight','reps','rir'].some(k=>row[k]!==undefined&&row[k]!==null&&String(row[k]).trim()!=='');
+ if(hasValues&&!confirm('Видалити цей додатковий підхід? Внесені дані буде втрачено.'))return;
+ if(row.done)cancelRestTimer();
+ let drops=draft.__drops&&typeof draft.__drops==='object'?draft.__drops:{};
+ for(let k=n;k<count;k++){
+   if(draft[k+1]!==undefined)draft[k]={...draft[k+1]};else delete draft[k];
  }
+ delete draft[count];
+ let shiftedDrops={};
+ Object.keys(drops).forEach(key=>{
+   let parent=+key||0;
+   if(parent===n)return;
+   let next=parent>n?parent-1:parent;
+   shiftedDrops[String(next)]=drops[key];
+ });
+ draft.__drops=shiftedDrops;
+ draft.__set_count=count-1;
+ persistWorkoutDraft(sid,pid,draft);
+ let body=document.getElementById('exerciseBody'+pid);
+ if(body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
 }
+
+function toggleWorkoutPlannedSetSkipped(cid,pid,setNumber){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d),n=+setNumber||0;
+ if(!x||!sid||!n)return;
+ x=workoutEffectiveExercise(x);
+ let planned=Math.max(1,+x.sets||1);if(n>planned)return;
+ let state=workoutAuxDraftState(d,pid),draft=state.draft,skipped=new Set(workoutSkippedSetNumbers(d,pid));
+ if(skipped.has(n)){
+   skipped.delete(n);
+ }else{
+   let row=draft[n]||{},hasValues=!!row.done||['weight','reps','rir'].some(k=>row[k]!==undefined&&row[k]!==null&&String(row[k]).trim()!=='');
+   let hasDrops=(state.drops[String(n)]||[]).length>0;
+   if((hasValues||hasDrops)&&!confirm('Пропустити цей підхід? Введені значення не будуть збережені'+(hasDrops?', а дроп-сети цього підходу буде видалено.':'.')))return;
+   if(row.done)cancelRestTimer();
+   draft[n]=draft[n]||{};
+   draft[n].done=false;
+   delete draft[n].rest_seconds;
+   if(hasDrops){delete state.drops[String(n)];draft.__drops=state.drops}
+   skipped.add(n);
+ }
+ draft.__skipped=[...skipped].sort((a,b)=>a-b);
+ persistWorkoutDraft(sid,pid,draft);
+ let body=document.getElementById('exerciseBody'+pid);
+ if(body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+}
+
 
 function clearWorkoutDraft(sid,pid){if(!sid)return;try{let k=workoutDraftKey(sid,pid);if(k)localStorage.removeItem(k)}catch(e){}}
 
@@ -624,19 +684,22 @@ function focusNextUnfinishedExercise(pid){
 
 
 async function saveSets(cid,pid,exercise,count){
- let raw=[];
+ let currentData=window.currentClientData||{},sid=workoutDraftSessionId(currentData),draft=readWorkoutDraft(sid,pid);
+ let skipped=new Set(workoutSkippedSetNumbers(currentData,pid)),raw=[];
  for(let n=1;n<=count;n++){
+  if(skipped.has(n))continue;
   let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
+  if(!w||!r||!i)continue;
   if(!w.value&&!r.value&&!i.value)continue;
   if(!w.value||!r.value||!i.value)return alert(`Заповни вагу, повтори та RIR у підході ${n}`);
   raw.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value});
  }
- if(!raw.length)return alert('Заповни хоча б один підхід');
- let currentData=window.currentClientData||{},sid=workoutDraftSessionId(currentData);
+ if(!raw.length&&!skipped.size)return alert('Заповни хоча б один підхід або познач пропущений');
  // Finalize the currently running rest timer before reading the draft so the
  // last measured rest interval is included in the saved exercise.
  cancelRestTimer();
- let draft=readWorkoutDraft(sid,pid),day=workoutDataDay(currentData);
+ draft=readWorkoutDraft(sid,pid);
+ let day=workoutDataDay(currentData);
  let existing=(currentData.result_sets||[]).filter(s=>+s.program_id===+pid&&s.day===day);
  let sets=raw.map(s=>{
    let prior=existing.find(x=>+x.set_number===+s.set_number),rest=draft[s.set_number]?.rest_seconds;
@@ -647,11 +710,14 @@ async function saveSets(cid,pid,exercise,count){
  let auxSets=[];
  try{auxSets=collectWorkoutAuxSets(currentData,pid)}catch(e){return alert(e.message||'Перевір додаткові підходи')}
  let planned=(currentData.program||[]).find(v=>+v.id===+pid),effective=planned?workoutEffectiveExercise(planned):null,repeatMode=normalizeRepeatMode(effective?.repeat_mode);
- await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,repeat_mode:repeatMode,sets,aux_sets:auxSets})});
+ let plannedCount=Math.max(1,+effective?.sets||1);
+ let skippedSets=[...skipped].filter(n=>n>=1&&n<=plannedCount).sort((a,b)=>a-b);
+ await api('/result-sets',{method:'POST',body:JSON.stringify({client_id:cid,program_id:pid,exercise,repeat_mode:repeatMode,sets,aux_sets:auxSets,skipped_sets:skippedSets})});
  clearWorkoutDraft(sid,pid);
  let body=$('#exerciseBody'+pid);
  if(body){
-   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${sets.map(s=>`<div class="muted" style="margin-top:6px">Підхід ${s.set_number}: ${s.weight} кг × ${repeatResultText(s.reps,repeatMode)} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
+   let savedRows=[...sets.map(s=>({n:s.set_number,text:`${s.weight} кг × ${repeatResultText(s.reps,repeatMode)} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}`,skipped:false})),...skippedSets.map(n=>({n,text:'Пропущено',skipped:true}))].sort((a,b)=>a.n-b.n);
+   body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${savedRows.map(row=>`<div class="muted${row.skipped?' workout-saved-skip':''}" style="margin-top:6px">Підхід ${row.n}: ${row.text}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
  }

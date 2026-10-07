@@ -226,6 +226,23 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("Додати дроп-сет", WORKOUT_LYFTA)
         self.assertIn("collectWorkoutAuxSets", WORKOUT)
 
+    def test_client_can_skip_planned_and_delete_added_sets(self):
+        self.assertIn("CREATE TABLE IF NOT EXISTS workout_skipped_sets", APP)
+        self.assertIn('"skipped_sets":"SELECT * FROM workout_skipped_sets', APP)
+        self.assertIn("skipped_sets:List[int]", APP)
+        self.assertIn("Підхід не може бути одночасно виконаний і пропущений", APP)
+        self.assertIn("DELETE FROM workout_skipped_sets WHERE client_id=%s AND program_id=%s AND day=%s", APP)
+        self.assertIn("function workoutSkippedSetNumbers", WORKOUT)
+        self.assertIn("function toggleWorkoutPlannedSetSkipped", WORKOUT)
+        self.assertIn("function removeWorkoutExtraSet(cid,pid,setNumber=0)", WORKOUT)
+        self.assertIn("skipped_sets:skippedSets", WORKOUT)
+        self.assertIn("function lyftaSetSwipeStart", WORKOUT_LYFTA)
+        self.assertIn("data-set-action", WORKOUT_LYFTA)
+        self.assertIn("Свайп вліво: пропустити плановий або видалити доданий підхід", WORKOUT_LYFTA)
+        self.assertIn("skippedAll=(d.skipped_sets||[])", PROGRESS_REDESIGN)
+        self.assertIn("Клієнт не виконував цей підхід", RESULTS)
+        self.assertIn("d.skipped_sets=(d.skipped_sets||[])", CORE)
+
     def test_training_day_title_modal_uses_redesign_ui(self):
         self.assertIn("trainer-day-title-modal", PROGRAM)
         self.assertIn("trainer-day-title-card", PROGRAM)

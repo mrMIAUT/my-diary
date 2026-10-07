@@ -806,6 +806,18 @@ def init():
         c.execute("ALTER TABLE workout_aux_sets ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_workout_aux_sets_client_day
                      ON workout_aux_sets(client_id,day,program_id,kind,parent_set_number,aux_number)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS workout_skipped_sets(
+            id SERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL,
+            program_id INTEGER NOT NULL,
+            exercise TEXT NOT NULL DEFAULT '',
+            day TEXT NOT NULL,
+            set_number INTEGER NOT NULL
+        )""")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_workout_skipped_sets_client_program_day_set
+                     ON workout_skipped_sets(client_id,program_id,day,set_number)""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_workout_skipped_sets_client_day
+                     ON workout_skipped_sets(client_id,day,program_id,set_number)""")
         # A program exercise can have only one saved value for a given set number on a given day.
         # Clean legacy duplicate rows first, then prevent them from being created again.
         c.execute("""DELETE FROM result_sets a USING result_sets b
@@ -1193,7 +1205,13 @@ class WorkoutAuxSetIn(BaseModel):
     weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
     reps:int=Field(ge=1,le=MAX_REPS)
 class SetResultIn(BaseModel):
-    client_id:int; program_id:int; exercise:str=Field(max_length=255); repeat_mode:str=Field(default="normal",max_length=16); sets:List[SetIn]=Field(max_length=100); aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
+    client_id:int
+    program_id:int
+    exercise:str=Field(max_length=255)
+    repeat_mode:str=Field(default="normal",max_length=16)
+    sets:List[SetIn]=Field(default_factory=list,max_length=100)
+    aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
+    skipped_sets:List[int]=Field(default_factory=list,max_length=100)
 class CompletedWorkoutSetIn(BaseModel):
     program_id:int
     exercise:str=Field(max_length=255)
@@ -2244,6 +2262,7 @@ def client(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         "results":"SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",
         "result_sets":"SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
         "aux_sets":"SELECT * FROM workout_aux_sets WHERE client_id=? ORDER BY day DESC,program_id,kind,parent_set_number,aux_number,id",
+        "skipped_sets":"SELECT * FROM workout_skipped_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
         "nutrition":"SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",
         "nutrition_plan":"SELECT * FROM nutrition_plan_items WHERE client_id=? ORDER BY meal_number,variant_number,sort,id",
         "measurements":"SELECT * FROM measurements WHERE client_id=? ORDER BY day,id",
@@ -2814,11 +2833,16 @@ def add_result(x:ResultIn,user:AuthUser=Depends(require_client)):
 def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
     authorize_program(user,x.program_id,x.client_id)
     require_active_client(x.client_id,'workouts')
-    if not x.sets:
-        raise HTTPException(400,"Додай хоча б один підхід")
     numbers=[s.set_number for s in x.sets]
+    skipped=[int(n) for n in x.skipped_sets]
+    if not numbers and not skipped:
+        raise HTTPException(400,"Додай хоча б один підхід або познач пропущений")
     if len(numbers)!=len(set(numbers)):
         raise HTTPException(400,"Номери підходів не мають повторюватися")
+    if any(n<1 or n>MAX_SET_COUNT for n in skipped) or len(skipped)!=len(set(skipped)):
+        raise HTTPException(400,"Некоректний список пропущених підходів")
+    if set(numbers)&set(skipped):
+        raise HTTPException(400,"Підхід не може бути одночасно виконаний і пропущений")
     repeat_mode=normalize_repeat_mode(x.repeat_mode)
     ids=[]
     # Keep every set on the calendar day when the workout session started.
@@ -2832,6 +2856,7 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
         result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
         c.execute("DELETE FROM result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         c.execute("DELETE FROM workout_aux_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
+        c.execute("DELETE FROM workout_skipped_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         for item in x.sets:
             row=c.execute("""INSERT INTO result_sets(client_id,program_id,exercise,day,set_number,weight,reps,rir,rest_seconds,repeat_mode)
                              VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
@@ -2856,8 +2881,12 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
                 client_id,program_id,exercise,day,kind,parent_set_number,aux_number,weight,reps,repeat_mode)
                 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                 (x.client_id,x.program_id,x.exercise,result_day,kind,parent,item.aux_number,item.weight,item.reps,repeat_mode))
+        for set_number in skipped:
+            c.execute("""INSERT INTO workout_skipped_sets(client_id,program_id,exercise,day,set_number)
+                         VALUES(%s,%s,%s,%s,%s)""",
+                      (x.client_id,x.program_id,x.exercise,result_day,set_number))
         c.commit()
-    return {"ok":True,"ids":ids,"day":result_day}
+    return {"ok":True,"ids":ids,"skipped_sets":skipped,"day":result_day}
 
 @app.get("/api/result-sets/{cid}")
 def result_set_history(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
@@ -3253,8 +3282,11 @@ def cancel_workout(sid:int,user:AuthUser=Depends(require_client)):
         has_sets=c.execute("""SELECT 1 FROM result_sets
                               WHERE client_id=%s AND day=%s
                               LIMIT 1""",(client_id,workout_day)).fetchone()
-        if has_sets:
-            raise HTTPException(400,"Тренування вже має збережені підходи і не може бути скасоване")
+        has_skipped=c.execute("""SELECT 1 FROM workout_skipped_sets
+                                 WHERE client_id=%s AND day=%s
+                                 LIMIT 1""",(client_id,workout_day)).fetchone()
+        if has_sets or has_skipped:
+            raise HTTPException(400,"Тренування вже має збережені або пропущені підходи і не може бути скасоване")
         c.execute("DELETE FROM workout_sessions WHERE id=%s",(sid,))
         c.commit()
     return {"ok":True,"cancelled":True}
@@ -3373,6 +3405,9 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
                          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                       (client_id,item.program_id,item.exercise.strip(),workout_day,item.set_number,
                        item.weight,item.reps,item.rir,item.rest_seconds,mode))
+            c.execute("""DELETE FROM workout_skipped_sets
+                         WHERE client_id=%s AND program_id=%s AND day=%s AND set_number=%s""",
+                      (client_id,item.program_id,workout_day,item.set_number))
         for item in x.aux_sets:
             pid=int(item.program_id)
             kind=(item.kind or "").strip().lower()
