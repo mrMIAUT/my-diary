@@ -16649,3 +16649,225 @@ body.eplan-redesign.client-ui .completed-workout-add-drop{
     margin-left:18px;
   }
 }
+
+
+/* Extra training days */
+body.eplan-redesign.trainer-ui .trainer-program-editor-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-program-editor-head>div{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-extra-day-create{
+  flex:0 0 auto;
+  min-height:38px;
+  padding:8px 11px!important;
+  border-radius:11px!important;
+  background:#eef5ff!important;
+  color:#1677ff!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-card{
+  border-color:#bfd9ff!important;
+  background:linear-gradient(180deg,#fbfdff 0%,#f5f9ff 100%)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-day-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges b,
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges em,
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges i{
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-style:normal;
+  font-weight:850;
+  line-height:1;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges b{
+  background:#e9f3ff;
+  color:#1677ff;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges em{
+  background:#f1f4f8;
+  color:#60718a;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges i.active{
+  background:#e8f7ef;
+  color:#168553;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-badges i.paused{
+  background:#fff3e8;
+  color:#b56b1c;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 12px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-actions button{
+  min-height:40px;
+  padding:8px 10px!important;
+  border-radius:11px!important;
+  font-size:9.5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-actions .trainer-extra-promote{
+  grid-column:1/-1;
+  background:#1677ff!important;
+  color:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border:1px dashed #bfd0e6;
+  border-radius:13px;
+  background:#fff;
+  color:#74839a;
+  font-size:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-empty button{
+  flex:0 0 auto;
+  min-height:34px;
+  padding:7px 10px!important;
+  border-radius:10px!important;
+  font-size:9px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal{z-index:12050;padding:12px}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card{
+  width:min(100%,480px);
+  max-height:calc(100dvh - 24px);
+  overflow:auto;
+  border-radius:22px!important;
+  padding:18px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-modal-card .edit-exercise-head small{
+  display:block;
+  margin-bottom:3px;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.05em;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label:first-child,
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label:nth-child(2),
+body.eplan-redesign.trainer-ui .trainer-extra-day-form #extraDayUntilWrap{
+  grid-column:1/-1;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label,
+body.eplan-redesign.trainer-ui .trainer-day-title-field{
+  display:grid;
+  gap:5px;
+  margin-top:9px;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form label>span,
+body.eplan-redesign.trainer-ui .trainer-day-title-field>span{
+  color:#718198;
+  font-size:9px;
+  font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-form input,
+body.eplan-redesign.trainer-ui .trainer-extra-day-form select,
+body.eplan-redesign.trainer-ui .trainer-day-title-field input{
+  min-height:42px;
+  border-radius:11px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-note{
+  margin:12px 0 0;
+  color:#7d8999;
+  font-size:9.5px;
+  line-height:1.45;
+}
+body.eplan-redesign.trainer-ui .trainer-extra-day-save{
+  width:100%;
+  min-height:46px;
+  margin-top:14px;
+  border-radius:13px!important;
+}
+
+body.eplan-redesign.client-ui .redesign-extra-training-section{
+  margin-top:16px;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+  padding:0 2px;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-head>div{
+  display:grid;
+  gap:2px;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-head span{
+  color:#0a1738;
+  font-size:13px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-head small{
+  color:#8390a3;
+  font-size:9px;
+  font-weight:650;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-head>b{
+  display:grid;
+  place-items:center;
+  min-width:26px;
+  height:26px;
+  padding:0 7px;
+  border-radius:999px;
+  background:#eaf3ff;
+  color:#1677ff;
+  font-size:10px;
+}
+body.eplan-redesign.client-ui .redesign-extra-training-day{
+  border-color:#c6dcfb!important;
+  background:linear-gradient(180deg,#fff 0%,#f6faff 100%)!important;
+}
+body.eplan-redesign.client-ui .redesign-training-day-index.extra{
+  background:#eaf3ff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .redesign-training-day-status.extra{
+  background:#eaf3ff!important;
+  color:#1677ff!important;
+}
+body.eplan-redesign.client-ui .redesign-start-workout.extra{
+  background:#1677ff!important;
+}
+@media(max-width:480px){
+  body.eplan-redesign.trainer-ui .trainer-program-editor-head{
+    display:grid;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-day-create{width:100%}
+}
+@media(max-width:370px){
+  body.eplan-redesign.trainer-ui .trainer-extra-day-form,
+  body.eplan-redesign.trainer-ui .trainer-extra-day-actions{
+    grid-template-columns:1fr;
+  }
+  body.eplan-redesign.trainer-ui .trainer-extra-day-actions .trainer-extra-promote{
+    grid-column:auto;
+  }
+}
