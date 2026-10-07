@@ -1639,6 +1639,80 @@ FOOD_GENERIC_DISH_MARKERS={
     "crackers","cracker","chips","chip","pizza","burger","casserole",
 }
 
+# Intent rules keep generic searches focused on the actual food, not products
+# that merely mention the word as a flavour/ingredient/brand.
+FOOD_INTENT_RULES={
+    "молоко":{
+        "starts":("молоко","milk"),
+        "contains":("молоко","milk"),
+        "secondary":("згущене молоко","молоко згущене","condensed milk"),
+        "noise":("сир","cheese","печиво","cookie","тістечко","cake","шоколад","chocolate",
+                 "батон","bar","сметана","cream","йогурт","yogurt"),
+    },
+    "сир":{
+        "starts":("сир","cheese","cottage cheese","paneer"),
+        "contains":("сир","cheese","paneer"),
+        "secondary":(),
+        "noise":("чипс","chips","брускет","cracker","крекер","соус","sauce","sandwich","bread","dip","ball"),
+    },
+    "йогурт":{
+        "starts":("йогурт","yogurt"),
+        "contains":("йогурт","yogurt"),
+        "secondary":(),
+        "noise":("печиво","cookie","батон","bar","шоколад","chocolate","морозиво","ice cream"),
+    },
+    "тунець":{
+        "starts":("тунець","tuna"),
+        "contains":("тунець","tuna"),
+        "secondary":(),
+        "noise":("sandwich","pizza","салат","salad"),
+    },
+    "рис":{
+        "starts":("рис","rice","basmati rice"),
+        "contains":("рис","rice","basmati"),
+        "secondary":(),
+        "noise":("cracker","крекер","chips","чипс","pudding","пудинг","milk rice"),
+    },
+    "вівсяні пластівці":{
+        "starts":("вівсяні пластівці","oats","oat flakes","rolled oats"),
+        "contains":("вівсяні","oats","oat"),
+        "secondary":(),
+        "noise":("cookie","печиво","bar","батон","granola","гранола"),
+    },
+    "куряча грудка":{
+        "starts":("куряча грудка","chicken breast"),
+        "contains":("куряча грудка","chicken breast"),
+        "secondary":(),
+        "noise":("sandwich","pizza","salad","салат","soup","суп"),
+    },
+    "куряче філе":{
+        "starts":("куряче філе","chicken breast","chicken fillet"),
+        "contains":("куряче філе","chicken breast","chicken fillet"),
+        "secondary":(),
+        "noise":("sandwich","pizza","salad","салат","soup","суп"),
+    },
+}
+
+def _intent_rule(query:str):
+    q=query.lower().strip()
+    # Fat percentage or preparation qualifiers should not change the food intent.
+    for key in ("молоко","сир","йогурт","тунець","рис","вівсяні пластівці","куряча грудка","куряче філе"):
+        if q==key or q.startswith(key+" "):return FOOD_INTENT_RULES[key]
+    return None
+
+def _intent_score(query:str,item:dict):
+    rule=_intent_rule(query)
+    if not rule:return 0
+    low=(item.get("name") or "").lower().strip()
+    if any(low.startswith(prefix) for prefix in rule["starts"]):score=125
+    elif any(token in low for token in rule["contains"]):score=35
+    else:score=-150
+    if rule["secondary"] and any(token in low for token in rule["secondary"]):
+        score-=95
+    if any(marker in low for marker in rule["noise"]):
+        score-=150
+    return score
+
 def _is_generic_dish_noise(query:str,item:dict):
     if query!="сир" or item.get("source")!="usda":return False
     low=(item.get("name") or "").lower()
@@ -1675,6 +1749,7 @@ def _food_rank(query:str,items:list):
             if is_generic:
                 score+=10
                 if not (item.get("brand") or "").strip():score+=8
+        score+=_intent_score(query,item)
         # A broad "сир" query in the Ukrainian app should prioritize actual
         # cheese products sold in Ukraine, not prepared US dishes containing cheese.
         if query=="сир":
