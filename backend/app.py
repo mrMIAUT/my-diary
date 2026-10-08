@@ -1527,7 +1527,9 @@ UKRAINIAN_BRAND_HINTS={
     "чумак","roshen","рошен","том","комо","золотий резерв","serenada",
     "наша ряба","глобино","globyno","алан","alan",
     "м'ясна гільдія","мясная гильдия","бащинський",
-    "м'ясна весна","мясная весна","атб","сільпо","silpo","varus","новус","novus",
+    "м'ясна весна","мясная весна","етнічні м'ясники","етнічні мясники",
+    "цем'ясо","цемясо","#цем'ясо","#цемясо",
+    "атб","сільпо","silpo","varus","новус","novus",
 }
 
 RUSSIAN_BRAND_BLOCKLIST={
@@ -1996,9 +1998,12 @@ def _food_rank(query:str,items:list):
                 score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     if _intent_rule(query):
+        # Market priority is intentional for EPLAN: among results that survive
+        # relevance/noise filtering, Ukrainian brands come first, then products
+        # explicitly present in Ukraine, then other foreign/reference options.
         ranked.sort(key=lambda x:(
-            _intent_bucket(query,x),
             _food_local_tier(x),
+            _intent_bucket(query,x),
             -x["_score"],
             x.get("brand")!="",
             x.get("name",""),
