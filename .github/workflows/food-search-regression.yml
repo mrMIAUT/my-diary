@@ -7,6 +7,9 @@ on:
     paths:
       - backend/app.py
       - backend/tests/test_food_search_*.py
+      - backend/food_reference_catalog.py
+      - backend/static/calculator-prototype.js
+      - backend/static/calculator-prototype.html
       - .github/workflows/food-search-regression.yml
   workflow_dispatch:
 
@@ -23,5 +26,7 @@ jobs:
           python-version: '3.12'
       - name: Check backend syntax
         run: python -m py_compile backend/app.py
+      - name: Check food prototype JavaScript syntax
+        run: node --check backend/static/calculator-prototype.js
       - name: Run food search regression tests
         run: python -m unittest discover -s backend/tests -p 'test_food_search_*.py' -v
