@@ -8,6 +8,7 @@ on:
       - backend/app.py
       - backend/tests/test_food_search_*.py
       - backend/food_reference_catalog.py
+      - backend/food_nutrition_audit.py
       - backend/static/calculator-prototype.js
       - backend/static/calculator-prototype.html
       - .github/workflows/food-search-regression.yml
