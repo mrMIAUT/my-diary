@@ -1848,7 +1848,7 @@ def _food_expand_specific_candidates(query:str,items:list,limit:int,collect):
     offline, independently of Open Food Facts availability.
     """
     if len(_food_match_words(query))<2:return items
-    minimum=max(1,min(2,limit//4))
+    minimum=1
     if _food_full_title_matches(query,items)>=minimum:return items
     for term in _food_search_related_terms(query):
         items=_dedupe_food_items(items+collect(term))
@@ -2307,7 +2307,7 @@ def prototype_food_search(
     # and use the same strict relevance ordering on the unified result.
     ua_off_items=_food_expand_specific_candidates(
         normalized,ua_off_items,limit,
-        lambda term:_off_collect(term,"Ukraine",pages=3,page_size=24),
+        lambda term:_off_collect(term,"Ukraine",pages=2,page_size=24),
     )
 
     global_off_items=[]
