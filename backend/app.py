@@ -1909,7 +1909,7 @@ FOOD_PROCESSED_CUES=(
     "chips","чипс","снек","snack","батон","chocolate","шоколад",
 )
 FOOD_PROCESSED_WHOLE_WORDS=("ham","bar")
-FOOD_DISH_CUES=
+FOOD_DISH_CUES=(
     "пельмен","pelmeni","dumpling","pierog","ravioli","вареник","гьодз","gyoza",
     "лазан","lasagn","піца","pizza","салат","salad","суп","soup",
     "локшин","noodle","пюре","puree","бургер","burger","бутерброд",
