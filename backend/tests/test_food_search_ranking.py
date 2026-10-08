@@ -9,6 +9,7 @@ FUNCTIONS = {
     "normalize_food_query", "usda_food_query", "food_search_variants",
     "_food_match_words", "_food_match_word", "_food_match_coverage",
     "_food_match_quality", "_food_local_tier", "_food_rank",
+    "_food_preparation_rank",
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates",
 }
@@ -16,6 +17,7 @@ CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
     "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
+    "FOOD_READY_PRODUCT_STEMS","FOOD_COOKED_PRODUCT_STEMS",
 }
 
 
@@ -201,6 +203,68 @@ class FoodSearchRanking(unittest.TestCase):
         ])
         self.assertEqual(ranked[0]["brand"],"Три Ведмеді")
         self.assertIn("Beef dumplings",[x["name"] for x in ranked])
+
+
+    def test_broad_chicken_prioritizes_basic_then_cooked_then_snacks(self):
+        ranked=self.rank("Курица",[
+            food("Chicken Jerky","Silpo",True),
+            food("Курка гриль","Сільпо",True),
+            food("Chicken breast","Imported",False),
+            food("Куряче філе сушене","М'ясоріг",True),
+            food("Куряче філе","Наша ряба",True),
+            food("Chicken noodles","Rozumnyi Vybir",True),
+            food("Курка відварена","Local",True),
+        ])
+        self.assertEqual(
+            [R["_food_preparation_rank"](item) for item in ranked],
+            [0,0,1,1,2,2,2],
+        )
+        self.assertEqual(ranked[0]["brand"],"Наша ряба")
+        self.assertEqual(ranked[1]["brand"],"Imported")
+
+    def test_ukrainian_brands_wins_within_broad_food_group(self):
+        ranked=self.rank("Курица",[
+            food("Chicken breast","Foreign",False),
+            food("Chicken Breast","Наша ряба",True),
+            food("Курка гриль","Other",False),
+            food("Курка гриль","Сільпо",True),
+        ])
+        self.assertEqual(ranked[0]["brand"],"Наша ряба")
+        cooked=[x for x in ranked if R["_food_preparation_rank"](x)==1]
+        self.assertEqual(cooked[0]["brand"],"Сільпо")
+
+    def test_specific_chicken_snack_query_is_not_downgraded(self):
+        ranked=self.rank("Chicken Jerky",[
+            food("Chicken breast","Наша ряба",True),
+            food("Chicken Jerky","Local",True),
+            food("Chicken Kabanos","Silpo",True),
+        ])
+        self.assertEqual(ranked[0]["name"],"Chicken Jerky")
+
+    def test_generic_potato_and_milk_dont_lose_related_foods(self):
+        potato=self.rank("Картошка",[
+            food("Чипси картопляні","Novus",True),
+            food("Картопля запечена","Novus",True),
+            food("Картопля","Foreign",False),
+        ])
+        self.assertEqual(
+            [R["_food_preparation_rank"](x) for x in potato],[0,1,2],
+        )
+        milk=self.rank("Молоко",[
+            food("Молочно-шоколадний батон","Roshen",True),
+            food("Молоко 2,5%","Молокія",True),
+        ])
+        self.assertEqual(len(milk),2)
+        self.assertEqual(milk[0]["brand"],"Молокія")
+
+    def test_beef_dumplings_stay_discoverable(self):
+        ranked=self.rank("Пельмени с говядиной",[
+            food("Яловичина для стейка","Сільпо",True),
+            food("Пельмені з яловичиною","Три Ведмеді",True),
+            food("Beef dumplings","Foreign",False),
+        ])
+        self.assertEqual(ranked[0]["brand"],"Три Ведмеді")
+        self.assertEqual(len(ranked),3)
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]

@@ -1888,9 +1888,40 @@ def _food_local_tier(item:dict):
         return 2
     return 3
 
+# Conservative sorting for broad one-word searches only.  Nothing is
+# removed; precise multiword searches continue to use their original order.
+# These markers describe preparation/type, not nutrition or ingredients.
+FOOD_READY_PRODUCT_STEMS=(
+    "jerky","jerkey","джерк","сушен","сушон","вялен","ялен",
+    "kabanos","кабанос","ковбас","сосиск","котлет",
+    "noodle","локшин","chips","чипс","snack","снек",
+    "батон","шоколад","chocolate","пельмен","dumpling",
+    "лазань","lasagn","піца","pizza","салат","salad",
+    "burger","бургер","casserole",
+)
+FOOD_COOKED_PRODUCT_STEMS=(
+    "варен","відварен","boil","гриль","grill",
+    "запеч","baked","roast","смажен","fried",
+    "тушкован","stewed","парі","steam",
+)
+
+def _food_preparation_rank(item:dict):
+    """0 basic ingredient, 1 cooked, 2 processed/assembled food.
+
+    Only used as a secondary sort key on one-word searches. Keeping the
+    match-quality bucket ahead of this rank protects exact product queries.
+    """
+    words=_food_match_words(item.get("name") or "")
+    if any(word.startswith(stem) for word in words for stem in FOOD_READY_PRODUCT_STEMS):
+        return 2
+    if any(word.startswith(stem) for word in words for stem in FOOD_COOKED_PRODUCT_STEMS):
+        return 1
+    return 0
+
 def _food_rank(query:str,items:list):
     ranked=[]
     seen=set()
+    broad_query=(len(_food_match_words(query))==1)
     for item in items:
         key=(item.get("barcode") or "",item.get("source"),item.get("source_id"))
         if key in seen:continue
@@ -1899,10 +1930,11 @@ def _food_rank(query:str,items:list):
         # No relevance at all means the upstream API returned an unrelated
         # catalogue hit (e.g. pasta for a potato search). Do not show it.
         if quality[0]>=4:continue
-        ranked.append((quality[0],_food_local_tier(item),quality[1],
+        preparation=_food_preparation_rank(item) if broad_query else 0
+        ranked.append((quality[0],preparation,_food_local_tier(item),quality[1],
                        quality[2],quality[3],(item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:6])
-    return _dedupe_food_items([row[6] for row in ranked])
+    ranked.sort(key=lambda row:row[:7])
+    return _dedupe_food_items([row[7] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
