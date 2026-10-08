@@ -35,7 +35,14 @@ def audit_item(item):
         ("kcal_100", "protein_100", "fat_100", "carbs_100"))
     if not 0 <= kcal <= 900:
         issues.append("kcal_out_of_range")
-    if any(not 0 <= x <= 100 for x in (protein, fat, carbs)):
+    if any(not 0 <= x <= 100 for x in (protein, fat)):
+        issues.append("macro_out_of_range")
+    if carbs < 0 and source == "usda" and carbs >= -1:
+        # USDA Foundation "carbohydrate by difference" can be slightly
+        # negative due to independent component measurements/rounding.
+        # Retain the original value and explicitly mark for review.
+        issues.append("usda_trace_negative_carbs_review")
+    elif not 0 <= carbs <= 100:
         issues.append("macro_out_of_range")
     if protein + fat + carbs > 105:
         issues.append("macros_exceed_100g")
@@ -66,7 +73,24 @@ def audit(items):
             counts.update(issues)
             flagged.append({"source": source, "source_id": item.get("source_id"),
                             "name": item.get("name"), "issues": issues})
+    review_categories = {}
+    for entry in flagged:
+        codes = entry["issues"]
+        if any(code.startswith("missing_or_invalid_") or code in
+               ("missing_name", "missing_source_id") for code in codes):
+            category = "incomplete_data"
+        elif "usda_trace_negative_carbs_review" in codes:
+            category = "usda_calculation_review"
+        elif any(code in ("kcal_out_of_range", "macro_out_of_range",
+                         "macros_exceed_100g", "energy_macro_mismatch_review")
+                 for code in codes):
+            category = "nutrition_anomaly_review"
+        else:
+            category = "metadata_review"
+        entry["review_category"] = category
+        review_categories[category] = review_categories.get(category, 0) + 1
     return {"checked": len(items), "by_source": dict(by_source),
+            "review_categories": review_categories,
             "flagged_count": len(flagged), "issue_counts": dict(counts),
             "flagged": flagged,
             "note": "Automated sanity checks only; passing does not verify label accuracy."}
