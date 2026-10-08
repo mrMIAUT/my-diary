@@ -2053,6 +2053,8 @@ FOOD_DISH_COMPLEMENT_CUES=(
     "сир","cheese","масл","butter","вершк","cream",
     "квасол","bean","помідор","tomato","риба","fish",
     "лосос","salmon","моркв","carrot","круп","grain",
+    "кріп","кроп","dill","петруш","parsley","часник","garlic",
+    "цибул","onion","бекон","bacon","м'яс","meat","котлет","cutlet",
 )
 # Open Food Facts categories are imperfect, so only strong specific tags
 # influence a rank. Generic categories (meats, milk, fish, etc.) are neutral.
@@ -2107,6 +2109,10 @@ def _food_preparation_rank(item:dict):
         return 3
     if _food_contains_cue(words,FOOD_DISH_CUES):
         return 3
+    # Multi-ingredient prepared foods can also be expressed without "з":
+    # "картопля кріп", "рис курка". Require a preparation cue or an
+    # explicit joining word below to avoid treating plain ingredient lists
+    # and raw multi-ingredient packages as ready-to-eat meals.
     # Look only at words after a conjunction; otherwise the queried main
     # ingredient itself would spuriously mark everything as a mixed dish.
     linked=re.search(r"\b(?:з|із|зі|с|со|with|and|та)\b\s+(.+)",name)
