@@ -15,7 +15,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from food_nutrition_audit import audit
 
-QUERIES = ("rice", "potato", "milk", "chicken", "buckwheat")
+# Diverse food categories; up to 25 OFF + 20 USDA records per query.
+# USDA DEMO_KEY and API response sizes may yield fewer than the target.
+QUERIES = (
+    "rice", "potato", "milk", "chicken", "buckwheat",
+    "beef", "pork", "salmon", "tuna", "egg",
+    "yogurt", "cheese", "bread", "pasta", "oats",
+    "apple", "banana", "tomato", "broccoli", "carrot",
+    "lentils", "beans", "almonds", "olive oil", "chocolate",
+)
 HEADERS = {"User-Agent": "EPLAN-NutritionAudit/1.0 (read-only sample)"}
 
 
@@ -47,7 +55,7 @@ def fetch_off_products(query):
     """
     fields = "code,product_name,product_name_en,nutriments"
     params = urllib.parse.urlencode({
-        "search_terms": query, "page_size": 20, "fields": fields,
+        "search_terms": query, "page_size": 25, "fields": fields,
         "json": 1, "action": "process", "search_simple": 1,
     })
     try:
@@ -176,9 +184,10 @@ def main():
             ("kcal_100", "protein_100", "fat_100", "carbs_100")
         }
     report["queries"] = list(QUERIES)
+    report["target_scope"] = "Up to 1125 raw results (25 OFF + 20 USDA per query); overlap and API failures reduce unique coverage."
     report["fetch_failures"] = failures
     report["fetch_success_queries"] = {source: len(QUERIES) - sum(f["source"] == source for f in failures) for source in ("off", "usda")}
-    report["scope"] = "Small sampled API results only, not full USDA/OFF database."
+    report["scope"] = "Diverse sampled API results only, not full USDA/OFF database."
     Path("nutrition-audit-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({k: report[k] for k in
