@@ -1714,6 +1714,18 @@ FOOD_INTENT_RULES={
         "secondary":(),
         "noise":("sandwich","pizza","салат","salad"),
     },
+    "лосось":{
+        "starts":("лосось","salmon"),
+        "contains":("лосось","salmon"),
+        "secondary":(
+            "копчен","smoked","слабосол","малосол","salted","солон",
+        ),
+        "noise":(
+            "ікра","икра","roe","caviar","капсул","capsule",
+            "смак","вкус","flavour","flavor","соус","sauce",
+            "теріяк","терияк","teriyaki","крем","cream",
+        ),
+    },
     "рис":{
         "starts":("рис","rice","basmati rice"),
         "contains":("рис","rice","basmati"),
@@ -1765,7 +1777,7 @@ FOOD_INTENT_RULES={
 def _intent_rule(query:str):
     q=query.lower().strip()
     # Fat percentage or preparation qualifiers should not change the food intent.
-    for key in ("молоко","сир","йогурт","тунець","рис","вівсяні пластівці","куряча грудка","куряче філе"):
+    for key in ("молоко","сир","йогурт","тунець","лосось","рис","вівсяні пластівці","куряча грудка","куряче філе"):
         if q==key or q.startswith(key+" "):return FOOD_INTENT_RULES[key]
     return None
 
@@ -1783,6 +1795,11 @@ def _intent_score(query:str,item:dict):
     if query in ("куряча грудка","куряче філе"):
         if any(token in low for token in ("raw","сире","сыра","сырой","свіже","свежее","fresh")):
             score+=45
+        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
+            score+=20
+    if query=="лосось":
+        if any(token in low for token in ("raw","сирий","сир","свіж","свеж","fresh","fresh-frozen","свіжоморож","свежеморож","frozen","філе","филе","fillet")):
+            score+=50
         elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
             score+=20
     return score
