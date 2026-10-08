@@ -1931,7 +1931,8 @@ def _is_generic_dish_noise(query:str,item:dict):
         if any(marker in brand_low for marker in ("objerky","jack link","jack link's","archer")):
             return True
         return any(marker in low for marker in (
-            "пельмен","pelmeni","dumpling","ravioli","равіол","равиол",
+            "пельмен","pelmeni","dumpling","gyoza","гьодза","гёдза","гедза",
+            "ravioli","равіол","равиол",
             "лазан","lasagn","moussaka","мусака","hachis parmentier","parmentier",
             "картопляне пюре","картофельное пюре","mashed potato","purée","puree",
             "à l'oignon","a l'oignon","onion special",
