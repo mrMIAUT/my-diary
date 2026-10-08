@@ -2111,7 +2111,8 @@ def _food_preparation_rank(item:dict):
     processed_meat=("ковбас","колбас","sausage","сосиск","сардель",
                     "frankfurter","salami","салям","шинка","ham",
                     "бекон","bacon","jerky","джерк","в'ялен","в’ялен")
-    if _food_contains_cue(words,processed_meat):
+    # English "ham" is a whole word; Hamachi is a fish, not ham.
+    if _food_contains_cue(words,tuple(cue for cue in processed_meat if cue != "ham")) or "ham" in words:
         return 2
     if any(cue in cat_string for cue in FOOD_DISH_CATEGORY_CUES):
         return 3
