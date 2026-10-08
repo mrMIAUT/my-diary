@@ -1737,13 +1737,16 @@ FOOD_INTENT_RULES={
         "starts":("яловичина","говядина","beef"),
         "contains":("яловичина","говядина","beef"),
         "secondary":(
-            "варен","відвар","отвар","boiled","cooked","копчен","smoked",
-            "тушен","stewed","запеч","roasted","гриль","grilled",
+            "варен","відвар","отвар","boiled","cooked",
+            "копчен","smoked","тушкован","тушен","stewed",
+            "запеч","baked","roasted","гриль","grilled",
         ),
         "noise":(
+            "в'ялен","вялен","в ялен","jerky","beef stick","beef sticks",
+            "м'ясні палички","мясные палочки","meat stick","stick mild",
             "блин","млинец","pancake","рвана","pulled","по-каталон",
             "для вторых блюд","для других страв","готовое блюдо","готова страва",
-            "соус","sauce","sandwich","бургер","burger",
+            "соус","sauce","sandwich","бургер","burger","ковбас","колбас","sausage",
         ),
     },
     "рис":{
@@ -1823,8 +1826,12 @@ def _intent_score(query:str,item:dict):
         elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
             score+=20
     if query=="яловичина":
-        if any(token in low for token in ("raw","сир","свіж","свеж","fresh","охолод","chilled")):
-            score+=45
+        if any(token in low for token in (
+            "raw","сир","свіж","свеж","fresh","охолод","chilled",
+            "стейк","steak","рибай","ribeye","striploin","стриплойн",
+            "виріз","вырез","tenderloin","для тушкування","для тушения",
+        )):
+            score+=55
         elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
             score+=20
     return score
