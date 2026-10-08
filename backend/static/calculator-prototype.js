@@ -228,7 +228,7 @@ function prepControlsHtml(meta){
   +'<label>Коли зважено<select id="foodWeightBasis"><option value="raw">До приготування</option><option value="cooked">Після приготування</option></select></label>'
   +'</div>'
   +'<div class="foodOil" id="foodOilBox" hidden><label>Олія, що потрапила у порцію, г<input id="foodOilGrams" type="number" inputmode="decimal" min="0" max="200" value="0"></label></div>'
-  +'<div class="foodPrepStatus" id="foodPrepStatus"></div>'
+  +'<div class="foodPrepStatus" id="foodPrepStatus" hidden></div>'
   +'</div>';
 }
 function prepCacheKey(meta,mode){return meta.category+'|'+meta.base+'|'+mode}
@@ -245,9 +245,10 @@ function prepModeLabel(){
  const select=$('foodPrepMode');
  return select&&select.selectedOptions[0]?select.selectedOptions[0].textContent:'';
 }
-function prepNoteText(data){
- if(!data||!data.item)return 'Для цього способу немає надійного профілю. Вкажи вагу до приготування.';
- return 'Розрахунок за готовою вагою'+(data.approximate?' · орієнтовно':'');
+function showPrepError(message){
+ const el=$('foodPrepStatus');if(!el)return;
+ if(message){el.textContent=message;el.hidden=false}
+ else{el.textContent='';el.hidden=true}
 }
 async function refreshFoodPrepProfile(){
  if(!selectedFood||!foodPrepMeta)return;
@@ -259,24 +260,21 @@ async function refreshFoodPrepProfile(){
  if(cookedOption)cookedOption.disabled=rawLike;
  const oilBox=$('foodOilBox');if(oilBox)oilBox.hidden=foodPrepMode!=='fried';
  if(foodWeightBasis==='raw'||rawLike){
-  activeFoodProfile=selectedFood;currentPrepValid=true;
-  if($('foodPrepStatus'))$('foodPrepStatus').textContent='Зважено до приготування · використовуємо БЖВ вибраного продукту.';
+  activeFoodProfile=selectedFood;currentPrepValid=true;showPrepError('');
   updateFoodPer100();updateFoodPortion();return;
  }
- currentPrepValid=false;
- if($('foodPrepStatus'))$('foodPrepStatus').textContent='Підбираємо профіль готового продукту…';
+ currentPrepValid=false;showPrepError('');
  try{
   const data=await loadFoodPrep(foodPrepMeta,foodPrepMode);
   if(data&&data.item){
-   activeFoodProfile=data.item;currentPrepValid=true;
-   if($('foodPrepStatus'))$('foodPrepStatus').textContent=prepNoteText(data);
+   activeFoodProfile=data.item;currentPrepValid=true;showPrepError('');
   }else{
    activeFoodProfile=selectedFood;
-   if($('foodPrepStatus'))$('foodPrepStatus').textContent=prepNoteText(data);
+   showPrepError('Не вдалося розрахувати готовий продукт.');
   }
  }catch(_){
   activeFoodProfile=selectedFood;
-  if($('foodPrepStatus'))$('foodPrepStatus').textContent='Не вдалося знайти профіль готового продукту. Вкажи вагу до приготування.';
+  showPrepError('Не вдалося розрахувати готовий продукт.');
  }
  updateFoodPer100();updateFoodPortion();
 }
@@ -295,8 +293,7 @@ function selectFood(index){
   +(foodPrepMeta?prepControlsHtml(foodPrepMeta):'')
   +'<div class="foodGramRow"><label>Кількість, г<input id="foodGrams" type="number" inputmode="decimal" min="1" max="5000" value="100"></label><div><span class="kicker">ПОРЦІЯ</span><b id="foodPortionName">100 г</b></div></div>'
   +'<div class="foodTotals"><span><b id="foodKcal">0</b>ккал</span><span><b id="foodProtein">0</b>білки, г</span><span><b id="foodFat">0</b>жири, г</span><span><b id="foodCarbs">0</b>вуглеводи, г</span></div>'
-  +'<div class="foodAddRow"><select id="foodMeal"><option value="Сніданок">Сніданок</option><option value="Обід">Обід</option><option value="Вечеря">Вечеря</option><option value="Перекус">Перекус</option></select><button type="button" id="foodAddBtn">Додати в щоденник</button></div><div class="foodAddStatus" id="foodAddStatus"></div>'
-  +(foodPrepMeta?'<p class="note">Якщо продукт зважено <b>до приготування</b>, використовуємо його БЖВ до приготування. Якщо <b>після</b> — окремий профіль готового продукту. Для смаження олія додається окремо.</p>':'');
+  +'<div class="foodAddRow"><select id="foodMeal"><option value="Сніданок">Сніданок</option><option value="Обід">Обід</option><option value="Вечеря">Вечеря</option><option value="Перекус">Перекус</option></select><button type="button" id="foodAddBtn">Додати в щоденник</button></div><div class="foodAddStatus" id="foodAddStatus"></div>';
  portion.classList.add('show');
  $('foodGrams').addEventListener('input',updateFoodPortion);
  $('foodAddBtn').addEventListener('click',addFoodToDiary);
