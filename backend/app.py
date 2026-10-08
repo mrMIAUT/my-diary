@@ -1901,7 +1901,7 @@ FOOD_COOKED_CUES=(
     "тушкован","тушен","stewed","напар","steam","sous",
 )
 FOOD_PROCESSED_CUES=(
-    "marinad","marinat","марина","pesto","песто","spicy","seasoned","спеці",
+    "marinad","marinat","марин","pesto","песто","spicy","seasoned","спеці",
     "копчен","smoked","сушен","сушон","вялен","ялен","jerky","jerkey",
     "джерк","кабанос","kabanos","ковбас","sausage","сосиск","salami",
     "шинка","ветчин","nugget","нагет","наггет",
