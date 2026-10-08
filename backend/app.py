@@ -1918,7 +1918,7 @@ def _intent_bucket(query:str,item:dict):
     return 2
 
 def _is_generic_dish_noise(query:str,item:dict):
-    low=(item.get("name") or "").lower()
+    low=(item.get("name") or "").lower().replace("’","'").replace("‘","'").replace("ʼ","'")
 
     if query=="сир" and item.get("source")=="usda":
         return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
@@ -1931,6 +1931,7 @@ def _is_generic_dish_noise(query:str,item:dict):
             "пельмен","pelmeni","dumpling",
             "картопляне пюре","картофельное пюре","mashed potato",
             "bouillon","бульйон","бульон","stock cube","кубик",
+            "beef fond","fond de","fond","beef stock","stock",
             "seasoning","приправа","intense rich beef",
             "beef flavour","beef flavor","смак ялович","вкус говядин",
             "jerky","beef jerky","beef stick","beef sticks",
@@ -2035,9 +2036,8 @@ def _food_rank(query:str,items:list):
         noisy=[x for x in ranked if _is_generic_dish_noise(query,x)]
         ranked=clean+noisy
 
-    # For a generic beef search, obvious non-beef dishes/seasonings should not
-    # appear at all. Processed beef itself is still kept and naturally ranks
-    # below fresh/raw cuts through the intent buckets above.
+    # For a generic beef search, non-meat dishes, stocks and processed snack/
+    # cured beef are excluded entirely; explicit searches can still find them.
     if query=="яловичина":
         ranked=[x for x in ranked if not _is_generic_dish_noise(query,x)]
 
@@ -2493,7 +2493,7 @@ def prototype_food_search(
                 if uq and len(usda_items)<fetch_limit:
                     usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,1))
     ranked=_food_rank(normalized,off_items+usda_items)
-    if _intent_rule(normalized):
+    if _intent_rule(normalized) and normalized!="яловичина":
         core=[x for x in ranked if _intent_bucket(normalized,x)==0]
         secondary=[x for x in ranked if _intent_bucket(normalized,x)==1]
         noisy=[x for x in ranked if _intent_bucket(normalized,x)==2]
