@@ -14,7 +14,7 @@ FUNCTIONS = {
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates", "_food_native_local_match_count",
     "_food_extra_meat_count", "_food_named_dish_conflicts",
-    "_food_manufacture_country", "_food_broad_case_forms",
+    "_food_manufacture_country", "_food_broad_case_forms", "_food_search_type",
 }
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
