@@ -18,6 +18,7 @@ CONSTANTS = {
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
     "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
     "FOOD_READY_PRODUCT_STEMS","FOOD_COOKED_PRODUCT_STEMS",
+    "FOOD_DISH_SIDE_STEMS",
 }
 
 
@@ -265,6 +266,68 @@ class FoodSearchRanking(unittest.TestCase):
         ])
         self.assertEqual(ranked[0]["brand"],"Три Ведмеді")
         self.assertEqual(len(ranked),3)
+
+
+    def test_real_chicken_screenshot_basic_cuts_before_meals(self):
+        # Reported 8 October: mixed dishes appeared before chicken cuts for
+        # Russian "Курица" even though broad search should prefer plain foods.
+        actual=[
+            food("Курка Су-Від З Овочами Та Зеленню","Наша Ряба",True),
+            food("Куряче філе мале «Міньйон»","Наша ряба",True),
+            food("Курка Для Шаурми","М'ясторія",True),
+            food("Курка під соусом «Териякі» з овочами та рисом","Meal Time",True),
+            food("Chicken Breast","Epikur"),
+            food("Chicken Fiesta","Objerky"),
+            food("Chicken Nuggets","Befoodie"),
+            food("Chicken Thighs","Epicur"),
+        ]
+        ranked=self.rank("Курица",actual)
+        self.assertEqual(len(ranked),len(actual))
+        self.assertEqual(
+            [item["name"] for item in ranked[:3]],
+            ["Куряче філе мале «Міньйон»","Chicken Breast","Chicken Thighs"],
+        )
+        self.assertTrue(all(R["_food_preparation_rank"](item)==2 for item in ranked[3:]))
+
+    def test_mixed_dish_vs_plain_cooked_general_food_categories(self):
+        groups=(
+            ("Рис",["Рис басматі","Рис відварений","Рис з овочами"]),
+            ("Картошка",["Картопля","Картопля гриль","Картопля з сиром"]),
+            ("Лосось",["Лосось філе","Лосось на парі","Лосось з овочами"]),
+            ("Говядина",["Яловичина для стейка","Яловичина гриль","Яловичина в соусі"]),
+        )
+        for query,names in groups:
+            with self.subTest(query=query):
+                original=[
+                    food(names[2],"Сільпо",True),
+                    food(names[1],"Сільпо",True),
+                    food(names[0],"Сільпо",True),
+                ]
+                ranked=self.rank(query,original)
+                self.assertEqual([x["name"] for x in ranked],names)
+
+    def test_single_raw_food_and_plain_sous_vide_not_marked_a_mixed_meal(self):
+        for name,category in (
+            ("Курка охолоджена",0),
+            ("Chicken Thighs",0),
+            ("Овочі свіжі",0),
+            ("Молоко з вітаміном D3",0),
+            ("Курка су-від",1),
+            ("Курка су-від з овочами",2),
+            ("Рис з куркою",2),
+            ("Сир кисломолочний",0),
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(R["_food_preparation_rank"](food(name,"Local",True)),category)
+
+    def test_detailed_dish_search_still_prioritizes_recipe(self):
+        ranked=self.rank("Рис з куркою",[
+            food("Рис басматі","Сільпо",True),
+            food("Рис з куркою","Local",True),
+            food("Куряче філе","Наша ряба",True),
+        ])
+        self.assertEqual(ranked[0]["name"],"Рис з куркою")
+        self.assertEqual(len(ranked),2)
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]

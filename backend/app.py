@@ -1888,34 +1888,53 @@ def _food_local_tier(item:dict):
         return 2
     return 3
 
-# Conservative sorting for broad one-word searches only.  Nothing is
-# removed; precise multiword searches continue to use their original order.
-# These markers describe preparation/type, not nutrition or ingredients.
+# Conservative secondary ordering for broad, one-word queries only.
+# This is a search-quality heuristic, not a statement about product nutrition.
+# Avoid a catalogue whitelist: all relevant products and dishes remain visible.
 FOOD_READY_PRODUCT_STEMS=(
     "jerky","jerkey","джерк","сушен","сушон","вялен","ялен",
     "kabanos","кабанос","ковбас","сосиск","котлет",
+    "nugget","нагет","наггет","шаурм","shawarma","shaurma",
     "noodle","локшин","chips","чипс","snack","снек",
     "батон","шоколад","chocolate","пельмен","dumpling",
     "лазань","lasagn","піца","pizza","салат","salad",
-    "burger","бургер","casserole",
+    "burger","бургер","casserole","запікан","пюре","puree",
+    "fiesta","теріяк","teriyaki","соус","sauce",
+    "moussaka","мусак","суп","soup","готов","ready",
 )
 FOOD_COOKED_PRODUCT_STEMS=(
     "варен","відварен","boil","гриль","grill",
     "запеч","baked","roast","смажен","fried",
-    "тушкован","stewed","парі","steam",
+    "тушкован","stewed","парі","steam","sous",
+)
+# Mixed meals contain ingredients linked with "з/with/and"; unlike raw cuts
+# they should not appear before simple meat, fish, grains or vegetables.
+# Merely listing an ingredient (e.g. "овочі", "рис") does NOT mark it a meal.
+FOOD_DISH_SIDE_STEMS=(
+    "овоч","vegetable","зеленн","herb","рис","rice","картоп","potato",
+    "макарон","pasta","курк","куряч","chicken","ялович","beef",
+    "свинин","pork","гриб","mushroom","шоколад","chocolate",
+    "сир","cheese","масл","butter","вершк","cream",
+    "квасол","bean","помідор","tomato",
 )
 
 def _food_preparation_rank(item:dict):
-    """0 basic ingredient, 1 cooked, 2 processed/assembled food.
+    """0 basic food/cut, 1 plainly cooked, 2 prepared dish/snack.
 
-    Only used as a secondary sort key on one-word searches. Keeping the
-    match-quality bucket ahead of this rank protects exact product queries.
+    Apply only to broad one-word searches; specific product/recipe queries
+    retain their existing exact-word relevance. No entries are discarded.
     """
-    words=_food_match_words(item.get("name") or "")
+    name=(item.get("name") or "").lower()
+    words=_food_match_words(name)
     if any(word.startswith(stem) for word in words for stem in FOOD_READY_PRODUCT_STEMS):
         return 2
+    if re.search(r"\b(?:з|із|зі|с|со|with|and|та)\b",name):
+        if any(word.startswith(stem) for word in words for stem in FOOD_DISH_SIDE_STEMS):
+            return 2
     if any(word.startswith(stem) for word in words for stem in FOOD_COOKED_PRODUCT_STEMS):
         return 1
+    if "су" in words and "від" in words:
+        return 1  # sous-vide; with vegetables/sauce was already marked as a dish
     return 0
 
 def _food_rank(query:str,items:list):
