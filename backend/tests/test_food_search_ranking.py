@@ -10,6 +10,7 @@ FUNCTIONS = {
     "_food_match_words", "_food_match_word", "_food_match_coverage",
     "_food_match_quality", "_food_local_tier", "_food_rank",
     "_food_preparation_rank", "_food_broad_relation_rank",
+    "_food_contains_cue",
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates",
 }
@@ -17,9 +18,10 @@ CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
     "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
-    "FOOD_READY_PRODUCT_STEMS","FOOD_COOKED_PRODUCT_STEMS",
-    "FOOD_DISH_SIDE_STEMS","FOOD_READY_PRODUCT_WORDS",
-    "FOOD_BROAD_MEAT_TERMS","FOOD_NON_MEAT_ANIMAL_STEMS",
+    "FOOD_COOKED_CUES","FOOD_PROCESSED_CUES","FOOD_DISH_CUES",
+    "FOOD_DISH_COMPLEMENT_CUES","FOOD_DISH_CATEGORY_CUES",
+    "FOOD_PROCESSED_CATEGORY_CUES","FOOD_BROAD_MEAT_TERMS",
+    "FOOD_NON_MEAT_ANIMAL_STEMS",
 }
 
 
@@ -219,7 +221,7 @@ class FoodSearchRanking(unittest.TestCase):
         ])
         self.assertEqual(
             [R["_food_preparation_rank"](item) for item in ranked],
-            [0,0,1,1,2,2,2],
+            [0,0,1,1,2,2,3],
         )
         self.assertEqual(ranked[0]["brand"],"Наша ряба")
         self.assertEqual(ranked[1]["brand"],"Imported")
@@ -288,7 +290,7 @@ class FoodSearchRanking(unittest.TestCase):
             [item["name"] for item in ranked[:3]],
             ["Куряче філе мале «Міньйон»","Chicken Breast","Chicken Thighs"],
         )
-        self.assertTrue(all(R["_food_preparation_rank"](item)==2 for item in ranked[3:]))
+        self.assertTrue(all(R["_food_preparation_rank"](item)>=2 for item in ranked[3:]))
 
     def test_mixed_dish_vs_plain_cooked_general_food_categories(self):
         groups=(
@@ -314,8 +316,8 @@ class FoodSearchRanking(unittest.TestCase):
             ("Овочі свіжі",0),
             ("Молоко з вітаміном D3",0),
             ("Курка су-від",1),
-            ("Курка су-від з овочами",2),
-            ("Рис з куркою",2),
+            ("Курка су-від з овочами",3),
+            ("Рис з куркою",3),
             ("Сир кисломолочний",0),
         ):
             with self.subTest(name=name):
@@ -355,7 +357,7 @@ class FoodSearchRanking(unittest.TestCase):
         self.assertEqual(ranked[-1]["name"],"Курячі яйця 10шт")
         self.assertEqual(
             [R["_food_preparation_rank"](x) for x in ranked[4:7]],
-            [2,2,2],
+            [2,2,3],
         )
 
     def test_chicken_related_eggs_kept_and_eggs_search_unaffected(self):
@@ -375,8 +377,10 @@ class FoodSearchRanking(unittest.TestCase):
             food("Chicken & Butter Pelmeni","Bilyi Byk",True),
             food("Chicken Strips Spicy","Легко!",True),
         ]
-        for item in candidates:
-            self.assertEqual(R["_food_preparation_rank"](item),2)
+        self.assertEqual(
+            [R["_food_preparation_rank"](item) for item in candidates],
+            [2,3,2],
+        )
         self.assertEqual(
             self.rank("Chicken ham",candidates)[0]["name"],"Chicken ham"
         )
@@ -394,6 +398,45 @@ class FoodSearchRanking(unittest.TestCase):
             R["_food_preparation_rank"](food("Hamachi fillet","Local",True)),0
         )
 
+
+    def test_chicken_screenshot_1743_plain_before_marinades_and_meals(self):
+        candidates=[
+            food("Chicken Thighs Pesto","Nasha Ryaba",True),
+            food("Chicken Thighs Yoghurt Marinade","Nasha Ryaba",True),
+            food("Курка Су-Від З Овочами Та Зеленню","Наша ряба",True),
+            food("Chicken Wings In Cherry Marinade","Appetitna",True),
+            food("Куряче філе мале «Міньйон»","Наша ряба",True),
+            food("Chicken Breast","Epikur",True),
+            food("Chicken Thighs","Epicur",True),
+            food("Chicken Thighs, Skinless, Marinated","Nasha Ryaba",True),
+        ]
+        result=self.rank("Курица",candidates)
+        self.assertEqual(
+            [R["_food_preparation_rank"](r) for r in result],
+            [0,0,0,2,2,2,2,3],
+        )
+        self.assertEqual(result[0]["name"],"Куряче філе мале «Міньйон»")
+
+    def test_categories_can_refine_incomplete_names_without_brand_rules(self):
+        plain=food("Chicken thighs","Other",True)
+        prepared=food("Chicken thighs","Same",True)
+        prepared["categories_tags"]=["en:prepared-meals","en:meats"]
+        marinated=food("Chicken thighs","SameElse",True)
+        marinated["categories_tags"]=["en:marinated-meat"]
+        ranked=self.rank("Курица",[prepared,marinated,plain])
+        self.assertEqual([R["_food_preparation_rank"](x) for x in ranked],[0,2,3])
+
+    def test_generic_categories_do_not_make_basic_food_a_dish(self):
+        item=food("Chicken breast","Other",True)
+        item["categories_tags"]=["en:meats","en:poultry","en:chicken"]
+        self.assertEqual(R["_food_preparation_rank"](item),0)
+
+    def test_ordinary_milk_with_vitamins_and_fish_with_no_additions(self):
+        for name in (
+            "Молоко з вітаміном D3","Лосось філе свіже",
+            "Сир кисломолочний", "Chicken Drumsticks Raw",
+        ):
+            self.assertEqual(R["_food_preparation_rank"](food(name,"UA",True)),0)
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
         twice = [x["name"] for x in self.rank("Говядина")]

@@ -1607,10 +1607,11 @@ def _off_item(product:dict):
         "brand":brand[:180],
         "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
         "ukraine":("en:ukraine" in countries),
+        "categories_tags":[str(x)[:90] for x in (product.get("categories_tags") or [])[:30]],
     }
 
 def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags"
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags"
     country_filter=""
     if country:
         country_filter=(
@@ -1647,7 +1648,7 @@ def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
     return _dedupe_food_items(items)
 
 def _off_barcode(barcode:str):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags"
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags"
     url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
     payload=_food_fetch_json(url) or {}
     if int(payload.get("status") or 0)!=1:return []
@@ -1684,6 +1685,7 @@ def _usda_item(food:dict):
         "barcode":str(food.get("gtinUpc") or ""),"name":name[:240],"brand":brand[:180],
         "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
         "data_type":str(food.get("dataType") or ""),
+        "food_category":str(food.get("foodCategory") or "")[:120],
     }
 
 USDA_GENERIC_TYPES=["Foundation","Survey (FNDDS)","SR Legacy"]
@@ -1888,77 +1890,110 @@ def _food_local_tier(item:dict):
         return 2
     return 3
 
-# Conservative secondary ordering for broad, one-word queries only.
-# This is a search-quality heuristic, not a statement about product nutrition.
-# Avoid a catalogue whitelist: all relevant products and dishes remain visible.
-FOOD_READY_PRODUCT_STEMS=(
-    "jerky","jerkey","джерк","сушен","сушон","вялен","ялен",
-    "kabanos","кабанос","ковбас","сосиск","котлет",
-    "nugget","нагет","наггет","шаурм","shawarma","shaurma",
-    "pelmeni","pierog","ravioli","strips","стрипс","шинка","ветчин",
-    "noodle","локшин","chips","чипс","snack","снек",
-    "батон","шоколад","chocolate","пельмен","dumpling",
-    "лазань","lasagn","піца","pizza","салат","salad",
-    "burger","бургер","casserole","запікан","пюре","puree",
-    "fiesta","теріяк","teriyaki","соус","sauce",
-    "moussaka","мусак","суп","soup","готов","ready",
+# Food search relevance pipeline. The catalogue stays open: these semantic
+# *classes* are used for ranking, never for discarding otherwise relevant hits.
+# 0 = basic ingredient/cut, 1 = simply cooked, 2 = processed/seasoned,
+# 3 = assembled dish. Broad ingredient queries prefer this progression.
+# Specific searches ("курка теріякі", "chicken jerky") bypass the progression.
+FOOD_COOKED_CUES=(
+    "варен","відварен","boil","вареный","вареное","гриль","grill",
+    "запеч","baked","roast","смажен","жарен","fried",
+    "тушкован","тушен","stewed","напар","steam","sous",
 )
-# Short whole-word terms: avoid e.g. classifying the fish "hamachi" as ham.
-FOOD_READY_PRODUCT_WORDS=("ham",)
-FOOD_COOKED_PRODUCT_STEMS=(
-    "варен","відварен","boil","гриль","grill",
-    "запеч","baked","roast","смажен","fried",
-    "тушкован","stewed","парі","steam","sous",
+FOOD_PROCESSED_CUES=(
+    "marinat","марина","pesto","песто","spicy","seasoned","спеці",
+    "копчен","smoked","сушен","сушон","вялен","ялен","jerky","jerkey",
+    "джерк","кабанос","kabanos","ковбас","sausage","сосиск","salami",
+    "шинка","ветчин","ham","nugget","нагет","наггет",
+    "strips","стрипс","breaded","панір","консерв","canned","солен","солон",
+    "chips","чипс","снек","snack","батон","bar","chocolate","шоколад",
 )
-# Mixed meals contain ingredients linked with "з/with/and"; unlike raw cuts
-# they should not appear before simple meat, fish, grains or vegetables.
-# Merely listing an ingredient (e.g. "овочі", "рис") does NOT mark it a meal.
-FOOD_DISH_SIDE_STEMS=(
+FOOD_DISH_CUES=(
+    "пельмен","pelmeni","dumpling","pierog","ravioli","вареник","гьодз","gyoza",
+    "лазан","lasagn","піца","pizza","салат","salad","суп","soup",
+    "локшин","noodle","пюре","puree","бургер","burger","бутерброд",
+    "sandwich","casserole","запікан","moussaka","мусак",
+    "шаурм","shawarma","shaurma","теріяк","teriyaki","fiesta",
+    "соус","sauce","рагу","plov","плов",
+)
+# The complement after a joining word decides whether this is a mixed dish.
+# "Курка з овочами" is mixed, whereas "Молоко з вітаміном D3" is not.
+FOOD_DISH_COMPLEMENT_CUES=(
     "овоч","vegetable","зеленн","herb","рис","rice","картоп","potato",
     "макарон","pasta","курк","куряч","chicken","ялович","beef",
-    "свинин","pork","гриб","mushroom","шоколад","chocolate",
+    "свин","pork","гриб","mushroom","шоколад","chocolate",
     "сир","cheese","масл","butter","вершк","cream",
-    "квасол","bean","помідор","tomato",
+    "квасол","bean","помідор","tomato","риба","fish",
+    "лосос","salmon","моркв","carrot","круп","grain",
 )
-
-def _food_preparation_rank(item:dict):
-    """0 basic food/cut, 1 plainly cooked, 2 prepared dish/snack.
-
-    Apply only to broad one-word searches; specific product/recipe queries
-    retain their existing exact-word relevance. No entries are discarded.
-    """
-    name=(item.get("name") or "").lower()
-    words=_food_match_words(name)
-    if any(word.startswith(stem) for word in words for stem in FOOD_READY_PRODUCT_STEMS):
-        return 2
-    if any(word in FOOD_READY_PRODUCT_WORDS for word in words):
-        return 2
-    if re.search(r"\b(?:з|із|зі|с|со|with|and|та)\b",name):
-        if any(word.startswith(stem) for word in words for stem in FOOD_DISH_SIDE_STEMS):
-            return 2
-    if any(word.startswith(stem) for word in words for stem in FOOD_COOKED_PRODUCT_STEMS):
-        return 1
-    if "су" in words and "від" in words:
-        return 1  # sous-vide; with vegetables/sauce was already marked as a dish
-    return 0
-
-# Animal-related products are retained but should not outrank meat cuts when
-# the broad query is the animal's meat (e.g. chicken eggs vs chicken breast).
-# For a specific "яйця" query, this penalty is deliberately not applied.
+# Open Food Facts categories are imperfect, so only strong specific tags
+# influence a rank. Generic categories (meats, milk, fish, etc.) are neutral.
+FOOD_DISH_CATEGORY_CUES=(
+    "prepared-meal","ready-to-eat-meal","prepared-dish","ready-meal",
+    "frozen-meal","pizzas","lasagne","sandwiches","dumplings",
+    "salads","soups","noodle-dishes",
+)
+FOOD_PROCESSED_CATEGORY_CUES=(
+    "marinated-","smoked-","sausages","canned-","charcuterie",
+    "meat-preparations","breaded-","nuggets",
+)
 FOOD_BROAD_MEAT_TERMS=(
     "курятина","курка","chicken","яловичина","beef",
     "свинина","pork","індичка","turkey","качка","duck",
 )
 FOOD_NON_MEAT_ANIMAL_STEMS=("яйц","яєч","egg")
 
+def _food_contains_cue(words,stems):
+    return any(word.startswith(stem) for word in words for stem in stems)
+
+def _food_preparation_rank(item:dict):
+    """General 0-3 preparation classes; no SKU-specific or brand rules."""
+    name=(item.get("name") or "").lower()
+    words=_food_match_words(name)
+    if not words:return 0
+    categories=item.get("categories_tags") or ()
+    cat_string=" ".join(str(x).lower() for x in categories)
+    if item.get("food_category"):
+        cat_string+=" "+str(item["food_category"]).lower()
+    if any(cue in cat_string for cue in FOOD_DISH_CATEGORY_CUES):
+        return 3
+    if _food_contains_cue(words,FOOD_DISH_CUES):
+        return 3
+    # Look only at words after a conjunction; otherwise the queried main
+    # ingredient itself would spuriously mark everything as a mixed dish.
+    linked=re.search(r"\b(?:з|із|зі|с|со|with|and|та)\b\s+(.+)",name)
+    if linked and _food_contains_cue(
+        _food_match_words(linked.group(1)), FOOD_DISH_COMPLEMENT_CUES
+    ):
+        return 3
+    if any(cue in cat_string for cue in FOOD_PROCESSED_CATEGORY_CUES):
+        return 2
+    if _food_contains_cue(words,FOOD_PROCESSED_CUES):
+        return 2
+    if _food_contains_cue(words,FOOD_COOKED_CUES) or (
+        "су" in words and "від" in words
+    ):
+        return 1
+    return 0
+
 def _food_broad_relation_rank(query:str,item:dict):
+    """A meat query can match animal products, but meat is preferred to eggs."""
     if normalize_food_query(query) not in FOOD_BROAD_MEAT_TERMS:
         return 0
     name_words=_food_match_words(item.get("name") or "")
-    return int(any(word.startswith(stem) for word in name_words
-                   for stem in FOOD_NON_MEAT_ANIMAL_STEMS))
+    cat=" ".join(str(x).lower() for x in (item.get("categories_tags") or ()))
+    return int(
+        _food_contains_cue(name_words,FOOD_NON_MEAT_ANIMAL_STEMS)
+        or "en:eggs" in cat or "en:egg-" in cat
+    )
 
 def _food_rank(query:str,items:list):
+    """Rank candidate foods with relevance > intent > provenance > tie-breaks.
+
+    Relevance excludes irrelevant source hits; all actually related foods stay.
+    The preparation tiers only affect broad single-food queries, not explicit
+    recipes or brands. UA makers are preferred within comparable results.
+    """
     ranked=[]
     seen=set()
     broad_query=(len(_food_match_words(query))==1)
@@ -1967,8 +2002,6 @@ def _food_rank(query:str,items:list):
         if key in seen:continue
         seen.add(key)
         quality=_food_match_quality(query,item)
-        # No relevance at all means the upstream API returned an unrelated
-        # catalogue hit (e.g. pasta for a potato search). Do not show it.
         if quality[0]>=4:continue
         preparation=_food_preparation_rank(item) if broad_query else 0
         relation=_food_broad_relation_rank(query,item) if broad_query else 0
