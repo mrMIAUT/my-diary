@@ -1859,18 +1859,28 @@ def _food_search_related_terms(query:str):
 def _food_full_title_matches(query:str,items:list):
     return sum(_food_match_quality(query,item)[0]<=1 for item in items)
 
-def _food_expand_specific_candidates(query:str,items:list,limit:int,collect):
-    """Relax lookup to component terms only when specific phrase search failed.
+def _food_native_local_match_count(query:str,items:list):
+    """Count Ukrainian-market results containing all Ukrainian query terms.
 
-    Collect is an injectable source callable so the fallback can be tested
-    offline, independently of Open Food Facts availability.
+    English source matches alone must not stop Ukrainian-name discovery.
+    The OFF country tag describes market coverage, not brand origin.
     """
+    words=_food_match_words(query)
+    if len(words)<2:return 0
+    return sum(
+        _food_local_tier(item)<=1
+        and _food_match_coverage(words,_food_match_words(item.get("name") or ""))==len(words)
+        for item in items
+    )
+
+def _food_expand_specific_candidates(query:str,items:list,limit:int,collect):
+    """Try bounded component searches if local compound-title coverage is low."""
     if len(_food_match_words(query))<2:return items
-    minimum=1
-    if _food_full_title_matches(query,items)>=minimum:return items
+    minimum=2
+    if _food_native_local_match_count(query,items)>=minimum:return items
     for term in _food_search_related_terms(query):
         items=_dedupe_food_items(items+collect(term))
-        if _food_full_title_matches(query,items)>=minimum:break
+        if _food_native_local_match_count(query,items)>=minimum:break
     return items
 
 def _food_local_tier(item:dict):
@@ -1943,6 +1953,16 @@ FOOD_BROAD_MEAT_TERMS=(
     "свинина","pork","індичка","turkey","качка","duck",
 )
 FOOD_NON_MEAT_ANIMAL_STEMS=("яйц","яєч","egg")
+# Generic meat families allow mixed-fillings to rank below exact requested
+# fillings, without a blacklist of named products or brands.
+FOOD_MEAT_FAMILY_CUES={
+    "beef":("ялович","говядин","beef"),
+    "pork":("свин","pork"),
+    "chicken":("куряч","курк","курят","chicken"),
+    "turkey":("індич","turkey"),
+    "lamb":("баран","ягнят","lamb","mutton"),
+    "duck":("качк","duck"),
+}
 
 def _food_contains_cue(words,stems):
     return any(word.startswith(stem) for word in words for stem in stems)
@@ -1990,6 +2010,20 @@ def _food_broad_relation_rank(query:str,item:dict):
         or "en:eggs" in cat or "en:egg-" in cat
     )
 
+def _food_extra_meat_count(query:str,item:dict):
+    """Detect extra meat in a title not explicitly requested by the user."""
+    query_words=_food_match_words(query)
+    requested={
+        key for key,stems in FOOD_MEAT_FAMILY_CUES.items()
+        if _food_contains_cue(query_words,stems)
+    }
+    if not requested:return 0
+    title_words=_food_match_words(item.get("name") or "")
+    return sum(
+        1 for key,stems in FOOD_MEAT_FAMILY_CUES.items()
+        if key not in requested and _food_contains_cue(title_words,stems)
+    )
+
 def _food_rank(query:str,items:list):
     """Rank candidate foods with relevance > intent > provenance > tie-breaks.
 
@@ -2008,11 +2042,12 @@ def _food_rank(query:str,items:list):
         if quality[0]>=4:continue
         preparation=_food_preparation_rank(item) if broad_query else 0
         relation=_food_broad_relation_rank(query,item) if broad_query else 0
+        extra_meat=_food_extra_meat_count(query,item) if not broad_query else 0
         ranked.append((quality[0],relation,preparation,_food_local_tier(item),
-                       quality[1],quality[2],quality[3],
+                       extra_meat,quality[1],quality[2],quality[3],
                        (item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:8])
-    return _dedupe_food_items([row[8] for row in ranked])
+    ranked.sort(key=lambda row:row[:9])
+    return _dedupe_food_items([row[9] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
@@ -2450,7 +2485,7 @@ def prototype_food_search(
     # Some OFF foods have no Ukraine country tag but do have Ukrainian labels.
     # If a compound phrase still has no full-title match, repeat the
     # component-term fallback against the wider catalogue.
-    if len(_food_match_words(normalized))>=2 and not _food_full_title_matches(normalized,off_items):
+    if len(_food_match_words(normalized))>=2 and _food_native_local_match_count(normalized,off_items)<2:
         off_items=_food_expand_specific_candidates(
             normalized,off_items,limit,
             lambda term:_off_collect(term,None,pages=2,page_size=24),

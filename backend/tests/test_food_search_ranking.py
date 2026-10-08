@@ -12,7 +12,8 @@ FUNCTIONS = {
     "_food_preparation_rank", "_food_broad_relation_rank",
     "_food_contains_cue",
     "_food_search_related_terms", "_food_full_title_matches",
-    "_food_expand_specific_candidates",
+    "_food_expand_specific_candidates", "_food_native_local_match_count",
+    "_food_extra_meat_count",
 }
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
@@ -21,7 +22,7 @@ CONSTANTS = {
     "FOOD_COOKED_CUES","FOOD_PROCESSED_CUES","FOOD_PROCESSED_WHOLE_WORDS","FOOD_DISH_CUES",
     "FOOD_DISH_COMPLEMENT_CUES","FOOD_DISH_CATEGORY_CUES",
     "FOOD_PROCESSED_CATEGORY_CUES","FOOD_BROAD_MEAT_TERMS",
-    "FOOD_NON_MEAT_ANIMAL_STEMS",
+    "FOOD_NON_MEAT_ANIMAL_STEMS","FOOD_MEAT_FAMILY_CUES",
 }
 
 
@@ -260,6 +261,45 @@ class FoodSearchRanking(unittest.TestCase):
         ])
         self.assertEqual(len(milk),2)
         self.assertEqual(milk[0]["brand"],"Молокія")
+
+    def test_english_hits_do_not_stop_local_compound_discovery(self):
+        foreign=[
+            food("Beef Dumplings","Foreign Food",False),
+            food("Beef and Chicken Dumplings","Foreign",False),
+        ]
+        calls=[]
+        def collect(term):
+            calls.append(term)
+            if term=="пельмені":
+                return [
+                    food("Пельмені зі свининою та яловичиною","Місцевий",True),
+                    food("Пельмені з яловичиною","Інший місцевий",True),
+                ]
+            return []
+        expanded=R["_food_expand_specific_candidates"](
+            R["normalize_food_query"]("Пельмени с говядиной"),
+            foreign,8,collect,
+        )
+        self.assertEqual(calls,["пельмені"])
+        self.assertEqual(len(expanded),4)
+        ranked=self.rank("Пельмени с говядиной",expanded)
+        self.assertEqual(ranked[0]["name"],"Пельмені з яловичиною")
+        self.assertIn("Beef Dumplings",[x["name"] for x in ranked])
+
+    def test_named_filling_favors_requested_meat_at_same_local_tier(self):
+        options=[
+            food("Пельмені зі свининою та яловичиною","Місцевий",True),
+            food("Пельмені з яловичиною","Інший місцевий",True),
+            food("Пельмені з куркою та яловичиною","Третій місцевий",True),
+        ]
+        self.assertEqual(
+            self.rank("Пельмени с говядиной",options)[0]["name"],
+            "Пельмені з яловичиною",
+        )
+        self.assertEqual(
+            self.rank("Пельмені зі свининою та яловичиною",options)[0]["name"],
+            "Пельмені зі свининою та яловичиною",
+        )
 
     def test_beef_dumplings_stay_discoverable(self):
         ranked=self.rank("Пельмени с говядиной",[
