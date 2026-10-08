@@ -1696,11 +1696,14 @@ def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
         # v2 country filter and v1 market filter are enforced locally too.
         if item and (country!="Ukraine" or item.get("ukraine")):
             items.append(item)
-    with FOOD_OFF_SEARCH_CACHE_LOCK:
-        if len(FOOD_OFF_SEARCH_CACHE)>=FOOD_OFF_CACHE_MAX_ENTRIES:
-            # FIFO is sufficient for this bounded, nonpersistent prototype.
-            FOOD_OFF_SEARCH_CACHE.pop(next(iter(FOOD_OFF_SEARCH_CACHE)))
-        FOOD_OFF_SEARCH_CACHE[key]=(time.monotonic(),tuple(items))
+    # Do not cache empty successes: source search indexing can temporarily
+    # return no products even though matching Ukrainian products exist.
+    if items:
+        with FOOD_OFF_SEARCH_CACHE_LOCK:
+            if len(FOOD_OFF_SEARCH_CACHE)>=FOOD_OFF_CACHE_MAX_ENTRIES:
+                # FIFO is sufficient for this bounded, nonpersistent prototype.
+                FOOD_OFF_SEARCH_CACHE.pop(next(iter(FOOD_OFF_SEARCH_CACHE)))
+            FOOD_OFF_SEARCH_CACHE[key]=(time.monotonic(),tuple(items))
     return items
 
 def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
