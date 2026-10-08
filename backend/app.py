@@ -19,6 +19,7 @@ from contextlib import contextmanager
 from math import ceil
 from zoneinfo import ZoneInfo
 import base64
+from food_reference_catalog import reference_food_items
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -2032,6 +2033,7 @@ FOOD_PROCESSED_CUES=(
     "шинка","ветчин","nugget","нагет","наггет",
     "strips","стрипс","breaded","панір","консерв","canned","солен","солон",
     "chips","чипс","снек","snack","батон","chocolate","шоколад",
+    "фрі","fries","frites","wedges","dippers","flour","борошн",
 )
 FOOD_PROCESSED_WHOLE_WORDS=("ham","bar")
 FOOD_DISH_CUES=(
@@ -2163,6 +2165,26 @@ def _food_extra_meat_count(query:str,item:dict):
         if key not in requested and _food_contains_cue(title_words,stems)
     )
 
+def _food_search_type(item:dict):
+    """Search presentation type, never an inference about manufacturer origin.
+
+    Plain reference and USDA generic data are generic. OFF is a packaged
+    product catalogue, including entries whose brand metadata is missing.
+    Mixed prepared meals take precedence over package/generic distinctions.
+    """
+    if _food_preparation_rank(item)>=3:
+        return "dish"
+    if item.get("source")=="reference":
+        return "generic"
+    if item.get("source")=="off":
+        return "branded"
+    if item.get("source")=="usda" and (
+        item.get("brand") or item.get("data_type")=="Branded"
+    ):
+        return "branded"
+    return "generic"
+
+
 def _food_rank(query:str,items:list):
     """Rank candidate foods with relevance > intent > provenance > tie-breaks.
 
@@ -2183,11 +2205,17 @@ def _food_rank(query:str,items:list):
         relation=_food_broad_relation_rank(query,item) if broad_query else 0
         extra_meat=_food_extra_meat_count(query,item) if not broad_query else 0
         dish_conflicts=_food_named_dish_conflicts(query,item)
-        ranked.append((quality[0],relation,preparation,dish_conflicts,
-                       _food_local_tier(item),extra_meat,quality[1],
-                       quality[2],quality[3],(item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:10])
-    return _dedupe_food_items([row[10] for row in ranked])
+        # For broad ingredient searches the compact reference catalogue is
+        # quick selection, ahead of packaged/cooked products. Never boost
+        # references for specific brand names or multi-word dish searches.
+        quick_reference=(0 if broad_query and item.get("source")=="reference"
+                         and quality[0]<=1 else 1)
+        ranked.append((quality[0],quick_reference,relation,preparation,
+                       dish_conflicts,_food_local_tier(item),extra_meat,
+                       quality[1],quality[2],quality[3],
+                       (item.get("name") or "").lower(),item))
+    ranked.sort(key=lambda row:row[:11])
+    return _dedupe_food_items([row[11] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
@@ -2583,6 +2611,7 @@ def prototype_food_search(
     q:str=Query(...,min_length=2,max_length=120),
     limit:int=Query(default=8,ge=1,le=FOOD_SEARCH_MAX_RESULTS),
     page:int=Query(default=1,ge=1,le=50),
+    food_type:str=Query(default="all",pattern="^(all|generic|branded|dish)$"),
 ):
     if not PROTOTYPE_MODE:
         raise HTTPException(404,"Прототип пошуку недоступний")
@@ -2590,7 +2619,10 @@ def prototype_food_search(
     compact="".join(ch for ch in raw if ch.isdigit())
     if raw.replace(" ","").isdigit() and 8<=len(compact)<=14:
         items=_off_barcode(compact)
-        return {"query":raw,"normalized_query":compact,"items":items[:limit],"mode":"barcode","page":1,"has_more":False}
+        items=[item for item in items if food_type=="all" or _food_search_type(item)==food_type]
+        for item in items:item["food_type"]=_food_search_type(item)
+        return {"query":raw,"normalized_query":compact,"items":items[:limit],
+                "mode":"barcode","food_type":food_type,"page":1,"has_more":False}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
     # Build a stable candidate window before UI pagination. Otherwise OFF's
@@ -2662,9 +2694,22 @@ def prototype_food_search(
                 uq=usda_food_query(query)
                 if uq and len(usda_items)<fetch_limit:
                     usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,1))
-    # One stable ranking is shared by all foods. Do not regroup after sorting:
-    # related dishes must stay searchable (including via "Показати ще").
-    ranked=_food_rank(normalized,off_items+usda_items)
+    # The locally bundled catalogue is intentionally small and marked
+    # approximate: a useful offline baseline, not invented branded labels.
+    # Compound searches must match *all* terms to avoid burying named brands
+    # under loosely related generic ingredients.
+    reference_candidates=[
+        item for item in reference_food_items()
+        if _food_match_quality(normalized,item)[0] <= (
+            2 if len(_food_match_words(normalized))==1 else 1
+        )
+    ]
+    # Rank once, THEN filter, THEN paginate. Each tab's "Показати ще"
+    # must therefore never skip or repeat hits across page boundaries.
+    ranked=_food_rank(normalized,reference_candidates+off_items+usda_items)
+    ranked=[dict(item,food_type=_food_search_type(item)) for item in ranked]
+    if food_type!="all":
+        ranked=[item for item in ranked if item["food_type"]==food_type]
     start=(page-1)*limit
     end=start+limit
     items=ranked[start:end]
@@ -2672,7 +2717,7 @@ def prototype_food_search(
     return {
         "query":raw,"normalized_query":normalized,"search_variants":variants,
         "items":items,"mode":"text","brand_query":bool(brand_matches),
-        "page":page,"has_more":has_more,
+        "food_type":food_type,"page":page,"has_more":has_more,
         "candidate_count":len(ranked),
         "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
     }
