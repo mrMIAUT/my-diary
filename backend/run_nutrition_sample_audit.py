@@ -33,11 +33,16 @@ def number(value):
 
 def off_record(product):
     n = product.get("nutriments") or {}
+    kcal = number(n.get("energy-kcal_100g"))
+    if kcal is None:
+        kj = number(n.get("energy_100g"))
+        if kj is not None:
+            kcal = round(kj / 4.184, 2)
     return {
         "source": "off", "source_id": str(product.get("code") or ""),
         "barcode": str(product.get("code") or ""),
         "name": product.get("product_name") or product.get("product_name_en") or "",
-        "kcal_100": number(n.get("energy-kcal_100g")),
+        "kcal_100": kcal,
         "protein_100": number(n.get("proteins_100g")),
         "fat_100": number(n.get("fat_100g")),
         "carbs_100": number(n.get("carbohydrates_100g")),
@@ -90,13 +95,29 @@ def main():
             failures.append({"source": "usda", "query": query, "error": type(exc).__name__})
         time.sleep(1)
     report = audit(items)
+    # Incomplete nutrition fields and contradictory nutrition are different issues.
+    report["quality_breakdown"] = {}
+    for source in ("off", "usda"):
+        records = [i for i in items if i.get("source") == source]
+        flagged = [i for i in report["flagged"] if i.get("source") == source]
+        incomplete = [i for i in flagged if any(
+            issue.startswith("missing_or_invalid_") or issue in ("missing_name", "missing_source_id")
+            for issue in i["issues"])]
+        contradictory = [i for i in flagged if any(issue in (
+            "energy_macro_mismatch_review", "kcal_out_of_range",
+            "macro_out_of_range", "macros_exceed_100g") for issue in i["issues"])]
+        report["quality_breakdown"][source] = {
+            "checked": len(records), "flagged": len(flagged),
+            "incomplete": len(incomplete), "nutrition_anomalies": len(contradictory),
+            "no_automated_issues": len(records) - len(flagged),
+        }
     report["queries"] = list(QUERIES)
     report["fetch_failures"] = failures
     report["scope"] = "Small sampled API results only, not full USDA/OFF database."
     Path("nutrition-audit-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({k: report[k] for k in
-        ("checked", "by_source", "flagged_count", "issue_counts", "fetch_failures")},
+        ("checked", "by_source", "flagged_count", "quality_breakdown", "issue_counts", "fetch_failures")},
         ensure_ascii=False, indent=2))
     if not items:
         raise SystemExit("No records fetched from either API")
