@@ -131,7 +131,8 @@ def main():
                 failures.append({"source": "off", "query": query, "error": "no_records"})
             items.extend(off_record(p) for p in products)
         except Exception as exc:
-            failures.append({"source": "off", "query": query, "error": type(exc).__name__})
+            failures.append({"source": "off", "query": query, "error": type(exc).__name__,
+                             "http_status": getattr(exc, "code", None)})
         time.sleep(6)
     for query in QUERIES:
         try:
@@ -143,7 +144,8 @@ def main():
                 failures.append({"source": "usda", "query": query, "error": "no_records"})
             items.extend(usda_record(p) for p in foods)
         except Exception as exc:
-            failures.append({"source": "usda", "query": query, "error": type(exc).__name__})
+            failures.append({"source": "usda", "query": query, "error": type(exc).__name__,
+                             "http_status": getattr(exc, "code", None)})
         time.sleep(1)
     report = audit(items)
     # Incomplete nutrition fields and contradictory nutrition are different issues.
