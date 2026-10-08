@@ -2318,6 +2318,14 @@ def prototype_food_search(
             )
 
     off_items=_dedupe_food_items(ua_off_items+global_off_items)
+    # Some OFF foods have no Ukraine country tag but do have Ukrainian labels.
+    # If a compound phrase still has no full-title match, repeat the
+    # component-term fallback against the wider catalogue.
+    if len(_food_match_words(normalized))>=2 and not _food_full_title_matches(normalized,off_items):
+        off_items=_food_expand_specific_candidates(
+            normalized,off_items,limit,
+            lambda term:_off_collect(term,None,pages=2,page_size=24),
+        )
     brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
     if brand_matches:
