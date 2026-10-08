@@ -231,11 +231,15 @@ function prepControlsHtml(meta){
   +'<div class="foodPrepStatus" id="foodPrepStatus" hidden></div>'
   +'</div>';
 }
-function prepCacheKey(meta,mode){return meta.category+'|'+meta.base+'|'+mode}
+function prepCacheKey(meta,mode){
+ const p=Number(selectedFood&&selectedFood.protein_100)||0,f=Number(selectedFood&&selectedFood.fat_100)||0;
+ return meta.category+'|'+meta.base+'|'+mode+'|'+(p>0?(f/p).toFixed(2):'na');
+}
 async function loadFoodPrep(meta,mode){
  const key=prepCacheKey(meta,mode);
  if(foodPrepCache[key])return foodPrepCache[key];
- const url='/api/prototype/foods/preparation?category='+encodeURIComponent(meta.category)+'&base='+encodeURIComponent(meta.base)+'&mode='+encodeURIComponent(mode);
+ const p=Number(selectedFood&&selectedFood.protein_100)||0,f=Number(selectedFood&&selectedFood.fat_100)||0;
+ const url='/api/prototype/foods/preparation?category='+encodeURIComponent(meta.category)+'&base='+encodeURIComponent(meta.base)+'&mode='+encodeURIComponent(mode)+'&raw_protein='+encodeURIComponent(p)+'&raw_fat='+encodeURIComponent(f);
  const response=await fetch(url,{headers:{'Accept':'application/json'}});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося завантажити спосіб приготування');

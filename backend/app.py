@@ -2177,7 +2177,7 @@ def _prep_queries(base:str,mode:str):
         return (f"{base} cooked",f"{base} boiled",base),("cooked",),("fried","breaded","with sauce")
     return (base,),(),()
 
-def _prep_candidate_score(item:dict,base:str,mode:str,prefer:tuple,reject:tuple):
+def _prep_candidate_score(item:dict,base:str,mode:str,prefer:tuple,reject:tuple,raw_protein:float|None=None,raw_fat:float|None=None):
     low=(item.get("name") or "").lower()
     score=0
     base_tokens=[t for t in base.lower().split() if len(t)>1]
@@ -2195,10 +2195,24 @@ def _prep_candidate_score(item:dict,base:str,mode:str,prefer:tuple,reject:tuple)
     # For cooked grain/pasta, prefer plain records over mixed dishes.
     if mode in ("boiled","steamed") and any(token in low for token in ("plain","without salt")):
         score+=15
+    if base in ("beef","pork","veal","lamb","duck","rabbit") and raw_protein and raw_protein>0 and raw_fat is not None:
+        cand_p=float(item.get("protein_100") or 0)
+        cand_f=float(item.get("fat_100") or 0)
+        cand_c=float(item.get("carbs_100") or 0)
+        if cand_p<=0 or cand_c>3:
+            score-=220
+        else:
+            raw_ratio=max(0.0,raw_fat/raw_protein)
+            cand_ratio=max(0.0,cand_f/cand_p)
+            ratio_gap=abs(cand_ratio-raw_ratio)
+            score-=min(220,ratio_gap*420)
+            if ratio_gap<=0.08:score+=70
+            elif ratio_gap<=0.15:score+=35
     return score,hits
 
-def _resolve_food_preparation(category:str,base:str,mode:str):
-    key=(category,base,mode)
+def _resolve_food_preparation(category:str,base:str,mode:str,raw_protein:float|None=None,raw_fat:float|None=None):
+    ratio_key=round(raw_fat/raw_protein,2) if raw_protein and raw_protein>0 and raw_fat is not None else None
+    key=(category,base,mode,ratio_key)
     cached=PREP_CACHE.get(key)
     if cached:return cached
     queries,prefer,reject=_prep_queries(base,mode)
@@ -2224,17 +2238,28 @@ def _resolve_food_preparation(category:str,base:str,mode:str):
         return result
     scored=[]
     for item in candidates:
-        score,hits=_prep_candidate_score(item,base,mode,prefer,reject)
+        score,hits=_prep_candidate_score(item,base,mode,prefer,reject,raw_protein,raw_fat)
         scored.append((score,hits,item))
     scored.sort(key=lambda row:(-row[0],-row[1],row[2].get("name","")))
     _,hits,best=scored[0]
     fallback=_generic_fallback_item(category,base,mode)
+    if base in ("beef","pork","veal","lamb","duck","rabbit") and raw_protein and raw_protein>0 and raw_fat is not None:
+        best_p=float(best.get("protein_100") or 0)
+        best_f=float(best.get("fat_100") or 0)
+        raw_ratio=max(0.0,raw_fat/raw_protein)
+        best_ratio=(best_f/max(0.1,best_p)) if best_p>0 else 99
+        if abs(best_ratio-raw_ratio)>0.18:
+            best=None
+            fallback=None
 
     # For staple starches, a canonical cooked profile is more stable than an
     # arbitrary USDA "cooked" hit whose water content may differ substantially.
     # The branded dry label remains authoritative whenever the user weighs dry.
     canonical_staple = category in ("grain","pasta","potato") and mode not in ("raw","dry")
-    if canonical_staple and fallback:
+    if best is None:
+        approximate=True
+        used_fallback=False
+    elif canonical_staple and fallback:
         best=fallback
         approximate=True
         used_fallback=True
@@ -2259,6 +2284,8 @@ def prototype_food_preparation(
     category:str=Query(...,min_length=3,max_length=12),
     base:str=Query(...,min_length=3,max_length=40),
     mode:str=Query(...,min_length=3,max_length=12),
+    raw_protein:float|None=Query(default=None,ge=0,le=100),
+    raw_fat:float|None=Query(default=None,ge=0,le=100),
 ):
     if not PROTOTYPE_MODE:
         raise HTTPException(404,"Прототип пошуку недоступний")
@@ -2269,7 +2296,7 @@ def prototype_food_preparation(
         raise HTTPException(400,"Невідома категорія продукту")
     if mode not in PREP_ALLOWED_MODES.get(category,set()):
         raise HTTPException(400,"Невідомий спосіб приготування")
-    return _resolve_food_preparation(category,base,mode)
+    return _resolve_food_preparation(category,base,mode,raw_protein,raw_fat)
 
 
 @app.get("/api/prototype/foods/chicken-preparation")
