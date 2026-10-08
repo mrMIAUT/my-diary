@@ -1855,9 +1855,24 @@ def _intent_bucket(query:str,item:dict):
     return 2
 
 def _is_generic_dish_noise(query:str,item:dict):
-    if query!="сир" or item.get("source")!="usda":return False
     low=(item.get("name") or "").lower()
-    return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
+
+    if query=="сир" and item.get("source")=="usda":
+        return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
+
+    if query=="яловичина":
+        # Not beef products themselves: dishes/sides/seasonings that merely
+        # contain or mention beef. Actual processed beef such as jerky/corned
+        # beef stays available lower in the results.
+        return any(marker in low for marker in (
+            "пельмен","pelmeni","dumpling",
+            "картопляне пюре","картофельное пюре","mashed potato",
+            "bouillon","бульйон","бульон","stock cube","кубик",
+            "seasoning","приправа","intense rich beef",
+            "beef flavour","beef flavor","смак ялович","вкус говядин",
+        ))
+
+    return False
 
 def _food_local_tier(item:dict):
     if item.get("source")=="off":
@@ -1927,6 +1942,13 @@ def _food_rank(query:str,items:list):
         clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
         noisy=[x for x in ranked if _is_generic_dish_noise(query,x)]
         ranked=clean+noisy
+
+    # For a generic beef search, obvious non-beef dishes/seasonings should not
+    # appear at all. Processed beef itself is still kept and naturally ranks
+    # below fresh/raw cuts through the intent buckets above.
+    if query=="яловичина":
+        ranked=[x for x in ranked if not _is_generic_dish_noise(query,x)]
+
     for item in ranked:item.pop("_score",None)
     return _dedupe_food_items(ranked)
 
