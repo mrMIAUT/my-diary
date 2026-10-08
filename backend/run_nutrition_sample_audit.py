@@ -132,6 +132,17 @@ def main():
             "incomplete": len(incomplete), "nutrition_anomalies": len(contradictory),
             "no_automated_issues": len(records) - len(flagged),
         }
+    # Attach the actual values to flagged records for reproducible review.
+    # The report remains a read-only GitHub Actions artifact.
+    lookup = {(str(item.get("source")), str(item.get("source_id"))): item
+              for item in items}
+    for flagged in report["flagged"]:
+        key = (str(flagged.get("source")), str(flagged.get("source_id")))
+        item = lookup.get(key, {})
+        flagged["nutrition_per_100g"] = {
+            field: item.get(field) for field in
+            ("kcal_100", "protein_100", "fat_100", "carbs_100")
+        }
     report["queries"] = list(QUERIES)
     report["fetch_failures"] = failures
     report["scope"] = "Small sampled API results only, not full USDA/OFF database."
