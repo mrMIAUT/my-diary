@@ -1484,6 +1484,8 @@ UKRAINIAN_BRAND_HINTS={
     "молокія","яготинське","галичина","своя лінія","розумний вибір",
     "de luxe","день у день","премія","повна чаша","верес","торчин",
     "чумак","roshen","рошен","том","комо","золотий резерв","serenada",
+    "наша ряба","глобино","м'ясна гільдія","мясная гильдия","бащинський",
+    "м'ясна весна","мясная весна","атб","сільпо","silpo","varus","новус","novus",
 }
 
 def _off_item(product:dict):
@@ -2330,10 +2332,19 @@ def prototype_food_search(
     # own page order leaks into EPLAN and good Ukrainian brands appear only
     # after "Показати ще".
     fetch_limit=24
-    ua_off_items=_off_collect(normalized,"Ukraine",pages=5,page_size=24)
+    ua_off_items=[]
+    for query in variants:
+        ua_off_items=_dedupe_food_items(
+            ua_off_items+_off_collect(query,"Ukraine",pages=4,page_size=24)
+        )
+
     global_off_items=[]
     if len(ua_off_items)<limit*3:
-        global_off_items=_off_collect(normalized,None,pages=2,page_size=24)
+        for query in variants:
+            global_off_items=_dedupe_food_items(
+                global_off_items+_off_collect(query,None,pages=2,page_size=24)
+            )
+
     off_items=_dedupe_food_items(ua_off_items+global_off_items)
     brand_matches=_off_brand_matches(normalized,off_items)
     usda_items=[]
@@ -2347,13 +2358,6 @@ def prototype_food_search(
             if _food_tokens(item.get("brand") or "") & matched_brand_tokens
         ]
     else:
-        for query in variants[1:]:
-            if len(off_items)<72:
-                extra_ua=_off_collect(query,"Ukraine",pages=2,page_size=24)
-                off_items=_dedupe_food_items(off_items+extra_ua)
-            if len(off_items)<48:
-                extra_global=_off_collect(query,None,pages=1,page_size=24)
-                off_items=_dedupe_food_items(off_items+extra_global)
         for query in variants:
             uq=usda_food_query(query)
             if uq and len(usda_items)<fetch_limit:
