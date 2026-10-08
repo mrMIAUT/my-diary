@@ -1927,9 +1927,14 @@ def _is_generic_dish_noise(query:str,item:dict):
         # Generic beef search should show meat/cuts, not snacks/cured products
         # or dishes that merely contain/mention beef. Processed products remain
         # available through explicit searches such as "jerky" or "corned beef".
+        brand_low=(item.get("brand") or "").lower()
+        if any(marker in brand_low for marker in ("objerky","jack link","jack link's","archer")):
+            return True
         return any(marker in low for marker in (
-            "пельмен","pelmeni","dumpling",
-            "картопляне пюре","картофельное пюре","mashed potato",
+            "пельмен","pelmeni","dumpling","ravioli","равіол","равиол",
+            "лазан","lasagn","moussaka","мусака","hachis parmentier","parmentier",
+            "картопляне пюре","картофельное пюре","mashed potato","purée","puree",
+            "à l'oignon","a l'oignon","onion special",
             "bouillon","бульйон","бульон","stock cube","кубик",
             "beef fond","fond de","fond","beef stock","stock",
             "seasoning","приправа","intense rich beef",
@@ -2039,7 +2044,24 @@ def _food_rank(query:str,items:list):
     # For a generic beef search, non-meat dishes, stocks and processed snack/
     # cured beef are excluded entirely; explicit searches can still find them.
     if query=="яловичина":
-        ranked=[x for x in ranked if not _is_generic_dish_noise(query,x)]
+        beef_meat_terms=(
+            "ялович","говядин","beef","boeuf","bœuf","steak","стейк",
+            "рибай","ribeye","striploin","стриплойн","tenderloin","виріз","вырез",
+            "minced beef","ground beef","фарш","для тушкування","для тушения",
+        )
+        clean=[]
+        for x in ranked:
+            if _is_generic_dish_noise(query,x):
+                continue
+            low=(x.get("name") or "").lower()
+            carbs=float(x.get("carbs_100") or 0)
+            # Composite ready meals frequently surface from broad multilingual
+            # searches. If carbs are high and the title doesn't clearly describe
+            # beef/meat itself, don't show it for the generic beef query.
+            if carbs>8 and not any(term in low for term in beef_meat_terms):
+                continue
+            clean.append(x)
+        ranked=clean
 
     for item in ranked:item.pop("_score",None)
     return _dedupe_food_items(ranked)
