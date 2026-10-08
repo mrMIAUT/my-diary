@@ -1895,6 +1895,7 @@ FOOD_READY_PRODUCT_STEMS=(
     "jerky","jerkey","джерк","сушен","сушон","вялен","ялен",
     "kabanos","кабанос","ковбас","сосиск","котлет",
     "nugget","нагет","наггет","шаурм","shawarma","shaurma",
+    "pelmeni","pierog","ravioli","strips","стрипс","шинка","ветчин",
     "noodle","локшин","chips","чипс","snack","снек",
     "батон","шоколад","chocolate","пельмен","dumpling",
     "лазань","lasagn","піца","pizza","салат","salad",
@@ -1902,6 +1903,8 @@ FOOD_READY_PRODUCT_STEMS=(
     "fiesta","теріяк","teriyaki","соус","sauce",
     "moussaka","мусак","суп","soup","готов","ready",
 )
+# Short whole-word terms: avoid e.g. classifying the fish "hamachi" as ham.
+FOOD_READY_PRODUCT_WORDS=("ham",)
 FOOD_COOKED_PRODUCT_STEMS=(
     "варен","відварен","boil","гриль","grill",
     "запеч","baked","roast","смажен","fried",
@@ -1928,6 +1931,8 @@ def _food_preparation_rank(item:dict):
     words=_food_match_words(name)
     if any(word.startswith(stem) for word in words for stem in FOOD_READY_PRODUCT_STEMS):
         return 2
+    if any(word in FOOD_READY_PRODUCT_WORDS for word in words):
+        return 2
     if re.search(r"\b(?:з|із|зі|с|со|with|and|та)\b",name):
         if any(word.startswith(stem) for word in words for stem in FOOD_DISH_SIDE_STEMS):
             return 2
@@ -1936,6 +1941,22 @@ def _food_preparation_rank(item:dict):
     if "су" in words and "від" in words:
         return 1  # sous-vide; with vegetables/sauce was already marked as a dish
     return 0
+
+# Animal-related products are retained but should not outrank meat cuts when
+# the broad query is the animal's meat (e.g. chicken eggs vs chicken breast).
+# For a specific "яйця" query, this penalty is deliberately not applied.
+FOOD_BROAD_MEAT_TERMS=(
+    "курятина","курка","chicken","яловичина","beef",
+    "свинина","pork","індичка","turkey","качка","duck",
+)
+FOOD_NON_MEAT_ANIMAL_STEMS=("яйц","яєч","egg")
+
+def _food_broad_relation_rank(query:str,item:dict):
+    if normalize_food_query(query) not in FOOD_BROAD_MEAT_TERMS:
+        return 0
+    name_words=_food_match_words(item.get("name") or "")
+    return int(any(word.startswith(stem) for word in name_words
+                   for stem in FOOD_NON_MEAT_ANIMAL_STEMS))
 
 def _food_rank(query:str,items:list):
     ranked=[]
@@ -1950,10 +1971,12 @@ def _food_rank(query:str,items:list):
         # catalogue hit (e.g. pasta for a potato search). Do not show it.
         if quality[0]>=4:continue
         preparation=_food_preparation_rank(item) if broad_query else 0
-        ranked.append((quality[0],preparation,_food_local_tier(item),quality[1],
-                       quality[2],quality[3],(item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:7])
-    return _dedupe_food_items([row[7] for row in ranked])
+        relation=_food_broad_relation_rank(query,item) if broad_query else 0
+        ranked.append((quality[0],relation,preparation,_food_local_tier(item),
+                       quality[1],quality[2],quality[3],
+                       (item.get("name") or "").lower(),item))
+    ranked.sort(key=lambda row:row[:8])
+    return _dedupe_food_items([row[8] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{

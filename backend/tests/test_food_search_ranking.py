@@ -9,7 +9,7 @@ FUNCTIONS = {
     "normalize_food_query", "usda_food_query", "food_search_variants",
     "_food_match_words", "_food_match_word", "_food_match_coverage",
     "_food_match_quality", "_food_local_tier", "_food_rank",
-    "_food_preparation_rank",
+    "_food_preparation_rank", "_food_broad_relation_rank",
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates",
 }
@@ -18,7 +18,8 @@ CONSTANTS = {
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
     "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
     "FOOD_READY_PRODUCT_STEMS","FOOD_COOKED_PRODUCT_STEMS",
-    "FOOD_DISH_SIDE_STEMS",
+    "FOOD_DISH_SIDE_STEMS","FOOD_READY_PRODUCT_WORDS",
+    "FOOD_BROAD_MEAT_TERMS","FOOD_NON_MEAT_ANIMAL_STEMS",
 }
 
 
@@ -328,6 +329,70 @@ class FoodSearchRanking(unittest.TestCase):
         ])
         self.assertEqual(ranked[0]["name"],"Рис з куркою")
         self.assertEqual(len(ranked),2)
+
+
+    def test_real_chicken_1731_screenshot_basic_cuts_first(self):
+        # Production-like examples reported in screenshot: plain meat must
+        # outrank eggs, deli ham and pelmeni for the generic "Курица" query.
+        actual=[
+            food("Куряче філе мале «Міньйон»","Наша ряба",True),
+            food("Курячі яйця 10шт","Квочка",True),
+            food("Chicken Breast","Epikur",False),
+            food("Chicken ham","Укрпромпостач перияслав",True),
+            food("Chicken Thighs","Epicur",False),
+            food("Chicken & Butter Pelmeni","Bilyi Byk",True),
+            food("Chicken Drumsticks Raw","Epikur",False),
+            food("Chicken Strips Spicy","Легко!",True),
+        ]
+        ranked=self.rank("Курица",actual)
+        self.assertEqual(len(ranked),8)
+        self.assertEqual([x["name"] for x in ranked[:4]],[
+            "Куряче філе мале «Міньйон»",
+            "Chicken Breast",
+            "Chicken Thighs",
+            "Chicken Drumsticks Raw",
+        ])
+        self.assertEqual(ranked[-1]["name"],"Курячі яйця 10шт")
+        self.assertEqual(
+            [R["_food_preparation_rank"](x) for x in ranked[4:7]],
+            [2,2,2],
+        )
+
+    def test_chicken_related_eggs_kept_and_eggs_search_unaffected(self):
+        items=[
+            food("Курячі яйця 10шт","Квочка",True),
+            food("Куряче філе","Наша ряба",True),
+        ]
+        meat=self.rank("Курица",items)
+        self.assertEqual(meat[-1]["name"],"Курячі яйця 10шт")
+        self.assertEqual(len(meat),2)
+        eggs=self.rank("Яйца",items)
+        self.assertEqual([x["name"] for x in eggs],["Курячі яйця 10шт"])
+
+    def test_processed_meat_words_and_specific_queries(self):
+        candidates=[
+            food("Chicken ham","Укрпромпостач",True),
+            food("Chicken & Butter Pelmeni","Bilyi Byk",True),
+            food("Chicken Strips Spicy","Легко!",True),
+        ]
+        for item in candidates:
+            self.assertEqual(R["_food_preparation_rank"](item),2)
+        self.assertEqual(
+            self.rank("Chicken ham",candidates)[0]["name"],"Chicken ham"
+        )
+        self.assertEqual(
+            self.rank("Chicken Strips Spicy",candidates)[0]["name"],
+            "Chicken Strips Spicy",
+        )
+        self.assertEqual(
+            self.rank("Chicken & Butter Pelmeni",candidates)[0]["name"],
+            "Chicken & Butter Pelmeni",
+        )
+
+    def test_hamachi_is_not_ham(self):
+        self.assertEqual(
+            R["_food_preparation_rank"](food("Hamachi fillet","Local",True)),0
+        )
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
