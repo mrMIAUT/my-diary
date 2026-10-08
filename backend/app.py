@@ -1896,19 +1896,20 @@ def _food_local_tier(item:dict):
 # 3 = assembled dish. Broad ingredient queries prefer this progression.
 # Specific searches ("курка теріякі", "chicken jerky") bypass the progression.
 FOOD_COOKED_CUES=(
-    "варен","відварен","boil","вареный","вареное","гриль","grill",
+    "варен","відварен","boil","вареный","вареное","гриль","grill","парі","паре",
     "запеч","baked","roast","смажен","жарен","fried",
     "тушкован","тушен","stewed","напар","steam","sous",
 )
 FOOD_PROCESSED_CUES=(
-    "marinat","марина","pesto","песто","spicy","seasoned","спеці",
+    "marinad","marinat","марина","pesto","песто","spicy","seasoned","спеці",
     "копчен","smoked","сушен","сушон","вялен","ялен","jerky","jerkey",
     "джерк","кабанос","kabanos","ковбас","sausage","сосиск","salami",
-    "шинка","ветчин","ham","nugget","нагет","наггет",
+    "шинка","ветчин","nugget","нагет","наггет",
     "strips","стрипс","breaded","панір","консерв","canned","солен","солон",
-    "chips","чипс","снек","snack","батон","bar","chocolate","шоколад",
+    "chips","чипс","снек","snack","батон","chocolate","шоколад",
 )
-FOOD_DISH_CUES=(
+FOOD_PROCESSED_WHOLE_WORDS=("ham","bar")
+FOOD_DISH_CUES=
     "пельмен","pelmeni","dumpling","pierog","ravioli","вареник","гьодз","gyoza",
     "лазан","lasagn","піца","pizza","салат","salad","суп","soup",
     "локшин","noodle","пюре","puree","бургер","burger","бутерброд",
@@ -1969,6 +1970,8 @@ def _food_preparation_rank(item:dict):
     if any(cue in cat_string for cue in FOOD_PROCESSED_CATEGORY_CUES):
         return 2
     if _food_contains_cue(words,FOOD_PROCESSED_CUES):
+        return 2
+    if any(word in FOOD_PROCESSED_WHOLE_WORDS for word in words):
         return 2
     if _food_contains_cue(words,FOOD_COOKED_CUES) or (
         "су" in words and "від" in words
