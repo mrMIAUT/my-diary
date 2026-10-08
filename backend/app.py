@@ -1756,7 +1756,11 @@ FOOD_SEARCH_LINK_WORDS={
 }
 
 def _food_match_words(value:str):
-    return [token for token in _food_tokens(value) if token not in FOOD_SEARCH_LINK_WORDS]
+    # Preserve word order: _food_tokens() returns a set and cannot be used for
+    # prefix/leading-name relevance ranking.
+    normalized="".join(ch if (ch.isalnum() or ch=="%") else " " for ch in value.lower())
+    return [token for token in normalized.split()
+            if len(token)>1 and token not in FOOD_SEARCH_LINK_WORDS]
 
 def _food_match_word(a:str,b:str):
     if a==b:return True
