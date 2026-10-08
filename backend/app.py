@@ -1525,7 +1525,8 @@ UKRAINIAN_BRAND_HINTS={
     "молокія","яготинське","галичина","своя лінія","розумний вибір",
     "de luxe","день у день","премія","повна чаша","верес","торчин",
     "чумак","roshen","рошен","том","комо","золотий резерв","serenada",
-    "наша ряба","глобино","м'ясна гільдія","мясная гильдия","бащинський",
+    "наша ряба","глобино","globyno","алан","alan",
+    "м'ясна гільдія","мясная гильдия","бащинський",
     "м'ясна весна","мясная весна","атб","сільпо","silpo","varus","новус","novus",
 }
 
@@ -1933,12 +1934,21 @@ def _is_generic_dish_noise(query:str,item:dict):
     return False
 
 def _food_local_tier(item:dict):
+    """
+    Stable market priority for equally relevant foods:
+      0 - Ukrainian brand
+      1 - foreign/other brand with a product explicitly present in Ukraine
+      2 - other Open Food Facts products
+      3 - generic/reference USDA records
+    """
     if item.get("source")=="off":
-        brand_low=(item.get("brand") or "").lower()
-        if item.get("ukraine") or any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):
+        brand_low=(item.get("brand") or "").strip().lower()
+        if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):
             return 0
-        return 1
-    return 2
+        if item.get("ukraine"):
+            return 1
+        return 2
+    return 3
 
 def _food_rank(query:str,items:list):
     qtokens=_food_tokens(query)
@@ -1962,7 +1972,7 @@ def _food_rank(query:str,items:list):
             brand_hits=_food_tokens(item.get("brand") or "") & qtokens
             score+=35+(70 if brand_hits else 0)
             brand_low=(item.get("brand") or "").lower()
-            if item.get("ukraine"):score+=95
+            if item.get("ukraine"):score+=25
             if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):score+=70
         else:
             data_type=str(item.get("data_type") or "").lower()
@@ -1994,7 +2004,12 @@ def _food_rank(query:str,items:list):
             x.get("name",""),
         ))
     else:
-        ranked.sort(key=lambda x:(-x["_score"],_food_local_tier(x),x.get("brand")!="" ,x.get("name","")))
+        ranked.sort(key=lambda x:(
+            _food_local_tier(x),
+            -x["_score"],
+            x.get("brand")!="",
+            x.get("name",""),
+        ))
     # For a generic cheese search, prepared USDA dishes are fallback-only.
     if query=="сир":
         clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
