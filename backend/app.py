@@ -1400,7 +1400,13 @@ FOOD_QUERY_REPLACEMENTS={
     "пельмени с говядиной":"пельмені з яловичиною",
     "пельмени":"пельмені",
     "говядиной":"яловичиною",
+    "говядины":"яловичини",
+    "говядину":"яловичину",
+    "говядине":"яловичині",
     "говядина":"яловичина",
+    # Common Russian prepositions in ingredient queries.
+    "из":"з",
+    "с":"з",
     "курица":"курятина",
     "индейка":"індичка",
     "утка":"качка",
@@ -1442,8 +1448,10 @@ FOOD_QUERY_REPLACEMENTS={
 FOOD_USDA_ALIASES=(
     # Put specific phrases first so generic "сир" does not corrupt them.
     ("пельмені з яловичиною","beef dumplings"),
+    ("пельмені з яловичини","beef dumplings"),
     ("пельмені","dumplings"),
     ("яловичиною","beef"),
+    ("яловичини","beef"),
     ("сир кисломолочний","cottage cheese"),
     ("кисломолочний сир","cottage cheese"),
     ("твердий сир","cheese"),
@@ -1812,6 +1820,40 @@ def _food_match_quality(query:str,item:dict):
         candidate=(bucket,-strength,len(name_words))
         if candidate<best:best=candidate
     return best
+
+# Search terms for compound queries without a literal full-title API match.
+# This is an expansion of the user's terms, not a whitelist of allowed dishes.
+FOOD_SEARCH_COMMON_BASES=(
+    "яловичина","свинина","курятина","індичка","картопля","макарони",
+    "рис","лосось","тунець","молоко","сир","пельмені",
+)
+
+def _food_search_related_terms(query:str):
+    words=_food_match_words(query)
+    if len(words)<2:return []
+    result=[]
+    for token in words:
+        term=next((base for base in FOOD_SEARCH_COMMON_BASES
+                   if _food_match_word(token,base)),token)
+        if term not in result and term!=query:result.append(term)
+    return result[:3]
+
+def _food_full_title_matches(query:str,items:list):
+    return sum(_food_match_quality(query,item)[0]<=1 for item in items)
+
+def _food_expand_specific_candidates(query:str,items:list,limit:int,collect):
+    """Relax lookup to component terms only when specific phrase search failed.
+
+    Collect is an injectable source callable so the fallback can be tested
+    offline, independently of Open Food Facts availability.
+    """
+    if len(_food_match_words(query))<2:return items
+    minimum=max(1,min(2,limit//4))
+    if _food_full_title_matches(query,items)>=minimum:return items
+    for term in _food_search_related_terms(query):
+        items=_dedupe_food_items(items+collect(term))
+        if _food_full_title_matches(query,items)>=minimum:break
+    return items
 
 def _food_local_tier(item:dict):
     """
@@ -2260,6 +2302,13 @@ def prototype_food_search(
         ua_off_items=_dedupe_food_items(
             ua_off_items+_off_collect(query,"Ukraine",pages=4,page_size=24)
         )
+    # OFF may return nothing for a literal phrase even when the catalogue
+    # contains a relevant composite food. Search its individual key terms
+    # and use the same strict relevance ordering on the unified result.
+    ua_off_items=_food_expand_specific_candidates(
+        normalized,ua_off_items,limit,
+        lambda term:_off_collect(term,"Ukraine",pages=3,page_size=24),
+    )
 
     global_off_items=[]
     if len(ua_off_items)<limit*3:

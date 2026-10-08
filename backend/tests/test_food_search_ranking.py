@@ -9,10 +9,13 @@ FUNCTIONS = {
     "normalize_food_query", "usda_food_query", "food_search_variants",
     "_food_match_words", "_food_match_word", "_food_match_coverage",
     "_food_match_quality", "_food_local_tier", "_food_rank",
+    "_food_search_related_terms", "_food_full_title_matches",
+    "_food_expand_specific_candidates",
 }
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
+    "FOOD_SEARCH_COMMON_BASES",
 }
 
 
@@ -92,6 +95,59 @@ class FoodSearchRanking(unittest.TestCase):
         ranked = self.rank("картошка", items)
         self.assertEqual(ranked[0]["name"], "Картопля")
         self.assertEqual(len(ranked), 2)
+
+
+    def test_russian_genitive_prepositions(self):
+        self.assertEqual(
+            R["normalize_food_query"]("Пельмени из говядины"),
+            "пельмені з яловичини",
+        )
+        self.assertEqual(
+            R["normalize_food_query"]("Пельмени с говядины"),
+            "пельмені з яловичини",
+        )
+        self.assertIn(
+            "beef dumplings",
+            R["food_search_variants"]("Пельмени из говядины"),
+        )
+
+    def test_broad_beef_result_with_pelmeni_mixed_meat(self):
+        ranked = self.rank("Пельмени из говядины", [
+            food("Яловичина для стейка", "Сільпо", True),
+            food("Пельмені Свинина Яловичина", "Український виробник", True),
+        ])
+        self.assertEqual(ranked[0]["name"], "Пельмені Свинина Яловичина")
+
+    def test_failed_phrase_search_expands_by_food_terms(self):
+        calls = []
+        def collect(term):
+            calls.append(term)
+            if term=="яловичина":
+                return [food("Пельмені Свинина Яловичина", "Український виробник", True)]
+            return []
+        result = R["_food_expand_specific_candidates"](
+            R["normalize_food_query"]("Пельмени из говядины"),
+            [],8,collect,
+        )
+        self.assertEqual(calls, ["пельмені","яловичина"])
+        self.assertEqual(result[0]["name"], "Пельмені Свинина Яловичина")
+
+    def test_exact_milk_is_above_related_chocolate(self):
+        ranked = self.rank("молоко", [
+            food('Молочно-шоколадний батон "Milk Chocolate"', "Roshen", True),
+            food("Молоко", "Галичина", True),
+            food("Молоко 2,5%", "Молокія", True),
+        ])
+        self.assertEqual(ranked[0]["name"], "Молоко")
+        self.assertEqual(ranked[-1]["brand"], "Roshen")
+
+    def test_single_word_query_does_not_expand(self):
+        calls = []
+        result = R["_food_expand_specific_candidates"](
+            "яловичина",[],8,lambda term:calls.append(term) or []
+        )
+        self.assertEqual(result, [])
+        self.assertEqual(calls, [])
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
