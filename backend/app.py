@@ -2175,13 +2175,23 @@ def _resolve_food_preparation(category:str,base:str,mode:str):
     scored.sort(key=lambda row:(-row[0],-row[1],row[2].get("name","")))
     _,hits,best=scored[0]
     fallback=_generic_fallback_item(category,base,mode)
-    if hits==0 and fallback:
+
+    # For staple starches, a canonical cooked profile is more stable than an
+    # arbitrary USDA "cooked" hit whose water content may differ substantially.
+    # The branded dry label remains authoritative whenever the user weighs dry.
+    canonical_staple = category in ("grain","pasta","potato") and mode not in ("raw","dry")
+    if canonical_staple and fallback:
+        best=fallback
+        approximate=True
+        used_fallback=True
+    elif hits==0 and fallback:
         best=fallback
         approximate=True
         used_fallback=True
     else:
         approximate=(hits==0 or mode=="fried")
         used_fallback=False
+
     result={
         "category":category,"base":base,"mode":mode,
         "label":PREP_MODE_LABELS.get(mode,mode),"item":best,
