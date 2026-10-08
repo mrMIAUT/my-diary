@@ -1558,7 +1558,7 @@ def _food_broad_case_forms(value:str):
     named "з яловичиною". Use common noun endings, never SKU/brand rules.
     Specific multi-word queries must not be broadened.
     """
-    if " " in value or len(value)<5:return []
+    if " " in value or len(value)<4:return []
     endings=(
         ("ина",("ини","иною")),
         ("ка",("ки","кою")),
@@ -2042,7 +2042,7 @@ FOOD_DISH_CUES=(
     "локшин","noodle","пюре","puree","бургер","burger","бутерброд",
     "sandwich","casserole","запікан","moussaka","мусак",
     "шаурм","shawarma","shaurma","теріяк","teriyaki","fiesta",
-    "соус","sauce","рагу","plov","плов",
+    "соус","sauce","рагу","plov","плов","по-домашн","домашн","homestyle",
 )
 # The complement after a joining word decides whether this is a mixed dish.
 # "Курка з овочами" is mixed, whereas "Молоко з вітаміном D3" is not.
