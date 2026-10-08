@@ -1924,15 +1924,18 @@ def _is_generic_dish_noise(query:str,item:dict):
         return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
 
     if query=="яловичина":
-        # Not beef products themselves: dishes/sides/seasonings that merely
-        # contain or mention beef. Actual processed beef such as jerky/corned
-        # beef stays available lower in the results.
+        # Generic beef search should show meat/cuts, not snacks/cured products
+        # or dishes that merely contain/mention beef. Processed products remain
+        # available through explicit searches such as "jerky" or "corned beef".
         return any(marker in low for marker in (
             "пельмен","pelmeni","dumpling",
             "картопляне пюре","картофельное пюре","mashed potato",
             "bouillon","бульйон","бульон","stock cube","кубик",
             "seasoning","приправа","intense rich beef",
             "beef flavour","beef flavor","смак ялович","вкус говядин",
+            "jerky","beef jerky","beef stick","beef sticks",
+            "meat stick","stick mild","mr beast beef jerky",
+            "corned beef","beef ham","в'ялен","вялен","в ялен",
         ))
 
     return False
@@ -2000,16 +2003,25 @@ def _food_rank(query:str,items:list):
                 score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     if _intent_rule(query):
-        # Relevance first, then market priority. This prevents processed foods
-        # such as jerky/corned beef from outranking plain beef cuts while still
-        # showing Ukrainian brands first among equally relevant products.
-        ranked.sort(key=lambda x:(
-            _intent_bucket(query,x),
-            _food_local_tier(x),
-            -x["_score"],
-            x.get("brand")!="",
-            x.get("name",""),
-        ))
+        if query=="яловичина":
+            # After filtering obvious processed/noise matches, generic beef is
+            # intentionally market-first: Ukrainian brands, then products sold
+            # in Ukraine, then other foreign/reference options.
+            ranked.sort(key=lambda x:(
+                _food_local_tier(x),
+                _intent_bucket(query,x),
+                -x["_score"],
+                x.get("brand")!="",
+                x.get("name",""),
+            ))
+        else:
+            ranked.sort(key=lambda x:(
+                _intent_bucket(query,x),
+                _food_local_tier(x),
+                -x["_score"],
+                x.get("brand")!="",
+                x.get("name",""),
+            ))
     else:
         ranked.sort(key=lambda x:(
             _food_local_tier(x),
