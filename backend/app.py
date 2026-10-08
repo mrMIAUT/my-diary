@@ -1565,6 +1565,27 @@ RUSSIAN_BRAND_BLOCKLIST={
     "останкино","дымov","дымов","мясницкий ряд","агрокомплекс",
 }
 
+def _food_manufacture_country(product:dict):
+    """Conservative country-of-manufacture evidence, distinct from sales markets.
+
+    Countries tags in OFF mean sold in that country, not made there. Missing
+    factory information stays unknown; ingredient origin is not factory origin.
+    """
+    tags={str(t).lower() for t in (product.get("manufacturing_places_tags") or [])}
+    raw=str(product.get("manufacturing_places") or "").lower()
+    mentions_ua=("en:ukraine" in tags or
+                 bool(re.search(r"(?<!\w)(?:україна|украина|ukraine)(?!\w)",raw)))
+    known_foreign={
+        "en:poland","en:germany","en:france","en:italy","en:spain",
+        "en:romania","en:turkey","en:belgium","en:netherlands",
+        "en:russia","en:belarus","en:china","en:united-states",
+        "en:united-kingdom",
+    }
+    foreign=bool(tags & known_foreign)
+    if mentions_ua and not foreign:return "ua"
+    if foreign and not mentions_ua:return "other"
+    return "unknown"
+
 def _is_blocked_russian_off_product(countries:list[str],brand:str):
     country_set=set(countries or [])
     # A product explicitly tagged as Ukrainian is allowed even if its record
@@ -1607,11 +1628,12 @@ def _off_item(product:dict):
         "brand":brand[:180],
         "kcal_100":kcal,"protein_100":protein,"fat_100":fat,"carbs_100":carbs,
         "ukraine":("en:ukraine" in countries),
+        "manufacture_country":_food_manufacture_country(product),
         "categories_tags":[str(x)[:90] for x in (product.get("categories_tags") or [])[:30]],
     }
 
 def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags"
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags,manufacturing_places,manufacturing_places_tags"
     country_filter=""
     if country:
         country_filter=(
@@ -1648,7 +1670,7 @@ def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
     return _dedupe_food_items(items)
 
 def _off_barcode(barcode:str):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags"
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags,manufacturing_places,manufacturing_places_tags"
     url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
     payload=_food_fetch_json(url) or {}
     if int(payload.get("status") or 0)!=1:return []
@@ -1893,7 +1915,11 @@ def _food_local_tier(item:dict):
     """
     if item.get("source")=="off":
         brand_low=(item.get("brand") or "").strip().lower()
-        if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):
+        # Producer evidence outranks historical brand hints; a store listing
+        # in Ukraine doesn't establish where the product was made.
+        origin=item.get("manufacture_country") or "unknown"
+        if origin=="ua":return 0
+        if origin=="unknown" and any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):
             return 0
         if item.get("ukraine"):
             return 1
@@ -1964,6 +1990,16 @@ FOOD_MEAT_FAMILY_CUES={
     "duck":("качк","duck"),
 }
 
+# A small, extensible dish taxonomy replaces product/brand-by-brand tweaks.
+# Generic "dumplings" is NOT a subtype; it can mean different ethnic dishes.
+FOOD_SPECIFIC_DISH_CUES={
+    "pelmeni":("пельмен","pelmeni"),
+    "gyoza":("гьодз","gyoza","гедз"),
+    "varenyky":("вареник","varenyk","pierogi","pierog"),
+    "khinkali":("хінкал","хинкал","khinkali"),
+    "ravioli":("равіол","равиол","ravioli"),
+}
+
 def _food_contains_cue(words,stems):
     return any(word.startswith(stem) for word in words for stem in stems)
 
@@ -2010,6 +2046,20 @@ def _food_broad_relation_rank(query:str,item:dict):
         or "en:eggs" in cat or "en:egg-" in cat
     )
 
+def _food_named_dish_conflicts(query:str,item:dict):
+    """Count alternate named dishes not requested, without filtering results."""
+    query_words=_food_match_words(query)
+    requested={
+        dish for dish,stems in FOOD_SPECIFIC_DISH_CUES.items()
+        if _food_contains_cue(query_words,stems)
+    }
+    if not requested:return 0
+    title_words=_food_match_words(item.get("name") or "")
+    return sum(
+        1 for dish,stems in FOOD_SPECIFIC_DISH_CUES.items()
+        if dish not in requested and _food_contains_cue(title_words,stems)
+    )
+
 def _food_extra_meat_count(query:str,item:dict):
     """Detect extra meat in a title not explicitly requested by the user."""
     query_words=_food_match_words(query)
@@ -2043,11 +2093,12 @@ def _food_rank(query:str,items:list):
         preparation=_food_preparation_rank(item) if broad_query else 0
         relation=_food_broad_relation_rank(query,item) if broad_query else 0
         extra_meat=_food_extra_meat_count(query,item) if not broad_query else 0
-        ranked.append((quality[0],relation,preparation,_food_local_tier(item),
-                       extra_meat,quality[1],quality[2],quality[3],
-                       (item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:9])
-    return _dedupe_food_items([row[9] for row in ranked])
+        dish_conflicts=_food_named_dish_conflicts(query,item)
+        ranked.append((quality[0],relation,preparation,dish_conflicts,
+                       _food_local_tier(item),extra_meat,quality[1],
+                       quality[2],quality[3],(item.get("name") or "").lower(),item))
+    ranked.sort(key=lambda row:row[:10])
+    return _dedupe_food_items([row[10] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{

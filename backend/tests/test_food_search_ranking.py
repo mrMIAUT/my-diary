@@ -13,7 +13,8 @@ FUNCTIONS = {
     "_food_contains_cue",
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates", "_food_native_local_match_count",
-    "_food_extra_meat_count",
+    "_food_extra_meat_count", "_food_named_dish_conflicts",
+    "_food_manufacture_country",
 }
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
@@ -23,6 +24,7 @@ CONSTANTS = {
     "FOOD_DISH_COMPLEMENT_CUES","FOOD_DISH_CATEGORY_CUES",
     "FOOD_PROCESSED_CATEGORY_CUES","FOOD_BROAD_MEAT_TERMS",
     "FOOD_NON_MEAT_ANIMAL_STEMS","FOOD_MEAT_FAMILY_CUES",
+    "FOOD_SPECIFIC_DISH_CUES",
 }
 
 
@@ -300,6 +302,49 @@ class FoodSearchRanking(unittest.TestCase):
             self.rank("Пельмені зі свининою та яловичиною",options)[0]["name"],
             "Пельмені зі свининою та яловичиною",
         )
+
+    def test_real_1842_pelmeni_gyoza_screenshot(self):
+        matches=[
+            food('Пельмені "Traditional", гьодза з яловичиною',"McJUNAI",True),
+            food("Пельмені Зі Свининою Та Яловичиною","Три Ведмеді",True),
+            food("Пельмені «Фірмові» З Яловичиною Та Свининою","Levada",True),
+            food("Beef Dumplings","Mama Vicky's Food",False),
+        ]
+        result=self.rank("Пельмени с говядиной",matches)
+        self.assertEqual(result[0]["brand"],"Три Ведмеді")
+        self.assertEqual(result[1]["brand"],"Levada")
+        self.assertIn("McJUNAI",[item["brand"] for item in result])
+        self.assertIn("Mama Vicky's Food",[item["brand"] for item in result])
+
+    def test_dish_identity_not_brand_specific(self):
+        options=[
+            food("Пельмені з яловичиною","Brand One",True),
+            food("Пельмені з яловичиною, гьодза","Brand Two",True),
+            food("Гьодза з яловичиною","Brand Three",True),
+        ]
+        self.assertEqual(self.rank("Пельмені з яловичиною",options)[0]["brand"],"Brand One")
+        self.assertEqual(self.rank("Гьодза з яловичиною",options)[0]["brand"],"Brand Three")
+        self.assertEqual(self.rank("Пельмені гьодза з яловичиною",options)[0]["brand"],"Brand Two")
+
+    def test_ukrainian_manufacture_vs_available_in_ukraine(self):
+        local=food("Пельмені з яловичиною","Unknown local brand",True)
+        local["manufacture_country"]="ua"
+        listed=food("Пельмені з яловичиною","Unverified brand",True)
+        foreign=food("Пельмені з яловичиною","Сільпо",True)
+        foreign["manufacture_country"]="other"
+        self.assertEqual(R["_food_local_tier"](local),0)
+        self.assertEqual(R["_food_local_tier"](listed),1)
+        self.assertEqual(R["_food_local_tier"](foreign),1)
+        self.assertEqual(self.rank("Пельмені з яловичиною",[listed,foreign,local])[0]["brand"],"Unknown local brand")
+
+    def test_manufacturing_place_evidence_is_conservative(self):
+        infer=R["_food_manufacture_country"]
+        self.assertEqual(infer({"manufacturing_places_tags":["en:ukraine"]}),"ua")
+        self.assertEqual(infer({"manufacturing_places":"Київ, Україна"}),"ua")
+        self.assertEqual(infer({"manufacturing_places_tags":["en:poland"]}),"other")
+        self.assertEqual(infer({"countries_tags":["en:ukraine"]}),"unknown")
+        self.assertEqual(infer({"manufacturing_places_tags":["en:ukraine","en:poland"]}),"unknown")
+        self.assertEqual(infer({}),"unknown")
 
     def test_beef_dumplings_stay_discoverable(self):
         ranked=self.rank("Пельмени с говядиной",[
