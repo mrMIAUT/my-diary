@@ -1397,6 +1397,9 @@ FOOD_QUERY_REPLACEMENTS={
     "макароны":"макарони",
     "спагетти":"спагеті",
     "перловка":"перлова крупа",
+    "пельмени с говядиной":"пельмені з яловичиною",
+    "пельмени":"пельмені",
+    "говядиной":"яловичиною",
     "говядина":"яловичина",
     "курица":"курятина",
     "индейка":"індичка",
@@ -1438,6 +1441,9 @@ FOOD_QUERY_REPLACEMENTS={
 }
 FOOD_USDA_ALIASES=(
     # Put specific phrases first so generic "сир" does not corrupt them.
+    ("пельмені з яловичиною","beef dumplings"),
+    ("пельмені","dumplings"),
+    ("яловичиною","beef"),
     ("сир кисломолочний","cottage cheese"),
     ("кисломолочний сир","cottage cheese"),
     ("твердий сир","cheese"),
@@ -1741,219 +1747,75 @@ def _dedupe_food_items(items:list):
         if not duplicate:kept.append(item)
     return kept
 
-FOOD_GENERIC_DISH_MARKERS={
-    "sandwich","bread","dip","ball","spread","dessert","sauce","with wine",
-    "crackers","cracker","chips","chip","pizza","burger","casserole",
+# Search quality is general-purpose rather than a product-specific list of
+# forbidden dishes. Direct products come first; recipes containing the queried
+# ingredient still appear later and become direct matches when named explicitly.
+FOOD_SEARCH_LINK_WORDS={
+    "з","із","зі","в","у","на","та","і","й","для","по",
+    "с","со","и","в","для","the","with","and","of","in","for",
 }
 
-# Intent rules keep generic searches focused on the actual food, not products
-# that merely mention the word as a flavour/ingredient/brand.
-FOOD_INTENT_RULES={
-    "молоко":{
-        "starts":("молоко","milk"),
-        "contains":("молоко","milk"),
-        "secondary":(
-            "згущене молоко","молоко згущене","condensed milk",
-            "сгущенное молоко","молоко сгущенное","молоко сгущен",
-        ),
-        "noise":(
-            "сир","cheese","печиво","cookie","тістечко","cake","шоколад","chocolate",
-            "батон","bar","сметана","cream","йогурт","yogurt","кефір","кефир",
-            "kefir","oat milk","овсяное молоко","вівсяне молоко","мигдальне молоко",
-            "миндальное молоко","almond milk","soy milk","соевое молоко","соєве молоко",
-            "пряник","пряники","gingerbread","цукер","конфет","candy","wafer","вафл",
-        ),
-    },
-    "сир":{
-        "starts":("сир","cheese","cottage cheese","paneer"),
-        "contains":("сир","cheese","paneer"),
-        "secondary":(),
-        "noise":("чипс","chips","брускет","cracker","крекер","соус","sauce","sandwich","bread","dip","ball"),
-    },
-    "йогурт":{
-        "starts":("йогурт","yogurt"),
-        "contains":("йогурт","yogurt"),
-        "secondary":(),
-        "noise":("печиво","cookie","батон","bar","шоколад","chocolate","морозиво","ice cream"),
-    },
-    "тунець":{
-        "starts":("тунець","tuna"),
-        "contains":("тунець","tuna"),
-        "secondary":(),
-        "noise":("sandwich","pizza","салат","salad"),
-    },
-    "лосось":{
-        "starts":("лосось","salmon"),
-        "contains":("лосось","salmon"),
-        "secondary":(
-            "копчен","smoked","слабосол","малосол","salted","солон",
-        ),
-        "noise":(
-            "ікра","икра","roe","caviar","капсул","capsule",
-            "смак","вкус","flavour","flavor","соус","sauce",
-            "теріяк","терияк","teriyaki","крем","cream",
-        ),
-    },
-    "яловичина":{
-        "starts":("яловичина","говядина","beef"),
-        "contains":("яловичина","говядина","beef"),
-        "secondary":(
-            "варен","відвар","отвар","boiled","cooked",
-            "копчен","smoked","тушкован","тушен","stewed",
-            "запеч","baked","roasted","гриль","grilled",
-            "corned beef","beef ham","маринован","marinated",
-        ),
-        "noise":(
-            "в'ялен","вялен","в ялен","jerky","beef jerky",
-            "beef stick","beef sticks","м'ясні палички","мясные палочки",
-            "meat stick","stick mild","mr beast beef jerky",
-            "блин","млинец","pancake","рвана","pulled","по-каталон",
-            "для вторых блюд","для других страв","готовое блюдо","готова страва",
-            "соус","sauce","sandwich","бургер","burger","ковбас","колбас","sausage",
-        ),
-    },
-    "рис":{
-        "starts":("рис","rice","basmati rice"),
-        "contains":("рис","rice","basmati"),
-        "secondary":(),
-        "noise":(
-            "cracker","крекер","chips","чипс","pudding","пудинг","milk rice",
-            "rice cake","rice cakes","рисовий хлібець","рисовые хлебцы",
-            "rice flakes","рисові пластівці","рисовые хлопья",
-            "chocolate","шоколад","snack","снек",
-        ),
-    },
-    "вівсяні пластівці":{
-        "starts":("вівсяні пластівці","oats","oat flakes","rolled oats"),
-        "contains":("вівсяні","oats","oat"),
-        "secondary":(
-            "strawberry","полуниц","клубник","banana","банан","chocolate","шоколад",
-            "berries","ягод","fruit","фрукт",
-        ),
-        "noise":("cookie","печиво","bar","батон","granola","гранола"),
-    },
-    "куряча грудка":{
-        "starts":("куряча грудка","chicken breast"),
-        "contains":("куряча грудка","chicken breast"),
-        "secondary":(
-            "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
-            "сиров'ялен","сыровялен","cured","smoked","копчен","сушен","dried",
-        ),
-        "noise":(
-            "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
-            "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
-            "hotdog","hot dog","хот-дог","хотдог","sausage","сосиск",
-        ),
-    },
-    "куряче філе":{
-        "starts":("куряче філе","chicken breast","chicken fillet","куриное филе"),
-        "contains":("куряче філе","chicken breast","chicken fillet","куриное филе"),
-        "secondary":(
-            "варен","відвар","отвар","boiled","cooked","запеч","baked","roasted",
-            "сиров'ялен","сыровялен","cured","smoked","копчен","сушен","dried",
-        ),
-        "noise":(
-            "sandwich","pizza","salad","салат","soup","суп","з картоп","с картоф",
-            "with potato","з овоч","с овощ","with vegetable","кубик","cubes",
-            "hotdog","hot dog","хот-дог","хотдог","sausage","сосиск",
-        ),
-    },
-}
+def _food_match_words(value:str):
+    return [token for token in _food_tokens(value) if token not in FOOD_SEARCH_LINK_WORDS]
 
-def _intent_rule(query:str):
-    q=query.lower().strip()
-    # Fat percentage or preparation qualifiers should not change the food intent.
-    for key in ("молоко","сир","йогурт","тунець","лосось","яловичина","рис","вівсяні пластівці","куряча грудка","куряче філе"):
-        if q==key or q.startswith(key+" "):return FOOD_INTENT_RULES[key]
-    return None
-
-def _intent_score(query:str,item:dict):
-    rule=_intent_rule(query)
-    if not rule:return 0
-    low=(item.get("name") or "").lower().strip()
-    if any(low.startswith(prefix) for prefix in rule["starts"]):score=125
-    elif any(token in low for token in rule["contains"]):score=35
-    else:score=-150
-    if rule["secondary"] and any(token in low for token in rule["secondary"]):
-        score-=95
-    if any(marker in low for marker in rule["noise"]):
-        score-=150
-    if query in ("куряча грудка","куряче філе"):
-        if any(token in low for token in ("raw","сире","сыра","сырой","свіже","свежее","fresh")):
-            score+=45
-        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
-            score+=20
-    if query=="лосось":
-        if any(token in low for token in ("raw","сирий","сир","свіж","свеж","fresh","fresh-frozen","свіжоморож","свежеморож","frozen","філе","филе","fillet")):
-            score+=50
-        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
-            score+=20
-    if query=="яловичина":
-        if any(token in low for token in (
-            "raw","сир","свіж","свеж","fresh","охолод","chilled",
-            "стейк","steak","рибай","ribeye","striploin","стриплойн",
-            "виріз","вырез","tenderloin","для тушкування","для тушения",
-        )):
-            score+=55
-        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
-            score+=20
-    return score
-
-def _intent_bucket(query:str,item:dict):
-    """0 = core food, 1 = related subtype, 2 = unrelated/noisy mention."""
-    rule=_intent_rule(query)
-    if not rule:return 0
-    low=(item.get("name") or "").lower().strip()
-    # Morphological catch-all for condensed milk in Ukrainian/Russian/English.
-    # It must never compete with ordinary drinking milk merely because the name
-    # starts with "молоко".
-    if query.startswith("молоко") and (
-        "згущ" in low or "сгущ" in low or "condensed" in low
-    ):
-        return 1
-    if any(marker in low for marker in rule["noise"]):return 2
-    if rule["secondary"] and any(token in low for token in rule["secondary"]):return 1
-    if any(low.startswith(prefix) for prefix in rule["starts"]):return 0
-    if any(token in low for token in rule["contains"]):return 1
-    return 2
-
-def _is_generic_dish_noise(query:str,item:dict):
-    low=(item.get("name") or "").lower().replace("’","'").replace("‘","'").replace("ʼ","'")
-
-    if query=="сир" and item.get("source")=="usda":
-        return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
-
-    if query=="яловичина":
-        # Generic beef search should show meat/cuts, not snacks/cured products
-        # or dishes that merely contain/mention beef. Processed products remain
-        # available through explicit searches such as "jerky" or "corned beef".
-        brand_low=(item.get("brand") or "").lower()
-        if any(marker in brand_low for marker in ("objerky","jack link","jack link's","archer")):
-            return True
-        return any(marker in low for marker in (
-            "пельмен","pelmeni","dumpling","gyoza","гьодза","гёдза","гедза",
-            "ravioli","равіол","равиол",
-            "лазан","lasagn","moussaka","мусака","hachis parmentier","parmentier",
-            "картопляне пюре","картофельное пюре","mashed potato","purée","puree",
-            "à l'oignon","a l'oignon","onion special",
-            "bouillon","бульйон","бульон","stock cube","кубик",
-            "beef fond","fond de","fond","beef stock","stock",
-            "seasoning","приправа","intense rich beef",
-            "beef flavour","beef flavor","смак ялович","вкус говядин",
-            "jerky","beef jerky","beef stick","beef sticks",
-            "meat stick","stick mild","mr beast beef jerky",
-            "corned beef","beef ham","в'ялен","вялен","в ялен",
-        ))
-
+def _food_match_word(a:str,b:str):
+    if a==b:return True
+    # Conservative stem matching handles grammatical forms such as
+    # "яловичина" -> "яловичиною", but not short distinct product names.
+    if len(a)>=5 and len(b)>=5:
+        prefix=max(4,min(len(a),len(b))-2)
+        return a[:prefix]==b[:prefix]
     return False
+
+def _food_match_coverage(query_words:list,name_words:list):
+    if not query_words:return 0
+    return sum(any(_food_match_word(q,n) for n in name_words) for q in query_words)
+
+def _food_match_quality(query:str,item:dict):
+    """
+    Rank without excluding related food:
+      0 direct/leading product name containing all query terms,
+      1 all terms elsewhere in the product title,
+      2 partial product-title match,
+      3 brand-only match,
+      4 fallback returned by a source.
+    Exact query names beat qualified names within the same locality tier.
+    """
+    name=(item.get("name") or "").strip()
+    brand=(item.get("brand") or "").strip()
+    name_words=_food_match_words(name)
+    brand_words=_food_match_words(brand)
+    best=(4,0,0)
+    for variant in food_search_variants(query):
+        query_words=_food_match_words(variant)
+        if not query_words:continue
+        matched=_food_match_coverage(query_words,name_words)
+        brand_matched=_food_match_coverage(query_words,brand_words)
+        full=(matched==len(query_words))
+        first=bool(name_words and _food_match_word(query_words[0],name_words[0]))
+        exact=(full and len(name_words)==len(query_words))
+        if full and first:bucket=0
+        elif full:bucket=1
+        elif matched:bucket=2
+        elif brand_matched:bucket=3
+        else:bucket=4
+        coverage=matched/max(1,len(query_words))
+        # Score is subordinate to the relevance bucket and country/brand tier.
+        # It only orders comparably relevant items.
+        strength=(100 if exact else 0)+int(coverage*60)+(
+            int(brand_matched/max(1,len(query_words))*15)
+        )
+        candidate=(bucket,-strength,len(name_words))
+        if candidate<best:best=candidate
+    return best
 
 def _food_local_tier(item:dict):
     """
-    Stable market priority for equally relevant foods:
-      0 - Ukrainian brand
-      1 - foreign/other brand with a product explicitly present in Ukraine
-      2 - other Open Food Facts products
-      3 - generic/reference USDA records
+    Market priority *within a relevance level*:
+      0 recognised Ukrainian brand,
+      1 other product explicitly listed in Ukraine,
+      2 other Open Food Facts products,
+      3 USDA reference foods.
     """
     if item.get("source")=="off":
         brand_low=(item.get("brand") or "").strip().lower()
@@ -1965,108 +1827,17 @@ def _food_local_tier(item:dict):
     return 3
 
 def _food_rank(query:str,items:list):
-    qtokens=_food_tokens(query)
-    off_brand_hit=False
-    for item in items:
-        if item.get("source")!="off":continue
-        brand_tokens=_food_tokens(item.get("brand") or "")
-        if brand_tokens & qtokens:
-            off_brand_hit=True
-            break
     ranked=[]
     seen=set()
     for item in items:
         key=(item.get("barcode") or "",item.get("source"),item.get("source_id"))
         if key in seen:continue
         seen.add(key)
-        text_tokens=_food_tokens((item.get("name") or "")+" "+(item.get("brand") or ""))
-        overlap=len(qtokens & text_tokens)/max(1,len(qtokens))
-        score=overlap*60
-        if item.get("source")=="off":
-            brand_hits=_food_tokens(item.get("brand") or "") & qtokens
-            score+=35+(70 if brand_hits else 0)
-            brand_low=(item.get("brand") or "").lower()
-            if item.get("ukraine"):score+=25
-            if any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):score+=70
-        else:
-            data_type=str(item.get("data_type") or "").lower()
-            is_generic=data_type in ("foundation","survey (fndds)","sr legacy")
-            score+=(58 if is_generic else (34 if not off_brand_hit else 8))
-            if is_generic:
-                score+=10
-                if not (item.get("brand") or "").strip():score+=8
-        score+=_intent_score(query,item)
-        # A broad "сир" query in the Ukrainian app should prioritize actual
-        # cheese products sold in Ukraine, not prepared US dishes containing cheese.
-        if query=="сир":
-            low_name=(item.get("name") or "").lower()
-            if item.get("source")=="off" and (item.get("ukraine") or any(hint in (item.get("brand") or "").lower() for hint in UKRAINIAN_BRAND_HINTS)):
-                score+=85
-            elif low_name.startswith("сир") or low_name.startswith("cheese"):
-                score+=35
-            if _is_generic_dish_noise(query,item):
-                score-=120
-            if any(marker in low_name for marker in ("чипс","брускет","сухар","крекер","соус","смак сир")):
-                score-=80
-        item=dict(item);item["_score"]=round(score,2);ranked.append(item)
-    if _intent_rule(query):
-        if query=="яловичина":
-            # After filtering obvious processed/noise matches, generic beef is
-            # intentionally market-first: Ukrainian brands, then products sold
-            # in Ukraine, then other foreign/reference options.
-            ranked.sort(key=lambda x:(
-                _food_local_tier(x),
-                _intent_bucket(query,x),
-                -x["_score"],
-                x.get("brand")!="",
-                x.get("name",""),
-            ))
-        else:
-            ranked.sort(key=lambda x:(
-                _intent_bucket(query,x),
-                _food_local_tier(x),
-                -x["_score"],
-                x.get("brand")!="",
-                x.get("name",""),
-            ))
-    else:
-        ranked.sort(key=lambda x:(
-            _food_local_tier(x),
-            -x["_score"],
-            x.get("brand")!="",
-            x.get("name",""),
-        ))
-    # For a generic cheese search, prepared USDA dishes are fallback-only.
-    if query=="сир":
-        clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
-        noisy=[x for x in ranked if _is_generic_dish_noise(query,x)]
-        ranked=clean+noisy
-
-    # For a generic beef search, non-meat dishes, stocks and processed snack/
-    # cured beef are excluded entirely; explicit searches can still find them.
-    if query=="яловичина":
-        beef_meat_terms=(
-            "ялович","говядин","beef","boeuf","bœuf","steak","стейк",
-            "рибай","ribeye","striploin","стриплойн","tenderloin","виріз","вырез",
-            "minced beef","ground beef","фарш","для тушкування","для тушения",
-        )
-        clean=[]
-        for x in ranked:
-            if _is_generic_dish_noise(query,x):
-                continue
-            low=(x.get("name") or "").lower()
-            carbs=float(x.get("carbs_100") or 0)
-            # Composite ready meals frequently surface from broad multilingual
-            # searches. If carbs are high and the title doesn't clearly describe
-            # beef/meat itself, don't show it for the generic beef query.
-            if carbs>8 and not any(term in low for term in beef_meat_terms):
-                continue
-            clean.append(x)
-        ranked=clean
-
-    for item in ranked:item.pop("_score",None)
-    return _dedupe_food_items(ranked)
-
+        quality=_food_match_quality(query,item)
+        ranked.append((quality[0],_food_local_tier(item),quality[1],quality[2],
+                       (item.get("name") or "").lower(),item))
+    ranked.sort(key=lambda row:row[:5])
+    return _dedupe_food_items([row[5] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
@@ -2515,12 +2286,9 @@ def prototype_food_search(
                 uq=usda_food_query(query)
                 if uq and len(usda_items)<fetch_limit:
                     usda_items.extend(_usda_search(uq,fetch_limit-len(usda_items),USDA_BRANDED_TYPES,1))
+    # One stable ranking is shared by all foods. Do not regroup after sorting:
+    # related dishes must stay searchable (including via "Показати ще").
     ranked=_food_rank(normalized,off_items+usda_items)
-    if _intent_rule(normalized) and normalized!="яловичина":
-        core=[x for x in ranked if _intent_bucket(normalized,x)==0]
-        secondary=[x for x in ranked if _intent_bucket(normalized,x)==1]
-        noisy=[x for x in ranked if _intent_bucket(normalized,x)==2]
-        ranked=core+secondary+noisy
     start=(page-1)*limit
     end=start+limit
     items=ranked[start:end]
