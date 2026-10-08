@@ -1801,10 +1801,12 @@ FOOD_INTENT_RULES={
             "варен","відвар","отвар","boiled","cooked",
             "копчен","smoked","тушкован","тушен","stewed",
             "запеч","baked","roasted","гриль","grilled",
+            "corned beef","beef ham","маринован","marinated",
         ),
         "noise":(
-            "в'ялен","вялен","в ялен","jerky","beef stick","beef sticks",
-            "м'ясні палички","мясные палочки","meat stick","stick mild",
+            "в'ялен","вялен","в ялен","jerky","beef jerky",
+            "beef stick","beef sticks","м'ясні палички","мясные палочки",
+            "meat stick","stick mild","mr beast beef jerky",
             "блин","млинец","pancake","рвана","pulled","по-каталон",
             "для вторых блюд","для других страв","готовое блюдо","готова страва",
             "соус","sauce","sandwich","бургер","burger","ковбас","колбас","sausage",
@@ -1998,12 +2000,12 @@ def _food_rank(query:str,items:list):
                 score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     if _intent_rule(query):
-        # Market priority is intentional for EPLAN: among results that survive
-        # relevance/noise filtering, Ukrainian brands come first, then products
-        # explicitly present in Ukraine, then other foreign/reference options.
+        # Relevance first, then market priority. This prevents processed foods
+        # such as jerky/corned beef from outranking plain beef cuts while still
+        # showing Ukrainian brands first among equally relevant products.
         ranked.sort(key=lambda x:(
-            _food_local_tier(x),
             _intent_bucket(query,x),
+            _food_local_tier(x),
             -x["_score"],
             x.get("brand")!="",
             x.get("name",""),
