@@ -15,7 +15,7 @@ FUNCTIONS = {
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
-    "FOOD_SEARCH_COMMON_BASES",
+    "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
 }
 
 
@@ -148,6 +148,59 @@ class FoodSearchRanking(unittest.TestCase):
         )
         self.assertEqual(result, [])
         self.assertEqual(calls, [])
+
+
+    def test_chicken_has_ukrainian_and_english_search_variants(self):
+        self.assertEqual(R["normalize_food_query"]("Курица"),"курятина")
+        variants = R["food_search_variants"]("Курица")
+        self.assertIn("курятина",variants)
+        self.assertIn("курка",variants)
+        self.assertIn("куряче",variants)
+        self.assertIn("chicken",variants)
+        self.assertEqual(R["usda_food_query"]("курятина"),"chicken")
+
+    def test_chicken_title_rank_and_translation(self):
+        ranked = self.rank("Курица", [
+            food("Куряче філе", "Наша Ряба",True),
+            food("Яловичина Ангус", "Сільпо",True),
+            food("Chicken breast", "World brand",False),
+            food("Курка охолоджена", "Сільпо",True),
+        ])
+        names=[x["name"] for x in ranked]
+        self.assertIn("Куряче філе", names)
+        self.assertIn("Chicken breast", names)
+        self.assertIn("Курка охолоджена", names)
+        self.assertNotIn("Яловичина Ангус", names)
+        self.assertEqual(ranked[0]["brand"],"Сільпо")
+
+    def test_unrelated_pasta_not_in_potato_results(self):
+        ranked = self.rank("Картошка", [
+            food("Картопля варена з маслом","Novus",True),
+            food("Локшина макаронні вироби","Своя Лінія",True),
+            food("Пюре з картоплі", "Місцеві",True),
+        ])
+        names=[x["name"] for x in ranked]
+        self.assertNotIn("Локшина макаронні вироби",names)
+        self.assertIn("Пюре з картоплі",names)
+
+    def test_milk_chocolate_bars_are_below_actual_milk(self):
+        ranked = self.rank("Молоко", [
+            food('Молочно-шоколадний батон "Milk Chocolate"', "Roshen",True),
+            food("Молоко 2,5%", "Галичина",True),
+            food("Молоко коров'яче", "Молокія",True),
+            food('Молочно-шоколадний батон "Milk Chocolate with Coconut"', "Roshen",True),
+        ])
+        self.assertEqual([x["brand"] for x in ranked[:2]],["Галичина","Молокія"])
+        self.assertTrue(all(x["brand"]=="Roshen" for x in ranked[2:]))
+
+    def test_specific_beef_dumplings_and_related_beef_dishes_still_found(self):
+        ranked = self.rank("Пельмени с говядиной", [
+            food("Пельмені зі свининою та яловичиною","Три Ведмеді",True),
+            food("Яловичина для стейка","Сільпо",True),
+            food("Beef dumplings","International",False),
+        ])
+        self.assertEqual(ranked[0]["brand"],"Три Ведмеді")
+        self.assertIn("Beef dumplings",[x["name"] for x in ranked])
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]

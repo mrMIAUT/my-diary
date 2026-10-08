@@ -1452,6 +1452,12 @@ FOOD_USDA_ALIASES=(
     ("пельмені","dumplings"),
     ("яловичиною","beef"),
     ("яловичини","beef"),
+    ("курятина","chicken"),
+    ("курка","chicken"),
+    ("куряче","chicken"),
+    ("курячий","chicken"),
+    ("картопля","potato"),
+    ("макарони","pasta"),
     ("сир кисломолочний","cottage cheese"),
     ("кисломолочний сир","cottage cheese"),
     ("твердий сир","cheese"),
@@ -1498,24 +1504,31 @@ def usda_food_query(value:str):
         if src in q:q=q.replace(src,dst)
     return q
 
-def food_search_variants(value:str):
-    """Return a small ordered set of queries for multilingual food lookup.
+# Orthographic / everyday food-language equivalents, not per-product
+# exclusion rules. Russian "курица" -> Ukrainian "курятина"; catalog entries
+# may instead be "курка" or "куряче філе".
+FOOD_SEARCH_NAME_EQUIVALENTS={
+    "курятина":("курка","куряче"),
+    "курка":("курятина","куряче"),
+}
 
-    Keep the original Ukrainian/brand query first for Open Food Facts, then add
-    an English nutrient-database variant for generic foods. This avoids forcing
-    Ukrainian brands through English translation while still making queries
-    like "сир" useful in USDA.
+def food_search_variants(value:str):
+    """Ordered Ukrainian/common-name variants followed by an English query.
+
+    Searching across language/script aliases is essential for common foods:
+    OFF's Ukrainian product titles and USDA's English descriptions rarely
+    use the same words. It must not depend on a blacklist of recipe names.
     """
     normalized=normalize_food_query(value)
     variants=[normalized]
+    for alias in FOOD_SEARCH_NAME_EQUIVALENTS.get(normalized,()):
+        if alias not in variants:variants.append(alias)
     english=usda_food_query(normalized)
     if english and english not in variants:variants.append(english)
-    # Common ambiguity: Ukrainian "сир" may mean cheese; "сир кисломолочний"
-    # is already translated above to cottage cheese.
     if normalized=="сир":
         for fallback in ("cheese","cottage cheese"):
             if fallback not in variants:variants.append(fallback)
-    return variants[:3]
+    return variants[:5]
 
 def _food_fetch_json(url:str,payload=None):
     data=None
@@ -1695,6 +1708,7 @@ def _food_tokens(value:str):
 FOOD_GENERIC_QUERY_TOKENS={
     "сир","кисломолочний","твердий","рис","басматі","куряча","грудка","філе",
     "молоко","йогурт","тунець","яйце","яйця","банан","яблуко","гречка",
+    "курятина","курка","куряче","картопля","макарони","яловичина",
     "арахісова","паста","вівсяні","пластівці","cheese","cottage","rice",
     "chicken","breast","milk","yogurt","tuna","egg","eggs","oats","peanut","butter",
 }
@@ -1775,7 +1789,9 @@ def _food_match_word(a:str,b:str):
     # Conservative stem matching handles grammatical forms such as
     # "яловичина" -> "яловичиною", but not short distinct product names.
     if len(a)>=5 and len(b)>=5:
-        prefix=max(4,min(len(a),len(b))-2)
+        # 4-char overlap falsely treated молоко and молочний as the same
+        # word; require at least five letters of the shared stem.
+        prefix=max(5,min(len(a),len(b))-2)
         return a[:prefix]==b[:prefix]
     return False
 
@@ -1797,8 +1813,8 @@ def _food_match_quality(query:str,item:dict):
     brand=(item.get("brand") or "").strip()
     name_words=_food_match_words(name)
     brand_words=_food_match_words(brand)
-    best=(4,0,0)
-    for variant in food_search_variants(query):
+    best=(4,999,0,999)
+    for variant_index,variant in enumerate(food_search_variants(query)):
         query_words=_food_match_words(variant)
         if not query_words:continue
         matched=_food_match_coverage(query_words,name_words)
@@ -1817,7 +1833,7 @@ def _food_match_quality(query:str,item:dict):
         strength=(100 if exact else 0)+int(coverage*60)+(
             int(brand_matched/max(1,len(query_words))*15)
         )
-        candidate=(bucket,-strength,len(name_words))
+        candidate=(bucket,variant_index,-strength,len(name_words))
         if candidate<best:best=candidate
     return best
 
@@ -1880,10 +1896,13 @@ def _food_rank(query:str,items:list):
         if key in seen:continue
         seen.add(key)
         quality=_food_match_quality(query,item)
-        ranked.append((quality[0],_food_local_tier(item),quality[1],quality[2],
-                       (item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:5])
-    return _dedupe_food_items([row[5] for row in ranked])
+        # No relevance at all means the upstream API returned an unrelated
+        # catalogue hit (e.g. pasta for a potato search). Do not show it.
+        if quality[0]>=4:continue
+        ranked.append((quality[0],_food_local_tier(item),quality[1],
+                       quality[2],quality[3],(item.get("name") or "").lower(),item))
+    ranked.sort(key=lambda row:row[:6])
+    return _dedupe_food_items([row[6] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
@@ -2298,9 +2317,9 @@ def prototype_food_search(
     ua_variants=list(variants)
     if raw_normalized and raw_normalized not in ua_variants:
         ua_variants.append(raw_normalized)
-    for query in ua_variants:
+    for i,query in enumerate(ua_variants):
         ua_off_items=_dedupe_food_items(
-            ua_off_items+_off_collect(query,"Ukraine",pages=4,page_size=24)
+            ua_off_items+_off_collect(query,"Ukraine",pages=4 if i==0 else 2,page_size=24)
         )
     # OFF may return nothing for a literal phrase even when the catalogue
     # contains a relevant composite food. Search its individual key terms
