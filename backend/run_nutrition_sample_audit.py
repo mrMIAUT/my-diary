@@ -51,16 +51,37 @@ def off_record(product):
 
 def usda_record(food):
     nutrients = food.get("foodNutrients") or []
-    def nutrient(nid):
+
+    def nutrient(number_id, names=(), unit=None):
+        # USDA nutrientId is a database ID (e.g. 1008); nutrientNumber
+        # can use a different code (e.g. 208 for energy).
         for n in nutrients:
-            if str(n.get("nutrientId") or n.get("nutrientNumber")) == nid:
-                return number(n.get("value"))
+            if str(n.get("nutrientId") or "") != number_id and (
+                str(n.get("nutrientName") or n.get("name") or "").lower()
+                not in names
+            ):
+                continue
+            if unit and str(n.get("unitName") or "").upper() != unit:
+                continue
+            value = number(n.get("value"))
+            if value is not None:
+                return value
         return None
+
+    kcal = nutrient("1008", ("energy",), "KCAL")
+    # Foundation foods may report Atwater energy under IDs 2047/2048
+    # rather than 1008. Do not convert kJ without explicit units.
+    if kcal is None:
+        kcal = nutrient("2047", ("energy (atwater general factors)",), "KCAL")
+    if kcal is None:
+        kcal = nutrient("2048", ("energy (atwater specific factors)",), "KCAL")
     return {
         "source": "usda", "source_id": str(food.get("fdcId") or ""),
         "name": food.get("description") or "",
-        "kcal_100": nutrient("1008"), "protein_100": nutrient("1003"),
-        "fat_100": nutrient("1004"), "carbs_100": nutrient("1005"),
+        "kcal_100": kcal,
+        "protein_100": nutrient("1003", ("protein",)),
+        "fat_100": nutrient("1004", ("total lipid (fat)",)),
+        "carbs_100": nutrient("1005", ("carbohydrate, by difference",)),
     }
 
 
