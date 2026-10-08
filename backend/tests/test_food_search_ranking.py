@@ -14,7 +14,7 @@ FUNCTIONS = {
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates", "_food_native_local_match_count",
     "_food_extra_meat_count", "_food_named_dish_conflicts",
-    "_food_manufacture_country",
+    "_food_manufacture_country", "_food_broad_case_forms",
 }
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
@@ -77,6 +77,42 @@ class FoodSearchRanking(unittest.TestCase):
             R["normalize_food_query"]("Пельмени с говядиной"),
             "пельмені з яловичиною",
         )
+
+    def test_broad_food_cases_expand_without_sku_special_cases(self):
+        cases={
+            "Говядина":["яловичини","яловичиною"],
+            "Свинина":["свинини","свининою"],
+            "Курица":["курятини","курятиною"],
+            "Курка":["курки","куркою"],
+            "Картопля":["картоплі","картоплею"],
+            "Морква":["моркви","морквою"],
+            "Олія":["олії","олією"],
+        }
+        for query,forms in cases.items():
+            with self.subTest(query=query):
+                normalized=R["normalize_food_query"](query)
+                self.assertEqual(R["_food_broad_case_forms"](normalized),forms)
+                for form in forms:
+                    self.assertTrue(R["_food_match_word"](normalized,form))
+                    self.assertTrue(R["_food_match_word"](form,normalized))
+
+    def test_specific_food_queries_do_not_expand_noun_cases(self):
+        for phrase in ("Пельмени с говядиной","Курка гриль",
+                       "Картопля з грибами","Chicken breast", "Сир 5%"):
+            with self.subTest(query=phrase):
+                self.assertEqual(R["_food_broad_case_forms"](
+                    R["normalize_food_query"](phrase)),[])
+
+    def test_broad_query_preserves_product_before_dishes_in_other_cases(self):
+        for query,basic,dish in (
+            ("говядина","Яловичина","Гуляш з яловичиною"),
+            ("курка","Курка","Салат з куркою"),
+            ("картопля","Картопля","Пиріг з картоплею"),
+        ):
+            with self.subTest(query=query):
+                ranked=self.rank(query,[food(dish,"Локальний",True),
+                                        food(basic,"Локальний",True)])
+                self.assertEqual([item["name"] for item in ranked],[basic,dish])
 
     def test_related_dishes_stay_in_results(self):
         ranked = self.rank("Говядина")
