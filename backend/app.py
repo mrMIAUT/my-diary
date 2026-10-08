@@ -1374,23 +1374,67 @@ FOOD_USER_AGENT=os.environ.get("FOOD_API_USER_AGENT","EPLAN/1.2 product-search p
 USDA_API_KEY=os.environ.get("USDA_API_KEY","DEMO_KEY")
 
 FOOD_QUERY_REPLACEMENTS={
-    "творог":"сир кисломолочний",
+    # Common Russian food phrases -> Ukrainian search language.
     "творог 5%":"сир кисломолочний 5%",
-    "молокия":"молокія",
-    "яготинское":"яготинське",
-    "галичина":"галичина",
-    "овсянка":"вівсяні пластівці",
+    "творог":"сир кисломолочний",
     "овсяные хлопья":"вівсяні пластівці",
+    "овсянка":"вівсяні пластівці",
     "куриная грудка":"куряча грудка",
     "грудка куриная":"куряча грудка",
     "куриное филе":"куряче філе",
     "филе куриное":"куряче філе",
+    "индейка филе":"філе індички",
+    "филе индейки":"філе індички",
     "арахисовая паста":"арахісова паста",
+    "сливочное масло":"вершкове масло",
+    "масло сливочное":"вершкове масло",
+    "подсолнечное масло":"соняшникова олія",
+    "оливковое масло":"оливкова олія",
+    "грецкий орех":"волоський горіх",
     "рис басмати":"рис басматі",
-    "тунец":"тунець",
+    "картофель":"картопля",
+    "картошка":"картопля",
+    "макароны":"макарони",
+    "спагетти":"спагеті",
+    "перловка":"перлова крупа",
     "говядина":"яловичина",
+    "курица":"курятина",
+    "индейка":"індичка",
+    "утка":"качка",
+    "семга":"сьомга",
+    "треска":"тріска",
+    "скумбрия":"скумбрія",
+    "сельдь":"оселедець",
+    "тунец":"тунець",
+    "креветка":"креветка",
+    "креветки":"креветки",
+    "молокия":"молокія",
+    "яготинское":"яготинське",
+    "сливки":"вершки",
+    "кефир":"кефір",
+    "сыр":"сир",
     "яйца":"яйця",
     "яйцо":"яйце",
+    "яблоко":"яблуко",
+    "клубника":"полуниця",
+    "черника":"чорниця",
+    "голубика":"лохина",
+    "огурец":"огірок",
+    "огурцы":"огірки",
+    "помидор":"помідор",
+    "помидоры":"помідори",
+    "морковь":"морква",
+    "свекла":"буряк",
+    "лук":"цибуля",
+    "чеснок":"часник",
+    "арахис":"арахіс",
+    "миндаль":"мигдаль",
+    "сахар":"цукор",
+    "мука":"борошно",
+    "печенье":"печиво",
+    "мороженое":"морозиво",
+    "протеин":"протеїн",
+    "галичина":"галичина",
 }
 FOOD_USDA_ALIASES=(
     # Put specific phrases first so generic "сир" does not corrupt them.
@@ -1450,9 +1494,6 @@ def food_search_variants(value:str):
     """
     normalized=normalize_food_query(value)
     variants=[normalized]
-    raw_normalized=" ".join((value or "").strip().lower().replace("ё","е").split())
-    if raw_normalized and raw_normalized not in variants:
-        variants.append(raw_normalized)
     english=usda_food_query(normalized)
     if english and english not in variants:variants.append(english)
     # Common ambiguity: Ukrainian "сир" may mean cheese; "сир кисломолочний"
@@ -1488,6 +1529,21 @@ UKRAINIAN_BRAND_HINTS={
     "м'ясна весна","мясная весна","атб","сільпо","silpo","varus","новус","novus",
 }
 
+RUSSIAN_BRAND_BLOCKLIST={
+    "вкусвилл","вкус вилл","азбука вкуса","зелёная линия","зеленая линия",
+    "самокат","братья караваевы","первая свежесть","мираторг","черкизово",
+    "останкино","дымov","дымов","мясницкий ряд","агрокомплекс",
+}
+
+def _is_blocked_russian_off_product(countries:list[str],brand:str):
+    country_set=set(countries or [])
+    # A product explicitly tagged as Ukrainian is allowed even if its record
+    # also mentions multiple markets. Russia-only products are excluded.
+    if "en:russia" in country_set and "en:ukraine" not in country_set:
+        return True
+    brand_low=(brand or "").strip().lower()
+    return any(blocked in brand_low for blocked in RUSSIAN_BRAND_BLOCKLIST)
+
 def _off_item(product:dict):
     nutr=product.get("nutriments") or {}
     # OFF occasionally returns HTML entities in contributor-entered names.
@@ -1500,6 +1556,8 @@ def _off_item(product:dict):
     if brand and _food_tokens(brand)==_food_tokens(name):
         brand=""
     countries=[str(x).lower() for x in (product.get("countries_tags") or [])]
+    if _is_blocked_russian_off_product(countries,brand):
+        return None
     kcal=_food_num(nutr.get("energy-kcal_100g"))
     if not kcal:
         kj=_food_num(nutr.get("energy_100g"))
@@ -1559,7 +1617,7 @@ def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
     return _dedupe_food_items(items)
 
 def _off_barcode(barcode:str):
-    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments"
+    fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags"
     url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
     payload=_food_fetch_json(url) or {}
     if int(payload.get("status") or 0)!=1:return []
@@ -2362,7 +2420,11 @@ def prototype_food_search(
     # after "Показати ще".
     fetch_limit=24
     ua_off_items=[]
-    for query in variants:
+    raw_normalized=" ".join(raw.lower().replace("ё","е").split())
+    ua_variants=list(variants)
+    if raw_normalized and raw_normalized not in ua_variants:
+        ua_variants.append(raw_normalized)
+    for query in ua_variants:
         ua_off_items=_dedupe_food_items(
             ua_off_items+_off_collect(query,"Ukraine",pages=4,page_size=24)
         )
