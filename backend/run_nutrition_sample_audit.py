@@ -40,6 +40,26 @@ def get_json(url, attempts=3):
             time.sleep(3 * (attempt + 1))
 
 
+def fetch_off_products(query):
+    """Try the legacy OFF search, then the public v2 search on HTTP failure.
+
+    Never interpret an API failure as an empty product list.
+    """
+    fields = "code,product_name,product_name_en,nutriments"
+    params = urllib.parse.urlencode({
+        "search_terms": query, "page_size": 20, "fields": fields,
+        "json": 1, "action": "process", "search_simple": 1,
+    })
+    try:
+        payload = get_json("https://world.openfoodfacts.org/cgi/search.pl?" + params)
+    except urllib.error.HTTPError:
+        fallback = urllib.parse.urlencode({
+            "search_terms": query, "page_size": 20, "fields": fields,
+        })
+        payload = get_json("https://world.openfoodfacts.org/api/v2/search?" + fallback)
+    return payload.get("products") or []
+
+
 def number(value):
     try:
         return float(value)
@@ -106,13 +126,7 @@ def main():
     key = os.environ.get("USDA_API_KEY") or "DEMO_KEY"
     for query in QUERIES:
         try:
-            params = urllib.parse.urlencode({
-                "search_terms": query, "page_size": 20,
-                "fields": "code,product_name,product_name_en,nutriments",
-                "json": 1, "action": "process", "search_simple": 1,
-            })
-            payload = get_json("https://world.openfoodfacts.org/cgi/search.pl?" + params)
-            products = payload.get("products") or []
+            products = fetch_off_products(query)
             if not products:
                 failures.append({"source": "off", "query": query, "error": "no_records"})
             items.extend(off_record(p) for p in products)
