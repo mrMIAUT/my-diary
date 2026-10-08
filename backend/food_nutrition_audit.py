@@ -46,6 +46,12 @@ def audit_item(item):
         issues.append("macro_out_of_range")
     if protein + fat + carbs > 105:
         issues.append("macros_exceed_100g")
+    # Hard physical plausibility checks are separate from softer 4/9/4
+    # discrepancies, which can be explained by fibre and Atwater factors.
+    if source == "off" and kcal > 900:
+        issues.append("off_impossible_energy_review")
+    if source == "off" and kcal >= 0 and (protein * 4 + fat * 9 + carbs * 4) > kcal + 250:
+        issues.append("off_severe_energy_mismatch_review")
     estimated = 4 * protein + 9 * fat + 4 * carbs
     # This is a heuristic only: fibre, alcohol, specific Atwater factors
     # and label rounding can explain differences.
@@ -81,7 +87,8 @@ def audit(items):
             category = "incomplete_data"
         elif "usda_trace_negative_carbs_review" in codes:
             category = "usda_calculation_review"
-        elif any(code in ("kcal_out_of_range", "macro_out_of_range",
+        elif any(code in ("kcal_out_of_range", "off_impossible_energy_review",
+                         "off_severe_energy_mismatch_review", "macro_out_of_range",
                          "macros_exceed_100g", "energy_macro_mismatch_review")
                  for code in codes):
             category = "nutrition_anomaly_review"
