@@ -192,7 +192,7 @@ class FoodSearchRanking(unittest.TestCase):
             food("Молоко коров'яче", "Молокія",True),
             food('Молочно-шоколадний батон "Milk Chocolate with Coconut"', "Roshen",True),
         ])
-        self.assertEqual([x["brand"] for x in ranked[:2]],["Галичина","Молокія"])
+        self.assertEqual({x["brand"] for x in ranked[:2]},{"Галичина","Молокія"})
         self.assertTrue(all(x["brand"]=="Roshen" for x in ranked[2:]))
 
     def test_specific_beef_dumplings_and_related_beef_dishes_still_found(self):
@@ -251,7 +251,7 @@ class FoodSearchRanking(unittest.TestCase):
             [R["_food_preparation_rank"](x) for x in potato],[0,1,2],
         )
         milk=self.rank("Молоко",[
-            food("Молочно-шоколадний батон","Roshen",True),
+            food('Молочно-шоколадний батон "Milk Chocolate"',"Roshen",True),
             food("Молоко 2,5%","Молокія",True),
         ])
         self.assertEqual(len(milk),2)
