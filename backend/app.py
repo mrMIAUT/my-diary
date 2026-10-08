@@ -1550,6 +1550,27 @@ def food_search_variants(value:str):
             if fallback not in variants:variants.append(fallback)
     return variants[:5]
 
+def _food_broad_case_forms(value:str):
+    """Bounded Ukrainian grammatical forms for broad ingredient searches.
+
+    OFF indexes literal titles, so a search for "яловичина" may miss a dish
+    named "з яловичиною". Use common noun endings, never SKU/brand rules.
+    Specific multi-word queries must not be broadened.
+    """
+    if " " in value or len(value)<5:return []
+    endings=(
+        ("ина",("ини","иною")),
+        ("ка",("ки","кою")),
+        ("ва",("ви","вою")),
+        ("ля",("лі","лею")),
+        ("ія",("ії","ією")),
+    )
+    for suffix,forms in endings:
+        if value.endswith(suffix) and re.fullmatch(r"[а-яіїєґ]+",value):
+            stem=value[:-len(suffix)]
+            if len(stem)>=2:return [stem+ending for ending in forms]
+    return []
+
 def _food_fetch_json(url:str,payload=None):
     data=None
     headers={"User-Agent":FOOD_USER_AGENT,"Accept":"application/json"}
@@ -1866,6 +1887,10 @@ def _food_match_words(value:str):
 
 def _food_match_word(a:str,b:str):
     if a==b:return True
+    # Exact case-form matching also covers short foods (курка / куркою)
+    # without relaxing general fuzzy prefix matching for unrelated titles.
+    if b in _food_broad_case_forms(a) or a in _food_broad_case_forms(b):
+        return True
     # Conservative stem matching handles grammatical forms such as
     # "яловичина" -> "яловичиною", but not short distinct product names.
     if len(a)>=5 and len(b)>=5:
@@ -2577,9 +2602,16 @@ def prototype_food_search(
     ua_variants=list(variants)
     if raw_normalized and raw_normalized not in ua_variants:
         ua_variants.append(raw_normalized)
+    # Ingredient names often occur in other grammatical cases inside dishes.
+    # Two one-page searches add those foods while retaining the original
+    # direct query priority and capping extra calls.
+    case_queries=_food_broad_case_forms(normalized)
+    for case in case_queries:
+        if case not in ua_variants:ua_variants.append(case)
     for i,query in enumerate(ua_variants):
+        search_pages=1 if query in case_queries else (4 if i==0 else 2)
         ua_off_items=_dedupe_food_items(
-            ua_off_items+_off_collect(query,"Ukraine",pages=4 if i==0 else 2,page_size=24)
+            ua_off_items+_off_collect(query,"Ukraine",pages=search_pages,page_size=24)
         )
     # OFF may return nothing for a literal phrase even when the catalogue
     # contains a relevant composite food. Search its individual key terms
@@ -2591,9 +2623,13 @@ def prototype_food_search(
 
     global_off_items=[]
     if len(ua_off_items)<limit*3:
-        for query in variants:
+        global_queries=list(variants)
+        for case in case_queries:
+            if case not in global_queries:global_queries.append(case)
+        for query in global_queries:
+            search_pages=1 if query in case_queries else 2
             global_off_items=_dedupe_food_items(
-                global_off_items+_off_collect(query,None,pages=2,page_size=24)
+                global_off_items+_off_collect(query,None,pages=search_pages,page_size=24)
             )
 
     off_items=_dedupe_food_items(ua_off_items+global_off_items)
