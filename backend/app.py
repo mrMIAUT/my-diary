@@ -2043,6 +2043,7 @@ FOOD_DISH_CUES=(
     "sandwich","casserole","запікан","moussaka","мусак",
     "шаурм","shawarma","shaurma","теріяк","teriyaki","fiesta",
     "соус","sauce","рагу","plov","плов","по-домашн","домашн","homestyle",
+    "біфштекс","beefsteak","тартар","tartare","мітбол","meatball",
 )
 # The complement after a joining word decides whether this is a mixed dish.
 # "Курка з овочами" is mixed, whereas "Молоко з вітаміном D3" is not.
@@ -2105,6 +2106,13 @@ def _food_preparation_rank(item:dict):
     cat_string=" ".join(str(x).lower() for x in categories)
     if item.get("food_category"):
         cat_string+=" "+str(item["food_category"]).lower()
+    # Strong processed-food signals override vague prepared-meal tags.
+    # Sausages and cold cuts are processed products, not plated dishes.
+    processed_meat=("ковбас","колбас","sausage","сосиск","сардель",
+                    "frankfurter","salami","салям","шинка","ham",
+                    "бекон","bacon","jerky","джерк","в'ялен","в’ялен")
+    if _food_contains_cue(words,processed_meat):
+        return 2
     if any(cue in cat_string for cue in FOOD_DISH_CATEGORY_CUES):
         return 3
     if _food_contains_cue(words,FOOD_DISH_CUES):
