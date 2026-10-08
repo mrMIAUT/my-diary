@@ -4,6 +4,7 @@ Read-only. Uses public APIs and USDA DEMO_KEY; coverage is a small sampled
 subset, never the complete databases. Failures are reported, not hidden.
 """
 import json
+import urllib.error
 import os
 import sys
 import time
@@ -18,10 +19,25 @@ QUERIES = ("rice", "potato", "milk", "chicken", "buckwheat")
 HEADERS = {"User-Agent": "EPLAN-NutritionAudit/1.0 (read-only sample)"}
 
 
-def get_json(url):
+def get_json(url, attempts=3):
     request = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(request, timeout=25) as response:
-        return json.load(response)
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=25) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (429, 500, 502, 503, 504) or attempt == attempts - 1:
+                raise
+            retry_after = exc.headers.get("Retry-After")
+            try:
+                wait = min(30, max(1, int(retry_after)))
+            except (TypeError, ValueError):
+                wait = 3 * (attempt + 1)
+            time.sleep(wait)
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == attempts - 1:
+                raise
+            time.sleep(3 * (attempt + 1))
 
 
 def number(value):
@@ -102,7 +118,7 @@ def main():
             items.extend(off_record(p) for p in products)
         except Exception as exc:
             failures.append({"source": "off", "query": query, "error": type(exc).__name__})
-        time.sleep(2)
+        time.sleep(6)
     for query in QUERIES:
         try:
             params = urllib.parse.urlencode({"api_key": key, "query": query,
@@ -145,11 +161,12 @@ def main():
         }
     report["queries"] = list(QUERIES)
     report["fetch_failures"] = failures
+    report["fetch_success_queries"] = {source: len(QUERIES) - sum(f["source"] == source for f in failures) for source in ("off", "usda")}
     report["scope"] = "Small sampled API results only, not full USDA/OFF database."
     Path("nutrition-audit-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({k: report[k] for k in
-        ("checked", "by_source", "flagged_count", "quality_breakdown", "issue_counts", "fetch_failures")},
+        ("checked", "by_source", "flagged_count", "quality_breakdown", "issue_counts", "fetch_failures", "fetch_success_queries", "review_categories")},
         ensure_ascii=False, indent=2))
     if not items:
         raise SystemExit("No records fetched from either API")
