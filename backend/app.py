@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 import os
 import json, hashlib, hmac, secrets, urllib.request, urllib.error, urllib.parse
-import io, logging, stat, warnings, html, re
+import io, logging, stat, warnings, html, re, time, threading
 import psycopg
 from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta, timezone
@@ -1370,6 +1370,14 @@ def _app_index():
 FOOD_HTTP_TIMEOUT_SECONDS=4.5
 FOOD_HTTP_MAX_BYTES=1_500_000
 FOOD_SEARCH_MAX_RESULTS=24
+# Store only successful OFF page responses. Serving the last successful data
+# during a temporary source error is safer than silently replacing the whole
+# Ukrainian result set with foreign results. This prototype cache is local to
+# the Render worker, not persistent across restarts.
+FOOD_OFF_CACHE_TTL_SECONDS=60*30
+FOOD_OFF_CACHE_MAX_ENTRIES=384
+FOOD_OFF_SEARCH_CACHE={}
+FOOD_OFF_SEARCH_CACHE_LOCK=threading.Lock()
 FOOD_USER_AGENT=os.environ.get("FOOD_API_USER_AGENT","EPLAN/1.2 product-search prototype")
 USDA_API_KEY=os.environ.get("USDA_API_KEY","DEMO_KEY")
 
@@ -1511,6 +1519,13 @@ FOOD_SEARCH_NAME_EQUIVALENTS={
     "курятина":("курка","куряче"),
     "курка":("курятина","куряче"),
 }
+# Linguistic equivalents, not SKU-specific exceptions: everyday Russian and
+# Ukrainian case forms should retrieve the same candidate set.
+FOOD_SEARCH_CASE_EQUIVALENTS={
+    "яловичини":"яловичиною", "яловичиною":"яловичини",
+    "свинини":"свининою", "свининою":"свинини",
+    "курятини":"курятиною", "курятиною":"курятини",
+}
 
 def food_search_variants(value:str):
     """Ordered Ukrainian/common-name variants followed by an English query.
@@ -1521,6 +1536,11 @@ def food_search_variants(value:str):
     """
     normalized=normalize_food_query(value)
     variants=[normalized]
+    for source,replacement in FOOD_SEARCH_CASE_EQUIVALENTS.items():
+        if re.search(r"(?<!\w)"+re.escape(source)+r"(?!\w)",normalized):
+            variant=re.sub(r"(?<!\w)"+re.escape(source)+r"(?!\w)",replacement,normalized)
+            if variant not in variants:variants.append(variant)
+            break
     for alias in FOOD_SEARCH_NAME_EQUIVALENTS.get(normalized,()):
         if alias not in variants:variants.append(alias)
     english=usda_food_query(normalized)
@@ -1545,7 +1565,10 @@ def _food_fetch_json(url:str,payload=None):
                 return None
             return json.loads(raw.decode("utf-8"))
     except (urllib.error.URLError,urllib.error.HTTPError,TimeoutError,ValueError,json.JSONDecodeError) as exc:
-        safe_log("food_source_unavailable",logging.WARNING,error_type=type(exc).__name__)
+        # No URL/query is logged (a query could contain personal information).
+        origin="off" if "openfoodfacts.org" in url else "usda"
+        safe_log("food_source_unavailable",logging.WARNING,error_type=type(exc).__name__,
+                 status_code=getattr(exc,"code",None),route=origin)
         return None
 
 UKRAINIAN_BRAND_HINTS={
@@ -1633,6 +1656,18 @@ def _off_item(product:dict):
     }
 
 def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
+    """Try the OFF search APIs, retaining successful pages across failures.
+
+    Cache key includes region/page so global products never masquerade as
+    Ukrainian-market listings. Errors are not cached as empty search results.
+    """
+    page=max(1,page)
+    size=min(24,max(1,limit))
+    key=(query.casefold().strip(),size,page,country or "")
+    with FOOD_OFF_SEARCH_CACHE_LOCK:
+        cached=FOOD_OFF_SEARCH_CACHE.get(key)
+    if cached and time.monotonic()-cached[0]<FOOD_OFF_CACHE_TTL_SECONDS:
+        return list(cached[1])
     fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags,manufacturing_places,manufacturing_places_tags"
     country_filter=""
     if country:
@@ -1640,14 +1675,32 @@ def _off_search(query:str,limit:int,page:int=1,country:str|None=None):
             "&tagtype_0=countries&tag_contains_0=contains"
             f"&tag_0={urllib.parse.quote(country)}"
         )
-    url=("https://world.openfoodfacts.org/cgi/search.pl?action=process&search_simple=1&json=1"
-         f"&page={max(1,page)}&page_size={min(24,max(1,limit))}&fields={urllib.parse.quote(fields)}"
-         f"&search_terms={urllib.parse.quote(query)}"+country_filter)
-    payload=_food_fetch_json(url) or {}
+    query_str=urllib.parse.quote(query)
+    base="https://world.openfoodfacts.org"
+    v1=(base+"/cgi/search.pl?action=process&search_simple=1&json=1"
+        f"&page={page}&page_size={size}&fields={urllib.parse.quote(fields)}"
+        f"&search_terms={query_str}"+country_filter)
+    payload=_food_fetch_json(v1)
+    if not isinstance(payload,dict) or not isinstance(payload.get("products"),list):
+        # The indexed v2 endpoint can remain available during CGI throttling.
+        filter_v2="&countries_tags=en%3Aukraine" if country=="Ukraine" else ""
+        v2=(base+"/api/v2/search?"
+            f"page={page}&page_size={size}&fields={urllib.parse.quote(fields)}"
+            f"&search_terms={query_str}"+filter_v2)
+        payload=_food_fetch_json(v2)
+    if not isinstance(payload,dict) or not isinstance(payload.get("products"),list):
+        return list(cached[1]) if cached else []
     items=[]
-    for product in payload.get("products") or []:
+    for product in payload["products"]:
         item=_off_item(product)
-        if item:items.append(item)
+        # v2 country filter and v1 market filter are enforced locally too.
+        if item and (country!="Ukraine" or item.get("ukraine")):
+            items.append(item)
+    with FOOD_OFF_SEARCH_CACHE_LOCK:
+        if len(FOOD_OFF_SEARCH_CACHE)>=FOOD_OFF_CACHE_MAX_ENTRIES:
+            # FIFO is sufficient for this bounded, nonpersistent prototype.
+            FOOD_OFF_SEARCH_CACHE.pop(next(iter(FOOD_OFF_SEARCH_CACHE)))
+        FOOD_OFF_SEARCH_CACHE[key]=(time.monotonic(),tuple(items))
     return items
 
 def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
@@ -1876,7 +1929,15 @@ def _food_search_related_terms(query:str):
         term=next((base for base in FOOD_SEARCH_COMMON_BASES
                    if _food_match_word(token,base)),token)
         if term not in result and term!=query:result.append(term)
-    return result[:3]
+    # Search common Russian catalogue spellings too when the normalized
+    # Ukrainian constituent query missed local products. This is generated
+    # from the existing translation dictionary, not a new product blacklist.
+    for term in tuple(result):
+        aliases=(ru for ru,uk in FOOD_QUERY_REPLACEMENTS.items()
+                 if uk==term and len(ru)>2 and " " not in ru)
+        for alias in aliases:
+            if alias not in result:result.append(alias)
+    return result[:6]
 
 def _food_full_title_matches(query:str,items:list):
     return sum(_food_match_quality(query,item)[0]<=1 for item in items)

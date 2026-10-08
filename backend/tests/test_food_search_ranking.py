@@ -19,6 +19,7 @@ FUNCTIONS = {
 CONSTANTS = {
     "FOOD_QUERY_REPLACEMENTS", "FOOD_USDA_ALIASES",
     "FOOD_SEARCH_LINK_WORDS", "UKRAINIAN_BRAND_HINTS",
+    "FOOD_SEARCH_CASE_EQUIVALENTS",
     "FOOD_SEARCH_COMMON_BASES","FOOD_SEARCH_NAME_EQUIVALENTS",
     "FOOD_COOKED_CUES","FOOD_PROCESSED_CUES","FOOD_PROCESSED_WHOLE_WORDS","FOOD_DISH_CUES",
     "FOOD_DISH_COMPLEMENT_CUES","FOOD_DISH_CATEGORY_CUES",
@@ -106,6 +107,30 @@ class FoodSearchRanking(unittest.TestCase):
         self.assertEqual(len(ranked), 2)
 
 
+    def test_related_catalogue_spellings_cover_both_russian_cases(self):
+        nominative=R["food_search_variants"]("Пельмени с говядиной")
+        genitive=R["food_search_variants"]("Пельмени с говядины")
+        self.assertIn("пельмені з яловичиною",nominative)
+        self.assertIn("пельмені з яловичиною",genitive)
+        self.assertIn("пельмені з яловичини",nominative)
+        self.assertIn("пельмені з яловичини",genitive)
+        self.assertIn("beef dumplings",genitive)
+        self.assertEqual(R["_food_search_related_terms"]("пельмені з яловичини"),
+                         ["пельмені","яловичина","пельмени","говядина"])
+
+    def test_both_russian_cases_rank_local_pelmeni(self):
+        candidates=[
+            food("Beef Dumplings","International",False),
+            food("Пельмені Зі Свининою Та Яловичиною","Три Ведмеді",True),
+            food("Пельмені «Фірмові» З Яловичиною Та Свининою","Levada",True),
+            food("Пельмені Traditional, гьодза з яловичиною","Another",True),
+        ]
+        for query in ("Пельмени с говядиной","Пельмени с говядины"):
+            with self.subTest(query=query):
+                ranked=self.rank(query,candidates)
+                self.assertEqual(ranked[0]["brand"],"Три Ведмеді")
+                self.assertEqual(ranked[1]["brand"],"Levada")
+
     def test_russian_genitive_prepositions(self):
         self.assertEqual(
             R["normalize_food_query"]("Пельмени из говядины"),
@@ -138,7 +163,7 @@ class FoodSearchRanking(unittest.TestCase):
             R["normalize_food_query"]("Пельмени из говядины"),
             [],8,collect,
         )
-        self.assertEqual(calls, ["пельмені","яловичина"])
+        self.assertEqual(calls, ["пельмені","яловичина","пельмени","говядина"])
         self.assertEqual(result[0]["name"], "Пельмені Свинина Яловичина")
 
     def test_exact_milk_is_above_related_chocolate(self):
