@@ -1388,6 +1388,7 @@ FOOD_QUERY_REPLACEMENTS={
     "арахисовая паста":"арахісова паста",
     "рис басмати":"рис басматі",
     "тунец":"тунець",
+    "говядина":"яловичина",
     "яйца":"яйця",
     "яйцо":"яйце",
 }
@@ -1412,6 +1413,7 @@ FOOD_USDA_ALIASES=(
     ("молоко","milk"),
     ("йогурт","yogurt"),
     ("лосось","salmon"),
+    ("яловичина","beef"),
 )
 
 def _food_num(value,default=0.0):
@@ -1448,6 +1450,9 @@ def food_search_variants(value:str):
     """
     normalized=normalize_food_query(value)
     variants=[normalized]
+    raw_normalized=" ".join((value or "").strip().lower().replace("ё","е").split())
+    if raw_normalized and raw_normalized not in variants:
+        variants.append(raw_normalized)
     english=usda_food_query(normalized)
     if english and english not in variants:variants.append(english)
     # Common ambiguity: Ukrainian "сир" may mean cheese; "сир кисломолочний"
@@ -1726,6 +1731,19 @@ FOOD_INTENT_RULES={
             "теріяк","терияк","teriyaki","крем","cream",
         ),
     },
+    "яловичина":{
+        "starts":("яловичина","говядина","beef"),
+        "contains":("яловичина","говядина","beef"),
+        "secondary":(
+            "варен","відвар","отвар","boiled","cooked","копчен","smoked",
+            "тушен","stewed","запеч","roasted","гриль","grilled",
+        ),
+        "noise":(
+            "блин","млинец","pancake","рвана","pulled","по-каталон",
+            "для вторых блюд","для других страв","готовое блюдо","готова страва",
+            "соус","sauce","sandwich","бургер","burger",
+        ),
+    },
     "рис":{
         "starts":("рис","rice","basmati rice"),
         "contains":("рис","rice","basmati"),
@@ -1777,7 +1795,7 @@ FOOD_INTENT_RULES={
 def _intent_rule(query:str):
     q=query.lower().strip()
     # Fat percentage or preparation qualifiers should not change the food intent.
-    for key in ("молоко","сир","йогурт","тунець","лосось","рис","вівсяні пластівці","куряча грудка","куряче філе"):
+    for key in ("молоко","сир","йогурт","тунець","лосось","яловичина","рис","вівсяні пластівці","куряча грудка","куряче філе"):
         if q==key or q.startswith(key+" "):return FOOD_INTENT_RULES[key]
     return None
 
@@ -1800,6 +1818,11 @@ def _intent_score(query:str,item:dict):
     if query=="лосось":
         if any(token in low for token in ("raw","сирий","сир","свіж","свеж","fresh","fresh-frozen","свіжоморож","свежеморож","frozen","філе","филе","fillet")):
             score+=50
+        elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
+            score+=20
+    if query=="яловичина":
+        if any(token in low for token in ("raw","сир","свіж","свеж","fresh","охолод","chilled")):
+            score+=45
         elif not any(token in low for token in rule["secondary"]) and not any(marker in low for marker in rule["noise"]):
             score+=20
     return score
@@ -1826,6 +1849,14 @@ def _is_generic_dish_noise(query:str,item:dict):
     if query!="сир" or item.get("source")!="usda":return False
     low=(item.get("name") or "").lower()
     return any(marker in low for marker in FOOD_GENERIC_DISH_MARKERS)
+
+def _food_local_tier(item:dict):
+    if item.get("source")=="off":
+        brand_low=(item.get("brand") or "").lower()
+        if item.get("ukraine") or any(hint in brand_low for hint in UKRAINIAN_BRAND_HINTS):
+            return 0
+        return 1
+    return 2
 
 def _food_rank(query:str,items:list):
     qtokens=_food_tokens(query)
@@ -1873,9 +1904,15 @@ def _food_rank(query:str,items:list):
                 score-=80
         item=dict(item);item["_score"]=round(score,2);ranked.append(item)
     if _intent_rule(query):
-        ranked.sort(key=lambda x:(_intent_bucket(query,x),-x["_score"],x.get("brand")!="" ,x.get("name","")))
+        ranked.sort(key=lambda x:(
+            _intent_bucket(query,x),
+            _food_local_tier(x),
+            -x["_score"],
+            x.get("brand")!="",
+            x.get("name",""),
+        ))
     else:
-        ranked.sort(key=lambda x:(-x["_score"],x.get("brand")!="" ,x.get("name","")))
+        ranked.sort(key=lambda x:(-x["_score"],_food_local_tier(x),x.get("brand")!="" ,x.get("name","")))
     # For a generic cheese search, prepared USDA dishes are fallback-only.
     if query=="сир":
         clean=[x for x in ranked if not _is_generic_dish_noise(query,x)]
