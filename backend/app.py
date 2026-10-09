@@ -2965,13 +2965,17 @@ def add_timed_result_sets(x:TimedSetResultIn,user:AuthUser=Depends(require_clien
             raise HTTPException(400,"Ця вправа не входить до активного тренування")
         if normalize_execution_mode(snapshot_item.get("execution_mode"))!="time":
             raise HTTPException(400,"Ця вправа не налаштована як вправа за часом")
+        planned_seconds=max(1,int(snapshot_item.get("work_seconds") or 0))
+        planned_sets=max(1,int(snapshot_item.get("sets") or 1))
+        if any(n>planned_sets for n in numbers):
+            raise HTTPException(400,"Номер підходу перевищує план цієї вправи")
         c.execute("DELETE FROM timed_result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         ids=[]
         for item in x.sets:
             row=c.execute("""INSERT INTO timed_result_sets(
                 client_id,program_id,exercise,day,set_number,work_seconds,planned_seconds,rest_seconds)
                 VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                (x.client_id,x.program_id,x.exercise.strip(),result_day,item.set_number,item.work_seconds,item.planned_seconds,item.rest_seconds)).fetchone()
+                (x.client_id,x.program_id,x.exercise.strip(),result_day,item.set_number,item.work_seconds,planned_seconds,item.rest_seconds)).fetchone()
             ids.append(row["id"])
         c.commit()
     return {"ok":True,"ids":ids,"day":result_day}
