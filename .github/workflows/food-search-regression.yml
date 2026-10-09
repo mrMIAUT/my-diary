@@ -35,5 +35,7 @@ jobs:
         run: python backend/check_food_local_catalog.py
       - name: Check food prototype JavaScript syntax
         run: node --check backend/static/calculator-prototype.js
+      - name: Check instant local food search (UA/RU/EN)
+        run: node backend/tests/food_search_instant_client.test.cjs
       - name: Run food search regression tests
         run: python -m unittest discover -s backend/tests -p 'test_food_search_*.py' -v
