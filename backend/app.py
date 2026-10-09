@@ -2746,6 +2746,28 @@ def _food_result_page(raw,normalized,variants,candidates,limit,page,food_type):
     }
 
 
+@app.get("/api/prototype/foods/preview")
+def prototype_food_preview(
+    q:str=Query(...,min_length=2,max_length=120),
+    limit:int=Query(default=8,ge=1,le=FOOD_SEARCH_MAX_RESULTS),
+):
+    """Immediate local preview; never claim it is the complete API search."""
+    if not PROTOTYPE_MODE:
+        raise HTTPException(404,"Прототип пошуку недоступний")
+    normalized=normalize_food_query(q)
+    options=[
+        item for item in reference_food_items()
+        if _food_match_quality(normalized,item)[0] <= (
+            2 if len(_food_match_words(normalized))==1 else 1
+        )
+    ]
+    ranked=_food_rank(normalized,options)
+    return {
+        "query":q,"normalized_query":normalized,"preliminary":True,
+        "items":[dict(item,food_type=_food_search_type(item)) for item in ranked[:limit]],
+    }
+
+
 @app.get("/api/prototype/foods/search")
 def prototype_food_search(
     q:str=Query(...,min_length=2,max_length=120),
