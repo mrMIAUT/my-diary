@@ -1,0 +1,32 @@
+name: USDA official datasets audit (EPLAN 1.2)
+
+on:
+  push:
+    branches:
+      - eplan-1.2
+    paths:
+      - .github/workflows/usda-source-scan.yml
+      - backend/usda_source_scan.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-usda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download and inspect official USDA datasets
+        run: python backend/usda_source_scan.py --out usda_source_report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: usda-official-source-audit
+          path: usda_source_report/
+          if-no-files-found: warn
+          retention-days: 14
