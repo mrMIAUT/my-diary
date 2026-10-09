@@ -15,7 +15,12 @@ const products=Array.from({length:12},(_,i)=>({
  kcal_100:120+i,protein_100:23,fat_100:2.6,carbs_100:0,
  approximate:false,search_aliases:["Курятина","Chicken breast"],
 }));
-const catalogue={savedAt:Date.now(),items:products,
+const decoys=Array.from({length:14},(_,i)=>({
+ name:"Картопля "+i,source:"reference",source_id:"potato-"+i,
+ kcal_100:77,protein_100:2,fat_100:0,carbs_100:17,
+ approximate:false,search_aliases:["Potatoes"],
+}));
+const catalogue={savedAt:Date.now(),items:[...products,...decoys],
  query_replacements:{"курица":"курятина"},
  english_aliases:[["курятина","chicken"]]};
 const store={"eplan12-local-food-catalog-v1":JSON.stringify(catalogue)};
