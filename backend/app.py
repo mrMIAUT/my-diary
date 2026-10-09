@@ -1654,6 +1654,9 @@ def _off_item(product:dict):
     countries=[str(x).lower() for x in (product.get("countries_tags") or [])]
     if _is_blocked_russian_off_product(countries,brand):
         return None
+    # Missing macros are unknown, not zero: reject incomplete OFF entries.
+    if any(nutr.get(field) is None for field in ("proteins_100g","fat_100g","carbohydrates_100g")):
+        return None
     kcal=_food_num(nutr.get("energy-kcal_100g"))
     if not kcal:
         kj=_food_num(nutr.get("energy_100g"))
@@ -1663,7 +1666,8 @@ def _off_item(product:dict):
     carbs=_food_num(nutr.get("carbohydrates_100g"))
     # Contributor-entered OFF records can be incomplete. A diary must not offer
     # an item that would silently add 0 kcal / 0 macros.
-    if kcal<=0:return None
+    if kcal<=0 or kcal>900:return None
+    if protein+fat+carbs>105:return None
     if any(v<0 or v>100 for v in (protein,fat,carbs)):return None
     macro_kcal=protein*4+fat*9+carbs*4
     if macro_kcal>max(kcal*1.5,kcal+140):return None
@@ -1764,7 +1768,7 @@ def _usda_nutrient(food:dict,number:str,*names):
         if num==number or name in wanted:
             if number=="1008" and unit and unit!="KCAL":continue
             return _food_num(nutrient.get("value"))
-    return 0.0
+    return None
 
 def _usda_item(food:dict):
     name=str(food.get("description") or "").strip()
@@ -1774,9 +1778,12 @@ def _usda_item(food:dict):
     protein=_usda_nutrient(food,"1003","protein")
     fat=_usda_nutrient(food,"1004","total lipid (fat)")
     carbs=_usda_nutrient(food,"1005","carbohydrate, by difference")
+    # Missing USDA nutrients must not silently become zero.
+    if any(v is None for v in (kcal,protein,fat,carbs)):return None
     # Search results occasionally contain incomplete/bad branded nutrition.
     # Do not let obviously impossible records reach the diary prototype.
-    if kcal<=0:return None
+    if kcal<=0 or kcal>900:return None
+    if protein+fat+carbs>105:return None
     if any(v<0 or v>100 for v in (protein,fat,carbs)):return None
     macro_kcal=protein*4+fat*9+carbs*4
     if macro_kcal>max(kcal*1.45,kcal+120):return None
