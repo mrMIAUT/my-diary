@@ -14,11 +14,12 @@ const start=js.indexOf("function localDayKey(){");
 const end=js.indexOf("\n$('foodCalendarToggle').addEventListener(",start);
 assert.ok(start>=0&&end>start);
 const savedData=[];
-let stored=JSON.stringify(savedData),lastFocus=null,scrolls=0;
+let stored=JSON.stringify(savedData),lastFocus=null,scrolls=0,bound=[];
 const entries={innerHTML:"",querySelectorAll(selector){
  if(selector==="[data-diary-meal-add]"){
-  return Array.from(this.innerHTML.matchAll(/data-diary-meal-add="([^"]+)"/g),
+  bound=Array.from(this.innerHTML.matchAll(/data-diary-meal-add="([^"]+)"/g),
     m=>({dataset:{diaryMealAdd:m[1]},onclick:null}));
+  return bound;
  }
  return [];
 }};
@@ -45,13 +46,12 @@ api.renderDiary();
 assert.equal((entries.innerHTML.match(/class="foodDiaryMeal is-empty"/g)||[]).length,4);
 assert.equal((entries.innerHTML.match(/data-diary-meal-add=/g)||[]).length,4);
 assert.equal(controls.diaryKcal.textContent,"0");
-const buttons=entries.querySelectorAll("[data-diary-meal-add]");
+const buttons=bound;
 assert.deepEqual(buttons.map(b=>b.dataset.diaryMealAdd),
  ["Сніданок","Обід","Вечеря","Перекус"]);
-// With actual UI rebind (the selector returns fresh objects each time), each
-// event is covered by the handler in renderDiary's source.
-assert.ok(js.includes("btn.onclick=()=>selectMealForFoodSearch(btn.dataset.diaryMealAdd)"));
-assert.equal(api.selectMealForFoodSearch("Перекус"),true);
+// Click the real bound handler; it must never initiate an external search.
+assert.equal(typeof buttons[3].onclick,"function");
+buttons[3].onclick();
 assert.equal(ctx.foodPreferredMeal,"Перекус");
 assert.equal(foodMeal.value,"Перекус");
 assert.equal(scrolls,1);
