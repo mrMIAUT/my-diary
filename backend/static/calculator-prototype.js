@@ -540,6 +540,8 @@ function localDayKey(){
 }
 const FOOD_MEALS=['Сніданок','Обід','Вечеря','Перекус'];
 let activeDiaryEditId=null,diaryLastRemoved=null;
+// Presentation-only state. No diary entry is changed when a meal folds.
+const diaryCollapsedMeals=new Set();
 // Browsing a date changes the view, NOT the data. Existing localStorage
 // entries remain byte-for-byte untouched until a deliberate save/edit/delete.
 let diarySelectedDate=localDayKey(),diaryCalendarOpen=false;
@@ -811,19 +813,41 @@ function diaryMealGroupHtml(meal,items){
  const totals=diaryNutritionTotals(items);
  const label=items.length===1?'1 продукт':items.length+' продуктів';
  const supportedMeal=FOOD_MEALS.includes(meal);
+ const folded=items.length>0&&diaryCollapsedMeals.has(diarySelectedDate+'|'+meal);
  const addButton=supportedMeal?'<button type="button" class="foodDiaryMealAdd" data-diary-meal-add="'+foodEsc(meal)+
   '" aria-label="Додати продукт: '+foodEsc(meal)+'" title="Додати продукт">+</button>':'';
- return '<section class="foodDiaryMeal'+(items.length?'':' is-empty')+'" data-diary-meal="'+foodEsc(meal)+'">'+
-  '<div class="foodDiaryMealHead"><div class="foodDiaryMealTitle"><strong>'+foodEsc(meal)+'</strong>'+
-   (items.length?'<span class="foodDiaryMealCount">'+label+'</span>':'')+'</div>'+
-   '<div class="foodDiaryMealRight"><strong class="foodDiaryMealKcal">'+
-   (items.length?foodFmt(totals.kcal)+' <small>ккал</small>':'—')+
-   '</strong>'+addButton+'</div></div>'+
-  (items.length?'<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
-   '<span>Б <b>'+foodFmt(totals.protein)+'</b></span>'+
-   '<span>Ж <b>'+foodFmt(totals.fat)+'</b></span>'+
-   '<span>В <b>'+foodFmt(totals.carbs)+'</b></span></div>'+
-   '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div>':'')+'</section>';
+ const title='<span class="foodDiaryMealTitle"><strong>'+foodEsc(meal)+'</strong>'+
+   (items.length?'<span class="foodDiaryMealCount">'+label+'</span>':'')+'</span>';
+ const calories=items.length?foodFmt(totals.kcal)+' <small>ккал</small>':'';
+ const heading=items.length?'<button type="button" class="foodDiaryMealToggle" data-diary-meal-toggle="'+foodEsc(meal)+
+  '" aria-expanded="'+(folded?'false':'true')+'" aria-label="'+(folded?'Розгорнути':'Згорнути')+' '+foodEsc(meal)+'">'+
+  title+'<span class="foodDiaryMealToggleRight"><strong class="foodDiaryMealKcal">'+calories+
+  '</strong><span class="foodDiaryMealChevron" aria-hidden="true">'+(folded?'⌄':'⌃')+'</span></span></button>':
+  '<span class="foodDiaryMealEmptyTitle">'+title+'</span>';
+ const macroCell=(label,value)=>'<span class="foodDiaryMealMacro"><small>'+label+'</small><b>'+foodFmt(value)+' <em>г</em></b></span>';
+ return '<section class="foodDiaryMeal'+(items.length?'':' is-empty')+(folded?' is-collapsed':'')+'" data-diary-meal="'+foodEsc(meal)+'">'+
+  '<div class="foodDiaryMealHead">'+heading+addButton+'</div>'+
+  (items.length&&!folded?'<div class="foodDiaryMealBody" data-diary-meal-body="'+foodEsc(meal)+'">'+
+   '<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
+    macroCell('Білки',totals.protein)+macroCell('Жири',totals.fat)+
+    macroCell('Вуглеводи',totals.carbs)+'</div>'+
+   '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div></div>':'')+
+  '</section>';
+}
+function toggleDiaryMeal(meal){
+ if(!FOOD_MEALS.includes(meal)&&meal!=='Інше')return false;
+ const items=loadDiary().filter(x=>x.date===diarySelectedDate&&
+  (meal==='Інше'?!FOOD_MEALS.includes(x.meal):x.meal===meal));
+ if(!items.length)return false;
+ const key=diarySelectedDate+'|'+meal;
+ if(diaryCollapsedMeals.has(key))diaryCollapsedMeals.delete(key);
+ else{
+  diaryCollapsedMeals.add(key);
+  if(activeDiaryEditId&&items.some(x=>String(x.id)===activeDiaryEditId))
+   activeDiaryEditId=null;
+ }
+ renderDiary();
+ return true;
 }
 function selectMealForFoodSearch(meal){
  if(!FOOD_MEALS.includes(meal))return false;
@@ -860,6 +884,7 @@ function renderDiary(){
  if(other.length)sections.push(diaryMealGroupHtml('Інше',other));
  box.innerHTML=sections.join('');
  box.querySelectorAll('[data-diary-meal-add]').forEach(btn=>btn.onclick=()=>selectMealForFoodSearch(btn.dataset.diaryMealAdd));
+ box.querySelectorAll('[data-diary-meal-toggle]').forEach(btn=>btn.onclick=()=>toggleDiaryMeal(btn.dataset.diaryMealToggle));
  box.querySelectorAll('[data-diary-remove]').forEach(btn=>btn.onclick=()=>removeDiaryEntry(btn.dataset.diaryRemove));
  box.querySelectorAll('[data-diary-edit]').forEach(btn=>btn.onclick=()=>startDiaryEdit(btn.dataset.diaryEdit));
  box.querySelectorAll('[data-diary-save]').forEach(btn=>btn.onclick=()=>saveDiaryEdit(btn.dataset.diarySave));
@@ -991,6 +1016,7 @@ function addFoodToDiary(){
   status.textContent='Не вдалося зберегти. Перевір вільне місце в браузері.';return;
  }
  diaryLastRemoved=null;
+ diaryCollapsedMeals.delete(diarySelectedDate+'|'+meal);
  renderDiary();
  status.textContent='Додано до щоденника.';
 }
@@ -1010,7 +1036,6 @@ $('foodQuery').addEventListener('input',()=>{
 });
 $('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
 $('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;searchFoods(foodActiveQuery,true)});
-document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener('click',()=>searchFoods(btn.dataset.foodQuery)));
 
 renderDiary();
 syncAdjust();
