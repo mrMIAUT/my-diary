@@ -37,7 +37,7 @@ class WorkoutSetVisualContracts(unittest.TestCase):
         self.assertIn("border:1px solid #dbece1!important",card)
         self.assertIn("border-radius:16px!important",card)
         # White input surfaces and swipe gesture mechanics remain intact.
-        self.assertIn("background:#fff!important", CSS.split(
+        self.assertIn("background:#fff!important", CSS.split("/* v245 — client workout set:",1)[1].split(
             ".lyfta-set-wrap.is-complete .lyfta-set-row input{",1)[1].split("}",1)[0])
         self.assertIn("transform:translateX(-92px)", CSS)
 
