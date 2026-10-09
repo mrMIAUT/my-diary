@@ -52,6 +52,8 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const src=fs.readFileSync('backend/static/js/workout.js','utf8');
 const ctx={
   window:{},console,
+  setInterval:()=>1,
+  document:{addEventListener:()=>{}},
   programDayIsExtra:()=>false,
   workoutWeekStartISO:()=> '2026-10-05',
   isoToday:()=> '2026-10-10',
