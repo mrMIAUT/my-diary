@@ -3,6 +3,7 @@
 Synthetic test values are not claims about real food composition.
 """
 import json
+import hashlib
 import sys
 import unittest
 from pathlib import Path
@@ -26,7 +27,7 @@ class LocalCatalogueTests(unittest.TestCase):
         # Read the stable ID from the actual manifest, never assume its order.
         candidate_id = candidate_id or self.candidates[0]["id"]
         candidate = self.by_id[candidate_id]
-        return {
+        row = {
             "candidate_id": candidate_id,
             "name_uk": candidate["name_uk"],
             "preparation_state": candidate["preparation_state"],
@@ -35,8 +36,9 @@ class LocalCatalogueTests(unittest.TestCase):
             "fdc_id": 1234567,  # synthetic ID for validation tests ONLY
             "source_data_type": "Foundation",
             "source_archive_version": "synthetic-test-fixture",
-            "source_snapshot_sha256": "a" * 64,
             "source_food_description": "Synthetic test food",
+            "source_archive_sha256": "a" * 64,
+            "source_url": "https://fdc.nal.usda.gov/fdc-datasets/synthetic-fixture.zip",
             "name_ru": "Куриное филе сырое",
             "name_en": "Raw chicken breast",
             "source_portion_basis": "100g_edible_portion",
@@ -55,6 +57,16 @@ class LocalCatalogueTests(unittest.TestCase):
             "fat_100": 2.6,
             "carbs_100": 0.0,
         }
+        row["source_snapshot"] = {
+            "fdc_id": row["fdc_id"],
+            "description": row["source_food_description"],
+            "source_nutrient_ids": row["source_nutrient_ids"],
+            "source_nutrients_100g": row["source_nutrients_100g"],
+        }
+        row["source_snapshot_sha256"] = hashlib.sha256(json.dumps(
+            row["source_snapshot"], ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")).hexdigest()
+        return row
 
     def test_candidate_manifest_is_large_and_not_nutrition_data(self):
         self.assertGreaterEqual(len(self.candidates), 300)
@@ -99,6 +111,8 @@ class LocalCatalogueTests(unittest.TestCase):
         original = self.sample_record()
         for changes in (
             {"source_snapshot_sha256": ""},
+            {"source_archive_sha256": ""},
+            {"source_snapshot": {}},
             {"source_system": "OFF"},
             {"source_data_type": "Branded"},
             {"source_nutrients_100g": {}},
@@ -129,6 +143,11 @@ class LocalCatalogueTests(unittest.TestCase):
         bad["source_nutrients_100g"] = {
             **bad["source_nutrients_100g"], "kcal_100": 650,
         }
+        bad["source_snapshot"]["source_nutrients_100g"] = dict(
+            bad["source_nutrients_100g"])
+        bad["source_snapshot_sha256"] = hashlib.sha256(json.dumps(
+            bad["source_snapshot"], ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")).hexdigest()
         # The review gate allows an explained exception, but cannot independently
         # verify its source; a human must compare underlying official records.
         self.assertEqual(
