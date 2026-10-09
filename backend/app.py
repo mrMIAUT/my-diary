@@ -2206,6 +2206,38 @@ def _food_search_type(item:dict):
     return "generic"
 
 
+def _food_title_language_rank(item:dict):
+    """Best-effort UI language preference, never a translation or filter.
+
+    Many Ukrainian/Russian food names share the same spelling. Keep those
+    titles neutral rather than guessing their language; only explicit
+    linguistic evidence can place a title in a language-specific group.
+    """
+    name=str(item.get("name") or "").casefold()
+    has_uk=bool(re.search(r"[іїєґ]",name))
+    has_ru=bool(re.search(r"[ыёъэ]",name))
+    if has_uk and not has_ru:return 0
+    if has_ru and not has_uk:return 2
+    if has_uk and has_ru:return 1
+    if not re.search(r"[а-я]",name):
+        return 3 if re.search(r"[a-z]",name) else 1
+
+    # Clear single-word conjunctions/prepositions distinguish the scripts'
+    # shared letters without using brand- or product-specific exceptions.
+    if re.search(r"(?<!\\w)(?:з|із|зі|та)(?!\\w)",name):
+        return 0
+    if re.search(r"(?<!\\w)(?:из|со|с)(?!\\w)",name):
+        return 2
+
+    # Reuse the existing Russian -> Ukrainian search vocabulary for
+    # unambiguous Russian spellings such as картошка, курица, творог.
+    for russian,ukrainian in FOOD_QUERY_REPLACEMENTS.items():
+        if russian==ukrainian or len(russian)<4:continue
+        if re.search(r"(?<!\\w)"+re.escape(russian)+r"(?!\\w)",name):
+            return 2
+    return 1
+
+
 def _food_rank(query:str,items:list):
     """Rank candidate foods with relevance > intent > provenance > tie-breaks.
 
@@ -2240,12 +2272,16 @@ def _food_rank(query:str,items:list):
         # references for specific brand names or multi-word dish searches.
         quick_reference=(0 if broad_query and item.get("source")=="reference"
                          and quality[0]<=1 else 1)
+        # Locality and relevance remain more important than title language.
+        # For equally suitable results prefer clear Ukrainian wording, then
+        # shared/uncertain Cyrillic, Russian, and finally English titles.
+        language=_food_title_language_rank(item)
         ranked.append((quality[0],quick_reference,relation,preparation,
                        secondary,dish_conflicts,_food_local_tier(item),extra_meat,
-                       quality[1],quality[2],quality[3],
+                       language,quality[1],quality[2],quality[3],
                        (item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:12])
-    return _dedupe_food_items([row[12] for row in ranked])
+    ranked.sort(key=lambda row:row[:13])
+    return _dedupe_food_items([row[13] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
