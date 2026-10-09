@@ -19,6 +19,17 @@ NUTRIENTS = ("kcal_100", "protein_100", "fat_100", "carbs_100")
 STATES = {"raw", "dry", "cooked", "as_sold"}
 
 
+def food_energy_valid(kcal, protein, fat, carbs):
+    """Rare pure rendered fats can be 902 kcal/100g in USDA SR Legacy.
+
+    Keep the normal 900 kcal upper bound for ALL other foods and allow
+    900-905 kcal only for essentially 100% fat with negligible macros.
+    """
+    return ((0 < kcal <= 900) or
+            (900 < kcal <= 905 and fat >= 99.9
+             and protein <= 0.1 and carbs <= 0.1))
+
+
 def candidate_manifest(path=CANDIDATES_PATH):
     """Read only the catalogue plan. Never treat its entries as diary food."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -140,7 +151,7 @@ def validate_reviewed_record(record, by_id):
         if abs(n - original) > .011:
             raise ValueError("Normalized nutrition differs from cited source")
         values[key] = float(n)
-    if not (0 < values["kcal_100"] <= 900):
+    if not food_energy_valid(values["kcal_100"],values["protein_100"],values["fat_100"],values["carbs_100"]):
         raise ValueError("Energy outside allowed bounds")
     if any(not 0 <= values[k] <= 100 for k in NUTRIENTS[1:]):
         raise ValueError("Macro outside possible per-100g bounds")
