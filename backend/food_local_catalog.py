@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 import math
 import re
+import hashlib
 
 ROOT = Path(__file__).resolve().parent
 CANDIDATES_PATH = ROOT / "food_catalog_candidates.json"
@@ -87,6 +88,25 @@ def validate_reviewed_record(record, by_id):
     snapshot = record.get("source_snapshot_sha256")
     if not isinstance(snapshot, str) or re.fullmatch(r"[0-9a-f]{64}", snapshot) is None:
         raise ValueError("Missing source snapshot SHA256 fingerprint")
+    official_snapshot = record.get("source_snapshot")
+    if not isinstance(official_snapshot, dict):
+        raise ValueError("Original USDA source snapshot required")
+    expected = hashlib.sha256(json.dumps(official_snapshot,ensure_ascii=False,
+        sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
+    if expected != snapshot:
+        raise ValueError("USDA source snapshot fingerprint does not match")
+    if official_snapshot.get("fdc_id") != fdc_id or (
+        official_snapshot.get("description") != record.get("source_food_description")
+    ):
+        raise ValueError("Snapshot identity differs from USDA food")
+    archive_sha=record.get("source_archive_sha256")
+    if not isinstance(archive_sha,str) or not re.fullmatch(r"[0-9a-f]{64}",archive_sha):
+        raise ValueError("Official archive SHA256 required")
+    source_url=record.get("source_url")
+    if not isinstance(source_url,str) or not source_url.startswith(
+        "https://fdc.nal.usda.gov/fdc-datasets/"
+    ):
+        raise ValueError("Official USDA download URL required")
     # A source serving-size, cooked/raw state and edible portion MUST match
     # the candidate before approval, not merely its food name.
     if record.get("source_portion_basis") != "100g_edible_portion":
@@ -105,6 +125,11 @@ def validate_reviewed_record(record, by_id):
     source_values = record.get("source_nutrients_100g")
     if not isinstance(source_values, dict):
         raise ValueError("Original official nutrient values required")
+    for key in NUTRIENTS:
+        if (official_snapshot.get("source_nutrient_ids") or {}).get(key) != source_nutrient_ids.get(key):
+            raise ValueError("Snapshot nutrient ID differs from cited USDA nutrient")
+        if (official_snapshot.get("source_nutrients_100g") or {}).get(key) != source_values.get(key):
+            raise ValueError("Snapshot nutrient amount differs from cited USDA value")
     values = {}
     for key in NUTRIENTS:
         n, original = record.get(key), source_values.get(key)
