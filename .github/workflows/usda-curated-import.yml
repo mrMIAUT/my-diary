@@ -1,0 +1,59 @@
+name: USDA curated local food import (EPLAN 1.2)
+
+on:
+  push:
+    branches:
+      - eplan-1.2
+    paths:
+      - backend/import_usda_curated.py
+      - backend/usda_curated_crosswalk.json
+      - .github/workflows/usda-curated-import.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usda-curated-import-eplan-1.2
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eplan-1.2
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Import only curated USDA identities from verified archives
+        run: python backend/import_usda_curated.py --write --out usda_curated_import_report.json
+      - name: Validate local catalogue source provenance
+        run: python backend/check_food_local_catalog.py
+      - name: Check Python and JavaScript syntax
+        run: |
+          python -m py_compile backend/food_local_catalog.py backend/food_reference_catalog.py backend/app.py backend/import_usda_curated.py
+          node --check backend/static/calculator-prototype.js
+      - name: Run all food search regression tests
+        run: python -m unittest discover -s backend/tests -p 'test_food_search_*.py' -v
+      - name: Commit ONLY reviewed local food data to experimental branch
+        run: |
+          git config user.name "eplan-usda-audit[bot]"
+          git config user.email "eplan-usda-audit[bot]@users.noreply.github.com"
+          git add backend/food_local_nutrition.json
+          if ! git diff --cached --quiet; then
+            git commit -m "food data: import source-checked USDA FDC foods into EPLAN 1.2"
+            git push origin HEAD:eplan-1.2
+          else
+            echo "No changes to reviewed local food data"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: usda-curated-import-report
+          path: usda_curated_import_report.json
+          if-no-files-found: warn
+          retention-days: 14
