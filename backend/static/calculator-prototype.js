@@ -115,7 +115,8 @@ function cachedFoodMatches(query){
  const tokens=String(query||'').toLowerCase().split(/\s+/).filter(x=>x.length>1&&!/^\d+%?$/.test(x));
  if(!tokens.length)return [];
  return loadFoodCache().filter(item=>{
-  const hay=((item.name||'')+' '+(item.brand||'')).toLowerCase();
+  const aliases=Array.isArray(item.search_aliases)?item.search_aliases.join(' '):'';
+  const hay=((item.name||'')+' '+(item.brand||'')+' '+aliases).toLowerCase();
   return tokens.every(t=>hay.includes(t));
  }).slice(0,8);
 }
