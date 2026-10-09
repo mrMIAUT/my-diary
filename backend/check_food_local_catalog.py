@@ -7,6 +7,7 @@ verify USDA measurements: that requires official source data review.
 from collections import Counter
 import json
 from food_local_catalog import candidate_manifest, approved_reference_food_items
+from food_manufacturer_catalog import manufacturer_label_food_items
 from food_reference_catalog import reference_food_items
 
 
@@ -17,10 +18,13 @@ def main():
     counts=Counter(item["category"] for item in candidates)
     existing_approximate=sum(item.get("approximate") is True for item in current)
     local_reviewed=sum(item.get("review_status")=="approved" for item in current)
-    if existing_approximate+local_reviewed!=len(current):
+    manufacturer_reviewed=sum(item.get("review_status")=="manufacturer_label_reviewed" for item in current)
+    if existing_approximate+local_reviewed+manufacturer_reviewed!=len(current):
         raise ValueError("Unclassified food provenance in reference catalogue")
     if local_reviewed!=len(approved):
-        raise ValueError("Reviewed records not included exactly once")
+        raise ValueError("Reviewed USDA records not included exactly once")
+    if manufacturer_reviewed!=len(manufacturer_label_food_items()):
+        raise ValueError("Reviewed manufacturer labels not included exactly once")
     if len({r["source_id"] for r in current}) != len(current):
         raise ValueError("Duplicate source IDs in combined reference catalogue")
     summary={
@@ -28,6 +32,7 @@ def main():
         "categories":dict(counts),
         "existing_approximate":existing_approximate,
         "source_reviewed_approved":local_reviewed,
+        "brand_label_reviewed":manufacturer_reviewed,
         "still_pending_source":len(candidates)-local_reviewed,
         "status":"plan_not_nutrition_data",
         "note":"Source audit and official FDC record comparison required before approving BJU.",
