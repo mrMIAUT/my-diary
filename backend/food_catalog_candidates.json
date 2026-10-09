@@ -1,0 +1,2521 @@
+{
+  "schema_version": 1,
+  "planned_only": true,
+  "note": "Proposed basic food list, NOT nutrition data. No calories/macros are supplied until linked to auditable official source records; candidates must not appear in diary search.",
+  "unit_basis": "per_100g_edible_portion_when_source_reviewed",
+  "products": [
+    {
+      "id": "plan-0001",
+      "category": "Птиця",
+      "name_uk": "Куряче філе (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0002",
+      "category": "Птиця",
+      "name_uk": "Куряче філе (відварене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0003",
+      "category": "Птиця",
+      "name_uk": "Куряче філе (запечене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0004",
+      "category": "Птиця",
+      "name_uk": "Куряча грудка зі шкірою (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0005",
+      "category": "Птиця",
+      "name_uk": "Куряче стегно без шкіри (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0006",
+      "category": "Птиця",
+      "name_uk": "Куряче стегно зі шкірою (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0007",
+      "category": "Птиця",
+      "name_uk": "Куряче стегно без шкіри (запечене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0008",
+      "category": "Птиця",
+      "name_uk": "Куряча гомілка без шкіри (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0009",
+      "category": "Птиця",
+      "name_uk": "Куряча гомілка зі шкірою (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0010",
+      "category": "Птиця",
+      "name_uk": "Куряча гомілка (запечена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0011",
+      "category": "Птиця",
+      "name_uk": "Куряче крило (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0012",
+      "category": "Птиця",
+      "name_uk": "Куряче крило (запечене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0013",
+      "category": "Птиця",
+      "name_uk": "Курячий фарш (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0014",
+      "category": "Птиця",
+      "name_uk": "Курка ціла без шкіри (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0015",
+      "category": "Птиця",
+      "name_uk": "Куряче серце (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0016",
+      "category": "Птиця",
+      "name_uk": "Куряча печінка (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0017",
+      "category": "Птиця",
+      "name_uk": "Філе індички (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0018",
+      "category": "Птиця",
+      "name_uk": "Філе індички (запечене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0019",
+      "category": "Птиця",
+      "name_uk": "Стегно індички без шкіри (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0020",
+      "category": "Птиця",
+      "name_uk": "Індичий фарш (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0021",
+      "category": "Птиця",
+      "name_uk": "Качине філе без шкіри (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0022",
+      "category": "Птиця",
+      "name_uk": "Качине філе зі шкірою (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0023",
+      "category": "Птиця",
+      "name_uk": "Перепілка (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0024",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичина пісна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0025",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичина середньої жирності (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0026",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловича вирізка (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0027",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичий оковалок (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0028",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичий антрекот (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0029",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичина (тушкована без олії)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0030",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичина (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0031",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичий фарш 5% жиру (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0032",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичий фарш 10% жиру (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0033",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Яловичий фарш 20% жиру (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0034",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Телятина пісна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0035",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинина вирізка (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0036",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинина корейка без кістки (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0037",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинина ошийок (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0038",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинина лопатка (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0039",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинина пісна (запечена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0040",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинячий фарш 10% жиру (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0041",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Свинячий фарш 20% жиру (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0042",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Баранина пісна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0043",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Баранина нога (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0044",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Кролятина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0045",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Печінка яловича (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0046",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Печінка свиняча (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0047",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Язик яловичий (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0048",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Серце яловиче (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0049",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Нирки яловичі (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0050",
+      "category": "М'ясо та субпродукти",
+      "name_uk": "Сало свиняче солоне",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0051",
+      "category": "Риба",
+      "name_uk": "Лосось атлантичний (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0052",
+      "category": "Риба",
+      "name_uk": "Лосось атлантичний (запечений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0053",
+      "category": "Риба",
+      "name_uk": "Лосось дикий (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0054",
+      "category": "Риба",
+      "name_uk": "Форель райдужна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0055",
+      "category": "Риба",
+      "name_uk": "Форель райдужна (запечена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0056",
+      "category": "Риба",
+      "name_uk": "Тунець жовтоперий (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0057",
+      "category": "Риба",
+      "name_uk": "Тунець у власному соку (консервований)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0058",
+      "category": "Риба",
+      "name_uk": "Тунець в олії (консервований, без рідини)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0059",
+      "category": "Риба",
+      "name_uk": "Тріска атлантична (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0060",
+      "category": "Риба",
+      "name_uk": "Тріска (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0061",
+      "category": "Риба",
+      "name_uk": "Хек (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0062",
+      "category": "Риба",
+      "name_uk": "Хек (запечений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0063",
+      "category": "Риба",
+      "name_uk": "Минтай (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0064",
+      "category": "Риба",
+      "name_uk": "Минтай (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0065",
+      "category": "Риба",
+      "name_uk": "Скумбрія атлантична (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0066",
+      "category": "Риба",
+      "name_uk": "Скумбрія (запечена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0067",
+      "category": "Риба",
+      "name_uk": "Скумбрія (копчена)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0068",
+      "category": "Риба",
+      "name_uk": "Оселедець атлантичний (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0069",
+      "category": "Риба",
+      "name_uk": "Оселедець солоний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0070",
+      "category": "Риба",
+      "name_uk": "Сардина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0071",
+      "category": "Риба",
+      "name_uk": "Сардини у власному соку (консервовані)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0072",
+      "category": "Риба",
+      "name_uk": "Шпроти в олії (консервовані)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0073",
+      "category": "Риба",
+      "name_uk": "Короп (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0074",
+      "category": "Риба",
+      "name_uk": "Карась (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0075",
+      "category": "Риба",
+      "name_uk": "Окунь річковий (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0076",
+      "category": "Риба",
+      "name_uk": "Судак (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0077",
+      "category": "Риба",
+      "name_uk": "Щука (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0078",
+      "category": "Риба",
+      "name_uk": "Дорадо (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0079",
+      "category": "Риба",
+      "name_uk": "Сибас (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0080",
+      "category": "Риба",
+      "name_uk": "Палтус (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0081",
+      "category": "Морепродукти",
+      "name_uk": "Креветки очищені (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0082",
+      "category": "Морепродукти",
+      "name_uk": "Креветки очищені (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0083",
+      "category": "Морепродукти",
+      "name_uk": "Мідії без мушлі (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0084",
+      "category": "Морепродукти",
+      "name_uk": "Мідії (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0085",
+      "category": "Морепродукти",
+      "name_uk": "Кальмар (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0086",
+      "category": "Морепродукти",
+      "name_uk": "Кальмар (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0087",
+      "category": "Морепродукти",
+      "name_uk": "Восьминіг (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0088",
+      "category": "Морепродукти",
+      "name_uk": "Восьминіг (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0089",
+      "category": "Морепродукти",
+      "name_uk": "Гребінці морські (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0090",
+      "category": "Морепродукти",
+      "name_uk": "Крабове м'ясо (відварене)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0091",
+      "category": "Морепродукти",
+      "name_uk": "Устриці (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0092",
+      "category": "Морепродукти",
+      "name_uk": "Морська капуста (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0093",
+      "category": "Морепродукти",
+      "name_uk": "Морська капуста (маринована)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0094",
+      "category": "Морепродукти",
+      "name_uk": "Ікра лососева солона",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0095",
+      "category": "Яйця",
+      "name_uk": "Яйце куряче (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0096",
+      "category": "Яйця",
+      "name_uk": "Яйце куряче (варене круто)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0097",
+      "category": "Яйця",
+      "name_uk": "Яйце куряче (варене некруто)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0098",
+      "category": "Яйця",
+      "name_uk": "Білок курячого яйця (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0099",
+      "category": "Яйця",
+      "name_uk": "Білок курячого яйця (варений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0100",
+      "category": "Яйця",
+      "name_uk": "Жовток курячого яйця (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0101",
+      "category": "Яйця",
+      "name_uk": "Яйце перепелине (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0102",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче 0,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0103",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче 1%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0104",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче 1,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0105",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче 2,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0106",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче 3,2%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0107",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко коров'яче незбиране",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0108",
+      "category": "Молочні продукти",
+      "name_uk": "Молоко безлактозне 2,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0109",
+      "category": "Молочні продукти",
+      "name_uk": "Кефір 1%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0110",
+      "category": "Молочні продукти",
+      "name_uk": "Кефір 2,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0111",
+      "category": "Молочні продукти",
+      "name_uk": "Кефір 3,2%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0112",
+      "category": "Молочні продукти",
+      "name_uk": "Йогурт натуральний без цукру 0%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0113",
+      "category": "Молочні продукти",
+      "name_uk": "Йогурт натуральний без цукру 2%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0114",
+      "category": "Молочні продукти",
+      "name_uk": "Йогурт грецький натуральний 2%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0115",
+      "category": "Молочні продукти",
+      "name_uk": "Йогурт грецький натуральний 5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0116",
+      "category": "Молочні продукти",
+      "name_uk": "Йогурт грецький натуральний 10%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0117",
+      "category": "Молочні продукти",
+      "name_uk": "Ряжанка 2,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0118",
+      "category": "Молочні продукти",
+      "name_uk": "Ряжанка 4%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0119",
+      "category": "Молочні продукти",
+      "name_uk": "Сир кисломолочний 0%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0120",
+      "category": "Молочні продукти",
+      "name_uk": "Сир кисломолочний 2%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0121",
+      "category": "Молочні продукти",
+      "name_uk": "Сир кисломолочний 5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0122",
+      "category": "Молочні продукти",
+      "name_uk": "Сир кисломолочний 9%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0123",
+      "category": "Молочні продукти",
+      "name_uk": "Сметана 10%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0124",
+      "category": "Молочні продукти",
+      "name_uk": "Сметана 15%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0125",
+      "category": "Молочні продукти",
+      "name_uk": "Сметана 20%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0126",
+      "category": "Молочні продукти",
+      "name_uk": "Вершки 10%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0127",
+      "category": "Молочні продукти",
+      "name_uk": "Вершки 20%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0128",
+      "category": "Молочні продукти",
+      "name_uk": "Вершки 33%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0129",
+      "category": "Молочні продукти",
+      "name_uk": "Масло вершкове 72,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0130",
+      "category": "Молочні продукти",
+      "name_uk": "Масло вершкове 82,5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0131",
+      "category": "Молочні продукти",
+      "name_uk": "Сир моцарела",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0132",
+      "category": "Молочні продукти",
+      "name_uk": "Сир фета",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0133",
+      "category": "Молочні продукти",
+      "name_uk": "Сир бринза",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0134",
+      "category": "Молочні продукти",
+      "name_uk": "Сир рикота",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0135",
+      "category": "Молочні продукти",
+      "name_uk": "Сир маскарпоне",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0136",
+      "category": "Молочні продукти",
+      "name_uk": "Сир чеддер",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0137",
+      "category": "Молочні продукти",
+      "name_uk": "Сир гауда",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0138",
+      "category": "Молочні продукти",
+      "name_uk": "Сир пармезан",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0139",
+      "category": "Молочні продукти",
+      "name_uk": "Сир вершковий натуральний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0140",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис білий шліфований (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0141",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис білий (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0142",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис басматі (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0143",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис басматі (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0144",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис жасмин (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0145",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис жасмин (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0146",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис бурий (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0147",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис бурий (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0148",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Рис дикий (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0149",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Гречка ядриця (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0150",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Гречка (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0151",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Вівсяні пластівці (сухі)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0152",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Вівсяна каша на воді",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0153",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Вівсяні висівки (сухі)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0154",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Пшоно (сухе)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0155",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Пшоняна каша на воді",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0156",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Булгур (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0157",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Булгур (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0158",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Кускус (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0159",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Кускус (готовий на воді)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0160",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Кіноа (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0161",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Кіноа (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0162",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Перлова крупа (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0163",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Перлова каша на воді",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0164",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Ячна крупа (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0165",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Манна крупа (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0166",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Кукурудзяна крупа (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0167",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Полента на воді",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0168",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Макарони з пшениці твердих сортів (сухі)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0169",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Макарони з пшениці твердих сортів (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0170",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Макарони цільнозернові (сухі)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0171",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Макарони цільнозернові (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0172",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Локшина рисова (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0173",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Локшина рисова (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0174",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Борошно пшеничне вищого ґатунку",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0175",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Борошно пшеничне цільнозернове",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0176",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Борошно житнє",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0177",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Борошно кукурудзяне",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0178",
+      "category": "Крупи, макарони та борошно",
+      "name_uk": "Крохмаль кукурудзяний",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0179",
+      "category": "Бобові",
+      "name_uk": "Сочевиця червона (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0180",
+      "category": "Бобові",
+      "name_uk": "Сочевиця червона (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0181",
+      "category": "Бобові",
+      "name_uk": "Сочевиця зелена (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0182",
+      "category": "Бобові",
+      "name_uk": "Сочевиця зелена (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0183",
+      "category": "Бобові",
+      "name_uk": "Нут (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0184",
+      "category": "Бобові",
+      "name_uk": "Нут (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0185",
+      "category": "Бобові",
+      "name_uk": "Квасоля біла (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0186",
+      "category": "Бобові",
+      "name_uk": "Квасоля біла (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0187",
+      "category": "Бобові",
+      "name_uk": "Квасоля червона (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0188",
+      "category": "Бобові",
+      "name_uk": "Квасоля червона (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0189",
+      "category": "Бобові",
+      "name_uk": "Квасоля чорна (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0190",
+      "category": "Бобові",
+      "name_uk": "Квасоля чорна (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0191",
+      "category": "Бобові",
+      "name_uk": "Горох колотий (сухий)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0192",
+      "category": "Бобові",
+      "name_uk": "Горох колотий (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0193",
+      "category": "Бобові",
+      "name_uk": "Горошок зелений (свіжий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0194",
+      "category": "Бобові",
+      "name_uk": "Горошок зелений (консервований без рідини)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0195",
+      "category": "Бобові",
+      "name_uk": "Соя (суха)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0196",
+      "category": "Бобові",
+      "name_uk": "Соєві боби (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0197",
+      "category": "Бобові",
+      "name_uk": "Едамаме (відварені)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0198",
+      "category": "Бобові",
+      "name_uk": "Тофу твердий натуральний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0199",
+      "category": "Овочі та зелень",
+      "name_uk": "Картопля (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0200",
+      "category": "Овочі та зелень",
+      "name_uk": "Картопля (відварена без шкірки)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0201",
+      "category": "Овочі та зелень",
+      "name_uk": "Картопля (запечена без олії)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0202",
+      "category": "Овочі та зелень",
+      "name_uk": "Батат (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0203",
+      "category": "Овочі та зелень",
+      "name_uk": "Батат (запечений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0204",
+      "category": "Овочі та зелень",
+      "name_uk": "Морква (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0205",
+      "category": "Овочі та зелень",
+      "name_uk": "Морква (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0206",
+      "category": "Овочі та зелень",
+      "name_uk": "Буряк (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0207",
+      "category": "Овочі та зелень",
+      "name_uk": "Буряк (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0208",
+      "category": "Овочі та зелень",
+      "name_uk": "Помідор (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0209",
+      "category": "Овочі та зелень",
+      "name_uk": "Огірок (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0210",
+      "category": "Овочі та зелень",
+      "name_uk": "Перець солодкий червоний (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0211",
+      "category": "Овочі та зелень",
+      "name_uk": "Перець солодкий зелений (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0212",
+      "category": "Овочі та зелень",
+      "name_uk": "Кабачок (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0213",
+      "category": "Овочі та зелень",
+      "name_uk": "Кабачок (тушкований без олії)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0214",
+      "category": "Овочі та зелень",
+      "name_uk": "Баклажан (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0215",
+      "category": "Овочі та зелень",
+      "name_uk": "Баклажан (запечений без олії)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0216",
+      "category": "Овочі та зелень",
+      "name_uk": "Капуста білоголова (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0217",
+      "category": "Овочі та зелень",
+      "name_uk": "Капуста червоноголова (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0218",
+      "category": "Овочі та зелень",
+      "name_uk": "Капуста пекінська (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0219",
+      "category": "Овочі та зелень",
+      "name_uk": "Капуста цвітна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0220",
+      "category": "Овочі та зелень",
+      "name_uk": "Капуста цвітна (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0221",
+      "category": "Овочі та зелень",
+      "name_uk": "Броколі (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0222",
+      "category": "Овочі та зелень",
+      "name_uk": "Броколі (на парі)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0223",
+      "category": "Овочі та зелень",
+      "name_uk": "Брюссельська капуста (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0224",
+      "category": "Овочі та зелень",
+      "name_uk": "Шпинат (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0225",
+      "category": "Овочі та зелень",
+      "name_uk": "Шпинат (відварений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0226",
+      "category": "Овочі та зелень",
+      "name_uk": "Салат ромен (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0227",
+      "category": "Овочі та зелень",
+      "name_uk": "Салат айсберг (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0228",
+      "category": "Овочі та зелень",
+      "name_uk": "Рукола (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0229",
+      "category": "Овочі та зелень",
+      "name_uk": "Редиска (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0230",
+      "category": "Овочі та зелень",
+      "name_uk": "Редька чорна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0231",
+      "category": "Овочі та зелень",
+      "name_uk": "Селера стеблова (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0232",
+      "category": "Овочі та зелень",
+      "name_uk": "Селера коренева (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0233",
+      "category": "Овочі та зелень",
+      "name_uk": "Гарбуз (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0234",
+      "category": "Овочі та зелень",
+      "name_uk": "Гарбуз (запечений)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0235",
+      "category": "Овочі та зелень",
+      "name_uk": "Цибуля ріпчаста (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0236",
+      "category": "Овочі та зелень",
+      "name_uk": "Цибуля червона (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0237",
+      "category": "Овочі та зелень",
+      "name_uk": "Часник (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0238",
+      "category": "Овочі та зелень",
+      "name_uk": "Печериці (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0239",
+      "category": "Овочі та зелень",
+      "name_uk": "Печериці (приготовані без олії)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0240",
+      "category": "Овочі та зелень",
+      "name_uk": "Гливи (сирі)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0241",
+      "category": "Овочі та зелень",
+      "name_uk": "Кукурудза цукрова (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0242",
+      "category": "Овочі та зелень",
+      "name_uk": "Кукурудза консервована (без рідини)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0243",
+      "category": "Овочі та зелень",
+      "name_uk": "Спаржа (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0244",
+      "category": "Овочі та зелень",
+      "name_uk": "Зелена квасоля (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0245",
+      "category": "Овочі та зелень",
+      "name_uk": "Зелена квасоля (відварена)",
+      "preparation_state": "cooked",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0246",
+      "category": "Овочі та зелень",
+      "name_uk": "Кріп свіжий",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0247",
+      "category": "Овочі та зелень",
+      "name_uk": "Петрушка свіжа",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0248",
+      "category": "Овочі та зелень",
+      "name_uk": "Базилік свіжий",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0249",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Яблуко (сире, без серцевини)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0250",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Груша (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0251",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Банан (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0252",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Апельсин (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0253",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Мандарин (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0254",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Грейпфрут (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0255",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Лимон (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0256",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Лайм (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0257",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Ківі (сирий, без шкірки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0258",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Ананас (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0259",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Манго (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0260",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Авокадо (сире, м'якоть)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0261",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Персик (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0262",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Нектарин (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0263",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Абрикос (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0264",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Слива (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0265",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Виноград білий (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0266",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Виноград темний (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0267",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Кавун (сирий, м'якоть)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0268",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Диня (сира, м'якоть)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0269",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Гранат (зерна)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0270",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Хурма (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0271",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Інжир свіжий",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0272",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Полуниця (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0273",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Малина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0274",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Ожина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0275",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Чорниця (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0276",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Лохина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0277",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Смородина чорна (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0278",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Смородина червона (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0279",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Вишня (сира, без кісточки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0280",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Черешня (сира, без кісточки)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0281",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Журавлина (сира)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0282",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Фініки сушені (без кісточок)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0283",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Родзинки (сушені)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0284",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Чорнослив (без кісточок)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0285",
+      "category": "Фрукти та ягоди",
+      "name_uk": "Курага",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0286",
+      "category": "Горіхи та насіння",
+      "name_uk": "Мигдаль (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0287",
+      "category": "Горіхи та насіння",
+      "name_uk": "Волоський горіх (ядро)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0288",
+      "category": "Горіхи та насіння",
+      "name_uk": "Фундук (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0289",
+      "category": "Горіхи та насіння",
+      "name_uk": "Кеш'ю (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0290",
+      "category": "Горіхи та насіння",
+      "name_uk": "Арахіс (сирий)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0291",
+      "category": "Горіхи та насіння",
+      "name_uk": "Арахіс (смажений без олії)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0292",
+      "category": "Горіхи та насіння",
+      "name_uk": "Фісташки (ядра, несолоні)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0293",
+      "category": "Горіхи та насіння",
+      "name_uk": "Пекан (ядра)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0294",
+      "category": "Горіхи та насіння",
+      "name_uk": "Макадамія (ядра)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0295",
+      "category": "Горіхи та насіння",
+      "name_uk": "Бразильські горіхи (ядра)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0296",
+      "category": "Горіхи та насіння",
+      "name_uk": "Кедрові горіхи",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0297",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння соняшника очищене (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0298",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння соняшника очищене (смажене)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0299",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння гарбуза очищене (сире)",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0300",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння гарбуза очищене (смажене)",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0301",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння чіа (сухе)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0302",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння льону (сухе)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0303",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння кунжуту (сухе)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0304",
+      "category": "Горіхи та насіння",
+      "name_uk": "Насіння маку (сухе)",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0305",
+      "category": "Горіхи та насіння",
+      "name_uk": "Кокосова стружка без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0306",
+      "category": "Горіхи та насіння",
+      "name_uk": "Кокосова м'якоть свіжа",
+      "preparation_state": "raw",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0307",
+      "category": "Горіхи та насіння",
+      "name_uk": "Арахісова паста 100%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0308",
+      "category": "Горіхи та насіння",
+      "name_uk": "Мигдалева паста 100%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0309",
+      "category": "Горіхи та насіння",
+      "name_uk": "Тахіні 100%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0310",
+      "category": "Олії та жири",
+      "name_uk": "Оливкова олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0311",
+      "category": "Олії та жири",
+      "name_uk": "Соняшникова олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0312",
+      "category": "Олії та жири",
+      "name_uk": "Ріпакова олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0313",
+      "category": "Олії та жири",
+      "name_uk": "Лляна олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0314",
+      "category": "Олії та жири",
+      "name_uk": "Кокосова олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0315",
+      "category": "Олії та жири",
+      "name_uk": "Кунжутна олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0316",
+      "category": "Олії та жири",
+      "name_uk": "Кукурудзяна олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0317",
+      "category": "Олії та жири",
+      "name_uk": "Олія авокадо",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0318",
+      "category": "Олії та жири",
+      "name_uk": "Гірчична олія",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0319",
+      "category": "Олії та жири",
+      "name_uk": "Свинячий смалець",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0320",
+      "category": "Олії та жири",
+      "name_uk": "Яловичий жир топлений",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0321",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб пшеничний білий",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0322",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб пшеничний цільнозерновий",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0323",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб житній",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0324",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб житньо-пшеничний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0325",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб на заквасці пшеничний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0326",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хліб на заквасці житній",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0327",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Батон пшеничний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0328",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Багет пшеничний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0329",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Лаваш тонкий пшеничний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0330",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Піта пшенична",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0331",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Тортилья пшенична",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0332",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Тортилья кукурудзяна",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0333",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хлібці житні",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0334",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хлібці рисові",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0335",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Хлібці гречані",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0336",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Сухарі пшеничні без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0337",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Булочка пшенична без начинки",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0338",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Булочка цільнозернова без начинки",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0339",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Бублик простий",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0340",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Крекер несолоний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0341",
+      "category": "Хліб та хлібобулочні вироби",
+      "name_uk": "Галети пшеничні",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0342",
+      "category": "Інші базові продукти",
+      "name_uk": "Цукор білий",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0343",
+      "category": "Інші базові продукти",
+      "name_uk": "Цукор коричневий",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0344",
+      "category": "Інші базові продукти",
+      "name_uk": "Мед натуральний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0345",
+      "category": "Інші базові продукти",
+      "name_uk": "Какао-порошок без цукру",
+      "preparation_state": "dry",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0346",
+      "category": "Інші базові продукти",
+      "name_uk": "Шоколад чорний 70–85%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0347",
+      "category": "Інші базові продукти",
+      "name_uk": "Шоколад молочний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0348",
+      "category": "Інші базові продукти",
+      "name_uk": "Томатна паста без добавок",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0349",
+      "category": "Інші базові продукти",
+      "name_uk": "Помідори консервовані у власному соку",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0350",
+      "category": "Інші базові продукти",
+      "name_uk": "Огірки мариновані без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0351",
+      "category": "Інші базові продукти",
+      "name_uk": "Квашена капуста без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0352",
+      "category": "Інші базові продукти",
+      "name_uk": "Оливки зелені без кісточок",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0353",
+      "category": "Інші базові продукти",
+      "name_uk": "Маслини чорні без кісточок",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0354",
+      "category": "Інші базові продукти",
+      "name_uk": "Соєвий соус класичний",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0355",
+      "category": "Інші базові продукти",
+      "name_uk": "Оцет яблучний 5%",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0356",
+      "category": "Інші базові продукти",
+      "name_uk": "Гірчиця столова",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0357",
+      "category": "Інші базові продукти",
+      "name_uk": "Кокосове молоко консервоване без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0358",
+      "category": "Інші базові продукти",
+      "name_uk": "Вівсяний напій без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    },
+    {
+      "id": "plan-0359",
+      "category": "Інші базові продукти",
+      "name_uk": "Соєвий напій без цукру",
+      "preparation_state": "as_sold",
+      "nutrition_status": "pending_source"
+    }
+  ]
+}
