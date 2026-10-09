@@ -22,7 +22,9 @@ class LocalCatalogueTests(unittest.TestCase):
         cls.candidates = candidate_manifest()
         cls.by_id = {row["id"]: row for row in cls.candidates}
 
-    def sample_record(self, candidate_id="plan-0001"):
+    def sample_record(self, candidate_id=None):
+        # Read the stable ID from the actual manifest, never assume its order.
+        candidate_id = candidate_id or self.candidates[0]["id"]
         candidate = self.by_id[candidate_id]
         return {
             "candidate_id": candidate_id,
