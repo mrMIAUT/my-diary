@@ -99,6 +99,85 @@ $('goal').addEventListener('change',syncAdjust);$('bf').addEventListener('input'
 let foodItems=[],selectedFood=null,activeFoodProfile=null,foodPage=1,foodActiveQuery='',foodHasMore=false,foodPrepMode='raw',foodWeightBasis='raw',foodPrepCache={},foodPrepMeta=null,currentFoodTotals=null,currentPrepValid=true,foodRequestId=0;
 const FOOD_CACHE_KEY='eplan12-food-cache-v2';
 const FOOD_DIARY_KEY='eplan12-food-diary-v1';
+const FOOD_LOCAL_CATALOG_KEY='eplan12-local-food-catalog-v1';
+const FOOD_LOCAL_CATALOG_TTL=6*60*60*1000;
+let foodLocalCatalog=null,foodFullLoading=false;
+function loadLocalFoodCatalogue(){
+ try{
+  const stored=JSON.parse(localStorage.getItem(FOOD_LOCAL_CATALOG_KEY)||'null');
+  if(!stored||!Array.isArray(stored.items)||stored.items.length<26
+     ||!Number.isFinite(stored.savedAt)
+     ||Date.now()-stored.savedAt>FOOD_LOCAL_CATALOG_TTL)return null;
+  return stored;
+ }catch(_){return null}
+}
+foodLocalCatalog=loadLocalFoodCatalogue();
+function foodPreviewNormalize(query){
+ const text=String(query||'').toLocaleLowerCase('uk-UA').replace(/ё/g,'е').trim().replace(/\\s+/g,' ');
+ if(!foodLocalCatalog)return text;
+ const replacements=foodLocalCatalog.query_replacements||{};
+ if(Object.prototype.hasOwnProperty.call(replacements,text))return replacements[text];
+ let result=text;
+ // Same word-boundary semantics as the Python normalizer, including Cyrillic.
+ const escaped=x=>x.replace(/[.*+?^${}()|[\\]\\]/g,'\\const FOOD_DIARY_KEY='eplan12-food-diary-v1';');
+ for(const [from,to] of Object.entries(replacements).sort((a,b)=>b[0].length-a[0].length)){
+  const re=new RegExp('(^|[^\\p{L}\\p{N}])'+escaped(from)+'(?=$|[^\\p{L}\\p{N}])','gu');
+  result=result.replace(re,(_,left)=>left+to);
+ }
+ return result;
+}
+function localFoodMatches(query){
+ if(!foodLocalCatalog||!Array.isArray(foodLocalCatalog.items))return [];
+ const raw=String(query||'').trim().toLocaleLowerCase('uk-UA');
+ if(raw.length<2||/^\\d{8,14}$/.test(raw))return [];
+ const normalized=foodPreviewNormalize(raw);
+ const variants=[raw,normalized];
+ const equivalents=Array.isArray(foodLocalCatalog.english_aliases)?foodLocalCatalog.english_aliases:[];
+ for(const [src,dst] of [...equivalents].sort((a,b)=>b[0].length-a[0].length)){
+  if(normalized===src||normalized.startsWith(src+' ')){
+   variants.push(normalized.replace(src,dst));
+  }
+ }
+ const terms=variants.map(v=>String(v).toLocaleLowerCase('uk-UA').split(/[^\\p{L}\\p{N}]+/u).filter(x=>x.length>1));
+ const scored=[];
+ for(const item of foodLocalCatalog.items){
+  if(!item||!item.name||!Number.isFinite(Number(item.kcal_100)))continue;
+  const label=String(item.name).toLocaleLowerCase('uk-UA');
+  const aliases=Array.isArray(item.search_aliases)?item.search_aliases.join(' '):'';
+  const hay=(label+' '+aliases).toLocaleLowerCase('uk-UA');
+  let relevance=99;
+  for(let k=0;k<terms.length;k++){
+   const words=terms[k];
+   if(!words.length||!words.every(word=>hay.includes(word)))continue;
+   const labelMatch=words.every(word=>label.includes(word));
+   const score=(labelMatch?0:3)+k;
+   if(score<relevance)relevance=score;
+  }
+  if(relevance>=99)continue;
+  scored.push({item,score:relevance,approx:item.approximate?1:0});
+ }
+ scored.sort((a,b)=>a.score-b.score||a.approx-b.approx||
+   a.item.name.length-b.item.name.length||
+   a.item.name.localeCompare(b.item.name,'uk'));
+ return scored.slice(0,8).map(x=>x.item);
+}
+function warmLocalFoodCatalogue(){
+ fetch('/api/prototype/foods/local-catalog',{headers:{'Accept':'application/json'}})
+  .then(response=>response.ok?response.json():null)
+  .then(data=>{
+   if(!data||!Array.isArray(data.items)||data.items.length<26)return;
+   foodLocalCatalog={...data,savedAt:Date.now()};
+   try{localStorage.setItem(FOOD_LOCAL_CATALOG_KEY,JSON.stringify(foodLocalCatalog))}catch(_){}
+   if(foodFullLoading&&foodActiveQuery&&!foodItems.length&&!selectedFood){
+    const matches=localFoodMatches(foodActiveQuery);
+    if(matches.length){
+     foodItems=matches;
+     renderFoodResults(foodItems,'Швидкі результати бази ЄПЛАН. Довантажуємо інші джерела…');
+    }
+   }
+  }).catch(()=>{});
+}
+
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function foodKey(item){return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''))}
 function loadFoodCache(){
@@ -151,13 +230,18 @@ async function searchFoods(query,append=false){
    $('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
    // Previously viewed products can appear immediately while authoritative
    // server results are loading. Never pretend this cache is the full list.
-   const preview=cachedFoodMatches(q);
+   // Warmed local catalogue is available without a network round trip.
+   const localPreview=localFoodMatches(q);
+   const preview=localPreview.length?localPreview:cachedFoodMatches(q);
    if(preview.length){
     foodItems=preview;
-    renderFoodResults(foodItems,'Попередні результати з кешу. Оновлюємо пошук…');
+    renderFoodResults(foodItems,localPreview.length
+      ?'Швидкі результати бази ЄПЛАН. Довантажуємо інші джерела…'
+      :'Попередні результати з кешу. Оновлюємо пошук…');
    }
   }
   $('foodQuery').value=q;
+  if(!append)foodFullLoading=true;
   if(append||!foodItems.length)$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо продукти…';
   $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
   let fullFinished=false;
@@ -201,7 +285,10 @@ async function searchFoods(query,append=false){
    renderFoodResults(foodItems,message);
   }finally{
    fullFinished=true;
-   if(requestId===foodRequestId){$('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false}
+   if(requestId===foodRequestId){
+    foodFullLoading=false;
+    $('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false
+   }
   }
 }
 
@@ -409,10 +496,24 @@ function addFoodToDiary(){
 }
 
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
+$('foodQuery').addEventListener('input',()=>{
+ // Local suggestions are synchronous; external APIs are contacted only
+ // after the explicit Search button/Enter action.
+ if(foodFullLoading)return;
+ const q=$('foodQuery').value.trim();
+ if(q.length<2)return;
+ const suggestions=localFoodMatches(q);
+ if(!suggestions.length)return;
+ foodRequestId+=1;
+ foodPage=1;foodActiveQuery=q;foodHasMore=false;
+ foodItems=suggestions;
+ renderFoodResults(foodItems,'Швидкі результати бази ЄПЛАН. Натисни «Знайти», щоб переглянути всі джерела.');
+});
 $('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
 $('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;foodPage+=1;searchFoods(foodActiveQuery,true)});
 document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener('click',()=>searchFoods(btn.dataset.foodQuery)));
 
 renderDiary();
 syncAdjust();
+warmLocalFoodCatalogue();
 })();
