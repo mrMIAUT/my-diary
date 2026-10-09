@@ -23,7 +23,13 @@ const potato=Array.from({length:5},(_,i)=>({
  kcal_100:77,protein_100:2,fat_100:0,carbs_100:17,
  approximate:false,search_aliases:["Potato raw","Картофель сырой"],
 }));
-const bootstrap={items:[...chickens,...beefs,...potato],
+const galMilk={name:"Молоко 2,5%",brand:"Галичина",
+ source:"reference",source_kind:"manufacturer_label",
+ source_id:"eplan12-manufacturer-galychyna-milk-25",
+ kcal_100:51.7,protein_100:2.8,fat_100:2.5,carbs_100:4.5,
+ approximate:false,food_type:"branded",
+ search_aliases:["Галичина Молоко 2,5%","Молоко 2,5% Галичина"]};
+const bootstrap={items:[...chickens,...beefs,...potato,galMilk],
  query_replacements:{"курица":"курятина","говядина":"яловичина"},
  english_aliases:[["курятина","chicken"],["яловичина","beef"]],preliminary:true};
 let networkCount=0;
@@ -59,7 +65,7 @@ vm.runInContext(src.slice(begin,end),ctx);
 const api=vm.runInContext("({searchFoods,localFoodMatches})",ctx);
 const state=()=>vm.runInContext("({stage:foodSearchStage,items:foodItems.map(x=>x.name)})",ctx);
 (async()=>{
- assert.equal(vm.runInContext("foodLocalCatalog.items.length",ctx),27);
+ assert.equal(vm.runInContext("foodLocalCatalog.items.length",ctx),28);
  assert.equal(vm.runInContext("foodLocalLoadPromise",ctx),null);
  assert.ok(storage["eplan12-local-food-catalog-v1"]);
  await api.searchFoods("Курица");
@@ -73,5 +79,9 @@ const state=()=>vm.runInContext("({stage:foodSearchStage,items:foodItems.map(x=>
  await api.searchFoods("Курица");
  assert.equal(networkCount,0);
  assert.equal(state().stage,"local");
- console.log("First-visit inline food bootstrap: RU chicken, beef, repeat query without HTTP PASS");
+ await api.searchFoods("Галичина молоко");
+ assert.equal(networkCount,0);
+ assert.equal(state().stage,"local");
+ assert.ok(state().items.includes("Молоко 2,5%"));
+ console.log("First-visit inline food bootstrap: RU chicken, beef, Ukrainian brand, repeat query without HTTP PASS");
 })().catch(error=>{console.error(error);process.exitCode=1});
