@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#f7faff">
   <title>Є ПЛАН · Апгрейд тренувань 1.2</title>
-  <link rel="stylesheet" href="/static/css/training-upgrade-demo.css?v=1">
+  <link rel="stylesheet" href="/static/css/training-upgrade-demo.css?v=2">
 </head>
 <body>
   <main class="demo-shell">
@@ -123,92 +123,73 @@
         <div>
           <span class="section-kicker">АКТИВНЕ ТРЕНУВАННЯ</span>
           <h2>День 1 · Дім</h2>
-          <p>Обери вправу зі списку нижче</p>
+          <p>Відкривай вправи так само, як у звичайному тренуванні ЄПЛАН.</p>
         </div>
         <span class="live-dot">LIVE</span>
       </article>
 
-      <article class="card client-exercise-list-card">
-        <div class="card-head compact">
-          <div>
-            <span class="section-kicker">ВПРАВИ</span>
-            <h2>Тренування</h2>
-          </div>
-          <span id="clientExerciseCount" class="count-badge">3</span>
-        </div>
-        <p class="client-list-helper">Натисни на вправу, щоб відкрити її виконання.</p>
-        <div id="clientExerciseList" class="client-exercise-list"></div>
-      </article>
+      <label class="prototype-test-toggle">
+        <input id="globalQuickTest" type="checkbox">
+        <span><strong>Швидкий тест таймерів</strong><small>Робота 5 сек · відпочинок 3–5 сек</small></span>
+      </label>
 
-      <article class="selected-exercise-title">
-        <span class="section-kicker">ОБРАНА ВПРАВА</span>
-        <h3 id="clientExerciseName">Присідання з резинкою</h3>
-      </article>
-
-      <article id="timedWorkoutCard" class="card timed-workout-card">
-        <div class="timed-meta">
-          <span id="setProgressText">Підхід 1 з 3</span>
-          <span id="loadChip">Резинка</span>
-        </div>
-
-        <div class="timer-ring" id="timerRing">
-          <svg class="timer-svg" viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="timer-track" cx="60" cy="60" r="54"></circle>
-            <circle id="timerProgressCircle" class="timer-progress" cx="60" cy="60" r="54"></circle>
-          </svg>
-          <div class="timer-inner">
-            <span id="phaseLabel">ГОТОВА</span>
-            <strong id="timerValue">00:30</strong>
-            <small id="timerHint">натисни «Почати»</small>
-          </div>
-        </div>
-
-        <div class="phase-strip">
-          <div><span>Робота</span><strong id="workPlan">30 сек</strong></div>
-          <i></i>
-          <div><span>Відпочинок</span><strong id="restPlan">30 сек</strong></div>
-        </div>
-
-        <div class="timer-actions">
-          <button id="timerPrimary" class="primary">Почати</button>
-          <button id="timerReset" class="secondary icon-btn" aria-label="Скинути таймер">↻</button>
-        </div>
-
-        <label class="quick-test">
-          <input id="quickTest" type="checkbox">
-          <span><strong>Швидкий тест</strong><small>5 сек робота / 3 сек відпочинок — лише для перевірки прототипу</small></span>
-        </label>
-      </article>
-
-      <article id="classicWorkoutCard" class="card classic-workout-card hidden">
-        <div class="classic-head">
-          <span class="section-kicker">КЛАСИЧНИЙ ФОРМАТ</span>
-          <h3 id="classicExerciseTitle">Присідання з резинкою</h3>
-        </div>
-        <div id="classicRows"></div>
-        <button class="primary full" id="completeClassic">Завершити вправу</button>
-      </article>
-
-      <article id="progressionCard" class="card progression-card">
-        <div class="card-head compact">
-          <div>
-            <span class="section-kicker">ПРОГРЕСІЯ</span>
-            <h2>Час роботи</h2>
-          </div>
-          <span id="progressDelta" class="delta">+5 сек</span>
-        </div>
-        <div class="progress-compare">
-          <div><span>Минулого разу</span><strong id="previousTime">25 сек</strong></div>
-          <span class="arrow">→</span>
-          <div><span>Сьогодні</span><strong id="todayTime">30 сек</strong></div>
-        </div>
-        <p>Для вправ за часом прогрес рахуємо окремо від ваги та повторів.</p>
-      </article>
+      <div id="clientWorkoutList" class="client-workout-list"></div>
 
       <button id="backTrainer" class="ghost-link">← Повернутися до конструктора тренера</button>
+
+      <div id="timedExerciseModal" class="prototype-modal hidden" aria-hidden="true">
+        <div class="prototype-modal-card">
+          <div class="prototype-modal-head">
+            <div>
+              <span class="section-kicker">ВПРАВА ЗА ЧАСОМ</span>
+              <h3 id="modalExerciseName">Присідання з резинкою</h3>
+            </div>
+            <button id="closeTimedModal" class="modal-close" type="button" aria-label="Закрити">✕</button>
+          </div>
+
+          <div class="timed-meta">
+            <span id="setProgressText">Підхід 1 з 3</span>
+            <span id="loadChip">Резинка</span>
+          </div>
+
+          <div class="timer-ring" id="timerRing">
+            <svg class="timer-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="timer-track" cx="60" cy="60" r="54"></circle>
+              <circle id="timerProgressCircle" class="timer-progress" cx="60" cy="60" r="54"></circle>
+            </svg>
+            <div class="timer-inner">
+              <span id="phaseLabel">ГОТОВА</span>
+              <strong id="timerValue">00:30</strong>
+              <small id="timerHint">натисни «Старт»</small>
+            </div>
+          </div>
+
+          <div class="phase-strip">
+            <div><span>Робота</span><strong id="workPlan">30 сек</strong></div>
+            <i></i>
+            <div><span>Відпочинок</span><strong id="restPlan">30 сек</strong></div>
+          </div>
+
+          <div class="timer-actions">
+            <button id="timerPrimary" class="primary">Старт</button>
+            <button id="timerReset" class="secondary icon-btn" type="button" aria-label="Скинути таймер">↻</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="restTimerBar" class="rest-timer-bar hidden" aria-live="polite">
+        <div class="rest-timer-copy">
+          <span>Відпочинок</span>
+          <strong id="restTimerValue">00:30</strong>
+          <small id="restTimerHint">після підходу</small>
+        </div>
+        <div class="rest-timer-progress"><i id="restTimerProgress"></i></div>
+        <button id="skipRestTimer" type="button">Пропустити</button>
+      </div>
+    </section>
     </section>
   </main>
 
-  <script src="/static/js/training-upgrade-demo.js?v=1"></script>
+  <script src="/static/js/training-upgrade-demo.js?v=2"></script>
 </body>
 </html>
