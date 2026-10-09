@@ -12,6 +12,7 @@ on:
       - backend/tests/food_search_first_load_client.test.cjs
       - backend/tests/food_search_local_first_client.test.cjs
       - backend/tests/food_diary_edit_client.test.cjs
+      - backend/tests/food_diary_meal_groups_client.test.cjs
       - backend/food_local_catalog.py
       - backend/food_manufacturer_catalog.py
       - backend/food_manufacturer_labels.json
@@ -49,5 +50,7 @@ jobs:
         run: node backend/tests/food_search_first_load_client.test.cjs
       - name: Check food diary edit, branded labels and delete undo
         run: node backend/tests/food_diary_edit_client.test.cjs
+      - name: Check separate meal groups and full-day totals
+        run: node backend/tests/food_diary_meal_groups_client.test.cjs
       - name: Run food search regression tests
         run: python -m unittest discover -s backend/tests -p 'test_food_search_*.py' -v
