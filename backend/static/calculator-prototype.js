@@ -509,7 +509,7 @@ function selectFood(index){
   $('foodOilGrams').addEventListener('input',updateFoodPortion);
   refreshFoodPrepProfile();
  }else updateFoodPortion();
- setTimeout(()=>portion.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+ setTimeout(()=>portion.scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 function updateFoodPortion(){
  const item=activeFoodProfile||selectedFood;if(!item)return;
@@ -535,22 +535,180 @@ function localDayKey(){
  const d=new Date(),pad=n=>String(n).padStart(2,'0');
  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 }
+const FOOD_MEALS=['Сніданок','Обід','Вечеря','Перекус'];
+let activeDiaryEditId=null,diaryLastRemoved=null;
 function loadDiary(){
  try{const x=JSON.parse(localStorage.getItem(FOOD_DIARY_KEY)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}
 }
-function saveDiary(items){try{localStorage.setItem(FOOD_DIARY_KEY,JSON.stringify(items))}catch(_){}}
+function saveDiary(items){
+ try{localStorage.setItem(FOOD_DIARY_KEY,JSON.stringify(items));return true}catch(_){return false}
+}
+function diaryNutritionProfile(entry){
+ // Older diary entries lack a per-100g snapshot. Infer it from the precise
+ // original unrounded totals and never from the rounded UI numbers.
+ const existing=entry&&entry.per100;
+ if(existing&&['kcal_100','protein_100','fat_100','carbs_100'].every(
+     key=>Number.isFinite(Number(existing[key]))&&Number(existing[key])>=0)){
+  return existing;
+ }
+ const previous=Number(entry&&entry.grams),oil=Math.max(0,Number(entry&&entry.oil)||0);
+ if(!Number.isFinite(previous)||previous<=0)return null;
+ const keys=[['kcal_100','kcal',9*oil],['protein_100','protein',0],
+             ['fat_100','fat',oil],['carbs_100','carbs',0]];
+ const profile={};
+ for(const [target,source,extra] of keys){
+  const value=Number(entry[source]);
+  if(!Number.isFinite(value)||value<extra-0.00001)return null;
+  profile[target]=Math.max(0,(value-extra)*100/previous);
+ }
+ return profile;
+}
+function diaryTotalsForGrams(entry,grams){
+ if(!Number.isFinite(grams)||grams<1||grams>5000)return null;
+ const per100=diaryNutritionProfile(entry);
+ if(!per100)return null;
+ const oil=Math.max(0,Number(entry.oil)||0);
+ const factor=grams/100;
+ return {grams,oil,per100,
+  kcal:Number(per100.kcal_100)*factor+oil*9,
+  protein:Number(per100.protein_100)*factor,
+  fat:Number(per100.fat_100)*factor+oil,
+  carbs:Number(per100.carbs_100)*factor};
+}
+function diaryMealOptions(selected){
+ return FOOD_MEALS.map(meal=>'<option value="'+meal+'"'+
+  (selected===meal?' selected':'')+'>'+meal+'</option>').join('');
+}
+function diaryEntryHtml(x){
+ const id=foodEsc(String(x.id));
+ const brand=x.brand?'<span class="foodDiaryBrand">'+foodEsc(x.brand)+'</span>':'';
+ const editing=activeDiaryEditId===String(x.id);
+ let edit='';
+ if(editing){
+  const oil=Math.max(0,Number(x.oil)||0);
+  edit='<div class="foodDiaryEditor" data-diary-editor="'+id+'">'+
+   '<div class="foodDiaryEditGrid"><label>Кількість, г'+
+   '<input id="diaryEditGrams" type="number" min="1" max="5000" step="any" inputmode="decimal" value="'+foodEsc(x.grams)+'"></label>'+
+   '<label>Прийом їжі<select id="diaryEditMeal">'+diaryMealOptions(x.meal)+'</select></label></div>'+
+   (oil?'<div class="foodDiaryEditHint">Олія '+foodFmt(oil)+' г залишається без змін.</div>':'')+
+   '<div class="foodDiaryEditPreview" id="diaryEditPreview" aria-live="polite"></div>'+
+   '<div class="foodDiaryEditError" id="diaryEditError" aria-live="polite"></div>'+
+   '<div class="foodDiaryEditActions"><button type="button" data-diary-save="'+id+'">Зберегти</button>'+
+   '<button type="button" class="foodDiaryCancel" data-diary-cancel="'+id+'">Скасувати</button></div></div>';
+ }
+ return '<div class="foodDiaryEntry" data-diary-entry="'+id+'">'+
+  '<div class="foodDiaryInfo"><strong>'+foodEsc(x.name||'Продукт')+'</strong>'+
+   brand+
+   '<div class="foodDiaryMeta">'+foodEsc(x.meal||'')+' · '+foodFmt(x.grams)+' г'+
+   (x.prep?' · '+foodEsc(x.prep):'')+' · '+foodFmt(x.kcal)+' ккал</div></div>'+
+  '<div class="foodDiaryActions"><button type="button" data-diary-edit="'+id+
+  '" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">Редагувати</button>'+
+  '<button type="button" class="foodDiaryRemove" data-diary-remove="'+id+
+  '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div>'+edit+'</div>';
+}
 function renderDiary(){
  const all=loadDiary(),day=localDayKey(),items=all.filter(x=>x.date===day);
  const sum=key=>items.reduce((acc,x)=>acc+(Number(x[key])||0),0);
  $('diaryKcal').textContent=foodFmt(sum('kcal'));$('diaryProtein').textContent=foodFmt(sum('protein'));$('diaryFat').textContent=foodFmt(sum('fat'));$('diaryCarbs').textContent=foodFmt(sum('carbs'));
  const date=new Date();$('foodDiaryDate').textContent=date.toLocaleDateString('uk-UA',{day:'numeric',month:'long'});
  const box=$('foodDiaryEntries');
- if(!items.length){box.innerHTML='<div class="foodDiaryEmpty">Поки що нічого не додано.</div>';return}
- box.innerHTML=items.map(x=>'<div class="foodDiaryEntry"><div><strong>'+foodEsc(x.name)+'</strong><div class="foodDiaryMeta">'+foodEsc(x.meal)+' · '+foodFmt(x.grams)+' г'+(x.prep?' · '+foodEsc(x.prep):'')+' · '+foodFmt(x.kcal)+' ккал</div></div><button type="button" data-diary-remove="'+foodEsc(x.id)+'">×</button></div>').join('');
+ if(!items.length)box.innerHTML='<div class="foodDiaryEmpty">Поки що нічого не додано.</div>';
+ else box.innerHTML=items.map(diaryEntryHtml).join('');
  box.querySelectorAll('[data-diary-remove]').forEach(btn=>btn.onclick=()=>removeDiaryEntry(btn.dataset.diaryRemove));
+ box.querySelectorAll('[data-diary-edit]').forEach(btn=>btn.onclick=()=>startDiaryEdit(btn.dataset.diaryEdit));
+ box.querySelectorAll('[data-diary-save]').forEach(btn=>btn.onclick=()=>saveDiaryEdit(btn.dataset.diarySave));
+ box.querySelectorAll('[data-diary-cancel]').forEach(btn=>btn.onclick=()=>cancelDiaryEdit());
+ if(activeDiaryEditId&&items.some(x=>String(x.id)===activeDiaryEditId)){
+  $('diaryEditGrams').addEventListener('input',updateDiaryEditPreview);
+  $('diaryEditMeal').addEventListener('change',updateDiaryEditPreview);
+  updateDiaryEditPreview();
+ }
+ const notice=$('foodDiaryNotice');
+ if(notice){
+  notice.innerHTML=diaryLastRemoved?
+   'Запис видалено. <button type="button" id="diaryUndoBtn">Скасувати видалення</button>':'';
+  const undo=$('diaryUndoBtn');
+  if(undo)undo.addEventListener('click',undoDiaryRemove);
+ }
+}
+function startDiaryEdit(id){
+ const entry=loadDiary().find(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ if(!entry)return;
+ diaryLastRemoved=null;
+ activeDiaryEditId=String(id);
+ renderDiary();
+ const editor=$('diaryEditGrams');
+ if(editor)editor.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function cancelDiaryEdit(){
+ activeDiaryEditId=null;
+ renderDiary();
+}
+function diaryDraft(){
+ const raw=String($('diaryEditGrams').value??'').trim().replace(',','.');
+ if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return null;
+ const grams=Number(raw);
+ if(!Number.isFinite(grams)||grams<1||grams>5000)return null;
+ const meal=$('diaryEditMeal').value;
+ if(!FOOD_MEALS.includes(meal))return null;
+ return {grams,meal};
+}
+function updateDiaryEditPreview(){
+ if(!activeDiaryEditId)return;
+ const entry=loadDiary().find(x=>x.date===localDayKey()&&String(x.id)===activeDiaryEditId);
+ const draft=diaryDraft(),totals=entry&&draft?diaryTotalsForGrams(entry,draft.grams):null;
+ const preview=$('diaryEditPreview'),error=$('diaryEditError');
+ if(!preview||!error)return;
+ if(!totals){
+  preview.textContent='';
+  error.textContent='Введи кількість від 1 до 5000 г.';
+  return;
+ }
+ error.textContent='';
+ preview.textContent=foodFmt(totals.kcal)+' ккал · Б '+foodFmt(totals.protein)+
+  ' · Ж '+foodFmt(totals.fat)+' · В '+foodFmt(totals.carbs);
+}
+function saveDiaryEdit(id){
+ if(String(id)!==activeDiaryEditId)return false;
+ const draft=diaryDraft(),error=$('diaryEditError');
+ if(!draft){if(error)error.textContent='Введи кількість від 1 до 5000 г.';return false}
+ const all=loadDiary();
+ const idx=all.findIndex(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ if(idx<0)return false;
+ const entry=all[idx],totals=diaryTotalsForGrams(entry,draft.grams);
+ if(!totals){if(error)error.textContent='Не вдалося перерахувати продукт.';return false}
+ const {per100,...values}=totals;
+ all[idx]={...entry,...values,per100,meal:draft.meal};
+ if(!saveDiary(all)){
+  if(error)error.textContent='Не вдалося зберегти. Перевір вільне місце в браузері.';
+  return false;
+ }
+ diaryLastRemoved=null;
+ activeDiaryEditId=null;
+ renderDiary();
+ return true;
 }
 function removeDiaryEntry(id){
- const all=loadDiary().filter(x=>String(x.id)!==String(id));saveDiary(all);renderDiary();
+ const all=loadDiary();
+ const index=all.findIndex(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ if(index<0)return false;
+ const removed=all[index];
+ all.splice(index,1);
+ if(!saveDiary(all))return false;
+ diaryLastRemoved={entry:removed,index};
+ if(activeDiaryEditId===String(id))activeDiaryEditId=null;
+ renderDiary();
+ return true;
+}
+function undoDiaryRemove(){
+ if(!diaryLastRemoved)return false;
+ const {entry,index}=diaryLastRemoved,all=loadDiary();
+ if(all.some(x=>String(x.id)===String(entry.id)))return false;
+ all.splice(Math.min(index,all.length),0,entry);
+ if(!saveDiary(all))return false;
+ diaryLastRemoved=null;
+ renderDiary();
+ return true;
 }
 function addFoodToDiary(){
  const status=$('foodAddStatus');
@@ -558,15 +716,36 @@ function addFoodToDiary(){
  if(foodPrepMeta&&foodWeightBasis==='cooked'&&!currentPrepValid){
   status.textContent='Спочатку обери варіант, для якого знайдено профіль готового продукту.';return;
  }
+ if(!Number.isFinite(currentFoodTotals.grams)||currentFoodTotals.grams<1||
+    currentFoodTotals.grams>5000){
+  status.textContent='Введи кількість від 1 до 5000 г.';return;
+ }
  const meal=$('foodMeal').value;
+ if(!FOOD_MEALS.includes(meal)){
+  status.textContent='Обери прийом їжі.';return;
+ }
  const prep=foodPrepMeta?(prepModeLabel()+' · '+(foodWeightBasis==='raw'?'до приготування':'після приготування')):'';
- const entry={
-  id:String(Date.now()),date:localDayKey(),meal,name:selectedFood.name,brand:selectedFood.brand||'',
-  grams:currentFoodTotals.grams,kcal:currentFoodTotals.kcal,protein:currentFoodTotals.protein,
-  fat:currentFoodTotals.fat,carbs:currentFoodTotals.carbs,oil:currentFoodTotals.oil||0,prep,
-  source:selectedFood.source||'',source_id:selectedFood.source_id||'',barcode:selectedFood.barcode||''
+ const item=activeFoodProfile||selectedFood;
+ const per100={
+  kcal_100:Number(item.kcal_100)||0,
+  protein_100:Number(item.protein_100)||0,
+  fat_100:Number(item.fat_100)||0,
+  carbs_100:Number(item.carbs_100)||0,
  };
- const all=loadDiary();all.push(entry);saveDiary(all);renderDiary();
+ const entry={
+  id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10),
+  date:localDayKey(),meal,name:selectedFood.name,brand:selectedFood.brand||'',
+  grams:currentFoodTotals.grams,kcal:currentFoodTotals.kcal,protein:currentFoodTotals.protein,
+  fat:currentFoodTotals.fat,carbs:currentFoodTotals.carbs,oil:currentFoodTotals.oil||0,
+  per100,prep,source:selectedFood.source||'',source_id:selectedFood.source_id||'',
+  barcode:selectedFood.barcode||''
+ };
+ const all=loadDiary();all.push(entry);
+ if(!saveDiary(all)){
+  status.textContent='Не вдалося зберегти. Перевір вільне місце в браузері.';return;
+ }
+ diaryLastRemoved=null;
+ renderDiary();
  status.textContent='Додано до щоденника.';
 }
 
