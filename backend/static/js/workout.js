@@ -617,9 +617,22 @@ function activeExercisesHTML(items,d,cid){
  let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false,showRest=true){
-  let effective=workoutEffectiveExercise(x),doneToday=(d.result_sets||[]).some(r=>r.program_id===x.id&&r.day===activeDay),shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
-  let rest=showRest?restLabel(effective):'';
-  return `<div class="${inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise'}${doneToday?' is-exercise-complete':''}"><button class="exercise-toggle workout-live-toggle" onclick="toggleExercise('exerciseBody${x.id}',this)"><span><span class="workout-exercise-title-line"><strong>${esc(shownName)}</strong></span>${shownTech?`<span class="workout-technique-row">${techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')}</span>`:``}${shownName!==x.exercise?`<span class="muted workout-replacement-note">Замість: ${esc(x.exercise)}</span>`:``}<span class="muted workout-plan-line"><span class="workout-plan-meta">${effective.sets} × ${esc(repeatPlanText(effective))}</span>${rest?`<span class="workout-plan-meta">Відпочинок ${esc(rest)}</span>`:``}<span class="workout-plan-meta">RIR ${rirPlan(effective).join(' / ')}</span></span></span><span class="workout-live-toggle-side"><span class="arrow">⌄</span>${doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':''}</span></button><div id="exerciseBody${x.id}" class="exercise-body workout-live-body hidden">${exerciseAlternatives(x).length&&!todaySets(d,x.id).length?`<button class="swap-exercise-btn" onclick="chooseWorkoutExercise(${x.id},${cid})">⇄ Замінити вправу</button>`:``}${completedExerciseHTML(effective,d,cid)}</div></div>`;
+  let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
+      doneToday=timed?(d.timed_result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
+      shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
+  let rest=showRest?restLabel(effective):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
+      rir=timed?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
+      swap=!timed&&exerciseAlternatives(x).length&&!todaySets(d,x.id).length?'<button class="swap-exercise-btn" onclick="chooseWorkoutExercise('+x.id+','+cid+')">⇄ Замінити вправу</button>':'',
+      content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid);
+  return '<div class="'+(inner?'workout-live-exercise workout-live-exercise-inner':'exercise workout-live-exercise')+(doneToday?' is-exercise-complete':'')+'">'
+    +'<button class="exercise-toggle workout-live-toggle" onclick="toggleExercise(\'exerciseBody'+x.id+'\',this)">'
+      +'<span><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
+      +(shownTech?'<span class="workout-technique-row">'+techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')+'</span>':'')
+      +(shownName!==x.exercise?'<span class="muted workout-replacement-note">Замість: '+esc(x.exercise)+'</span>':'')
+      +'<span class="muted workout-plan-line"><span class="workout-plan-meta">'+effective.sets+' × '+esc(plan)+'</span>'
+      +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span>'
+      +'<span class="workout-live-toggle-side"><span class="arrow">⌄</span>'+(doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':'')+'</span>'
+    +'</button><div id="exerciseBody'+x.id+'" class="exercise-body workout-live-body hidden">'+swap+content+'</div></div>';
  }
  for(let x of items){
   if(used.has(x.id))continue;
