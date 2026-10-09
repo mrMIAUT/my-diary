@@ -70,10 +70,17 @@ class ReferenceFoodTests(unittest.TestCase):
             with self.subTest(item=item["name"]):
                 self.assertEqual(item["source"], "reference")
                 if item.get("approximate") is not True:
-                    self.assertEqual(item["review_status"],"approved")
-                    self.assertGreater(item["source_fdc_id"],0)
-                self.assertEqual(item["food_type"], "generic")
-                self.assertEqual(item["brand"], "")
+                    if item.get("source_kind")=="manufacturer_label":
+                        self.assertEqual(item["review_status"],"manufacturer_label_reviewed")
+                        self.assertEqual(item["food_type"],"branded")
+                        self.assertTrue(item["brand"])
+                        self.assertNotIn("source_fdc_id",item)
+                    else:
+                        self.assertEqual(item["review_status"],"approved")
+                        self.assertGreater(item["source_fdc_id"],0)
+                if item.get("source_kind")!="manufacturer_label":
+                    self.assertEqual(item["food_type"], "generic")
+                    self.assertEqual(item["brand"], "")
                 self.assertTrue(item["name"])
                 self.assertGreater(item["kcal_100"], 0)
                 for macro in ("protein_100", "fat_100", "carbs_100"):
@@ -100,6 +107,9 @@ class ReferenceFoodTests(unittest.TestCase):
         off_no_brand = food("Картопля сира", "", True)
         dish = food("Суп з картоплею", "Місцевий", True)
         self.assertEqual(classify(reference), "generic")
+        manufacturer=next(x for x in reference_food_items()
+                          if x.get("source_kind")=="manufacturer_label")
+        self.assertEqual(classify(manufacturer), "branded")
         self.assertEqual(classify(usda_plain), "generic")
         self.assertEqual(classify(usda_brand), "branded")
         self.assertEqual(classify(off_no_brand), "branded")
