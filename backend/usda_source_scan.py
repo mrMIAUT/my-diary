@@ -183,6 +183,9 @@ def main():
     candidates_file=Path(__file__).resolve().parent/"food_catalog_candidates.json"
     if candidates_file.exists():
         (args.out/"food_catalog_candidates.json").write_bytes(candidates_file.read_bytes())
+    crosswalk_file=Path(__file__).resolve().parent/"usda_curated_crosswalk.json"
+    if crosswalk_file.exists():
+        (args.out/"usda_curated_crosswalk.json").write_bytes(crosswalk_file.read_bytes())
     print("SOURCE AUDIT SUCCESS:",dest,"full records",len(records),flush=True)
 
 if __name__=="__main__":
