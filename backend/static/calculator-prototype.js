@@ -184,7 +184,7 @@ function warmLocalFoodCatalogue(){
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function foodKey(item){
  const fdc=item.source_fdc_id||(item.source==='usda'?item.source_id:null);
- if(fdc&&/^\\d+$/.test(String(fdc)))return 'fdc:'+fdc;
+ if(fdc&&/^\d+$/.test(String(fdc)))return 'fdc:'+fdc;
  return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''));
 }
 function loadFoodCache(){
