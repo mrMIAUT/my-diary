@@ -4,13 +4,13 @@ const fs=require("node:fs"),vm=require("node:vm"),assert=require("node:assert/st
 const js=fs.readFileSync("backend/static/calculator-prototype.js","utf8");
 const html=fs.readFileSync("backend/static/calculator-prototype.html","utf8");
 const begin=js.indexOf("function localDayKey(){");
-const end=js.indexOf("\n$('foodCalendarToggle').addEventListener(",begin);
+const end=js.indexOf("\n$('foodWeekPrev').addEventListener(",begin);
 assert.ok(begin>=0&&end>begin,"Actual calendar and diary code should be present");
 for(const id of ["foodCalendar","foodCalendarToggle","foodDiaryTodayBtn"]){
  assert.ok(html.includes('id="'+id+'"'),"Missing "+id);
 }
 assert.ok(html.includes(".foodCalendarDot{"),"Green dot styling missing");
-assert.ok(html.includes("v=43"),"iPhone asset version wasn't updated");
+assert.ok(html.includes("v=44"),"iPhone asset version wasn't updated");
 const store=new Map(),diaryKey="eplan12-food-diary-v1";
 const localStorage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v))};
 const ids=["foodCalendar","foodCalendarToggle","foodDiaryTodayBtn",
