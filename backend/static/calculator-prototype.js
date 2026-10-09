@@ -767,20 +767,15 @@ function renderDiary(){
  $('foodDiaryDate').textContent=diaryDateLabel(day);
  renderFoodCalendar(all);
  const box=$('foodDiaryEntries');
- if(!items.length){
-  // All four meals still render with a quick add action on an empty day.
- }
- {
-  // Empty meals stay available as compact one-tap add rows.
-  const sections=FOOD_MEALS.map(meal=>{
-   const group=items.filter(item=>item.meal===meal);
-   return diaryMealGroupHtml(meal,group);
-  });
-  // Never hide entries created by an older diary version with a custom meal.
-  const other=items.filter(item=>!FOOD_MEALS.includes(item.meal));
-  if(other.length)sections.push(diaryMealGroupHtml('Інше',other));
-  box.innerHTML=sections.join('');
- }
+ // Empty meals remain compact one-tap add rows even on a new/empty day.
+ const sections=FOOD_MEALS.map(meal=>{
+  const group=items.filter(item=>item.meal===meal);
+  return diaryMealGroupHtml(meal,group);
+ });
+ // Never hide entries created by an older diary version with a custom meal.
+ const other=items.filter(item=>!FOOD_MEALS.includes(item.meal));
+ if(other.length)sections.push(diaryMealGroupHtml('Інше',other));
+ box.innerHTML=sections.join('');
  box.querySelectorAll('[data-diary-meal-add]').forEach(btn=>btn.onclick=()=>selectMealForFoodSearch(btn.dataset.diaryMealAdd));
  box.querySelectorAll('[data-diary-remove]').forEach(btn=>btn.onclick=()=>removeDiaryEntry(btn.dataset.diaryRemove));
  box.querySelectorAll('[data-diary-edit]').forEach(btn=>btn.onclick=()=>startDiaryEdit(btn.dataset.diaryEdit));
