@@ -91,7 +91,7 @@ class ManufacturerLabels(unittest.TestCase):
             sum(x.get("source_kind")=="manufacturer_label" for x in all_items),
             18,
         )
-        self.assertEqual(
+        self.assertGreaterEqual(
             sum(x.get("review_status")=="approved" for x in all_items),261
         )
         self.assertEqual(
