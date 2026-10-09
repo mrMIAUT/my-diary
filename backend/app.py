@@ -1982,10 +1982,13 @@ def _food_match_quality(query:str,item:dict):
     brand_words=_food_match_words(brand)
     # Approved local foods can display Ukrainian while matching reviewed
     # Russian/English aliases. OFF/USDA without aliases remain unchanged.
-    search_titles=[name_words]+[
-        _food_match_words(alias) for alias in (item.get("search_aliases") or ())
+    aliases=[
+        alias for alias in (item.get("search_aliases") or ())
         if isinstance(alias,str) and alias.strip()
     ]
+    search_titles=([name_words]
+        + [_food_match_words(alias) for alias in aliases]
+        + [_food_match_words(normalize_food_query(alias)) for alias in aliases])
     best=(4,999,0,999)
     for variant_index,variant in enumerate(food_search_variants(query)):
         query_words=_food_match_words(variant)
