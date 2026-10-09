@@ -6,6 +6,8 @@ on:
       - eplan-1.2
     paths:
       - backend/usda_pending_review.py
+      - backend/food_local_nutrition.json
+      - backend/food_manufacturer_labels.json
       - .github/workflows/usda-pending-review.yml
   workflow_dispatch:
 
