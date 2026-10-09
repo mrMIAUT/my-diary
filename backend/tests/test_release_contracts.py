@@ -19,7 +19,7 @@ NUTRITION_JS = (ROOT / "backend" / "static" / "js" / "nutrition.js").read_text(e
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
 LIBRARY = (ROOT / "backend" / "static" / "js" / "library.js").read_text(encoding="utf-8")
 WORKOUT_LYFTA = (ROOT / "backend" / "static" / "js" / "workout-lyfta.js").read_text(encoding="utf-8")
-TIMED_WORKOUT = (ROOT / "backend" / "static" / "js" / "timed-workout.js").read_text(encoding="utf-8")
+TIMED_WORKOUT = (ROOT / "backend" / "static" / "js" / "timed-workout.js").read_text(encoding="utf-8")\nTIMER = (ROOT / "backend" / "static" / "js" / "timer.js").read_text(encoding="utf-8")
 INDEX = (ROOT / "backend" / "static" / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "backend" / "static" / "sw.js").read_text(encoding="utf-8")
 
@@ -352,7 +352,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("inSuperset&&!isLast", WORKOUT_LYFTA)
         self.assertIn("singleSet:inSuperset", TIMED_WORKOUT)
         self.assertIn("if(s.singleSet){await finishTimedExerciseTimer();return}", TIMED_WORKOUT)
-        self.assertIn("startRestTimer(sharedRest,null,false)", TIMED_WORKOUT)
+        self.assertIn("startAutomaticRestTimer(sharedRest,false)", TIMED_WORKOUT)
         self.assertIn("без відпочинку до кінця кола", TIMED_WORKOUT)
 
     def test_superset_group_collapses_together_and_timed_rest_starts_before_refresh(self):
@@ -364,7 +364,19 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("focusWorkoutExerciseCard(nextPid)", WORKOUT)
         self.assertIn("if(singleSet&&isLast&&hasNextRound&&sharedRest>0)", TIMED_WORKOUT)
         finish_block = TIMED_WORKOUT.split("async function finishTimedExerciseTimer()",1)[1].split("function renderTimedExerciseTimer",1)[0]
-        self.assertLess(finish_block.index("startRestTimer(sharedRest,null,false)"), finish_block.index("loadClientData(cid)"))
+        self.assertLess(finish_block.index("startAutomaticRestTimer(sharedRest,false)"), finish_block.index("loadClientData(cid)"))
+
+    def test_timed_modal_cancel_keeps_timer_and_auto_rest_does_not_block(self):
+        close_block = TIMED_WORKOUT.split("function closeTimedExerciseTimer(force)",1)[1].split("function openTimedExerciseTimer",1)[0]
+        self.assertLess(close_block.index("confirm("), close_block.index("cancelAnimationFrame"))
+        self.assertIn("return false", close_block)
+        self.assertNotIn("if(e.target===modal)closeTimedExerciseTimer()", TIMED_WORKOUT)
+        self.assertIn("function startAutomaticRestTimer", TIMER)
+        auto_block = TIMER.split("function startAutomaticRestTimer",1)[1].split("function addRestTimer",1)[0]
+        self.assertNotIn("ensureTimerNotifications", auto_block)
+        self.assertNotIn("unlockTimerSound", auto_block)
+        self.assertIn("startRestTimerCore", auto_block)
+        self.assertIn("startAutomaticRestTimer(sharedRest,false)", TIMED_WORKOUT)
 
     def test_exercise_submit_actions_use_save_labels(self):
         self.assertIn(">Зберегти вправу</button>", PROGRAM)
