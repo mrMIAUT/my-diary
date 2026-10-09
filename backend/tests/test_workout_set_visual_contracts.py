@@ -30,7 +30,7 @@ class WorkoutSetVisualContracts(unittest.TestCase):
         self.assertIn("border-color:#d8ebdf!important", inputs)
 
     def test_completed_sets_are_separate_cards_without_changing_white_inputs(self):
-        rules=CSS.split("/* v247 — separate completed workout sets:",1)[1]
+        rules=CSS.split("/* v247 — distinct completed-set cards:",1)[1]
         card=rules.split(".lyfta-set-wrap.is-complete{",1)[1].split("}",1)[0]
         self.assertIn("margin-top:6px!important",card)
         self.assertIn("margin-bottom:12px!important",card)
