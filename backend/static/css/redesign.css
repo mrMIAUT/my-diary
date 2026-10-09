@@ -17894,3 +17894,60 @@ body.eplan-redesign.client-ui .workout-timed-superset-progress strong{
   font-size:10px;
   font-weight:900;
 }
+
+
+/* Superset group accordion + timed round rest */
+body.eplan-redesign.client-ui .workout-live-superset-toggle{
+  width:100%!important;
+  min-height:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  color:#0a1738!important;
+  text-align:left!important;
+  cursor:pointer;
+}
+body.eplan-redesign.client-ui .workout-live-superset-toggle.open{
+  border-bottom:1px solid #dfe8f3!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset-copy{
+  min-width:0;
+  display:flex;
+  flex:1;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+body.eplan-redesign.client-ui .workout-live-superset-copy>span{
+  flex:1;
+  text-align:right;
+}
+body.eplan-redesign.client-ui .workout-live-superset-arrow{
+  flex:0 0 auto;
+  color:#7d8ba0!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset-body.hidden{
+  display:none!important;
+}
+body.eplan-redesign.client-ui .workout-live-grouped-exercise-head{
+  cursor:default!important;
+}
+body.eplan-redesign.client-ui .workout-live-grouped-exercise-head .workout-live-toggle-side{
+  justify-content:flex-end!important;
+}
+body.eplan-redesign.client-ui .workout-live-grouped-body{
+  display:block!important;
+}
+@media(max-width:520px){
+  body.eplan-redesign.client-ui .workout-live-superset-copy{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+  body.eplan-redesign.client-ui .workout-live-superset-copy>span{
+    text-align:left;
+  }
+}
