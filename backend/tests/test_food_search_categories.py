@@ -27,9 +27,11 @@ def unique_foods(items):
 def mock_endpoint(candidates):
     """Compile only the prototype search handler, without importing the app."""
     source = (BACKEND / "app.py").read_text(encoding="utf-8")
-    node = next(n for n in ast.parse(source).body
-                if isinstance(n, ast.FunctionDef) and n.name == "prototype_food_search")
-    node.decorator_list = []
+    nodes = [n for n in ast.parse(source).body
+             if isinstance(n, ast.FunctionDef)
+             and n.name in {"prototype_food_search","_food_result_page"}]
+    for node in nodes:
+        node.decorator_list = []
     namespace = {
         **R,
         "Query": lambda default=None, **kwargs: default,
@@ -37,6 +39,15 @@ def mock_endpoint(candidates):
         "FOOD_SEARCH_MAX_RESULTS": 24,
         "_off_search": lambda *a, **kw: [],
         "_off_collect": lambda *a, **kw: candidates,
+        # Keep the isolated route harness compatible with search caching:
+        # bypass caching to exercise ranking/pagination against mock sources.
+        "_food_cache_get": lambda *a, **kw: None,
+        "_food_cache_set": lambda *a, **kw: None,
+        "_food_collect_off_batches": lambda jobs: [candidates for _ in jobs],
+        "FOOD_RESULT_CACHE": {},
+        "FOOD_RESULT_CACHE_LOCK": None,
+        "FOOD_RESULT_CACHE_TTL_SECONDS": 180,
+        "FOOD_RESULT_CACHE_MAX_ENTRIES": 96,
         "_off_barcode": lambda barcode: [],
         "_off_brand_matches": lambda query, items: [],
         "_usda_search": lambda *a, **kw: [],
@@ -45,7 +56,7 @@ def mock_endpoint(candidates):
         "_dedupe_food_items": unique_foods,
         "reference_food_items": reference_food_items,
     }
-    exec(compile(ast.Module(body=[node], type_ignores=[]), "foods-category-route", "exec"),
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), "foods-category-route", "exec"),
          namespace)
     return namespace["prototype_food_search"]
 
