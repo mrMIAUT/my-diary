@@ -21,6 +21,8 @@ from math import ceil
 from zoneinfo import ZoneInfo
 import base64
 from food_reference_catalog import reference_food_items
+from food_local_bootstrap import embed_food_catalog
+from functools import lru_cache
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -2927,16 +2929,31 @@ def prototype_food_search(
     return _food_result_page(raw,normalized,variants,candidates,limit,page,food_type)
 
 
+@lru_cache(maxsize=1)
+def _prototype_food_bootstrapped_html():
+    """Ship the 239 local food records inside the first HTML response.
+
+    One immutable result per running prototype worker/deploy. This removes
+    initial browser waiting for the separate /local-catalog API request.
+    """
+    template=(BASE/"static"/"calculator-prototype.html").read_text(encoding="utf-8")
+    return embed_food_catalog(
+        template,reference_food_items(),FOOD_QUERY_REPLACEMENTS,FOOD_USDA_ALIASES
+    )
+
+
 @app.get("/")
 def home():
     if PROTOTYPE_MODE:
-        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+        return HTMLResponse(_prototype_food_bootstrapped_html(),
+                            headers={"Cache-Control":"no-store"})
     return _app_index()
 
 @app.get("/app")
 def pwa_app():
     if PROTOTYPE_MODE:
-        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+        return HTMLResponse(_prototype_food_bootstrapped_html(),
+                            headers={"Cache-Control":"no-store"})
     return _app_index()
 
 @app.get("/pwa-reset")
