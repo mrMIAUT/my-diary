@@ -19,7 +19,8 @@ NUTRITION_JS = (ROOT / "backend" / "static" / "js" / "nutrition.js").read_text(e
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
 LIBRARY = (ROOT / "backend" / "static" / "js" / "library.js").read_text(encoding="utf-8")
 WORKOUT_LYFTA = (ROOT / "backend" / "static" / "js" / "workout-lyfta.js").read_text(encoding="utf-8")
-TIMED_WORKOUT = (ROOT / "backend" / "static" / "js" / "timed-workout.js").read_text(encoding="utf-8")\nTIMER = (ROOT / "backend" / "static" / "js" / "timer.js").read_text(encoding="utf-8")
+TIMED_WORKOUT = (ROOT / "backend" / "static" / "js" / "timed-workout.js").read_text(encoding="utf-8")
+TIMER = (ROOT / "backend" / "static" / "js" / "timer.js").read_text(encoding="utf-8")
 INDEX = (ROOT / "backend" / "static" / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "backend" / "static" / "sw.js").read_text(encoding="utf-8")
 
