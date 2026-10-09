@@ -14,6 +14,7 @@ on:
       - backend/tests/food_diary_edit_client.test.cjs
       - backend/tests/food_diary_meal_groups_client.test.cjs
       - backend/tests/food_diary_calendar_client.test.cjs
+      - backend/tests/food_diary_compact_design_client.test.cjs
       - backend/food_local_catalog.py
       - backend/food_manufacturer_catalog.py
       - backend/food_manufacturer_labels.json
@@ -55,5 +56,7 @@ jobs:
         run: node backend/tests/food_diary_meal_groups_client.test.cjs
       - name: Check nutrition history calendar and backdated edits
         run: node backend/tests/food_diary_calendar_client.test.cjs
+      - name: Check compact diary design and one-tap meal add
+        run: node backend/tests/food_diary_compact_design_client.test.cjs
       - name: Run food search regression tests
         run: python -m unittest discover -s backend/tests -p 'test_food_search_*.py' -v
