@@ -1,4 +1,4 @@
-const VERSION='eplan-v194';
+const VERSION='eplan-v195';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -21,7 +21,7 @@ const APP_SHELL_URLS=[
   '/static/js/calendar.js?v=162',
   '/static/js/results.js?v=179',
   '/static/js/progress-redesign.js?v=166',
-  '/static/js/nutrition.js?v=160',
+  '/static/js/nutrition.js?v=161',
   '/static/js/nutrition-redesign.js?v=163',
   '/static/js/more-redesign.js?v=163',
   '/static/js/measurements.js?v=160',
