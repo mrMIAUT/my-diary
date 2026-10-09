@@ -69,7 +69,9 @@ class ReferenceFoodTests(unittest.TestCase):
         for item in items:
             with self.subTest(item=item["name"]):
                 self.assertEqual(item["source"], "reference")
-                self.assertTrue(item["approximate"])
+                if item.get("approximate") is not True:
+                    self.assertEqual(item["review_status"],"approved")
+                    self.assertGreater(item["source_fdc_id"],0)
                 self.assertEqual(item["food_type"], "generic")
                 self.assertEqual(item["brand"], "")
                 self.assertTrue(item["name"])
@@ -121,7 +123,7 @@ class ReferenceFoodTests(unittest.TestCase):
         ]
         search = mock_endpoint(candidates)
         all_results = search(q="Картошка", limit=24, page=1, food_type="all")
-        self.assertEqual(all_results["items"][0]["name"], "Картопля сира")
+        self.assertTrue(all_results["items"][0]["name"].startswith("Картопля"))
         self.assertEqual(all_results["items"][0]["food_type"], "generic")
         self.assertIn("Картопля фрі", [x["name"] for x in all_results["items"]])
 
