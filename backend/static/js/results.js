@@ -68,14 +68,20 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
  let day=sessionDay(session),dayName=session.day_name||'Тренування';
  let snap=sessionProgramForDate(d,dayName,day);
  let sets=(d.result_sets||[]).filter(x=>x.day===day);
+ let timed=(d.timed_result_sets||[]).filter(x=>x.day===day);
  let skipped=(d.skipped_sets||[]).filter(x=>x.day===day);
  let prevSets=previousDay?(d.result_sets||[]).filter(x=>x.day===previousDay):[];
- let exercises=(snap||[]).filter(x=>sets.some(s=>+s.program_id===+x.id)||skipped.some(s=>+s.program_id===+x.id));
+ let prevTimed=previousDay?(d.timed_result_sets||[]).filter(x=>x.day===previousDay):[];
+ let exercises=(snap||[]).filter(x=>sets.some(s=>+s.program_id===+x.id)||timed.some(s=>+s.program_id===+x.id)||skipped.some(s=>+s.program_id===+x.id));
  if(!exercises.length){
    let grouped={};
    sets.forEach(s=>{
      let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
      if(!grouped[key])grouped[key]={id:+s.program_id||0,exercise:s.exercise||'Вправа'};
+   });
+   timed.forEach(s=>{
+     let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
+     if(!grouped[key])grouped[key]={id:+s.program_id||0,exercise:s.exercise||'Вправа',execution_mode:'time'};
    });
    skipped.forEach(s=>{
      let key=String(+s.program_id||0)+'::'+String(s.exercise||'Вправа');
@@ -86,6 +92,24 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
  if(!exercises.length)return '<div class="trainer-review-empty-detail">Немає збережених або пропущених підходів для цього тренування.</div>';
  let norm=v=>String(v||'').trim().toLocaleLowerCase('uk-UA');
  return exercises.map(x=>{
+   let timedCur=timed.filter(s=>+s.program_id===+x.id||norm(s.exercise)===norm(x.exercise)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   if(timedCur.length){
+     let timedPrev=prevTimed.filter(s=>+s.program_id===+x.id||norm(s.exercise)===norm(x.exercise)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+     return '<div class="trainer-review-exercise trainer-review-timed-exercise">'
+       +'<div class="trainer-review-exercise-head"><div><strong>'+esc(x.exercise||timedCur[0]?.exercise||'Вправа')+'</strong>'+(previousDay?'<small>Попереднє: '+esc(formatProgressDate(previousDay))+'</small>':'')+'</div><span>'+timedCur.length+' підходи · за часом</span></div>'
+       +'<div class="trainer-review-sets">'+timedCur.map(s=>{
+         let p=timedPrev.find(z=>+z.set_number===+s.set_number),deltaHTML='';
+         if(p){
+           let dt=(+s.work_seconds||0)-(+p.work_seconds||0);
+           deltaHTML='<span class="trainer-review-set-deltas"><i class="'+(dt>0?'delta-up':dt<0?'delta-down':'delta-same')+'">'+(dt>0?'+':'')+dt+' сек</i></span>';
+         }
+         return '<section class="trainer-review-set-block timed"><div class="trainer-review-set-current"><small>Підхід '+esc(String(s.set_number||''))+'</small><b>'+esc(String(s.work_seconds||0))+' сек</b><span class="trainer-review-set-meta"><span class="trainer-review-rir">план '+esc(String(s.planned_seconds||s.work_seconds||0))+' сек</span>'+(+s.rest_seconds>0?'<span class="trainer-review-meta-separator">|</span><span class="trainer-review-rest">⏱ '+esc(String(s.rest_seconds))+' сек</span>':'')+'</span></div>'
+           +(p?'<div class="trainer-review-set-previous"><span>Попереднє</span><strong>'+esc(String(p.work_seconds||0))+' сек</strong>'+deltaHTML+'</div>':'')
+         +'</section>';
+       }).join('')+'</div>'
+     +'</div>';
+   }
+
    let cur=uniqueResultSets(sets.filter(s=>+s.program_id===+x.id)).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
    if(!cur.length){
      cur=uniqueResultSets(sets.filter(s=>norm(s.exercise)===norm(x.exercise))).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
@@ -154,7 +178,8 @@ function trainerPendingReviewsHTML(d){
 function trainerWorkoutCalendarDates(d){
  let sessionDates=(d.workout_sessions||[]).filter(x=>x.status==='finished').map(sessionDay).filter(Boolean);
  let setDates=(d.result_sets||[]).map(x=>x.day).filter(Boolean);
- return [...new Set([...sessionDates,...setDates])].sort().reverse();
+ let timedDates=(d.timed_result_sets||[]).map(x=>x.day).filter(Boolean);
+ return [...new Set([...sessionDates,...setDates,...timedDates])].sort().reverse();
 }
 
 function trainerWorkoutCalendarState(d){
@@ -173,7 +198,7 @@ function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&sessionDay(x)===day).slice().sort((a,b)=>(+b.id||0)-(+a.id||0));
  if(targetSid)sessions.sort((a,b)=>(+b.id===+targetSid)-(+a.id===+targetSid));
  if(!sessions.length){
-   let hasSets=(d.result_sets||[]).some(x=>x.day===day);
+   let hasSets=(d.result_sets||[]).some(x=>x.day===day)||(d.timed_result_sets||[]).some(x=>x.day===day);
    if(!hasSets)return '<div class="trainer-workout-calendar-empty">На цю дату тренування не знайдено.</div>';
    sessions=[{id:0,day_name:'Тренування',workout_day:day,status:'finished',trainer_reviewed:true}];
  }
@@ -524,7 +549,8 @@ function trainerResultDates(d,dayName){
  let sessions=(d.workout_sessions||[]).filter(s=>s.day_name===dayName&&s.status==='finished');
  let sessionDates=sessions.map(s=>sessionDay(s)).filter(Boolean);
  let setDates=(d.result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day);
- return [...new Set([...sessionDates,...setDates])].sort().reverse();
+ let timedDates=(d.timed_result_sets||[]).filter(r=>pids.has(r.program_id)).map(r=>r.day);
+ return [...new Set([...sessionDates,...setDates,...timedDates])].sort().reverse();
 }
 
 function periodStart(period){

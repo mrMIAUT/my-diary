@@ -770,6 +770,8 @@ def init():
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS rir_by_set TEXT DEFAULT ''")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS alternatives_json TEXT DEFAULT '[]'")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS execution_mode TEXT NOT NULL DEFAULT 'reps'")
+        c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS work_seconds INTEGER NOT NULL DEFAULT 0")
         c.execute("""CREATE TABLE IF NOT EXISTS program_days(
             client_id INTEGER NOT NULL,
             day_name TEXT NOT NULL,
@@ -791,6 +793,21 @@ def init():
         c.execute("""CREATE TABLE IF NOT EXISTS result_sets(id SERIAL PRIMARY KEY,client_id INTEGER,program_id INTEGER,exercise TEXT,day TEXT,set_number INTEGER,weight DOUBLE PRECISION,reps INTEGER,rir INTEGER,rest_seconds INTEGER)""")
         c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS rest_seconds INTEGER")
         c.execute("ALTER TABLE result_sets ADD COLUMN IF NOT EXISTS repeat_mode TEXT NOT NULL DEFAULT 'normal'")
+        c.execute("""CREATE TABLE IF NOT EXISTS timed_result_sets(
+            id SERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL,
+            program_id INTEGER NOT NULL,
+            exercise TEXT NOT NULL DEFAULT '',
+            day TEXT NOT NULL,
+            set_number INTEGER NOT NULL,
+            work_seconds INTEGER NOT NULL,
+            planned_seconds INTEGER NOT NULL,
+            rest_seconds INTEGER
+        )""")
+        c.execute("""CREATE UNIQUE INDEX IF NOT EXISTS ux_timed_result_sets_client_program_day_set
+                     ON timed_result_sets(client_id,program_id,day,set_number)""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_timed_result_sets_client_day
+                     ON timed_result_sets(client_id,day,program_id,set_number)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_aux_sets(
             id SERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL,
@@ -1159,7 +1176,7 @@ class ResetConfirmIn(BaseModel):
 class ClientIn(BaseModel):
     name:str=Field(max_length=200); email:str=Field(max_length=254); password:str=Field(default="",max_length=256,json_schema_extra=password_input_schema); goal:str=Field(default="",max_length=2000); weight:float=Field(default=0,ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G)
 class ProgramIn(BaseModel):
-    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); repeat_mode:str=Field(default="normal",max_length=16); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
+    client_id:int; day_name:str=Field(max_length=128); exercise:str=Field(max_length=255); sets:int=Field(default=3,ge=1,le=MAX_SET_COUNT); reps:str=Field(default="8-12",max_length=64); repeat_mode:str=Field(default="normal",max_length=16); execution_mode:str=Field(default="reps",max_length=16); work_seconds:int=Field(default=0,ge=0,le=3600); target_rir:int=Field(default=2,ge=0,le=MAX_RIR); superset_group:str=Field(default="",max_length=64); superset_order:int=Field(default=0,ge=0,le=MAX_SET_COUNT); superset_with_id:int=Field(default=0,ge=0); technique_url:str=Field(default="",max_length=2048); rest_seconds:int=Field(default=0,ge=0,le=3600); rest_text:str=Field(default="",max_length=1000); rir_by_set:str=Field(default="",max_length=512); alternatives_json:str=Field(default="[]",max_length=65536)
 class ProgramSupersetPairIn(BaseModel):
     first:ProgramIn
     second:ProgramIn
@@ -1212,6 +1229,16 @@ class SetResultIn(BaseModel):
     sets:List[SetIn]=Field(default_factory=list,max_length=100)
     aux_sets:List[WorkoutAuxSetIn]=Field(default_factory=list,max_length=200)
     skipped_sets:List[int]=Field(default_factory=list,max_length=100)
+class TimedSetIn(BaseModel):
+    set_number:int=Field(ge=1,le=MAX_SET_COUNT)
+    work_seconds:int=Field(ge=1,le=3600)
+    planned_seconds:int=Field(ge=1,le=3600)
+    rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+class TimedSetResultIn(BaseModel):
+    client_id:int
+    program_id:int
+    exercise:str=Field(max_length=255)
+    sets:List[TimedSetIn]=Field(default_factory=list,max_length=100)
 class CompletedWorkoutSetIn(BaseModel):
     program_id:int
     exercise:str=Field(max_length=255)
@@ -1382,6 +1409,7 @@ def authorize_program(user:AuthUser,pid:int,cid:int):
         if p["client_id"]!=cid:raise HTTPException(403,"Вправа належить іншому клієнту")
         return
     if one("SELECT id FROM result_sets WHERE client_id=? AND program_id=? LIMIT 1",(cid,pid)):return
+    if one("SELECT id FROM timed_result_sets WHERE client_id=? AND program_id=? LIMIT 1",(cid,pid)):return
     # V92 active/history workouts retain a server-created program snapshot.
     # A removed exercise may still be saved from its owner's snapshot.
     for s in rows("SELECT program_snapshot FROM workout_sessions WHERE client_id=?",(cid,)):
@@ -2055,6 +2083,8 @@ def create_program_template(x:ProgramTemplateCreateIn,user:AuthUser=Depends(requ
         items=db.execute("""SELECT * FROM program WHERE client_id=%s
                             ORDER BY day_name,COALESCE(sort,0),id""",(x.source_client_id,)).fetchall()
         if not items:raise HTTPException(400,"У клієнта ще немає програми")
+        if any(normalize_execution_mode(item.get("execution_mode"))=="time" for item in items):
+            raise HTTPException(400,"Шаблони вправ за часом додамо окремим етапом. Поточну програму клієнта не змінено.")
         tid=db.execute("""INSERT INTO program_templates(trainer_id,name,description)
                           VALUES(%s,%s,%s) RETURNING id""",(user.user_id,name,x.description.strip())).fetchone()["id"]
         days=db.execute("""SELECT day_name,title FROM program_days WHERE client_id=%s""",(x.source_client_id,)).fetchall()
@@ -2261,6 +2291,7 @@ def client(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         "program_days":"SELECT * FROM program_days WHERE client_id=? ORDER BY day_name",
         "results":"SELECT * FROM results WHERE client_id=? ORDER BY day DESC,id DESC",
         "result_sets":"SELECT * FROM result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
+        "timed_result_sets":"SELECT * FROM timed_result_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
         "aux_sets":"SELECT * FROM workout_aux_sets WHERE client_id=? ORDER BY day DESC,program_id,kind,parent_set_number,aux_number,id",
         "skipped_sets":"SELECT * FROM workout_skipped_sets WHERE client_id=? ORDER BY day DESC,program_id,set_number,id",
         "nutrition":"SELECT * FROM nutrition WHERE client_id=? ORDER BY day DESC,id DESC",
@@ -2558,6 +2589,11 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     if not day or not exercise: raise HTTPException(400,"Вкажіть день і вправу")
     technique_url=require_technique_url(x.technique_url)
     repeat_mode=normalize_repeat_mode(x.repeat_mode)
+    execution_mode=normalize_execution_mode(x.execution_mode)
+    work_seconds=int(x.work_seconds or 0)
+    if execution_mode=="time":
+        if work_seconds<5: raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
+        if x.superset_group.strip() or x.superset_with_id: raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
     alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
@@ -2568,18 +2604,19 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
         superset_group=x.superset_group.strip()
         superset_order=x.superset_order
         if x.superset_with_id:
-            source=c.execute("SELECT id,day_name,superset_group FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
+            source=c.execute("SELECT id,day_name,superset_group,execution_mode FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
             if not source: raise HTTPException(404,"Вправу для суперсету не знайдено")
+            if normalize_execution_mode(source.get("execution_mode"))!="reps": raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
             if str(source["day_name"] or "").strip()!=day: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
             if str(source["superset_group"] or "").strip(): raise HTTPException(409,"Ця вправа вже входить у суперсет")
             superset_group=f"SS{source['id']}"
             superset_order=1
             c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(superset_group,source["id"]))
         row=c.execute("""INSERT INTO program(
-            client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
+            client_id,day_name,exercise,sets,reps,repeat_mode,execution_mode,work_seconds,target_rir,sort,superset_group,superset_order,
             technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-            (x.client_id,day,exercise,x.sets,x.reps.strip() or "8-12",repeat_mode,x.target_rir,next_sort,
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            (x.client_id,day,exercise,x.sets,x.reps.strip() or "8-12",repeat_mode,execution_mode,work_seconds,x.target_rir,next_sort,
              superset_group,superset_order,technique_url,x.rest_seconds,x.rest_text.strip(),
              x.rir_by_set.strip(),alternatives_json)).fetchone()
         c.commit()
@@ -2595,6 +2632,8 @@ def add_program_superset_pair(x:ProgramSupersetPairIn,user:AuthUser=Depends(requ
     if day_a!=day_b: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
     tech_a=require_technique_url(a.technique_url); tech_b=require_technique_url(b.technique_url)
     repeat_a=normalize_repeat_mode(a.repeat_mode); repeat_b=normalize_repeat_mode(b.repeat_mode)
+    if normalize_execution_mode(a.execution_mode)!="reps" or normalize_execution_mode(b.execution_mode)!="reps":
+        raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
     alts_a=normalize_program_alternatives(a.alternatives_json,{"sets":a.sets,"reps":a.reps,"repeat_mode":repeat_a,"target_rir":a.target_rir,"rest_seconds":a.rest_seconds,"rest_text":a.rest_text,"rir_by_set":a.rir_by_set})
     alts_b=normalize_program_alternatives(b.alternatives_json,{"sets":b.sets,"reps":b.reps,"repeat_mode":repeat_b,"target_rir":b.target_rir,"rest_seconds":b.rest_seconds,"rest_text":b.rest_text,"rir_by_set":b.rir_by_set})
     with con() as c:
@@ -2628,9 +2667,14 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     if not p: raise HTTPException(404,"Вправу не знайдено")
     technique_url=require_technique_url(x.technique_url)
     repeat_mode=normalize_repeat_mode(x.repeat_mode)
+    execution_mode=normalize_execution_mode(x.execution_mode)
+    work_seconds=int(x.work_seconds or 0)
+    if execution_mode=="time":
+        if work_seconds<5: raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
+        if str(p.get("superset_group") or "").strip(): raise HTTPException(400,"Вправу в суперсеті не можна перевести у режим за часом")
     alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
-    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,repeat_mode=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
-           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),repeat_mode,x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
+    run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,repeat_mode=?,execution_mode=?,work_seconds=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
+           WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),repeat_mode,execution_mode,work_seconds,x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
     return {"ok":True}
 
 @app.patch("/api/program/{pid}/client-exercise")
@@ -2769,11 +2813,11 @@ def duplicate_program_day(x:ProgramDayDuplicateIn,user:AuthUser=Depends(require_
                    meta.get("status") or "active",meta.get("active_until")))
         for pos,item in enumerate(rows_src,1):
             c.execute("""INSERT INTO program(
-                client_id,day_name,exercise,sets,reps,repeat_mode,target_rir,sort,superset_group,superset_order,
+                client_id,day_name,exercise,sets,reps,repeat_mode,execution_mode,work_seconds,target_rir,sort,superset_group,superset_order,
                 technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
               (x.client_id,target,item.get("exercise") or "",item.get("sets") or 1,item.get("reps") or "8-12",
-               normalize_repeat_mode(item.get("repeat_mode")),item.get("target_rir") or 0,pos,
+               normalize_repeat_mode(item.get("repeat_mode")),normalize_execution_mode(item.get("execution_mode")),item.get("work_seconds") or 0,item.get("target_rir") or 0,pos,
                item.get("superset_group") or "",item.get("superset_order") or 0,
                safe_technique_url(item.get("technique_url") or ""),item.get("rest_seconds") or 0,
                item.get("rest_text") or "",item.get("rir_by_set") or "",item.get("alternatives_json") or "[]"))
@@ -2815,8 +2859,13 @@ def reorder_program(x:ProgramOrderIn,user:AuthUser=Depends(require_trainer)):
 
 @app.patch("/api/program/{pid}/superset")
 def set_superset(pid:int,x:SupersetIn,user:AuthUser=Depends(require_trainer)):
-    owned_record(user,"program",pid)
-    run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
+    p=owned_record(user,"program",pid)
+    group=(x.superset_group or "").strip()
+    if group:
+        current=one("SELECT execution_mode FROM program WHERE id=?",(pid,))
+        if current and normalize_execution_mode(current.get("execution_mode"))!="reps":
+            raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
+    run("UPDATE program SET superset_group=? WHERE id=?",(group,pid))
     return {"ok":True}
 
 @app.delete("/api/program/{pid}")
@@ -2887,6 +2936,49 @@ def add_result_sets(x:SetResultIn,user:AuthUser=Depends(require_client)):
                       (x.client_id,x.program_id,x.exercise,result_day,set_number))
         c.commit()
     return {"ok":True,"ids":ids,"skipped_sets":skipped,"day":result_day}
+
+@app.post("/api/timed-result-sets")
+def add_timed_result_sets(x:TimedSetResultIn,user:AuthUser=Depends(require_client)):
+    authorize_program(user,x.program_id,x.client_id)
+    require_active_client(x.client_id,'workouts')
+    numbers=[s.set_number for s in x.sets]
+    if not numbers:
+        raise HTTPException(400,"Додай хоча б один виконаний підхід")
+    if len(numbers)!=len(set(numbers)):
+        raise HTTPException(400,"Номери підходів не мають повторюватися")
+    with con() as c:
+        c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
+        active=c.execute("""SELECT workout_day,started_at,program_snapshot FROM workout_sessions
+                            WHERE client_id=%s AND status='training'
+                            ORDER BY id DESC LIMIT 1""",(x.client_id,)).fetchone()
+        if not active:
+            raise HTTPException(400,"Немає активного тренування")
+        result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
+        snapshot_item=None
+        try:
+            snapshot=json.loads(active.get("program_snapshot") or "[]")
+            if isinstance(snapshot,list):
+                snapshot_item=next((p for p in snapshot if isinstance(p,dict) and int(p.get("id") or 0)==x.program_id),None)
+        except (TypeError,ValueError):
+            snapshot_item=None
+        if not snapshot_item:
+            raise HTTPException(400,"Ця вправа не входить до активного тренування")
+        if normalize_execution_mode(snapshot_item.get("execution_mode"))!="time":
+            raise HTTPException(400,"Ця вправа не налаштована як вправа за часом")
+        planned_seconds=max(1,int(snapshot_item.get("work_seconds") or 0))
+        planned_sets=max(1,int(snapshot_item.get("sets") or 1))
+        if any(n>planned_sets for n in numbers):
+            raise HTTPException(400,"Номер підходу перевищує план цієї вправи")
+        c.execute("DELETE FROM timed_result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
+        ids=[]
+        for item in x.sets:
+            row=c.execute("""INSERT INTO timed_result_sets(
+                client_id,program_id,exercise,day,set_number,work_seconds,planned_seconds,rest_seconds)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (x.client_id,x.program_id,x.exercise.strip(),result_day,item.set_number,item.work_seconds,planned_seconds,item.rest_seconds)).fetchone()
+            ids.append(row["id"])
+        c.commit()
+    return {"ok":True,"ids":ids,"day":result_day}
 
 @app.get("/api/result-sets/{cid}")
 def result_set_history(cid:int,limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
@@ -2986,6 +3078,14 @@ def normalize_repeat_mode(value:str|None)->str:
     mode=str(value or "normal").strip().lower()
     if mode not in REPEAT_MODES:
         raise HTTPException(400,"Некоректний спосіб підрахунку повторів")
+    return mode
+
+EXECUTION_MODES={"reps","time"}
+
+def normalize_execution_mode(value:str|None)->str:
+    mode=str(value or "reps").strip().lower()
+    if mode not in EXECUTION_MODES:
+        raise HTTPException(400,"Некоректний тип виконання вправи")
     return mode
 
 def normalize_program_alternatives(value:str,fallback:dict|None=None)->str:
@@ -3186,7 +3286,7 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
                     active_until=(day_meta or {}).get("active_until")
                     if active_until and active_until<kyiv_today():
                         raise HTTPException(400,"Термін доступу до додаткового тренування завершився")
-                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
+                snapshot_rows=[dict(r) for r in c.execute("""SELECT id,day_name,exercise,sets,reps,repeat_mode,execution_mode,work_seconds,target_rir,superset_group,superset_order,technique_url,rest_seconds,rest_text,rir_by_set,alternatives_json
                                                                   FROM program WHERE client_id=%s AND day_name=%s ORDER BY id""",(x.client_id,x.day_name)).fetchall()]
                 if not snapshot_rows:
                     raise HTTPException(400,"У цьому тренуванні ще немає вправ")
@@ -3285,7 +3385,10 @@ def cancel_workout(sid:int,user:AuthUser=Depends(require_client)):
         has_skipped=c.execute("""SELECT 1 FROM workout_skipped_sets
                                  WHERE client_id=%s AND day=%s
                                  LIMIT 1""",(client_id,workout_day)).fetchone()
-        if has_sets or has_skipped:
+        has_timed=c.execute("""SELECT 1 FROM timed_result_sets
+                               WHERE client_id=%s AND day=%s
+                               LIMIT 1""",(client_id,workout_day)).fetchone()
+        if has_sets or has_skipped or has_timed:
             raise HTTPException(400,"Тренування вже має збережені або пропущені підходи і не може бути скасоване")
         c.execute("DELETE FROM workout_sessions WHERE id=%s",(sid,))
         c.commit()

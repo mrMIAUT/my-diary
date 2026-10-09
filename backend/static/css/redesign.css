@@ -17566,3 +17566,290 @@ body.eplan-redesign.trainer-ui .trainer-review-set.skipped strong{
     grid-template-columns:36px minmax(0,1fr) auto!important;
   }
 }
+
+
+/* Timed exercises — additive mode, no changes to classic workout cards */
+body.eplan-redesign.trainer-ui .trainer-program-editor select#executionmode,
+body.eplan-redesign.trainer-ui .edit-exercise-card select#editExecutionMode{
+  width:100%;
+  min-height:42px;
+}
+body.eplan-redesign.client-ui .workout-timed-previous{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin:0 0 10px;
+  padding:10px 11px;
+  border:1px solid #e0e8f2;
+  border-radius:12px;
+  background:#f3f7fc;
+}
+body.eplan-redesign.client-ui .workout-timed-previous span{
+  color:#8390a3;
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .workout-timed-previous strong{
+  color:#233a59;
+  font-size:11px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .workout-timed-previous em{
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-style:normal;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .workout-timed-previous em.up{
+  background:#eaf8f0;
+  color:#168553;
+}
+body.eplan-redesign.client-ui .workout-timed-previous em.down{
+  background:#fff3e8;
+  color:#b36c23;
+}
+body.eplan-redesign.client-ui .workout-timed-plan{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin:0 0 10px;
+}
+body.eplan-redesign.client-ui .workout-timed-plan>div{
+  display:grid;
+  gap:3px;
+  padding:10px 8px;
+  border:1px solid #e0e8f2;
+  border-radius:11px;
+  background:#f3f7fc;
+  text-align:center;
+}
+body.eplan-redesign.client-ui .workout-timed-plan span{
+  color:#8794a6;
+  font-size:8px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .workout-timed-plan strong{
+  color:#183153;
+  font-size:10.5px;
+  font-weight:900;
+}
+body.eplan-redesign.client-ui .workout-timed-start{
+  width:100%!important;
+}
+body.eplan-redesign.client-ui .workout-timed-modal{
+  z-index:13050!important;
+  align-items:flex-end!important;
+  padding:0!important;
+  background:rgba(8,17,35,.58)!important;
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+}
+body.eplan-redesign.client-ui .workout-timed-modal-card{
+  width:min(100%,560px)!important;
+  max-height:92dvh!important;
+  margin:0 auto!important;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom))!important;
+  overflow:auto;
+  border:0!important;
+  border-radius:26px 26px 0 0!important;
+  background:#fff!important;
+  box-shadow:0 -14px 42px rgba(10,23,56,.2)!important;
+}
+body.eplan-redesign.client-ui .workout-timed-modal-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  gap:12px;
+  align-items:start;
+  margin-bottom:12px;
+}
+body.eplan-redesign.client-ui .workout-timed-modal-head small{
+  display:block;
+  margin-bottom:4px;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+body.eplan-redesign.client-ui .workout-timed-modal-head h2{
+  margin:0;
+  color:#0a1738;
+  font-size:22px;
+  line-height:1.12;
+  letter-spacing:-.025em;
+}
+body.eplan-redesign.client-ui .workout-timed-close{
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  padding:0!important;
+  border:1px solid #dbe5f0!important;
+  border-radius:13px!important;
+  background:#f3f7fc!important;
+  color:#183253!important;
+  box-shadow:none!important;
+  font-size:18px!important;
+}
+body.eplan-redesign.client-ui .workout-timed-modal-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:14px;
+  color:#6c7d95;
+  font-size:9.5px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .workout-timed-modal-meta b{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#f1f5fa;
+  color:#52647d;
+  font-size:8.5px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .workout-timed-ring{
+  position:relative;
+  width:clamp(220px,68vw,270px);
+  height:clamp(220px,68vw,270px);
+  margin:6px auto 16px;
+}
+body.eplan-redesign.client-ui .workout-timed-ring svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  transform:rotate(-90deg);
+}
+body.eplan-redesign.client-ui .workout-timed-ring circle{
+  fill:none;
+  stroke-width:7;
+}
+body.eplan-redesign.client-ui .workout-timed-ring .track{
+  stroke:#eaf0f7;
+}
+body.eplan-redesign.client-ui .workout-timed-ring .progress{
+  stroke:#1677ff;
+  stroke-linecap:round;
+  stroke-dasharray:339.292;
+  stroke-dashoffset:339.292;
+}
+body.eplan-redesign.client-ui .workout-timed-ring.rest .progress{
+  stroke:#19a568;
+}
+body.eplan-redesign.client-ui .workout-timed-ring.done .progress{
+  stroke:#19a568;
+}
+body.eplan-redesign.client-ui .workout-timed-ring>div{
+  position:absolute;
+  inset:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:inset 0 0 0 1px #edf2f7;
+}
+body.eplan-redesign.client-ui .workout-timed-ring span{
+  color:#1677ff;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+body.eplan-redesign.client-ui .workout-timed-ring.rest span{
+  color:#19a568;
+}
+body.eplan-redesign.client-ui .workout-timed-ring strong{
+  margin:8px 0 3px;
+  color:#0a1738;
+  font-size:50px;
+  line-height:1;
+  letter-spacing:-.04em;
+}
+body.eplan-redesign.client-ui .workout-timed-ring small{
+  color:#8a97aa;
+  font-size:9px;
+  font-weight:700;
+}
+body.eplan-redesign.client-ui .workout-timed-primary{
+  width:100%!important;
+  min-height:48px!important;
+  border:0!important;
+  border-radius:13px!important;
+  background:#1677ff!important;
+  color:#fff!important;
+  box-shadow:0 9px 20px rgba(22,119,255,.16)!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .workout-timed-primary:disabled{
+  opacity:.65;
+}
+body.eplan-redesign.client-ui .progress-timed-label{
+  display:block;
+  margin-top:4px;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:850;
+}
+body.eplan-redesign.client-ui .calendar-workout-set.timed{
+  background:#f6f9ff;
+  border-color:#dce8f8;
+}
+body.eplan-redesign.trainer-ui .trainer-review-set-block.timed{
+  border-color:#dce7f5;
+  background:#f8fbff;
+}
+@media(min-width:700px){
+  body.eplan-redesign.client-ui .workout-timed-modal{
+    align-items:center!important;
+    padding:24px!important;
+  }
+  body.eplan-redesign.client-ui .workout-timed-modal-card{
+    border-radius:24px!important;
+  }
+}
+
+
+/* Timed results are read-only in the legacy completed-workout editor */
+body.eplan-redesign.client-ui .completed-workout-edit-exercise.timed-readonly{
+  border-color:#dce7f5!important;
+  background:#f9fbff!important;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-readonly{
+  display:grid;
+  gap:7px;
+  margin-top:10px;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-readonly>div{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  padding:9px 10px;
+  border:1px solid #e0e8f2;
+  border-radius:11px;
+  background:#fff;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-readonly span{
+  color:#7c899c;
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-readonly strong{
+  color:#183153;
+  font-size:10.5px;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-readonly small{
+  color:#8995a6;
+  font-size:8.5px;
+}
+body.eplan-redesign.client-ui .completed-workout-timed-note{
+  margin:10px 0 0;
+  color:#8190a4;
+  font-size:9px;
+  line-height:1.4;
+}
