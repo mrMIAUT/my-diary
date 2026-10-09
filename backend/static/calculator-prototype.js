@@ -599,21 +599,58 @@ function diaryEntryHtml(x){
  return '<div class="foodDiaryEntry" data-diary-entry="'+id+'">'+
   '<div class="foodDiaryInfo"><strong>'+foodEsc(x.name||'Продукт')+'</strong>'+
    brand+
-   '<div class="foodDiaryMeta">'+foodEsc(x.meal||'')+' · '+foodFmt(x.grams)+' г'+
+   '<div class="foodDiaryMeta">'+foodFmt(x.grams)+' г'+
    (x.prep?' · '+foodEsc(x.prep):'')+' · '+foodFmt(x.kcal)+' ккал</div></div>'+
   '<div class="foodDiaryActions"><button type="button" data-diary-edit="'+id+
   '" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">Редагувати</button>'+
   '<button type="button" class="foodDiaryRemove" data-diary-remove="'+id+
   '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div>'+edit+'</div>';
 }
+function diaryNutritionTotals(items){
+ // Work from stored full-precision entries, never from rounded UI labels.
+ const totals={kcal:0,protein:0,fat:0,carbs:0};
+ for(const item of items){
+  for(const key of Object.keys(totals)){
+   const value=Number(item[key]);
+   if(Number.isFinite(value))totals[key]+=value;
+  }
+ }
+ return totals;
+}
+function diaryMealGroupHtml(meal,items){
+ const totals=diaryNutritionTotals(items);
+ const label=items.length===1?'1 продукт':items.length+' продуктів';
+ return '<section class="foodDiaryMeal" data-diary-meal="'+foodEsc(meal)+'">'+
+  '<div class="foodDiaryMealHead"><div><strong>'+foodEsc(meal)+'</strong>'+
+   '<span class="foodDiaryMealCount">'+label+'</span></div>'+
+   '<strong class="foodDiaryMealKcal">'+foodFmt(totals.kcal)+' <small>ккал</small></strong></div>'+
+  '<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
+   '<span>Б <b>'+foodFmt(totals.protein)+'</b></span>'+
+   '<span>Ж <b>'+foodFmt(totals.fat)+'</b></span>'+
+   '<span>В <b>'+foodFmt(totals.carbs)+'</b></span></div>'+
+  '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div></section>';
+}
 function renderDiary(){
  const all=loadDiary(),day=localDayKey(),items=all.filter(x=>x.date===day);
- const sum=key=>items.reduce((acc,x)=>acc+(Number(x[key])||0),0);
- $('diaryKcal').textContent=foodFmt(sum('kcal'));$('diaryProtein').textContent=foodFmt(sum('protein'));$('diaryFat').textContent=foodFmt(sum('fat'));$('diaryCarbs').textContent=foodFmt(sum('carbs'));
+ const totals=diaryNutritionTotals(items);
+ $('diaryKcal').textContent=foodFmt(totals.kcal);
+ $('diaryProtein').textContent=foodFmt(totals.protein);
+ $('diaryFat').textContent=foodFmt(totals.fat);
+ $('diaryCarbs').textContent=foodFmt(totals.carbs);
  const date=new Date();$('foodDiaryDate').textContent=date.toLocaleDateString('uk-UA',{day:'numeric',month:'long'});
  const box=$('foodDiaryEntries');
- if(!items.length)box.innerHTML='<div class="foodDiaryEmpty">Поки що нічого не додано.</div>';
- else box.innerHTML=items.map(diaryEntryHtml).join('');
+ if(!items.length){
+  box.innerHTML='<div class="foodDiaryEmpty">Поки що нічого не додано. Обери продукт і прийом їжі вище.</div>';
+ }else{
+  const sections=FOOD_MEALS.map(meal=>{
+   const group=items.filter(item=>item.meal===meal);
+   return group.length?diaryMealGroupHtml(meal,group):'';
+  });
+  // Never hide entries created by an older diary version with a custom meal.
+  const other=items.filter(item=>!FOOD_MEALS.includes(item.meal));
+  if(other.length)sections.push(diaryMealGroupHtml('Інше',other));
+  box.innerHTML=sections.join('');
+ }
  box.querySelectorAll('[data-diary-remove]').forEach(btn=>btn.onclick=()=>removeDiaryEntry(btn.dataset.diaryRemove));
  box.querySelectorAll('[data-diary-edit]').forEach(btn=>btn.onclick=()=>startDiaryEdit(btn.dataset.diaryEdit));
  box.querySelectorAll('[data-diary-save]').forEach(btn=>btn.onclick=()=>saveDiaryEdit(btn.dataset.diarySave));
