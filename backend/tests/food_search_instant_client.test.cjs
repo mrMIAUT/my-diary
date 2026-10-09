@@ -8,8 +8,10 @@ const source=fs.readFileSync("backend/static/calculator-prototype.js","utf8");
 const start=source.indexOf("function foodPreviewNormalize(");
 const end=source.indexOf("function warmLocalFoodCatalogue(",start);
 assert.ok(start>=0&&end>start,"Local preview helpers must exist");
-assert.ok(source.includes("const localPreview=localFoodMatches(q)"),
-          "Search must display local suggestions before network completion");
+assert.ok(source.includes("if(!barcode&&showLocalFoodResults(q))return;"),
+          "Search must return local results before attempting external API calls");
+assert.ok(source.includes("foodLocalShown<foodLocalResults.length"),
+          "Load-more must paginate remaining local results before external APIs");
 assert.ok(source.includes("warmLocalFoodCatalogue();"),
           "Local catalogue must be preloaded on page entry");
 const ctx=vm.createContext({
@@ -45,6 +47,7 @@ const helpers=vm.runInContext(source.slice(start,end)+
 const labels=q=>Array.from(helpers.localFoodMatches(q),x=>x.name);
 assert.equal(helpers.foodPreviewNormalize("Курица"),"курятина");
 assert.equal(helpers.foodPreviewNormalize("Рис басмати"),"рис басматі");
+assert.equal(helpers.localFoodMatches("Курица",null).length,2);
 assert.ok(labels("Курица").includes("Куряче філе (сире)"));
 assert.ok(labels("Курица").includes("Куряча печінка (сира)"));
 assert.ok(!labels("Курица").includes("Нут (сухий)"));
