@@ -151,8 +151,18 @@ function progressWorkoutData(d,sid){
  skippedAll.forEach(s=>{
    let pid=+s.program_id||0;if(exercises.some(x=>+x.pid===pid))return;
    let p=planById.get(pid)||null,name=s.exercise||p?.exercise||planned.get(pid)||'Вправа';
-   exercises.push({pid,name,planned:planned.get(pid)||'',sets:[],aux:[],skipped:skippedAll.filter(x=>+x.program_id===pid).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0)),planItem:p,order:order.has(pid)?order.get(pid):999});
+   exercises.push({pid,name,planned:planned.get(pid)||'',sets:[],timed:[],aux:[],skipped:skippedAll.filter(x=>+x.program_id===pid).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0)),planItem:p,order:order.has(pid)?order.get(pid):999});
  });
+ let timedAll=(d.timed_result_sets||[]).filter(x=>x.day===day&&(!ids.size||ids.has(+x.program_id)));
+ let timedGroups={};
+ timedAll.forEach(x=>{let key=String(+x.program_id||0)+'::'+String(x.exercise||'');(timedGroups[key]||(timedGroups[key]=[])).push(x)});
+ Object.values(timedGroups).forEach(xs=>{
+   xs=xs.slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   let pid=+xs[0].program_id||0,name=xs[0].exercise||planned.get(pid)||'Вправа',existing=exercises.find(x=>+x.pid===pid);
+   if(existing){existing.timed=xs;return}
+   exercises.push({pid,name,planned:planned.get(pid)||'',sets:[],timed:xs,aux:[],skipped:[],planItem:planById.get(pid)||null,order:order.has(pid)?order.get(pid):999});
+ });
+ exercises.forEach(x=>{if(!Array.isArray(x.timed))x.timed=[]});
  exercises.sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name,'uk'));
  return {workout,day,plan,exercises};
 }
@@ -171,7 +181,7 @@ function progressExerciseVolume(exercise){
 
 function progressWorkoutStats(data){
  let exercises=data?.exercises||[],total=0,workSets=0;
- exercises.forEach(x=>{total+=progressExerciseVolume(x);workSets+=(x.sets||[]).length});
+ exercises.forEach(x=>{total+=progressExerciseVolume(x);workSets+=(x.sets||[]).length+(x.timed||[]).length});
  let lib=window.progressExerciseLibrary||window.exerciseLibrary||null;
  let muscles=[];
  if(lib&&Array.isArray(lib.exercises)&&Array.isArray(lib.muscles)){
@@ -233,6 +243,12 @@ function progressWorkoutDetailHTML(d,sid){
  let actions='<div class="completed-workout-actions"><button type="button" class="completed-workout-edit-btn" onclick="openCompletedWorkoutEditor('+sid+')">'+uiIcon('edit')+'<span>Редагувати тренування</span></button>'+(canReopen?'<button type="button" class="completed-workout-reopen-btn" onclick="reopenCompletedWorkout('+sid+',this)">Скасувати завершення</button>':'')+'</div>';
  let exercises=data.exercises.length?data.exercises.map(x=>{
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
+   if((x.timed||[]).length){
+     let timedRows=(x.timed||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+     let rows=timedRows.map(set=>'<div class="progress-workout-set-group"><div class="calendar-workout-set timed"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.work_seconds)+' сек</strong><em>план '+esc(set.planned_seconds)+' сек'+(+set.rest_seconds>0?' · відпочинок '+esc(set.rest_seconds)+' сек':'')+'</em></div></div>').join('');
+     let count=timedRows.length;
+     return '<div class="progress-workout-exercise timed"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'<small class="progress-timed-label">За часом</small></div><span>'+count+' '+(count===1?'підхід':count<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+rows+'</div></div>';
+   }
    let warm=(x.aux||[]).filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
    let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||x.sets[0]?.repeat_mode))+'</span>').join('')+'</div>':'';
    let skippedSet=new Set((x.skipped||[]).map(s=>+s.set_number||0)),setMap=new Map((x.sets||[]).map(s=>[+s.set_number,s]));
