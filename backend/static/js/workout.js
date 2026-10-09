@@ -603,14 +603,7 @@ async function applyWorkoutExerciseChoice(pid,cid,index,scope){
  }
  alternativeExerciseModal?.remove();
  await showClientTraining(cid);
- requestAnimationFrame(()=>{
-   let body=document.getElementById('exerciseBody'+pid);
-   if(!body)return;
-   body.classList.remove('hidden');
-   let toggle=body.previousElementSibling;
-   if(toggle){toggle.classList.add('open');let a=toggle.querySelector('.arrow');if(a)a.textContent='⌃'}
-   setTimeout(()=>toggle?.scrollIntoView({behavior:'smooth',block:'center'}),60);
- });
+ requestAnimationFrame(()=>focusWorkoutExerciseCard(pid));
 }
 
 async function selectWorkoutExercise(pid,cid,index){
@@ -759,7 +752,10 @@ function focusNextUnfinishedExercise(pid){
  let cards=[...document.querySelectorAll('[id^="exerciseBody"]')];
  let current=cards.findIndex(x=>x.id==='exerciseBody'+pid);
  let next=cards.slice(current+1).find(x=>!x.textContent.includes('Виконано ✓'))||cards.find(x=>!x.textContent.includes('Виконано ✓'));
- if(next){let btn=next.previousElementSibling;if(next.classList.contains('hidden'))btn?.click();setTimeout(()=>btn?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
+ if(next){
+   let nextPid=+(next.id.replace('exerciseBody',''))||0;
+   if(nextPid)focusWorkoutExerciseCard(nextPid);
+ }
 }
 
 
