@@ -617,12 +617,51 @@ async function selectWorkoutExercise(pid,cid,index){
  return applyWorkoutExerciseChoice(pid,cid,index,'today');
 }
 
+function workoutSupersetPeers(x,d=window.currentClientData||{}){
+ if(!x?.superset_group)return [];
+ return orderedSupersetItems((d?.program||[]).filter(v=>v.day_name===x.day_name&&v.superset_group===x.superset_group));
+}
+function workoutSupersetRestSeconds(x,d=window.currentClientData||{}){
+ let peers=workoutSupersetPeers(x,d),last=peers[peers.length-1];
+ if(!last)return 0;
+ let effective=workoutEffectiveExercise(last);
+ if(typeof lyftaRestSeconds==='function')return Math.max(0,+lyftaRestSeconds(effective)||0);
+ return Math.max(0,+effective?.rest_seconds||0);
+}
+function workoutSupersetIsLast(x,d=window.currentClientData||{}){
+ let peers=workoutSupersetPeers(x,d);
+ return peers.length>1&&+peers[peers.length-1].id===+x.id;
+}
+function focusWorkoutExerciseCard(pid){
+ let body=document.getElementById('exerciseBody'+pid);
+ if(!body)return false;
+ let toggle=body.previousElementSibling;
+ if(body.classList.contains('hidden'))toggle?.click();
+ setTimeout(()=>toggle?.scrollIntoView({behavior:'smooth',block:'center'}),70);
+ return true;
+}
+function focusSupersetNextExercise(pid,round=1){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);
+ if(!x?.superset_group)return false;
+ let peers=workoutSupersetPeers(x,d),idx=peers.findIndex(v=>+v.id===+pid);
+ if(idx<0||idx>=peers.length-1)return false;
+ return focusWorkoutExerciseCard(peers[idx+1].id);
+}
+function focusSupersetRoundStart(pid,round=1){
+ let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid);
+ if(!x?.superset_group)return false;
+ let peers=workoutSupersetPeers(x,d),first=peers[0];
+ if(!first)return false;
+ return focusWorkoutExerciseCard(first.id);
+}
+
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false,showRest=true){
   let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
-      doneToday=timed?(d.timed_result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
+      timedDoneCount=timed?(d.timed_result_sets||[]).filter(function(r){return +r.program_id===+x.id&&r.day===activeDay}).length:0,
+      doneToday=timed?timedDoneCount>=Math.max(1,+effective.sets||1):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
       shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
   let rest=showRest?(timed?timedRestLabel(effective):restLabel(effective)):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
       rir=timed?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
@@ -642,8 +681,9 @@ function activeExercisesHTML(items,d,cid){
   if(used.has(x.id))continue;
   if(x.superset_group){
    let pair=orderedSupersetItems(items.filter(y=>y.superset_group===x.superset_group));pair.forEach(y=>used.add(y.id));
-   let effectivePair=pair.map(workoutEffectiveExercise),superRest=supersetRestLabel(effectivePair);
-   html+=`<div class="workout-live-superset"><div class="workout-live-superset-head"><strong>Суперсет</strong><span>виконати вправи по черзі${superRest?' · Відпочинок '+esc(superRest):''}</span></div><div class="workout-live-superset-body">${pair.map((y,i)=>card(y,true,false)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+   let effectivePair=pair.map(workoutEffectiveExercise),superRest=supersetRestLabel(effectivePair),
+       hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1);
+   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}"><div class="workout-live-superset-head"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></div><div class="workout-live-superset-body">${pair.map((y,i)=>card(y,true,false)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true)}
  }
  return html;

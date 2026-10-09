@@ -2593,7 +2593,7 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     work_seconds=int(x.work_seconds or 0)
     if execution_mode=="time":
         if work_seconds<5: raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
-        if x.superset_group.strip() or x.superset_with_id: raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
+        if x.superset_group.strip(): raise HTTPException(400,"Додавай вправу за часом у суперсет через вибір основної вправи")
     alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
@@ -2604,11 +2604,13 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
         superset_group=x.superset_group.strip()
         superset_order=x.superset_order
         if x.superset_with_id:
-            source=c.execute("SELECT id,day_name,superset_group,execution_mode FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
+            source=c.execute("SELECT id,day_name,superset_group,execution_mode,sets FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
             if not source: raise HTTPException(404,"Вправу для суперсету не знайдено")
-            if normalize_execution_mode(source.get("execution_mode"))!="reps": raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
             if str(source["day_name"] or "").strip()!=day: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
             if str(source["superset_group"] or "").strip(): raise HTTPException(409,"Ця вправа вже входить у суперсет")
+            source_mode=normalize_execution_mode(source.get("execution_mode"))
+            if (source_mode=="time" or execution_mode=="time") and int(source.get("sets") or 1)!=int(x.sets):
+                raise HTTPException(400,"У суперсеті з вправою за часом кількість підходів має бути однакова — це кількість кіл")
             superset_group=f"SS{source['id']}"
             superset_order=1
             c.execute("UPDATE program SET superset_group=%s,superset_order=0 WHERE id=%s",(superset_group,source["id"]))
@@ -2669,10 +2671,15 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
     repeat_mode=normalize_repeat_mode(x.repeat_mode)
     execution_mode=normalize_execution_mode(x.execution_mode)
     work_seconds=int(x.work_seconds or 0)
-    if execution_mode=="time":
-        if work_seconds<5: raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
-        if str(p.get("superset_group") or "").strip(): raise HTTPException(400,"Вправу в суперсеті не можна перевести у режим за часом")
-    alternatives_json=normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
+    if execution_mode=="time" and work_seconds<5:
+        raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
+    group=str(p.get("superset_group") or "").strip()
+    if group:
+        peers=all("SELECT id,sets,execution_mode FROM program WHERE client_id=? AND day_name=? AND superset_group=? AND id<>?",(p["client_id"],p["day_name"],group,pid))
+        has_timed_peer=any(normalize_execution_mode(v.get("execution_mode"))=="time" for v in peers)
+        if (execution_mode=="time" or has_timed_peer) and any(int(v.get("sets") or 1)!=int(x.sets) for v in peers):
+            raise HTTPException(400,"У суперсеті з вправою за часом кількість підходів має бути однакова — це кількість кіл")
+    alternatives_json="[]" if execution_mode=="time" else normalize_program_alternatives(x.alternatives_json,{"sets":x.sets,"reps":x.reps,"repeat_mode":repeat_mode,"target_rir":x.target_rir,"rest_seconds":x.rest_seconds,"rest_text":x.rest_text,"rir_by_set":x.rir_by_set})
     run("""UPDATE program SET day_name=?,exercise=?,sets=?,reps=?,repeat_mode=?,execution_mode=?,work_seconds=?,target_rir=?,technique_url=?,rest_seconds=?,rest_text=?,rir_by_set=?,alternatives_json=?
            WHERE id=?""",(x.day_name.strip(),x.exercise.strip(),x.sets,x.reps.strip(),repeat_mode,execution_mode,work_seconds,x.target_rir,technique_url,x.rest_seconds,x.rest_text.strip(),x.rir_by_set.strip(),alternatives_json,pid))
     return {"ok":True}

@@ -272,8 +272,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-review-timed-exercise", RESULTS)
         self.assertIn("path==='/timed-result-sets'&&m==='POST'", CORE)
         self.assertIn("timed_result_sets", CORE)
-        self.assertIn('/static/js/timed-workout.js?v=1', INDEX)
-        self.assertIn("'/static/js/timed-workout.js?v=1'", SW)
+        self.assertIn('/static/js/timed-workout.js?v=2', INDEX)
+        self.assertIn("'/static/js/timed-workout.js?v=2'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
     def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
@@ -336,6 +336,24 @@ class ReleaseContracts(unittest.TestCase):
         self.assertNotIn("refreshNewExerciseSupersetOptions", PROGRAM)
         self.assertNotIn('id="supersetwith"', PROGRAM)
         self.assertIn("superset_with_id:sourceId", PROGRAM)
+
+    def test_timed_and_mixed_supersets_use_shared_round_logic(self):
+        self.assertIn('id="ssexecutionmode"', PROGRAM)
+        self.assertIn("function toggleSupersetExecutionFields", PROGRAM)
+        self.assertIn("Відпочинок після суперсету, сек", PROGRAM)
+        self.assertIn("Підходи / кола", PROGRAM)
+        self.assertIn('source_mode=="time" or execution_mode=="time"', APP)
+        self.assertIn("кількість підходів має бути однакова — це кількість кіл", APP)
+        self.assertIn("function workoutSupersetPeers", WORKOUT)
+        self.assertIn("function workoutSupersetIsLast", WORKOUT)
+        self.assertIn("function focusSupersetNextExercise", WORKOUT)
+        self.assertIn("function focusSupersetRoundStart", WORKOUT)
+        self.assertIn("hasTimed=effectivePair.some(isTimedWorkoutExercise)", WORKOUT)
+        self.assertIn("inSuperset&&!isLast", WORKOUT_LYFTA)
+        self.assertIn("singleSet:inSuperset", TIMED_WORKOUT)
+        self.assertIn("if(s.singleSet){await finishTimedExerciseTimer();return}", TIMED_WORKOUT)
+        self.assertIn("startRestTimer(sharedRest,null,false)", TIMED_WORKOUT)
+        self.assertIn("без відпочинку до кінця кола", TIMED_WORKOUT)
 
     def test_exercise_submit_actions_use_save_labels(self):
         self.assertIn(">Зберегти вправу</button>", PROGRAM)

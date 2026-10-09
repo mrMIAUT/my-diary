@@ -74,13 +74,17 @@ async function lyftaCompleteSet(pid,n,total,restSeconds,btn){
   row?.classList.add('is-complete');
   wrap?.classList.add('is-complete');
   if(btn){btn.textContent='✓';btn.classList.add('done')}
-  let sid=workoutDraftSessionId(window.currentClientData||{});
+  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),inSuperset=!!x?.superset_group,
+      isLast=inSuperset&&workoutSupersetIsLast(x,d),sid=workoutDraftSessionId(d);
   if(sid)saveWorkoutDraft(sid,pid,n,'done',true);
+  if(inSuperset&&!isLast){
+    setTimeout(()=>focusSupersetNextExercise(pid,n),70);
+  }
   if(restSeconds>0){
-    // Track rest after every completed set, including the final set.
-    // saveSets() finalizes the running timer before persisting the exercise.
+    // Rest in a superset starts only after the final exercise of the round.
     let tracking={sid,pid,set_number:n};
     await startRestTimer(restSeconds,null,tracking);
+    if(inSuperset&&isLast&&n<total)setTimeout(()=>focusSupersetRoundStart(pid,n+1),80);
   }
 }
 

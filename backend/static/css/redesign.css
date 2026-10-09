@@ -17853,3 +17853,44 @@ body.eplan-redesign.client-ui .completed-workout-timed-note{
   font-size:9px;
   line-height:1.4;
 }
+
+
+/* Timed / mixed supersets */
+body.eplan-redesign.trainer-ui .trainer-superset-modal-grid input.is-locked{
+  background:#eef3f8;
+  color:#667790;
+}
+body.eplan-redesign.trainer-ui .trainer-superset-round-note{
+  margin:0;
+  padding:9px 10px;
+  border:1px solid #dbe7f5;
+  border-radius:11px;
+  background:#f6f9fd;
+  color:#75859b;
+  font-size:9px;
+  line-height:1.4;
+}
+body.eplan-redesign.client-ui .workout-live-superset.has-timed .workout-live-superset-head{
+  background:#eef5ff;
+}
+body.eplan-redesign.client-ui .workout-timed-superset-progress{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 9px;
+  padding:9px 11px;
+  border:1px solid #dce7f5;
+  border-radius:11px;
+  background:#f7faff;
+}
+body.eplan-redesign.client-ui .workout-timed-superset-progress span{
+  color:#7e8da2;
+  font-size:9px;
+  font-weight:800;
+}
+body.eplan-redesign.client-ui .workout-timed-superset-progress strong{
+  color:#1677ff;
+  font-size:10px;
+  font-weight:900;
+}
