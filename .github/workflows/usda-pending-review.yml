@@ -1,0 +1,32 @@
+name: USDA pending food source review (EPLAN 1.2)
+
+on:
+  push:
+    branches:
+      - eplan-1.2
+    paths:
+      - backend/usda_pending_review.py
+      - .github/workflows/usda-pending-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify pinned USDA archives and print exact source candidates
+        run: python backend/usda_pending_review.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: usda-pending-source-review
+          path: usda_pending_source_review.json
+          if-no-files-found: warn
+          retention-days: 14
