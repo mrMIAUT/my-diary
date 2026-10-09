@@ -77,6 +77,11 @@ def build_records():
                              "reason":"ambiguous_description_or_macro_review"})
             continue
         description=source["description"]
+        expected_description=entry.get("expected_source_description")
+        if (expected_description is not None and
+            (not isinstance(expected_description,str) or
+             description!=expected_description)):
+            raise ValueError("USDA FDC description differs from independently curated evidence: "+name)
         ids=source["source_nutrient_ids"]
         values={k:float(source[k]) for k in NUTRIENTS}
         note=None
