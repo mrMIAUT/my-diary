@@ -545,6 +545,8 @@ let activeDiaryEditId=null,diaryLastRemoved=null;
 let diarySelectedDate=localDayKey(),diaryCalendarOpen=false;
 let diaryCalendarYear=Number(diarySelectedDate.slice(0,4));
 let diaryCalendarMonth=Number(diarySelectedDate.slice(5,7))-1;
+// Monday of the 7-day strip; entirely in-memory and never written to storage.
+let diaryWeekStart=null;
 function diaryDateFromKey(key){
  if(typeof key!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(key))return null;
  const [year,month,day]=key.split('-').map(Number);
@@ -559,6 +561,79 @@ function diaryDateLabel(dayKey){
  const date=diaryDateFromKey(dayKey);
  return date?date.toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'}):'';
 }
+function diaryKeyForLocalDate(date){
+ const pad=value=>String(value).padStart(2,'0');
+ return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate());
+}
+function diaryWeekMonday(dateKey){
+ const date=diaryDateFromKey(dateKey);
+ if(!date)return null;
+ date.setDate(date.getDate()-(date.getDay()+6)%7);
+ return diaryKeyForLocalDate(date);
+}
+function diaryWeekLabel(monday){
+ const start=diaryDateFromKey(monday);
+ if(!start)return '';
+ const end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6,12);
+ const monthOptions={month:'long'};
+ if(start.getMonth()===end.getMonth()&&start.getFullYear()===end.getFullYear()){
+  return start.getDate()+'–'+end.getDate()+' '+end.toLocaleDateString('uk-UA',monthOptions);
+ }
+ return start.getDate()+' '+start.toLocaleDateString('uk-UA',monthOptions)+
+  ' — '+end.getDate()+' '+end.toLocaleDateString('uk-UA',monthOptions);
+}
+function diaryWeekMarkup(records,monday){
+ const start=diaryDateFromKey(monday);
+ if(!start)return '';
+ const today=localDayKey();
+ const marked=new Set(records.map(x=>x&&x.date).filter(x=>diaryDateFromKey(x)));
+ const shortDays=['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+ return Array.from({length:7},(_,i)=>{
+  const date=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i,12);
+  const key=diaryKeyForLocalDate(date);
+  const selected=key===diarySelectedDate,hasEntry=marked.has(key),future=key>today;
+  return '<button type="button" data-diary-week-day="'+key+'"'+
+   ' class="foodWeekDay'+(selected?' is-selected':'')+
+   (key===today?' is-today':'')+(hasEntry?' has-entry':'')+'"'+
+   ' aria-label="'+diaryDateLabel(key)+(hasEntry?', є записи харчування':'')+'"'+
+   ' aria-pressed="'+(selected?'true':'false')+'"'+
+   (future?' disabled aria-disabled="true"':'')+'>'+
+   '<span class="foodWeekDayLabel">'+shortDays[i]+'</span>'+
+   '<span class="foodWeekDayCircle">'+date.getDate()+'</span>'+
+   '<span class="foodWeekDayMarker" aria-hidden="true">'+
+   (hasEntry?'<i class="foodCalendarDot"></i>':'')+'</span>'+
+   '</button>';
+ }).join('');
+}
+function renderDiaryWeekStrip(records){
+ const target=$('foodDiaryWeekDays'),title=$('foodDiaryWeekTitle');
+ if(!target||!title)return;
+ diaryWeekStart=diaryWeekStart||diaryWeekMonday(diarySelectedDate);
+ const todayWeek=diaryWeekMonday(localDayKey());
+ title.textContent=diaryWeekLabel(diaryWeekStart);
+ const previous=$('foodWeekPrev'),next=$('foodWeekNext');
+ if(previous)previous.disabled=diaryWeekStart<='1900-01-01';
+ if(next)next.disabled=diaryWeekStart>=todayWeek;
+ target.innerHTML=diaryWeekMarkup(records,diaryWeekStart);
+ target.querySelectorAll('[data-diary-week-day]').forEach(button=>{
+  button.addEventListener('click',()=>selectDiaryDate(button.dataset.diaryWeekDay));
+ });
+}
+function moveDiaryWeek(direction){
+ if(direction!==-1&&direction!==1)return false;
+ const start=diaryWeekStart||diaryWeekMonday(diarySelectedDate);
+ if(!start)return false;
+ const monday=diaryDateFromKey(start);
+ monday.setDate(monday.getDate()+7*direction);
+ const targetWeek=diaryKeyForLocalDate(monday);
+ if(targetWeek<'1900-01-01'||targetWeek>diaryWeekMonday(localDayKey()))return false;
+ const selected=diaryDateFromKey(diarySelectedDate);
+ selected.setDate(selected.getDate()+7*direction);
+ const targetDate=diaryKeyForLocalDate(selected);
+ // Entering the current week may otherwise land on a future day.
+ return selectDiaryDate(targetDate>localDayKey()?localDayKey():targetDate);
+}
+
 function diaryCalendarMarkup(records){
  const first=new Date(diaryCalendarYear,diaryCalendarMonth,1,12);
  const days=new Date(diaryCalendarYear,diaryCalendarMonth+1,0,12).getDate();
@@ -640,6 +715,9 @@ function selectDiaryDate(dayKey){
  // A stale open edit/delete action cannot operate on a different date.
  activeDiaryEditId=null;diaryLastRemoved=null;
  diarySelectedDate=dayKey;diaryCalendarOpen=false;
+ diaryWeekStart=diaryWeekMonday(dayKey);
+ const status=$('foodAddStatus');
+ if(status)status.textContent='';
  diaryCalendarYear=Number(dayKey.slice(0,4));
  diaryCalendarMonth=Number(dayKey.slice(5,7))-1;
  renderDiary();
@@ -765,6 +843,7 @@ function renderDiary(){
  $('diaryFat').textContent=foodFmt(totals.fat);
  $('diaryCarbs').textContent=foodFmt(totals.carbs);
  $('foodDiaryDate').textContent=diaryDateLabel(day);
+ renderDiaryWeekStrip(all);
  renderFoodCalendar(all);
  const box=$('foodDiaryEntries');
  // Empty meals remain compact one-tap add rows even on a new/empty day.
@@ -912,6 +991,8 @@ function addFoodToDiary(){
  status.textContent='Додано до щоденника.';
 }
 
+$('foodWeekPrev').addEventListener('click',()=>moveDiaryWeek(-1));
+$('foodWeekNext').addEventListener('click',()=>moveDiaryWeek(1));
 $('foodCalendarToggle').addEventListener('click',toggleFoodCalendar);
 $('foodDiaryTodayBtn').addEventListener('click',()=>selectDiaryDate(localDayKey()));
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
