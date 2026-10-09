@@ -37,8 +37,12 @@ _REFERENCE = (
 )
 
 def reference_food_items():
-    """Return independent result dictionaries, compatible with OFF/USDA schema."""
-    return [
+    """Return provisional foods plus separately source-reviewed local records.
+
+    The 26 existing entries remain explicitly approximate. Candidate names
+    are never searchable until an independently reviewed source record exists.
+    """
+    illustrative = [
         {
             "source": "reference",
             "source_label": "Орієнтовні довідкові БЖВ",
@@ -57,3 +61,11 @@ def reference_food_items():
         }
         for slug, name, kcal, protein, fat, carbs, state in _REFERENCE
     ]
+    try:
+        from food_local_catalog import approved_reference_food_items
+        reviewed = approved_reference_food_items()
+    except (ImportError, OSError, ValueError, TypeError):
+        # An invalid optional reviewed catalog must never break existing food
+        # search or make a half-reviewed entry available in the diary.
+        reviewed = ()
+    return illustrative + [dict(item) for item in reviewed]
