@@ -12,6 +12,8 @@ on:
       - backend/tests/food_search_first_load_client.test.cjs
       - backend/tests/food_search_local_first_client.test.cjs
       - backend/food_local_catalog.py
+      - backend/food_manufacturer_catalog.py
+      - backend/food_manufacturer_labels.json
       - backend/food_catalog_candidates.json
       - backend/food_local_nutrition.json
       - backend/check_food_local_catalog.py
@@ -33,7 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Check backend syntax
-        run: python -m py_compile backend/app.py backend/food_reference_catalog.py backend/food_local_catalog.py backend/food_local_bootstrap.py backend/check_food_local_catalog.py
+        run: python -m py_compile backend/app.py backend/food_reference_catalog.py backend/food_local_catalog.py backend/food_manufacturer_catalog.py backend/food_local_bootstrap.py backend/check_food_local_catalog.py
       - name: Check local food catalogue provenance
         run: python backend/check_food_local_catalog.py
       - name: Check food prototype JavaScript syntax
