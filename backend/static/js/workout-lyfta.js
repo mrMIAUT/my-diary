@@ -40,7 +40,7 @@ function lyftaCopyPrevious(pid,n){
   let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
   if(w){w.value=p.weight;w.dispatchEvent(new Event('input',{bubbles:true}))}
   if(r){r.value=p.reps;r.dispatchEvent(new Event('input',{bubbles:true}))}
-  if(i){i.value=p.rir;i.dispatchEvent(new Event('input',{bubbles:true}))}
+  if(i){i.value=p.rir??'';i.dispatchEvent(new Event('input',{bubbles:true}))}
   lyftaUpdatePR(pid,n);
 }
 
@@ -69,7 +69,7 @@ function lyftaShouldStartRestAfterSet(x,d){
 async function lyftaCompleteSet(pid,n,total,restSeconds,btn){
   if(btn?.classList.contains('done'))return;
   let w=document.getElementById('w'+pid+'_'+n),r=document.getElementById('r'+pid+'_'+n),i=document.getElementById('i'+pid+'_'+n);
-  if(!w?.value||!r?.value||!i?.value){alert('Заповни вагу, повтори та RIR у цьому підході.');return}
+  if(!r?.value||!(+r.value>0)){alert('Заповни кількість повторів у цьому підході.');return}
   let row=btn?.closest('.lyfta-set-row'),wrap=btn?.closest('.lyfta-set-wrap');
   row?.classList.add('is-complete');
   wrap?.classList.add('is-complete');
@@ -130,6 +130,7 @@ function lyftaShouldSuggestProgression(x,d,prevSets=[]){
     let target=targets[n-1]??targets[targets.length-1]??(+x?.target_rir||0);
     if(!(+p.weight>0))return false;
     if((+p.reps||0)<upper)return false;
+    if(p.rir===null||p.rir===undefined||p.rir==='')return false;
     if(Number.isFinite(+target)&&(+p.rir||0)<+target)return false;
   }
   return true;
@@ -189,7 +190,7 @@ function setRows(x,d,cid){
   for(let n=1;n<=total;n++){
     let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned,skipped=!isExtra&&skippedSet.has(n);
     let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??rp[rp.length-1]??'';
-    let prevLine='<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?fmtProgress(p.weight)+' кг × '+repeatResultText(p.reps,p.repeat_mode||mode)+' · RIR '+p.rir+(+p.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):''):'—')+'</strong>'+(p&&!skipped?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>';
+    let prevLine='<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?workoutRecordedSetText(p,p.repeat_mode||mode)+(workoutRecordedMetaText(p)?' · '+workoutRecordedMetaText(p):''):'—')+'</strong>'+(p&&!skipped?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>';
     let rowHTML=skipped
       ?'<div class="lyfta-set-row is-skipped"><div class="setnum">'+n+'</div><div class="lyfta-skipped-copy"><strong>Пропущено</strong><small>Підхід залишиться у плані</small></div><span class="lyfta-swipe-hint">← свайп</span></div>'
       :'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
