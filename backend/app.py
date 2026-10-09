@@ -1980,15 +1980,32 @@ def _food_match_quality(query:str,item:dict):
     brand=(item.get("brand") or "").strip()
     name_words=_food_match_words(name)
     brand_words=_food_match_words(brand)
+    # Approved local foods can display Ukrainian while matching reviewed
+    # Russian/English aliases. OFF/USDA without aliases remain unchanged.
+    search_titles=[name_words]+[
+        _food_match_words(alias) for alias in (item.get("search_aliases") or ())
+        if isinstance(alias,str) and alias.strip()
+    ]
     best=(4,999,0,999)
     for variant_index,variant in enumerate(food_search_variants(query)):
         query_words=_food_match_words(variant)
         if not query_words:continue
         matched=_food_match_coverage(query_words,name_words)
         brand_matched=_food_match_coverage(query_words,brand_words)
+        # A complete alias counts as a direct product-name match; partial
+        # alias matches remain subordinate to actual title relevance.
+        best_title_words=min(
+            search_titles,
+            key=lambda words: (
+                -_food_match_coverage(query_words,words),
+                0 if words and _food_match_word(query_words[0],words[0]) else 1,
+                abs(len(words)-len(query_words)),
+            ),
+        )
+        matched=_food_match_coverage(query_words,best_title_words)
         full=(matched==len(query_words))
-        first=bool(name_words and _food_match_word(query_words[0],name_words[0]))
-        exact=(full and len(name_words)==len(query_words))
+        first=bool(best_title_words and _food_match_word(query_words[0],best_title_words[0]))
+        exact=(full and len(best_title_words)==len(query_words))
         if full and first:bucket=0
         elif full:bucket=1
         elif matched:bucket=2
