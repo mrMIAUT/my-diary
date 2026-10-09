@@ -35,6 +35,8 @@ class LocalCatalogueTests(unittest.TestCase):
             "source_archive_version": "synthetic-test-fixture",
             "source_snapshot_sha256": "a" * 64,
             "source_food_description": "Synthetic test food",
+            "name_ru": "Куриное филе сырое",
+            "name_en": "Raw chicken breast",
             "source_portion_basis": "100g_edible_portion",
             "source_nutrient_ids": {
                 "kcal_100": 1008, "protein_100": 1003,
