@@ -276,6 +276,12 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("'/static/js/timed-workout.js?v=1'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
+    def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
+        self.assertIn("function syncTrainerNutritionTargetKcal", NUTRITION_JS)
+        self.assertIn("Math.round(p*4+f*9+c*4)", NUTRITION_JS)
+        self.assertIn('oninput="syncTrainerNutritionTargetKcal()"', NUTRITION_JS)
+        self.assertIn("калорійність перерахується автоматично", NUTRITION_JS)
+
     def test_trainer_nutrition_targets_do_not_use_client_only_handler(self):
         self.assertIn("function saveTrainerNutritionTargets", NUTRITION_JS)
         self.assertIn("saveTrainerNutritionTargets(", NUTRITION_JS)
