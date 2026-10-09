@@ -229,7 +229,7 @@ function mergeFoodItems(a,b){
 }
 const foodFmt=value=>{
  const n=Number(value)||0;
- return n.toLocaleString('uk-UA',{maximumFractionDigits:n<10?1:0});
+ return n.toLocaleString('uk-UA',{maximumFractionDigits:1});
 };
 function foodResultLabel(item){
  const brand=item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+(item.source_kind==='manufacturer_label'?' · дані виробника':'')+'</span>':item.approximate?'<span class="foodBrand">Довідкові БЖВ · орієнтовно</span>':item.review_status==='approved'&&item.source_fdc_id?'<span class="foodBrand">База ЄПЛАН · USDA FDC №'+foodEsc(item.source_fdc_id)+'</span>':'';
