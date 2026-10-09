@@ -14,15 +14,21 @@ from food_reference_catalog import reference_food_items
 class FoodReferenceAuditTests(unittest.TestCase):
     def test_catalogue_has_unique_ids_and_explicit_provenance(self):
         items = reference_food_items()
-        self.assertEqual(len(items), 26)
+        self.assertGreaterEqual(len(items), 26)
+        self.assertEqual(sum(x.get("approximate") is True for x in items), 26)
         self.assertEqual(len({x["source_id"] for x in items}), len(items))
         for item in items:
             with self.subTest(food=item["name"]):
                 self.assertEqual(item["source"], "reference")
-                self.assertTrue(item["approximate"])
                 self.assertEqual(item["data_type"], "reference")
                 self.assertIn(item["preparation_state"], {"raw", "dry", "cooked", "as_sold"})
                 self.assertTrue(item["source_id"].startswith("eplan12-"))
+                if item.get("approximate") is True:
+                    self.assertNotIn("source_fdc_id",item)
+                else:
+                    self.assertEqual(item["review_status"],"approved")
+                    self.assertGreater(item["source_fdc_id"],0)
+                    self.assertTrue(item["source_id"].startswith("eplan12-fdc-"))
 
     def test_nutrients_are_finite_and_physically_possible(self):
         import math
@@ -45,8 +51,12 @@ class FoodReferenceAuditTests(unittest.TestCase):
                 # The source is explicitly approximate. Flag large discrepancies
                 # for review rather than inventing a replacement kcal value.
                 if discrepancy > 25:
-                    self.assertTrue(item["approximate"])
                     self.assertEqual(item["source"], "reference")
+                    if item.get("approximate") is not True:
+                        # Imported records retain official USDA energy rather
+                        # than inventing numbers from a universal 4/9/4 rule.
+                        self.assertEqual(item["review_status"],"approved")
+                        self.assertGreater(item["source_fdc_id"],0)
 
     def test_dry_and_cooked_rice_remain_distinct(self):
         items = {x["source_id"]: x for x in reference_food_items()}
