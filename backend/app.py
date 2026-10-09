@@ -2726,6 +2726,26 @@ def prototype_chicken_preparation(
     return _resolve_chicken_preparation(mode)
 
 
+def _food_result_page(raw,normalized,variants,candidates,limit,page,food_type):
+    """Page a fixed candidate window. Cache entries never depend on the page.
+
+    The same ranked window serves all pages and food-type filters, preventing
+    repeated external calls and result reordering on 'Показати ще'.
+    """
+    ranked,brand_query,sources=candidates
+    matching=(ranked if food_type=="all" else
+              [item for item in ranked if item["food_type"]==food_type])
+    start=(page-1)*limit
+    end=start+limit
+    return {
+        "query":raw,"normalized_query":normalized,"search_variants":variants,
+        "items":[dict(item) for item in matching[start:end]],
+        "mode":"text","brand_query":brand_query,
+        "food_type":food_type,"page":page,"has_more":end<len(matching),
+        "candidate_count":len(matching),"sources":dict(sources),
+    }
+
+
 @app.get("/api/prototype/foods/search")
 def prototype_food_search(
     q:str=Query(...,min_length=2,max_length=120),
@@ -2745,6 +2765,11 @@ def prototype_food_search(
                 "mode":"barcode","food_type":food_type,"page":1,"has_more":False}
     normalized=normalize_food_query(raw)
     variants=food_search_variants(raw)
+    cache_key=(raw.casefold(),limit)
+    cached=_food_cache_get(FOOD_RESULT_CACHE,FOOD_RESULT_CACHE_LOCK,
+                           cache_key,FOOD_RESULT_CACHE_TTL_SECONDS)
+    if cached is not None:
+        return _food_result_page(raw,normalized,variants,cached,limit,page,food_type)
     # Build a stable candidate window before UI pagination. Otherwise OFF's
     # own page order leaks into EPLAN and good Ukrainian brands appear only
     # after "Показати ще".
@@ -2760,11 +2785,12 @@ def prototype_food_search(
     case_queries=_food_broad_case_forms(normalized)
     for case in case_queries:
         if case not in ua_variants:ua_variants.append(case)
-    for i,query in enumerate(ua_variants):
-        search_pages=1 if query in case_queries else (4 if i==0 else 2)
-        ua_off_items=_dedupe_food_items(
-            ua_off_items+_off_collect(query,"Ukraine",pages=search_pages,page_size=24)
-        )
+    ua_jobs=[
+        (query,"Ukraine",1 if query in case_queries else (4 if i==0 else 2),24)
+        for i,query in enumerate(ua_variants)
+    ]
+    for batch in _food_collect_off_batches(ua_jobs):
+        ua_off_items=_dedupe_food_items(ua_off_items+batch)
     # OFF may return nothing for a literal phrase even when the catalogue
     # contains a relevant composite food. Search its individual key terms
     # and use the same strict relevance ordering on the unified result.
@@ -2778,11 +2804,12 @@ def prototype_food_search(
         global_queries=list(variants)
         for case in case_queries:
             if case not in global_queries:global_queries.append(case)
-        for query in global_queries:
-            search_pages=1 if query in case_queries else 2
-            global_off_items=_dedupe_food_items(
-                global_off_items+_off_collect(query,None,pages=search_pages,page_size=24)
-            )
+        global_jobs=[
+            (query,None,1 if query in case_queries else 2,24)
+            for query in global_queries
+        ]
+        for batch in _food_collect_off_batches(global_jobs):
+            global_off_items=_dedupe_food_items(global_off_items+batch)
 
     off_items=_dedupe_food_items(ua_off_items+global_off_items)
     # Some OFF foods have no Ukraine country tag but do have Ukrainian labels.
@@ -2827,20 +2854,16 @@ def prototype_food_search(
     # Rank once, THEN filter, THEN paginate. Each tab's "Показати ще"
     # must therefore never skip or repeat hits across page boundaries.
     ranked=_food_rank(normalized,reference_candidates+off_items+usda_items)
-    ranked=[dict(item,food_type=_food_search_type(item)) for item in ranked]
-    if food_type!="all":
-        ranked=[item for item in ranked if item["food_type"]==food_type]
-    start=(page-1)*limit
-    end=start+limit
-    items=ranked[start:end]
-    has_more=end<len(ranked)
-    return {
-        "query":raw,"normalized_query":normalized,"search_variants":variants,
-        "items":items,"mode":"text","brand_query":bool(brand_matches),
-        "food_type":food_type,"page":page,"has_more":has_more,
-        "candidate_count":len(ranked),
-        "sources":{"open_food_facts":bool(off_items),"usda":bool(usda_items)},
-    }
+    ranked=tuple(dict(item,food_type=_food_search_type(item)) for item in ranked)
+    candidates=(
+        ranked,bool(brand_matches),
+        {"open_food_facts":bool(off_items),"usda":bool(usda_items)},
+    )
+    # Do not pin reference-only/failed upstream searches in the result cache.
+    if off_items or usda_items:
+        _food_cache_set(FOOD_RESULT_CACHE,FOOD_RESULT_CACHE_LOCK,
+                        cache_key,candidates,FOOD_RESULT_CACHE_MAX_ENTRIES)
+    return _food_result_page(raw,normalized,variants,candidates,limit,page,food_type)
 
 
 @app.get("/")
