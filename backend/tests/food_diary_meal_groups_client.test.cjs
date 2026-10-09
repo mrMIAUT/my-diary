@@ -94,5 +94,5 @@ assert.equal(entries().find(x=>x.id==="yesterday").kcal,9999);
 assert.ok(f.saveDiary([]));
 f.renderDiary();
 assert.equal(elements.diaryKcal.textContent,"0");
-assert.match(elements.foodDiaryEntries.innerHTML,/Поки що нічого не додано/);
+assert.match(elements.foodDiaryEntries.innerHTML,/За цей день ще немає записів/);
 console.log("Food diary groups: meal BJU, separate daily totals, edit/move, undo, legacy grouping and empty state PASS");
