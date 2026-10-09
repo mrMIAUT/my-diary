@@ -161,7 +161,7 @@ function localFoodMatches(query,limit=8){
   if(!item||!item.name||!Number.isFinite(Number(item.kcal_100)))continue;
   const label=String(item.name).toLocaleLowerCase('uk-UA');
   const aliases=Array.isArray(item.search_aliases)?item.search_aliases.join(' '):'';
-  const hay=(label+' '+aliases).toLocaleLowerCase('uk-UA');
+  const hay=(label+' '+String(item.brand||'')+' '+aliases).toLocaleLowerCase('uk-UA');
   let relevance=99;
   for(let k=0;k<terms.length;k++){
    const words=terms[k];
