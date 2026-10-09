@@ -123,9 +123,26 @@
         <div>
           <span class="section-kicker">АКТИВНЕ ТРЕНУВАННЯ</span>
           <h2>День 1 · Дім</h2>
-          <p id="clientExerciseName">Присідання з резинкою</p>
+          <p>Обери вправу зі списку нижче</p>
         </div>
         <span class="live-dot">LIVE</span>
+      </article>
+
+      <article class="card client-exercise-list-card">
+        <div class="card-head compact">
+          <div>
+            <span class="section-kicker">ВПРАВИ</span>
+            <h2>Тренування</h2>
+          </div>
+          <span id="clientExerciseCount" class="count-badge">3</span>
+        </div>
+        <p class="client-list-helper">Натисни на вправу, щоб відкрити її виконання.</p>
+        <div id="clientExerciseList" class="client-exercise-list"></div>
+      </article>
+
+      <article class="selected-exercise-title">
+        <span class="section-kicker">ОБРАНА ВПРАВА</span>
+        <h3 id="clientExerciseName">Присідання з резинкою</h3>
       </article>
 
       <article id="timedWorkoutCard" class="card timed-workout-card">
@@ -135,6 +152,10 @@
         </div>
 
         <div class="timer-ring" id="timerRing">
+          <svg class="timer-svg" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="timer-track" cx="60" cy="60" r="54"></circle>
+            <circle id="timerProgressCircle" class="timer-progress" cx="60" cy="60" r="54"></circle>
+          </svg>
           <div class="timer-inner">
             <span id="phaseLabel">ГОТОВА</span>
             <strong id="timerValue">00:30</strong>
@@ -168,7 +189,7 @@
         <button class="primary full" id="completeClassic">Завершити вправу</button>
       </article>
 
-      <article class="card progression-card">
+      <article id="progressionCard" class="card progression-card">
         <div class="card-head compact">
           <div>
             <span class="section-kicker">ПРОГРЕСІЯ</span>
