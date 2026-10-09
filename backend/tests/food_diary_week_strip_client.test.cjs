@@ -57,7 +57,7 @@ assert.ok(api.saveDiary(records));
 const raw=localStorage.getItem(diaryKey);
 api.renderDiary();
 assert.equal(elements.diaryKcal.textContent,"120");
-assert.equal((elements.foodDiaryWeekDays.innerHTML.match(/class="foodWeekDay/g)||[]).length,7);
+assert.equal((elements.foodDiaryWeekDays.innerHTML.match(/data-diary-week-day=/g)||[]).length,7);
 assert.equal(boundDays.length,7);
 assert.ok(elements.foodDiaryWeekTitle.textContent);
 assert.equal(elements.foodWeekNext.disabled,true,"Can't move beyond current week");
