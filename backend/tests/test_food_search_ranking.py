@@ -675,6 +675,22 @@ class FoodSearchRanking(unittest.TestCase):
         # Explicit English names still remain accessible.
         self.assertEqual(self.rank("Milk",candidates)[0]["name"],"Milk")
 
+    def test_local_ukrainian_food_matches_reviewed_english_and_russian_aliases(self):
+        candidate=food("Куряче філе (сире)","",False)
+        candidate["source"]="reference"
+        candidate["search_aliases"]=[
+            "Raw chicken breast",
+            "Куриное филе сырое",
+        ]
+        for query in ("Raw chicken breast","Куриное филе сырое",
+                      "Куряче філе"):
+            with self.subTest(query=query):
+                ranked=self.rank(query,[
+                    food("Chicken curry","Foreign",False),candidate
+                ])
+                self.assertTrue(ranked)
+                self.assertEqual(ranked[0]["name"],"Куряче філе (сире)")
+
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
         twice = [x["name"] for x in self.rank("Говядина")]
