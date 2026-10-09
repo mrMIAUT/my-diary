@@ -2237,26 +2237,6 @@ def _food_rank(query:str,items:list):
                        quality[1],quality[2],quality[3],
                        (item.get("name") or "").lower(),item))
     ranked.sort(key=lambda row:row[:11])
-    # Broad single-ingredient queries should favour ordinary edible products.
-    # This is a cross-category presentation rule, not a product blacklist:
-    # explicit queries (e.g. "chicken skin") retain their exact-match priority.
-    if broad_query:
-        def _broad_ingredient_penalty(item):
-            words=_food_match_words(item.get("name") or "")
-            if not words:return 0
-            query_words=_food_match_words(query)
-            if not query_words:return 0
-            # These are secondary animal parts and meat substitutes, not
-            # representative cuts when the user asks for the whole animal.
-            animal_query=normalize_food_query(query) in FOOD_BROAD_MEAT_TERMS
-            secondary=("skin","шкір","кож","feet","foot","лап","tail","хвіст",
-                       "back","спин","meatless","substitute","замінник")
-            if animal_query and _food_contains_cue(words,secondary):
-                return 2
-            return 0
-        # Preserve relevance as the first key and the existing relative
-        # order within each group; demote only clearly secondary products.
-        ranked.sort(key=lambda row:(row[0],_broad_ingredient_penalty(row[11])))
     return _dedupe_food_items([row[11] for row in ranked])
 
 CHICKEN_PREPARATIONS={
