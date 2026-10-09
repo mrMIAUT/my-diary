@@ -241,7 +241,12 @@ class FoodSearchRanking(unittest.TestCase):
         self.assertIn("Chicken breast", names)
         self.assertIn("Курка охолоджена", names)
         self.assertNotIn("Яловичина Ангус", names)
-        self.assertEqual(ranked[0]["brand"],"Сільпо")
+        # Broad chicken searches must keep the two relevant Ukrainian foods
+        # ahead of the English one, but neither Ukrainian brand has to win
+        # against the other merely because of its shop/producer name.
+        self.assertIn(ranked[0]["name"], ("Куряче філе","Курка охолоджена"))
+        self.assertLess(names.index("Куряче філе"),names.index("Chicken breast"))
+        self.assertLess(names.index("Курка охолоджена"),names.index("Chicken breast"))
 
     def test_unrelated_pasta_not_in_potato_results(self):
         ranked = self.rank("Картошка", [
