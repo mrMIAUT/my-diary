@@ -36,6 +36,14 @@ class LocalCatalogueTests(unittest.TestCase):
             "source_snapshot_sha256": "a" * 64,
             "source_food_description": "Synthetic test food",
             "source_portion_basis": "100g_edible_portion",
+            "source_nutrient_ids": {
+                "kcal_100": 1008, "protein_100": 1003,
+                "fat_100": 1004, "carbs_100": 1005,
+            },
+            "source_nutrients_100g": {
+                "kcal_100": 120.0, "protein_100": 23.0,
+                "fat_100": 2.6, "carbs_100": 0.0,
+            },
             "reviewed_by": "unit-test-fixture",
             "reviewed_at": "2026-10-09",
             "kcal_100": 120.0,
@@ -88,6 +96,9 @@ class LocalCatalogueTests(unittest.TestCase):
         for changes in (
             {"source_snapshot_sha256": ""},
             {"source_system": "OFF"},
+            {"source_data_type": "Branded"},
+            {"source_nutrients_100g": {}},
+            {"source_nutrient_ids": {}},
             {"review_status": "pending"},
             {"fdc_id": 0},
             {"reviewed_by": ""},
@@ -111,6 +122,9 @@ class LocalCatalogueTests(unittest.TestCase):
             "Specific Atwater factors and non-macro energy contribution "
             "checked against the actual official source record."
         )
+        bad["source_nutrients_100g"] = {
+            **bad["source_nutrients_100g"], "kcal_100": 650,
+        }
         # The review gate allows an explained exception, but cannot independently
         # verify its source; a human must compare underlying official records.
         self.assertEqual(
