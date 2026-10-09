@@ -217,11 +217,16 @@ def candidate_sources():
         ):
             source_flags.append({"name":name,"warning":"cooked_label_unclear",
                                  "source":official["description"]})
-    print("USDA_EXISTING_AUDIT "+json.dumps({
+    audit_summary={
         "stored_records":len(stored["records"]),
         "source_mismatch_errors":source_errors,
-        "label_review_flags":source_flags
-    },ensure_ascii=False),flush=True)
+        "label_review_flags":source_flags,
+        "official_source_comparison":"pinned SR Legacy and Foundation CSV"
+    }
+    print("USDA_EXISTING_AUDIT "+json.dumps(audit_summary,ensure_ascii=False),flush=True)
+    Path("usda_nutrition_integrity_report.json").write_text(
+        json.dumps(audit_summary,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8"
+    )
     groups={}
     for c in pending:
         opts=QUERIES.get(c["name_uk"],"").split(";")
