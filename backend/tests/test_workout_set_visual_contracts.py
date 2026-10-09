@@ -12,20 +12,22 @@ SW=(ROOT/"sw.js").read_text(encoding="utf-8")
 class WorkoutSetVisualContracts(unittest.TestCase):
     def test_pwa_uses_updated_workout_css(self):
         for source in (HTML,SW):
-            self.assertIn("/static/css/redesign.css?v=245",source)
-            self.assertNotIn("/static/css/redesign.css?v=244",source)
-        self.assertIn("const VERSION='eplan-v201'",SW)
+            self.assertIn("/static/css/redesign.css?v=246",source)
+            self.assertNotIn("/static/css/redesign.css?v=245",source)
+        self.assertIn("const VERSION='eplan-v202'",SW)
 
-    def test_completed_set_surface_has_uniform_fill(self):
+    def test_completed_set_has_green_surface_and_white_inputs(self):
         rules=CSS.split("/* v245 — client workout set:",1)[1]
         for selector in (
             ".lyfta-set-wrap.is-complete{",
             ".lyfta-set-wrap.is-complete .lyfta-set-swipe-content{",
-            ".lyfta-set-wrap.is-complete .lyfta-set-row input{",
             ".lyfta-set-wrap.is-complete .lyfta-drop-zone{",
         ):
             part=rules.split(selector,1)[1].split("}",1)[0]
             self.assertIn("background:#f1faf4!important",part)
+        inputs = rules.split(".lyfta-set-wrap.is-complete .lyfta-set-row input{",1)[1].split("}",1)[0]
+        self.assertIn("background:#fff!important", inputs)
+        self.assertIn("border-color:#d8ebdf!important", inputs)
 
     def test_focus_ring_is_internal_and_swipe_is_kept(self):
         rules=CSS.split("/* v245 — client workout set:",1)[1]
