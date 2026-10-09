@@ -9,7 +9,7 @@ assert.ok(html.includes('placeholder="Пошук продуктів або шт�
 assert.ok(!html.includes('class="foodChips"'),"Preset suggestion chips must be removed");
 assert.ok(!html.includes('data-food-query='),"Hardcoded demo food suggestions must not appear");
 assert.ok(!js.includes("querySelectorAll('[data-food-query]')"),"Preset handlers must be absent");
-assert.ok(html.includes("/static/calculator-prototype.js?v=45"),"Refresh Safari JS cache");
+assert.ok(html.includes("/static/calculator-prototype.js?v=46"),"Refresh Safari JS cache");
 assert.ok(html.includes(".foodWeekDay.is-selected .foodWeekDayCircle{background:#3868cb"),"Selected week day must use brand blue");
 assert.ok(html.includes(".foodCalendarDay.is-selected{background:#e9f0ff"),"Month selection must use brand blue");
 assert.ok(html.includes(".foodCalendarDot{background:#4679d0"),"History indicators must use brand blue");
@@ -68,10 +68,15 @@ function block(meal){
 f.renderDiary();
 assert.ok(block("Сніданок").includes('data-diary-meal-body="Сніданок"'));
 assert.ok(block("Перекус").includes('data-diary-meal-body="Перекус"'));
-assert.ok(block("Сніданок").includes("Білки"));
-assert.ok(block("Сніданок").includes("Жири"));
-assert.ok(block("Сніданок").includes("Вуглеводи"));
+assert.ok(block("Сніданок").includes('aria-label="Білки: 5,6 грамів"'));
+assert.ok(block("Сніданок").includes('aria-label="Жири: 5 грамів"'));
+assert.ok(block("Сніданок").includes('aria-label="Вуглеводи: 9 грамів"'));
+for(const short of ["Б","Ж","В"])assert.ok(block("Сніданок").includes('title="'+({Б:"Білки",Ж:"Жири",В:"Вуглеводи"}[short])+'">'+short+'</small>'));
+assert.ok(!block("Сніданок").includes("продукт"),"Meal header should have no product count");
 assert.equal(byId.diaryKcal.textContent,"236,9");
+for(const label of ["Білки","Жири","Вуглеводи"])
+ assert.ok(html.includes('aria-label="'+label+'">'+({Білки:"Б",Жири:"Ж",Вуглеводи:"В"}[label])+'</small>'),
+  "Daily macros should use short accessible labels");
 assert.ok(toggleControls.some(btn=>btn.dataset.diaryMealToggle==="Сніданок"));
 const first=toggleControls.find(btn=>btn.dataset.diaryMealToggle==="Сніданок");
 assert.equal(typeof first.onclick,"function");
