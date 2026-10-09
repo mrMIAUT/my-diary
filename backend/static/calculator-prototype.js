@@ -194,8 +194,8 @@ async function searchFoods(query,append=false){
   }catch(err){
    if(requestId!==foodRequestId)return;
    if(!append&&selectedFood)return;
-   if(!append)foodItems=cachedFoodMatches(q);
-   const message=foodItems.length?'Показано кешовані результати. Зовнішній пошук тимчасово недоступний.':'Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
+   if(!append&&!foodItems.length)foodItems=cachedFoodMatches(q);
+   const message=foodItems.length?'Показано попередні результати. Зовнішній пошук тимчасово недоступний.':'Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
    foodHasMore=false;
    renderFoodResults(foodItems,message);
   }finally{
