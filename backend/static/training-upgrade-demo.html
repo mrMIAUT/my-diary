@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7faff">
+  <title>Є ПЛАН · Апгрейд тренувань 1.2</title>
+  <link rel="stylesheet" href="/static/css/training-upgrade-demo.css?v=1">
+</head>
+<body>
+  <main class="demo-shell">
+    <header class="demo-top">
+      <div class="brand"><span class="brand-e">Є</span><i></i><strong>ПЛАН</strong></div>
+      <span class="version">1.2 · ПРОТОТИП</span>
+    </header>
+
+    <section class="demo-hero">
+      <span class="eyebrow">АПГРЕЙД ТРЕНУВАНЬ</span>
+      <h1>Класичні + тренування за часом</h1>
+      <p>Перший інтерактивний прототип: тренер створює вправу, клієнт проходить роботу та автоматичний відпочинок по таймеру.</p>
+    </section>
+
+    <nav class="role-switch" aria-label="Режим прототипу">
+      <button class="active" data-role="trainer">Тренер</button>
+      <button data-role="client">Клієнт</button>
+    </nav>
+
+    <section id="trainerView" class="view active">
+      <article class="card format-card">
+        <div class="card-head">
+          <div>
+            <span class="section-kicker">КОНСТРУКТОР</span>
+            <h2>Формат вправи</h2>
+          </div>
+          <span class="prototype-chip">NEW</span>
+        </div>
+        <div class="segmented" id="formatSwitch">
+          <button data-format="reps">Класичне</button>
+          <button class="active" data-format="time">За часом</button>
+        </div>
+        <p class="helper" id="formatHelp">Підходи виконуються за таймером. Після роботи відпочинок запускається автоматично.</p>
+      </article>
+
+      <article class="card builder-card">
+        <div class="card-head compact">
+          <div>
+            <span class="section-kicker">НОВА ВПРАВА</span>
+            <h2>Налаштування</h2>
+          </div>
+        </div>
+
+        <label class="field wide">
+          <span>Вправа</span>
+          <input id="exerciseName" value="Присідання з резинкою" autocomplete="off">
+        </label>
+
+        <div class="place-block">
+          <span>Місце / обладнання</span>
+          <div class="place-chips" id="placeChips">
+            <button class="active" data-place="Дім">Дім</button>
+            <button data-place="Зал">Зал</button>
+            <button data-place="Без обладнання">Без обладнання</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Підходи</span>
+            <input id="setCount" type="number" min="1" max="10" value="3" inputmode="numeric">
+          </label>
+
+          <label class="field timed-field">
+            <span>Робота, сек</span>
+            <input id="workSeconds" type="number" min="5" max="600" value="30" inputmode="numeric">
+          </label>
+
+          <label class="field timed-field">
+            <span>Відпочинок, сек</span>
+            <input id="restSeconds" type="number" min="0" max="600" value="30" inputmode="numeric">
+          </label>
+
+          <label class="field timed-field">
+            <span>Навантаження <small>необов'язково</small></span>
+            <input id="loadLabel" value="Резинка" placeholder="10 кг / резинка">
+          </label>
+
+          <label class="field classic-field hidden">
+            <span>Повтори</span>
+            <input id="repRange" value="10–15">
+          </label>
+
+          <label class="field classic-field hidden">
+            <span>RIR</span>
+            <input id="rirValue" type="number" min="0" max="10" value="2">
+          </label>
+        </div>
+
+        <button id="saveExercise" class="primary soft">Зберегти вправу</button>
+        <div id="savedNotice" class="saved-notice" aria-live="polite">Збережено в прототипі ✓</div>
+      </article>
+
+      <article class="card plan-card">
+        <div class="card-head compact">
+          <div>
+            <span class="section-kicker">ДЕНЬ 1 · ДІМ</span>
+            <h2>Домашнє тренування</h2>
+          </div>
+          <span id="planCount" class="count-badge">1</span>
+        </div>
+        <div id="trainerExercisePreview"></div>
+        <button id="openClient" class="secondary full">Подивитися як клієнт →</button>
+      </article>
+
+      <article class="card roadmap-card">
+        <span class="section-kicker">НАСТУПНИЙ ЕТАП</span>
+        <h3>Кругове / HIIT</h3>
+        <p>Кілька вправ у колі, окремий відпочинок між вправами та колами. У перший прототип навмисно не додаємо, щоб окремо перевірити базову механіку.</p>
+      </article>
+    </section>
+
+    <section id="clientView" class="view">
+      <article class="client-workout-head">
+        <div>
+          <span class="section-kicker">АКТИВНЕ ТРЕНУВАННЯ</span>
+          <h2>День 1 · Дім</h2>
+          <p id="clientExerciseName">Присідання з резинкою</p>
+        </div>
+        <span class="live-dot">LIVE</span>
+      </article>
+
+      <article id="timedWorkoutCard" class="card timed-workout-card">
+        <div class="timed-meta">
+          <span id="setProgressText">Підхід 1 з 3</span>
+          <span id="loadChip">Резинка</span>
+        </div>
+
+        <div class="timer-ring" id="timerRing">
+          <div class="timer-inner">
+            <span id="phaseLabel">ГОТОВА</span>
+            <strong id="timerValue">00:30</strong>
+            <small id="timerHint">натисни «Почати»</small>
+          </div>
+        </div>
+
+        <div class="phase-strip">
+          <div><span>Робота</span><strong id="workPlan">30 сек</strong></div>
+          <i></i>
+          <div><span>Відпочинок</span><strong id="restPlan">30 сек</strong></div>
+        </div>
+
+        <div class="timer-actions">
+          <button id="timerPrimary" class="primary">Почати</button>
+          <button id="timerReset" class="secondary icon-btn" aria-label="Скинути таймер">↻</button>
+        </div>
+
+        <label class="quick-test">
+          <input id="quickTest" type="checkbox">
+          <span><strong>Швидкий тест</strong><small>5 сек робота / 3 сек відпочинок — лише для перевірки прототипу</small></span>
+        </label>
+      </article>
+
+      <article id="classicWorkoutCard" class="card classic-workout-card hidden">
+        <div class="classic-head">
+          <span class="section-kicker">КЛАСИЧНИЙ ФОРМАТ</span>
+          <h3 id="classicExerciseTitle">Присідання з резинкою</h3>
+        </div>
+        <div id="classicRows"></div>
+        <button class="primary full" id="completeClassic">Завершити вправу</button>
+      </article>
+
+      <article class="card progression-card">
+        <div class="card-head compact">
+          <div>
+            <span class="section-kicker">ПРОГРЕСІЯ</span>
+            <h2>Час роботи</h2>
+          </div>
+          <span id="progressDelta" class="delta">+5 сек</span>
+        </div>
+        <div class="progress-compare">
+          <div><span>Минулого разу</span><strong id="previousTime">25 сек</strong></div>
+          <span class="arrow">→</span>
+          <div><span>Сьогодні</span><strong id="todayTime">30 сек</strong></div>
+        </div>
+        <p>Для вправ за часом прогрес рахуємо окремо від ваги та повторів.</p>
+      </article>
+
+      <button id="backTrainer" class="ghost-link">← Повернутися до конструктора тренера</button>
+    </section>
+  </main>
+
+  <script src="/static/js/training-upgrade-demo.js?v=1"></script>
+</body>
+</html>
