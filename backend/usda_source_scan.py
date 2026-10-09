@@ -15,6 +15,7 @@ import time
 import urllib.request
 import zipfile
 from pathlib import Path
+from food_local_catalog import food_energy_valid
 
 OFFICIAL_ARCHIVES = {
     "SR Legacy": {
@@ -58,6 +59,9 @@ SEARCHES = {
     "beans": "beans",
     "almonds": "nuts, almonds",
     "walnuts": "nuts, walnuts",
+    "poppy_seed":"poppy seed",
+    "lard":"lard",
+    "beef_tallow":"beef tallow",
 }
 
 def get_bytes(url, max_bytes):
@@ -130,7 +134,7 @@ def load_source(label,cfg):
         item["energy_difference_4_9_4"]=round(item["kcal_100"]-estimated,2)
         # Only screen for impossible values here. Soft kcal differences
         # need independent review due to fiber/Atwater factors.
-        if not 0<item["kcal_100"]<=900:continue
+        if not food_energy_valid(item["kcal_100"],item["protein_100"],item["fat_100"],item["carbs_100"]):continue
         if any(item[k]<0 or item[k]>100 for k in
                ("protein_100","fat_100","carbs_100")):continue
         if item["protein_100"]+item["fat_100"]+item["carbs_100"]>105:continue
