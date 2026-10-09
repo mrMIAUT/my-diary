@@ -16,6 +16,7 @@ from psycopg.rows import dict_row
 from datetime import date, datetime, timedelta, timezone
 from dataclasses import dataclass
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from math import ceil
 from zoneinfo import ZoneInfo
 import base64
@@ -1379,6 +1380,17 @@ FOOD_OFF_CACHE_TTL_SECONDS=60*30
 FOOD_OFF_CACHE_MAX_ENTRIES=384
 FOOD_OFF_SEARCH_CACHE={}
 FOOD_OFF_SEARCH_CACHE_LOCK=threading.Lock()
+# A small shared pool bounds concurrent OFF searches across requests, rather
+# than spawning several threads per search or flooding the public API.
+FOOD_OFF_SEARCH_POOL=ThreadPoolExecutor(max_workers=2,thread_name_prefix="food-off")
+FOOD_USDA_CACHE_TTL_SECONDS=60*15
+FOOD_USDA_CACHE_MAX_ENTRIES=192
+FOOD_USDA_CACHE={}
+FOOD_USDA_CACHE_LOCK=threading.Lock()
+FOOD_RESULT_CACHE_TTL_SECONDS=60*3
+FOOD_RESULT_CACHE_MAX_ENTRIES=96
+FOOD_RESULT_CACHE={}
+FOOD_RESULT_CACHE_LOCK=threading.Lock()
 FOOD_USER_AGENT=os.environ.get("FOOD_API_USER_AGENT","EPLAN/1.2 product-search prototype")
 USDA_API_KEY=os.environ.get("USDA_API_KEY","DEMO_KEY")
 
@@ -1751,6 +1763,37 @@ def _off_collect(query:str,country:str|None=None,pages:int=3,page_size:int=24):
         items.extend(batch)
     return _dedupe_food_items(items)
 
+def _food_collect_off_batches(jobs):
+    """Fetch independent OFF query variants in bounded parallelism.
+
+    executor.map preserves input ordering, so brand and local ranking remain
+    deterministic even when upstream requests finish out of order.
+    """
+    return list(FOOD_OFF_SEARCH_POOL.map(lambda job:_off_collect(*job),jobs))
+
+
+def _food_cache_get(cache,lock,key,ttl):
+    with lock:
+        record=cache.get(key)
+        if not record:return None
+        timestamp,value=record
+        if time.monotonic()-timestamp>=ttl:
+            cache.pop(key,None)
+            return None
+        # Refresh insertion order so eviction is bounded and roughly LRU.
+        cache.pop(key,None)
+        cache[key]=record
+        return value
+
+
+def _food_cache_set(cache,lock,key,value,max_entries):
+    with lock:
+        cache.pop(key,None)
+        cache[key]=(time.monotonic(),value)
+        while len(cache)>max_entries:
+            cache.pop(next(iter(cache)))
+
+
 def _off_barcode(barcode:str):
     fields="code,product_name,product_name_uk,product_name_en,brands,nutriments,countries_tags,categories_tags,manufacturing_places,manufacturing_places_tags"
     url=f"https://world.openfoodfacts.org/api/v2/product/{urllib.parse.quote(barcode)}.json?fields={urllib.parse.quote(fields)}"
@@ -1800,15 +1843,26 @@ USDA_BRANDED_TYPES=["Branded"]
 
 def _usda_search(query:str,limit:int,data_types=None,page:int=1):
     if not query or not USDA_API_KEY:return []
+    types=tuple(data_types or USDA_GENERIC_TYPES)
+    key=(query.casefold().strip(),min(24,max(1,limit)),types,max(1,page))
+    cached=_food_cache_get(FOOD_USDA_CACHE,FOOD_USDA_CACHE_LOCK,key,
+                           FOOD_USDA_CACHE_TTL_SECONDS)
+    if cached is not None:return [dict(item) for item in cached]
     url="https://api.nal.usda.gov/fdc/v1/foods/search?api_key="+urllib.parse.quote(USDA_API_KEY)
     payload=_food_fetch_json(url,{
         "query":query,"pageSize":min(24,max(1,limit)),"pageNumber":max(1,page),
         "dataType":data_types or USDA_GENERIC_TYPES,
-    }) or {}
+    })
+    # Only cache genuine API responses, including confirmed empty searches.
+    # Never cache HTTP 429, timeouts or malformed upstream responses.
+    if not isinstance(payload,dict) or not isinstance(payload.get("foods"),list):
+        return []
     items=[]
-    for food in payload.get("foods") or []:
+    for food in payload["foods"]:
         item=_usda_item(food)
         if item:items.append(item)
+    _food_cache_set(FOOD_USDA_CACHE,FOOD_USDA_CACHE_LOCK,key,
+                    tuple(dict(item) for item in items),FOOD_USDA_CACHE_MAX_ENTRIES)
     return items
 
 def _food_tokens(value:str):
