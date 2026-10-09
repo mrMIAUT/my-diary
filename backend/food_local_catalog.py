@@ -79,7 +79,8 @@ def validate_reviewed_record(record, by_id):
         # for a generic food unless the exact brand/label is also preserved.
         raise ValueError("Unqualified branded or unknown USDA record type")
     for field in ("source_archive_version", "reviewed_by", "reviewed_at",
-                  "source_food_description", "source_portion_basis"):
+                  "source_food_description", "source_portion_basis",
+                  "name_ru", "name_en"):
         value = record.get(field)
         if not isinstance(value, str) or not value.strip():
             raise ValueError("Missing source-review metadata: " + field)
@@ -137,6 +138,13 @@ def validate_reviewed_record(record, by_id):
         "barcode": "",
         "name": candidate["name_uk"],
         "brand": "",
+        # Ukrainian is always displayed; manually reviewed Russian/English
+        # names and the original FDC description are searchable aliases.
+        "search_aliases": list(dict.fromkeys((
+            record["name_ru"].strip(),
+            record["name_en"].strip(),
+            record["source_food_description"].strip(),
+        ))),
         **values,
         "data_type": "reference",
         "food_type": "generic",
