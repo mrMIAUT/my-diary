@@ -666,6 +666,210 @@
       "carbs_100": 0.73
     },
     {
+      "candidate_id": "plan-boroshno-kukurudzyane",
+      "name_uk": "Борошно кукурудзяне",
+      "name_ru": "Мука кукурузная цельнозерновая",
+      "name_en": "Corn flour, whole-grain, yellow",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170290,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Corn flour, whole-grain, yellow",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 361.0,
+        "protein_100": 6.93,
+        "fat_100": 3.86,
+        "carbs_100": 76.85
+      },
+      "source_snapshot": {
+        "fdc_id": 170290,
+        "description": "Corn flour, whole-grain, yellow",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 361.0,
+          "protein_100": 6.93,
+          "fat_100": 3.86,
+          "carbs_100": 76.85
+        }
+      },
+      "source_snapshot_sha256": "1b04db53de30fae2b50016695b8e9aa009d1adc3835d818a5d79d714ac356f13",
+      "kcal_100": 361.0,
+      "protein_100": 6.93,
+      "fat_100": 3.86,
+      "carbs_100": 76.85
+    },
+    {
+      "candidate_id": "plan-boroshno-pshenychne-tsilnozernove",
+      "name_uk": "Борошно пшеничне цільнозернове",
+      "name_ru": "Мука пшеничная цельнозерновая",
+      "name_en": "Wheat flour, whole-grain (Includes foods for USDA's Food Distribution Program)",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168893,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Wheat flour, whole-grain (Includes foods for USDA's Food Distribution Program)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 340.0,
+        "protein_100": 13.21,
+        "fat_100": 2.5,
+        "carbs_100": 71.97
+      },
+      "source_snapshot": {
+        "fdc_id": 168893,
+        "description": "Wheat flour, whole-grain (Includes foods for USDA's Food Distribution Program)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 340.0,
+          "protein_100": 13.21,
+          "fat_100": 2.5,
+          "carbs_100": 71.97
+        }
+      },
+      "source_snapshot_sha256": "a6ac6c0a63c9370825bcf175fc7aabf963a0a36d9bcc6e70453e5668f30ba191",
+      "kcal_100": 340.0,
+      "protein_100": 13.21,
+      "fat_100": 2.5,
+      "carbs_100": 71.97
+    },
+    {
+      "candidate_id": "plan-boroshno-pshenychne-vyshchoho-gatunku",
+      "name_uk": "Борошно пшеничне вищого ґатунку",
+      "name_ru": "Мука пшеничная белая высший сорт",
+      "name_en": "Wheat flour, white, all-purpose, unenriched",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169761,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Wheat flour, white, all-purpose, unenriched",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 364.0,
+        "protein_100": 10.33,
+        "fat_100": 0.98,
+        "carbs_100": 76.31
+      },
+      "source_snapshot": {
+        "fdc_id": 169761,
+        "description": "Wheat flour, white, all-purpose, unenriched",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 364.0,
+          "protein_100": 10.33,
+          "fat_100": 0.98,
+          "carbs_100": 76.31
+        }
+      },
+      "source_snapshot_sha256": "8bb438c2ea1f0f31eac6ab26cfe8b71e3fbc1f69d678e34d13e6f4e8273e092a",
+      "kcal_100": 364.0,
+      "protein_100": 10.33,
+      "fat_100": 0.98,
+      "carbs_100": 76.31
+    },
+    {
+      "candidate_id": "plan-boroshno-zhytnye",
+      "name_uk": "Борошно житнє",
+      "name_ru": "Мука ржаная",
+      "name_en": "Flour, rye",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 2512375,
+      "source_data_type": "Foundation",
+      "source_archive_version": "2026-04",
+      "source_archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip",
+      "source_food_description": "Flour, rye",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 2047,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 359.4,
+        "protein_100": 8.3952,
+        "fat_100": 1.908,
+        "carbs_100": 77.1618
+      },
+      "source_snapshot": {
+        "fdc_id": 2512375,
+        "description": "Flour, rye",
+        "source_nutrient_ids": {
+          "kcal_100": 2047,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 359.4,
+          "protein_100": 8.3952,
+          "fat_100": 1.908,
+          "carbs_100": 77.1618
+        }
+      },
+      "source_snapshot_sha256": "f707218d3a293b1f52652b56355f1fdd021b370f9bf86c7dd15c916b80b47df0",
+      "kcal_100": 359.4,
+      "protein_100": 8.3952,
+      "fat_100": 1.908,
+      "carbs_100": 77.1618
+    },
+    {
       "candidate_id": "plan-brazylski-horikhy-yadra",
       "name_uk": "Бразильські горіхи (ядра)",
       "name_ru": "Бразильские орехи ядра",
@@ -919,6 +1123,108 @@
       "protein_100": 3.08,
       "fat_100": 0.24,
       "carbs_100": 18.58
+    },
+    {
+      "candidate_id": "plan-bulochka-pshenychna-bez-nachynky",
+      "name_uk": "Булочка пшенична без начинки",
+      "name_ru": "Булочка пшеничная простая",
+      "name_en": "Rolls, dinner, plain, commercially prepared (includes brown-and-serve)",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 172793,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Rolls, dinner, plain, commercially prepared (includes brown-and-serve)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 310.0,
+        "protein_100": 10.86,
+        "fat_100": 6.47,
+        "carbs_100": 52.04
+      },
+      "source_snapshot": {
+        "fdc_id": 172793,
+        "description": "Rolls, dinner, plain, commercially prepared (includes brown-and-serve)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 310.0,
+          "protein_100": 10.86,
+          "fat_100": 6.47,
+          "carbs_100": 52.04
+        }
+      },
+      "source_snapshot_sha256": "4d01be7d29a042de199c50f29287923961813f7a9a2651ad51fb473e17c5f265",
+      "kcal_100": 310.0,
+      "protein_100": 10.86,
+      "fat_100": 6.47,
+      "carbs_100": 52.04
+    },
+    {
+      "candidate_id": "plan-bulochka-tsilnozernova-bez-nachynky",
+      "name_uk": "Булочка цільнозернова без начинки",
+      "name_ru": "Булочка цельнозерновая",
+      "name_en": "Rolls, dinner, whole-wheat",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 172794,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Rolls, dinner, whole-wheat",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 266.0,
+        "protein_100": 8.7,
+        "fat_100": 4.7,
+        "carbs_100": 51.1
+      },
+      "source_snapshot": {
+        "fdc_id": 172794,
+        "description": "Rolls, dinner, whole-wheat",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 266.0,
+          "protein_100": 8.7,
+          "fat_100": 4.7,
+          "carbs_100": 51.1
+        }
+      },
+      "source_snapshot_sha256": "a2ab4808b5a22d428bb044a5b3d257a9f47c1bcde54c1f971dac41f37a6dcd06",
+      "kcal_100": 266.0,
+      "protein_100": 8.7,
+      "fat_100": 4.7,
+      "carbs_100": 51.1
     },
     {
       "candidate_id": "plan-buryak-syryi",
@@ -1227,6 +1533,159 @@
       "carbs_100": 8.16
     },
     {
+      "candidate_id": "plan-file-indychky-syre",
+      "name_uk": "Філе індички (сире)",
+      "name_ru": "Филе индейки сырое",
+      "name_en": "Turkey, whole, breast, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171098,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Turkey, whole, breast, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 114.0,
+        "protein_100": 23.66,
+        "fat_100": 1.48,
+        "carbs_100": 0.14
+      },
+      "source_snapshot": {
+        "fdc_id": 171098,
+        "description": "Turkey, whole, breast, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 114.0,
+          "protein_100": 23.66,
+          "fat_100": 1.48,
+          "carbs_100": 0.14
+        }
+      },
+      "source_snapshot_sha256": "28b39a193419734a2a52bdea4e914cdba4811c65d282c5bf41f9a3361d716bbd",
+      "kcal_100": 114.0,
+      "protein_100": 23.66,
+      "fat_100": 1.48,
+      "carbs_100": 0.14
+    },
+    {
+      "candidate_id": "plan-file-indychky-zapechene",
+      "name_uk": "Філе індички (запечене)",
+      "name_ru": "Филе индейки запечённое",
+      "name_en": "Turkey, whole, breast, meat only, cooked, roasted",
+      "preparation_state": "cooked",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171496,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Turkey, whole, breast, meat only, cooked, roasted",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 147.0,
+        "protein_100": 30.13,
+        "fat_100": 2.08,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 171496,
+        "description": "Turkey, whole, breast, meat only, cooked, roasted",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 147.0,
+          "protein_100": 30.13,
+          "fat_100": 2.08,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "007c59660faa3d9dc500f9afc1a156a3e2a8be431f64d860180a7cc390b809df",
+      "kcal_100": 147.0,
+      "protein_100": 30.13,
+      "fat_100": 2.08,
+      "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-finiky-susheni-bez-kistochok",
+      "name_uk": "Фініки сушені (без кісточок)",
+      "name_ru": "Финики меджул сушёные",
+      "name_en": "Dates, medjool",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168191,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Dates, medjool",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 277.0,
+        "protein_100": 1.81,
+        "fat_100": 0.15,
+        "carbs_100": 74.97
+      },
+      "source_snapshot": {
+        "fdc_id": 168191,
+        "description": "Dates, medjool",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 277.0,
+          "protein_100": 1.81,
+          "fat_100": 0.15,
+          "carbs_100": 74.97
+        }
+      },
+      "source_snapshot_sha256": "cdfbd557116f6604daa6f4aa3391a82ced3fe566292c4688d06dd20219ff2dcf",
+      "kcal_100": 277.0,
+      "protein_100": 1.81,
+      "fat_100": 0.15,
+      "carbs_100": 74.97
+    },
+    {
       "candidate_id": "plan-fistashky-yadra-nesoloni",
       "name_uk": "Фісташки (ядра, несолоні)",
       "name_ru": "Фисташки ядра несолёные",
@@ -1431,6 +1890,57 @@
       "carbs_100": 16.7
     },
     {
+      "candidate_id": "plan-halety-pshenychni",
+      "name_uk": "Галети пшеничні",
+      "name_ru": "Галеты пшеничные",
+      "name_en": "Crackers, water biscuits",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171856,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Crackers, water biscuits",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 384.0,
+        "protein_100": 7.14,
+        "fat_100": 7.14,
+        "carbs_100": 72.81
+      },
+      "source_snapshot": {
+        "fdc_id": 171856,
+        "description": "Crackers, water biscuits",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 384.0,
+          "protein_100": 7.14,
+          "fat_100": 7.14,
+          "carbs_100": 72.81
+        }
+      },
+      "source_snapshot_sha256": "60e1cc3e40255886988ffad8e093a34a718277500f0792452bb6a76032f1fb0a",
+      "kcal_100": 384.0,
+      "protein_100": 7.14,
+      "fat_100": 7.14,
+      "carbs_100": 72.81
+    },
+    {
       "candidate_id": "plan-harbuz-syryi",
       "name_uk": "Гарбуз (сирий)",
       "name_ru": "Тыква сырая",
@@ -1480,6 +1990,108 @@
       "protein_100": 1.0,
       "fat_100": 0.1,
       "carbs_100": 6.5
+    },
+    {
+      "candidate_id": "plan-hirchychna-oliya",
+      "name_uk": "Гірчична олія",
+      "name_ru": "Горчичное масло",
+      "name_en": "Oil, mustard",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 172337,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Oil, mustard",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 884.0,
+        "protein_100": 0.0,
+        "fat_100": 100.0,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 172337,
+        "description": "Oil, mustard",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 884.0,
+          "protein_100": 0.0,
+          "fat_100": 100.0,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "0a1b095dfbe72e57d9cfc951293f37f272398d9445b554c2e1808cb6ccf7b38c",
+      "kcal_100": 884.0,
+      "protein_100": 0.0,
+      "fat_100": 100.0,
+      "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-hirchytsya-stolova",
+      "name_uk": "Гірчиця столова",
+      "name_ru": "Горчица столовая",
+      "name_en": "Mustard, prepared, yellow",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 172234,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Mustard, prepared, yellow",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 60.0,
+        "protein_100": 3.74,
+        "fat_100": 3.34,
+        "carbs_100": 5.83
+      },
+      "source_snapshot": {
+        "fdc_id": 172234,
+        "description": "Mustard, prepared, yellow",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 60.0,
+          "protein_100": 3.74,
+          "fat_100": 3.34,
+          "carbs_100": 5.83
+        }
+      },
+      "source_snapshot_sha256": "5c01cd30842706b0f5f00f9479ff8c50b2f05dcfb4014bb61aff00943d9fa1f3",
+      "kcal_100": 60.0,
+      "protein_100": 3.74,
+      "fat_100": 3.34,
+      "carbs_100": 5.83
     },
     {
       "candidate_id": "plan-hlyvy-syri",
@@ -2143,6 +2755,57 @@
       "protein_100": 0.75,
       "fat_100": 0.3,
       "carbs_100": 19.18
+    },
+    {
+      "candidate_id": "plan-iohurt-hretskyi-naturalnyi-5",
+      "name_uk": "Йогурт грецький натуральний 5%",
+      "name_ru": "Йогурт греческий натуральный 5%",
+      "name_en": "Yogurt, Greek, plain, whole milk",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171304,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Yogurt, Greek, plain, whole milk",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 97.0,
+        "protein_100": 9.0,
+        "fat_100": 5.0,
+        "carbs_100": 3.98
+      },
+      "source_snapshot": {
+        "fdc_id": 171304,
+        "description": "Yogurt, Greek, plain, whole milk",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 97.0,
+          "protein_100": 9.0,
+          "fat_100": 5.0,
+          "carbs_100": 3.98
+        }
+      },
+      "source_snapshot_sha256": "4ed4a55780e1b11b508398f71a8a8a710e8cb301aeb0eff27d00b9ba777d3b16",
+      "kcal_100": 97.0,
+      "protein_100": 9.0,
+      "fat_100": 5.0,
+      "carbs_100": 3.98
     },
     {
       "candidate_id": "plan-iohurt-naturalnyi-bez-tsukru-0",
@@ -3012,6 +3675,57 @@
       "carbs_100": 48.3
     },
     {
+      "candidate_id": "plan-khlibtsi-rysovi",
+      "name_uk": "Хлібці рисові",
+      "name_ru": "Рисовые хлебцы без соли",
+      "name_en": "Snacks, rice cakes, brown rice, plain, unsalted",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170250,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Snacks, rice cakes, brown rice, plain, unsalted",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 387.0,
+        "protein_100": 8.2,
+        "fat_100": 2.8,
+        "carbs_100": 81.5
+      },
+      "source_snapshot": {
+        "fdc_id": 170250,
+        "description": "Snacks, rice cakes, brown rice, plain, unsalted",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 387.0,
+          "protein_100": 8.2,
+          "fat_100": 2.8,
+          "carbs_100": 81.5
+        }
+      },
+      "source_snapshot_sha256": "3647cdf31eeb26b8b990539dfabb17117159bfa89dac30b583cb935dfde962d0",
+      "kcal_100": 387.0,
+      "protein_100": 8.2,
+      "fat_100": 2.8,
+      "carbs_100": 81.5
+    },
+    {
       "candidate_id": "plan-khlibtsi-zhytni",
       "name_uk": "Хлібці житні",
       "name_ru": "Хлебцы ржаные",
@@ -3267,6 +3981,57 @@
       "carbs_100": 14.66
     },
     {
+      "candidate_id": "plan-kokosova-myakot-svizha",
+      "name_uk": "Кокосова м'якоть свіжа",
+      "name_ru": "Кокосовая мякоть свежая",
+      "name_en": "Nuts, coconut meat, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170169,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Nuts, coconut meat, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 354.0,
+        "protein_100": 3.33,
+        "fat_100": 33.49,
+        "carbs_100": 15.23
+      },
+      "source_snapshot": {
+        "fdc_id": 170169,
+        "description": "Nuts, coconut meat, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 354.0,
+          "protein_100": 3.33,
+          "fat_100": 33.49,
+          "carbs_100": 15.23
+        }
+      },
+      "source_snapshot_sha256": "326b36a768a48ddd2d726ec2eac44bff93cef427222e54d67ad890ac8272e3d8",
+      "kcal_100": 354.0,
+      "protein_100": 3.33,
+      "fat_100": 33.49,
+      "carbs_100": 15.23
+    },
+    {
       "candidate_id": "plan-kokosova-oliya",
       "name_uk": "Кокосова олія",
       "name_ru": "Кокосовое масло",
@@ -3316,6 +4081,57 @@
       "protein_100": 0.0,
       "fat_100": 99.06,
       "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-kokosova-struzhka-bez-tsukru",
+      "name_uk": "Кокосова стружка без цукру",
+      "name_ru": "Кокосовая стружка без сахара",
+      "name_en": "Nuts, coconut meat, dried (desiccated), not sweetened",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170170,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Nuts, coconut meat, dried (desiccated), not sweetened",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 660.0,
+        "protein_100": 6.88,
+        "fat_100": 64.53,
+        "carbs_100": 23.65
+      },
+      "source_snapshot": {
+        "fdc_id": 170170,
+        "description": "Nuts, coconut meat, dried (desiccated), not sweetened",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 660.0,
+          "protein_100": 6.88,
+          "fat_100": 64.53,
+          "carbs_100": 23.65
+        }
+      },
+      "source_snapshot_sha256": "f2bdae202b24f51a8667f27fe3b98fef01de3ce9b099931157f7f8dea1629713",
+      "kcal_100": 660.0,
+      "protein_100": 6.88,
+      "fat_100": 64.53,
+      "carbs_100": 23.65
     },
     {
       "candidate_id": "plan-korop-syryi",
@@ -3522,6 +4338,57 @@
       "carbs_100": 7.02
     },
     {
+      "candidate_id": "plan-krokhmal-kukurudzyanyi",
+      "name_uk": "Крохмаль кукурудзяний",
+      "name_ru": "Крахмал кукурузный",
+      "name_en": "Cornstarch",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169698,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Cornstarch",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 381.0,
+        "protein_100": 0.26,
+        "fat_100": 0.05,
+        "carbs_100": 91.27
+      },
+      "source_snapshot": {
+        "fdc_id": 169698,
+        "description": "Cornstarch",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 381.0,
+          "protein_100": 0.26,
+          "fat_100": 0.05,
+          "carbs_100": 91.27
+        }
+      },
+      "source_snapshot_sha256": "1f381e3526ac7e382cb8d2895fae0aeaf077c6cafd0e304980def6a1d8d84360",
+      "kcal_100": 381.0,
+      "protein_100": 0.26,
+      "fat_100": 0.05,
+      "carbs_100": 91.27
+    },
+    {
       "candidate_id": "plan-krolyatyna-syra",
       "name_uk": "Кролятина (сира)",
       "name_ru": "Кролик мясо сырое",
@@ -3571,6 +4438,57 @@
       "protein_100": 20.05,
       "fat_100": 5.55,
       "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-kukurudza-konservovana-bez-ridyny",
+      "name_uk": "Кукурудза консервована (без рідини)",
+      "name_ru": "Кукуруза консервированная без жидкости",
+      "name_en": "Corn, sweet, yellow, canned, whole kernel, drained solids",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169214,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Corn, sweet, yellow, canned, whole kernel, drained solids",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 67.0,
+        "protein_100": 2.29,
+        "fat_100": 1.22,
+        "carbs_100": 14.34
+      },
+      "source_snapshot": {
+        "fdc_id": 169214,
+        "description": "Corn, sweet, yellow, canned, whole kernel, drained solids",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 67.0,
+          "protein_100": 2.29,
+          "fat_100": 1.22,
+          "carbs_100": 14.34
+        }
+      },
+      "source_snapshot_sha256": "92e499a084cd5272e90d84ee778941e9db9fa75658a5210d74d5c972d1950e1e",
+      "kcal_100": 67.0,
+      "protein_100": 2.29,
+      "fat_100": 1.22,
+      "carbs_100": 14.34
     },
     {
       "candidate_id": "plan-kukurudza-tsukrova-vidvarena",
@@ -3777,6 +4695,108 @@
       "carbs_100": 62.64
     },
     {
+      "candidate_id": "plan-kurka-tsila-bez-shkiry-syra",
+      "name_uk": "Курка ціла без шкіри (сира)",
+      "name_ru": "Курица без кожи сырая",
+      "name_en": "Chicken, broilers or fryers, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171052,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Chicken, broilers or fryers, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 119.0,
+        "protein_100": 21.39,
+        "fat_100": 3.08,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 171052,
+        "description": "Chicken, broilers or fryers, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 119.0,
+          "protein_100": 21.39,
+          "fat_100": 3.08,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "7da45ab2386f6bca48342832a5cb5e0522f79d15438b1648c6b0a16183f50a38",
+      "kcal_100": 119.0,
+      "protein_100": 21.39,
+      "fat_100": 3.08,
+      "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-kuryacha-homilka-bez-shkiry-syra",
+      "name_uk": "Куряча гомілка без шкіри (сира)",
+      "name_ru": "Куриная голень без кожи сырая",
+      "name_en": "Chicken, broilers or fryers, dark meat, drumstick, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173614,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Chicken, broilers or fryers, dark meat, drumstick, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 116.0,
+        "protein_100": 19.41,
+        "fat_100": 3.71,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 173614,
+        "description": "Chicken, broilers or fryers, dark meat, drumstick, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 116.0,
+          "protein_100": 19.41,
+          "fat_100": 3.71,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "6be3e08042d1e234bcbd7931f32af74efc2accf03bd913def49ce3ec6420acd1",
+      "kcal_100": 116.0,
+      "protein_100": 19.41,
+      "fat_100": 3.71,
+      "carbs_100": 0.0
+    },
+    {
       "candidate_id": "plan-kuryacha-homilka-zapechena",
       "name_uk": "Куряча гомілка (запечена)",
       "name_ru": "Куриная голень запечённая с кожей",
@@ -3981,6 +5001,57 @@
       "carbs_100": 0.73
     },
     {
+      "candidate_id": "plan-kuryache-file-syre",
+      "name_uk": "Куряче філе (сире)",
+      "name_ru": "Куриное филе сырое без кожи",
+      "name_en": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171077,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 120.0,
+        "protein_100": 22.5,
+        "fat_100": 2.62,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 171077,
+        "description": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 120.0,
+          "protein_100": 22.5,
+          "fat_100": 2.62,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "ecd4cd76f4717b43c502f0b265cf8dc2fe4a062a0194ea36ad76651486ff0678",
+      "kcal_100": 120.0,
+      "protein_100": 22.5,
+      "fat_100": 2.62,
+      "carbs_100": 0.0
+    },
+    {
       "candidate_id": "plan-kuryache-file-zapechene",
       "name_uk": "Куряче філе (запечене)",
       "name_ru": "Куриное филе запечённое",
@@ -4183,6 +5254,57 @@
       "protein_100": 15.55,
       "fat_100": 9.33,
       "carbs_100": 0.71
+    },
+    {
+      "candidate_id": "plan-kuryache-stehno-bez-shkiry-syre",
+      "name_uk": "Куряче стегно без шкіри (сире)",
+      "name_ru": "Куриное бедро без кожи сырое",
+      "name_en": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173627,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 121.0,
+        "protein_100": 19.66,
+        "fat_100": 4.12,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 173627,
+        "description": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 121.0,
+          "protein_100": 19.66,
+          "fat_100": 4.12,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "6b129bef628546c9cda0573f74e18a74dffd70963a531be72043478eb0fda32c",
+      "kcal_100": 121.0,
+      "protein_100": 19.66,
+      "fat_100": 4.12,
+      "carbs_100": 0.0
     },
     {
       "candidate_id": "plan-kuryache-stehno-bez-shkiry-zapechene",
@@ -4438,6 +5560,108 @@
       "protein_100": 12.76,
       "fat_100": 0.64,
       "carbs_100": 77.43
+    },
+    {
+      "candidate_id": "plan-kvasolya-bila-sukha",
+      "name_uk": "Квасоля біла (суха)",
+      "name_ru": "Фасоль белая сухая",
+      "name_en": "Beans, white, mature seeds, raw",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 175202,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Beans, white, mature seeds, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 333.0,
+        "protein_100": 23.36,
+        "fat_100": 0.85,
+        "carbs_100": 60.27
+      },
+      "source_snapshot": {
+        "fdc_id": 175202,
+        "description": "Beans, white, mature seeds, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 333.0,
+          "protein_100": 23.36,
+          "fat_100": 0.85,
+          "carbs_100": 60.27
+        }
+      },
+      "source_snapshot_sha256": "554ef677cad26d40de4bde8f594822c16fe19bc256cab2d2de0815874a71f3d4",
+      "kcal_100": 333.0,
+      "protein_100": 23.36,
+      "fat_100": 0.85,
+      "carbs_100": 60.27
+    },
+    {
+      "candidate_id": "plan-kvasolya-bila-vidvarena",
+      "name_uk": "Квасоля біла (відварена)",
+      "name_ru": "Фасоль белая варёная",
+      "name_en": "Beans, white, mature seeds, cooked, boiled, without salt",
+      "preparation_state": "cooked",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 175203,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Beans, white, mature seeds, cooked, boiled, without salt",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 139.0,
+        "protein_100": 9.73,
+        "fat_100": 0.35,
+        "carbs_100": 25.09
+      },
+      "source_snapshot": {
+        "fdc_id": 175203,
+        "description": "Beans, white, mature seeds, cooked, boiled, without salt",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 139.0,
+          "protein_100": 9.73,
+          "fat_100": 0.35,
+          "carbs_100": 25.09
+        }
+      },
+      "source_snapshot_sha256": "83e87a86ae6622e88d16a32428c3fd29a4c649dce9fe398f1b02c78e65679cb4",
+      "kcal_100": 139.0,
+      "protein_100": 9.73,
+      "fat_100": 0.35,
+      "carbs_100": 25.09
     },
     {
       "candidate_id": "plan-kvasolya-chervona-sukha",
@@ -4797,6 +6021,108 @@
       "carbs_100": 14.49
     },
     {
+      "candidate_id": "plan-lokshyna-rysova-sukha",
+      "name_uk": "Локшина рисова (суха)",
+      "name_ru": "Лапша рисовая сухая",
+      "name_en": "Rice noodles, dry",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169742,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Rice noodles, dry",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 364.0,
+        "protein_100": 5.95,
+        "fat_100": 0.56,
+        "carbs_100": 80.18
+      },
+      "source_snapshot": {
+        "fdc_id": 169742,
+        "description": "Rice noodles, dry",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 364.0,
+          "protein_100": 5.95,
+          "fat_100": 0.56,
+          "carbs_100": 80.18
+        }
+      },
+      "source_snapshot_sha256": "bb60ae31aada5e78ba287c8addbfc331d740b292b9d3a90ccbf738d3079ecac4",
+      "kcal_100": 364.0,
+      "protein_100": 5.95,
+      "fat_100": 0.56,
+      "carbs_100": 80.18
+    },
+    {
+      "candidate_id": "plan-lokshyna-rysova-vidvarena",
+      "name_uk": "Локшина рисова (відварена)",
+      "name_ru": "Лапша рисовая варёная",
+      "name_en": "Rice noodles, cooked",
+      "preparation_state": "cooked",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168914,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Rice noodles, cooked",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 108.0,
+        "protein_100": 1.79,
+        "fat_100": 0.2,
+        "carbs_100": 24.01
+      },
+      "source_snapshot": {
+        "fdc_id": 168914,
+        "description": "Rice noodles, cooked",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 108.0,
+          "protein_100": 1.79,
+          "fat_100": 0.2,
+          "carbs_100": 24.01
+        }
+      },
+      "source_snapshot_sha256": "846893ceee94412583b5729bf5e08b05330b1bd96a5e6aeb920ba94f374055f5",
+      "kcal_100": 108.0,
+      "protein_100": 1.79,
+      "fat_100": 0.2,
+      "carbs_100": 24.01
+    },
+    {
       "candidate_id": "plan-losos-atlantychnyi-syryi",
       "name_uk": "Лосось атлантичний (сирий)",
       "name_ru": "Лосось атлантический фермерский сырой",
@@ -5052,6 +6378,108 @@
       "carbs_100": 13.82
     },
     {
+      "candidate_id": "plan-makarony-tsilnozernovi-sukhi",
+      "name_uk": "Макарони цільнозернові (сухі)",
+      "name_ru": "Макароны цельнозерновые сухие",
+      "name_en": "Pasta, whole-wheat, dry (Includes foods for USDA's Food Distribution Program)",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169738,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Pasta, whole-wheat, dry (Includes foods for USDA's Food Distribution Program)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 352.0,
+        "protein_100": 13.87,
+        "fat_100": 2.93,
+        "carbs_100": 73.37
+      },
+      "source_snapshot": {
+        "fdc_id": 169738,
+        "description": "Pasta, whole-wheat, dry (Includes foods for USDA's Food Distribution Program)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 352.0,
+          "protein_100": 13.87,
+          "fat_100": 2.93,
+          "carbs_100": 73.37
+        }
+      },
+      "source_snapshot_sha256": "4faa2e141c8bae943e4411f9f06178d462f59d16306dbc084f8bd88dfa828869",
+      "kcal_100": 352.0,
+      "protein_100": 13.87,
+      "fat_100": 2.93,
+      "carbs_100": 73.37
+    },
+    {
+      "candidate_id": "plan-makarony-tsilnozernovi-vidvareni",
+      "name_uk": "Макарони цільнозернові (відварені)",
+      "name_ru": "Макароны цельнозерновые варёные",
+      "name_en": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)",
+      "preparation_state": "cooked",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168910,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 149.0,
+        "protein_100": 5.99,
+        "fat_100": 1.71,
+        "carbs_100": 30.07
+      },
+      "source_snapshot": {
+        "fdc_id": 168910,
+        "description": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 149.0,
+          "protein_100": 5.99,
+          "fat_100": 1.71,
+          "carbs_100": 30.07
+        }
+      },
+      "source_snapshot_sha256": "4d5f893543bd31861041abbce9d7f7cc7d3cf81c9d3dec15632b1bfab5e44587",
+      "kcal_100": 149.0,
+      "protein_100": 5.99,
+      "fat_100": 1.71,
+      "carbs_100": 30.07
+    },
+    {
       "candidate_id": "plan-malyna-syra",
       "name_uk": "Малина (сира)",
       "name_ru": "Малина свежая",
@@ -5205,6 +6633,57 @@
       "carbs_100": 14.98
     },
     {
+      "candidate_id": "plan-manna-krupa-sukha",
+      "name_uk": "Манна крупа (суха)",
+      "name_ru": "Манная крупа сухая",
+      "name_en": "Semolina, unenriched",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168933,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Semolina, unenriched",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 360.0,
+        "protein_100": 12.68,
+        "fat_100": 1.05,
+        "carbs_100": 72.83
+      },
+      "source_snapshot": {
+        "fdc_id": 168933,
+        "description": "Semolina, unenriched",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 360.0,
+          "protein_100": 12.68,
+          "fat_100": 1.05,
+          "carbs_100": 72.83
+        }
+      },
+      "source_snapshot_sha256": "4b64d1ba7f9e953c4cdfcd163ccbcc75dcd836f427e217757c4c0a40ce90e0be",
+      "kcal_100": 360.0,
+      "protein_100": 12.68,
+      "fat_100": 1.05,
+      "carbs_100": 72.83
+    },
+    {
       "candidate_id": "plan-maslyny-chorni-bez-kistochok",
       "name_uk": "Маслини чорні без кісточок",
       "name_ru": "Маслины чёрные",
@@ -5254,6 +6733,57 @@
       "protein_100": 0.84,
       "fat_100": 10.9,
       "carbs_100": 6.04
+    },
+    {
+      "candidate_id": "plan-med-naturalnyi",
+      "name_uk": "Мед натуральний",
+      "name_ru": "Мёд натуральный",
+      "name_en": "Honey",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169640,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Honey",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 304.0,
+        "protein_100": 0.3,
+        "fat_100": 0.0,
+        "carbs_100": 82.4
+      },
+      "source_snapshot": {
+        "fdc_id": 169640,
+        "description": "Honey",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 304.0,
+          "protein_100": 0.3,
+          "fat_100": 0.0,
+          "carbs_100": 82.4
+        }
+      },
+      "source_snapshot_sha256": "7e2d71f163d8811120b322e991b14aa7e393cdc3259e5e5f466d12a88e58bac6",
+      "kcal_100": 304.0,
+      "protein_100": 0.3,
+      "fat_100": 0.0,
+      "carbs_100": 82.4
     },
     {
       "candidate_id": "plan-midiyi-bez-mushli-syri",
@@ -5560,6 +7090,57 @@
       "protein_100": 0.76,
       "fat_100": 0.18,
       "carbs_100": 8.22
+    },
+    {
+      "candidate_id": "plan-morska-kapusta-syra",
+      "name_uk": "Морська капуста (сира)",
+      "name_ru": "Морская капуста ламинария сырая",
+      "name_en": "Seaweed, kelp, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168457,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Seaweed, kelp, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 43.0,
+        "protein_100": 1.68,
+        "fat_100": 0.56,
+        "carbs_100": 9.57
+      },
+      "source_snapshot": {
+        "fdc_id": 168457,
+        "description": "Seaweed, kelp, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 43.0,
+          "protein_100": 1.68,
+          "fat_100": 0.56,
+          "carbs_100": 9.57
+        }
+      },
+      "source_snapshot_sha256": "5a1e0b27f6f2ea32b167959158d6e3a34d2e4da62430bdf5964bd72379571f0c",
+      "kcal_100": 43.0,
+      "protein_100": 1.68,
+      "fat_100": 0.56,
+      "carbs_100": 9.57
     },
     {
       "candidate_id": "plan-myhdal-syryi",
@@ -7296,6 +8877,57 @@
       "carbs_100": 55.7
     },
     {
+      "candidate_id": "plan-polenta-na-vodi",
+      "name_uk": "Полента на воді",
+      "name_ru": "Полента кукурузная на воде",
+      "name_en": "Cereals, corn grits, yellow, regular and quick, enriched, cooked with water, without salt",
+      "preparation_state": "cooked",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171672,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Cereals, corn grits, yellow, regular and quick, enriched, cooked with water, without salt",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 65.0,
+        "protein_100": 1.23,
+        "fat_100": 0.39,
+        "carbs_100": 13.86
+      },
+      "source_snapshot": {
+        "fdc_id": 171672,
+        "description": "Cereals, corn grits, yellow, regular and quick, enriched, cooked with water, without salt",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 65.0,
+          "protein_100": 1.23,
+          "fat_100": 0.39,
+          "carbs_100": 13.86
+        }
+      },
+      "source_snapshot_sha256": "945a3c622e78d4dfad62410e24949ce7cd05a85f84a45ad9440c250f5f5bf226",
+      "kcal_100": 65.0,
+      "protein_100": 1.23,
+      "fat_100": 0.39,
+      "carbs_100": 13.86
+    },
+    {
       "candidate_id": "plan-polunytsya-syra",
       "name_uk": "Полуниця (сира)",
       "name_ru": "Клубника свежая",
@@ -7396,6 +9028,57 @@
       "protein_100": 0.88,
       "fat_100": 0.2,
       "carbs_100": 3.89
+    },
+    {
+      "candidate_id": "plan-pomidory-konservovani-u-vlasnomu-soku",
+      "name_uk": "Помідори консервовані у власному соку",
+      "name_ru": "Помидоры консервированные в собственном соку",
+      "name_en": "Tomatoes, red, ripe, canned, packed in tomato juice",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170051,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Tomatoes, red, ripe, canned, packed in tomato juice",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 16.0,
+        "protein_100": 0.79,
+        "fat_100": 0.25,
+        "carbs_100": 3.47
+      },
+      "source_snapshot": {
+        "fdc_id": 170051,
+        "description": "Tomatoes, red, ripe, canned, packed in tomato juice",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 16.0,
+          "protein_100": 0.79,
+          "fat_100": 0.25,
+          "carbs_100": 3.47
+        }
+      },
+      "source_snapshot_sha256": "8b866ce3692ca2ec8b10c107959f18cb4cbb1a2180da461d76784ce60d00f7c7",
+      "kcal_100": 16.0,
+      "protein_100": 0.79,
+      "fat_100": 0.25,
+      "carbs_100": 3.47
     },
     {
       "candidate_id": "plan-pshono-sukhe",
@@ -7602,6 +9285,108 @@
       "carbs_100": 0.0
     },
     {
+      "candidate_id": "plan-rodzynky-susheni",
+      "name_uk": "Родзинки (сушені)",
+      "name_ru": "Изюм тёмный сушёный",
+      "name_en": "Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 168165,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 299.0,
+        "protein_100": 3.3,
+        "fat_100": 0.25,
+        "carbs_100": 79.32
+      },
+      "source_snapshot": {
+        "fdc_id": 168165,
+        "description": "Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 299.0,
+          "protein_100": 3.3,
+          "fat_100": 0.25,
+          "carbs_100": 79.32
+        }
+      },
+      "source_snapshot_sha256": "b33948a3d04ae8e18f0ba3f26392addea6a763cb34d42544ab0c9be489071fa7",
+      "kcal_100": 299.0,
+      "protein_100": 3.3,
+      "fat_100": 0.25,
+      "carbs_100": 79.32
+    },
+    {
+      "candidate_id": "plan-rukola-syra",
+      "name_uk": "Рукола (сира)",
+      "name_ru": "Руккола сырая",
+      "name_en": "Arugula, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169387,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Arugula, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 25.0,
+        "protein_100": 2.58,
+        "fat_100": 0.66,
+        "carbs_100": 3.65
+      },
+      "source_snapshot": {
+        "fdc_id": 169387,
+        "description": "Arugula, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 25.0,
+          "protein_100": 2.58,
+          "fat_100": 0.66,
+          "carbs_100": 3.65
+        }
+      },
+      "source_snapshot_sha256": "4687f4656132c5246d54954c1f189bb481306aeda5fed79e3cfe3d0d61c54f44",
+      "kcal_100": 25.0,
+      "protein_100": 2.58,
+      "fat_100": 0.66,
+      "carbs_100": 3.65
+    },
+    {
       "candidate_id": "plan-rys-bilyi-shlifovanyi-sukhyi",
       "name_uk": "Рис білий шліфований (сухий)",
       "name_ru": "Рис белый шлифованный сухой",
@@ -7806,6 +9591,57 @@
       "carbs_100": 25.58
     },
     {
+      "candidate_id": "plan-rys-dykyi-sukhyi",
+      "name_uk": "Рис дикий (сухий)",
+      "name_ru": "Рис дикий сухой",
+      "name_en": "Wild rice, raw",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 169726,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Wild rice, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 357.0,
+        "protein_100": 14.73,
+        "fat_100": 1.08,
+        "carbs_100": 74.9
+      },
+      "source_snapshot": {
+        "fdc_id": 169726,
+        "description": "Wild rice, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 357.0,
+          "protein_100": 14.73,
+          "fat_100": 1.08,
+          "carbs_100": 74.9
+        }
+      },
+      "source_snapshot_sha256": "006e18465643384340a1060c2ed1e5aa5ee90f525eb5fb38c17273e58ae6e102",
+      "kcal_100": 357.0,
+      "protein_100": 14.73,
+      "fat_100": 1.08,
+      "carbs_100": 74.9
+    },
+    {
       "candidate_id": "plan-salat-aisberh-syryi",
       "name_uk": "Салат айсберг (сирий)",
       "name_ru": "Салат айсберг сырой",
@@ -7906,6 +9742,57 @@
       "protein_100": 1.23,
       "fat_100": 0.3,
       "carbs_100": 3.29
+    },
+    {
+      "candidate_id": "plan-selera-koreneva-syra",
+      "name_uk": "Селера коренева (сира)",
+      "name_ru": "Сельдерей корневой сырой",
+      "name_en": "Celeriac, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 170400,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Celeriac, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 42.0,
+        "protein_100": 1.5,
+        "fat_100": 0.3,
+        "carbs_100": 9.2
+      },
+      "source_snapshot": {
+        "fdc_id": 170400,
+        "description": "Celeriac, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 42.0,
+          "protein_100": 1.5,
+          "fat_100": 0.3,
+          "carbs_100": 9.2
+        }
+      },
+      "source_snapshot_sha256": "12e79b595bce4730a768d639359218ecd97f4dbbf66084138550e6028c882d45",
+      "kcal_100": 42.0,
+      "protein_100": 1.5,
+      "fat_100": 0.3,
+      "carbs_100": 9.2
     },
     {
       "candidate_id": "plan-selera-steblova-syra",
@@ -8010,6 +9897,57 @@
       "carbs_100": 0.14
     },
     {
+      "candidate_id": "plan-shchuka-syra",
+      "name_uk": "Щука (сира)",
+      "name_ru": "Щука северная сырая",
+      "name_en": "Fish, pike, northern, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173680,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Fish, pike, northern, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 88.0,
+        "protein_100": 19.26,
+        "fat_100": 0.69,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 173680,
+        "description": "Fish, pike, northern, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 88.0,
+          "protein_100": 19.26,
+          "fat_100": 0.69,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "afaffe2fbf370680bb57aa6029bee848899c482a9c36c98b1c8292098fa838f4",
+      "kcal_100": 88.0,
+      "protein_100": 19.26,
+      "fat_100": 0.69,
+      "carbs_100": 0.0
+    },
+    {
       "candidate_id": "plan-shokolad-chornyi-70-85",
       "name_uk": "Шоколад чорний 70–85%",
       "name_ru": "Шоколад чёрный 70–85%",
@@ -8059,6 +9997,57 @@
       "protein_100": 7.79,
       "fat_100": 42.63,
       "carbs_100": 45.9
+    },
+    {
+      "candidate_id": "plan-shokolad-molochnyi",
+      "name_uk": "Шоколад молочний",
+      "name_ru": "Шоколад молочный",
+      "name_en": "Candies, milk chocolate",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 167587,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Candies, milk chocolate",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 535.0,
+        "protein_100": 7.65,
+        "fat_100": 29.66,
+        "carbs_100": 59.4
+      },
+      "source_snapshot": {
+        "fdc_id": 167587,
+        "description": "Candies, milk chocolate",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 535.0,
+          "protein_100": 7.65,
+          "fat_100": 29.66,
+          "carbs_100": 59.4
+        }
+      },
+      "source_snapshot_sha256": "e14f6eaafb45ae1537ce498636b6cef3249d390f0dad99125b9c70996a8d9a9d",
+      "kcal_100": 535.0,
+      "protein_100": 7.65,
+      "fat_100": 29.66,
+      "carbs_100": 59.4
     },
     {
       "candidate_id": "plan-shpynat-syryi",
@@ -8316,6 +10305,108 @@
       "carbs_100": 11.42
     },
     {
+      "candidate_id": "plan-smorodyna-chervona-syra",
+      "name_uk": "Смородина червона (сира)",
+      "name_ru": "Смородина красная сырая",
+      "name_en": "Currants, red and white, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173964,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Currants, red and white, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 56.0,
+        "protein_100": 1.4,
+        "fat_100": 0.2,
+        "carbs_100": 13.8
+      },
+      "source_snapshot": {
+        "fdc_id": 173964,
+        "description": "Currants, red and white, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 56.0,
+          "protein_100": 1.4,
+          "fat_100": 0.2,
+          "carbs_100": 13.8
+        }
+      },
+      "source_snapshot_sha256": "8c506cd8a6f9feb4b64469d70d65f6bcff223e1f87a80464a51b9602b02c88e5",
+      "kcal_100": 56.0,
+      "protein_100": 1.4,
+      "fat_100": 0.2,
+      "carbs_100": 13.8
+    },
+    {
+      "candidate_id": "plan-smorodyna-chorna-syra",
+      "name_uk": "Смородина чорна (сира)",
+      "name_ru": "Смородина чёрная сырая",
+      "name_en": "Currants, european black, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173963,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Currants, european black, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 63.0,
+        "protein_100": 1.4,
+        "fat_100": 0.41,
+        "carbs_100": 15.38
+      },
+      "source_snapshot": {
+        "fdc_id": 173963,
+        "description": "Currants, european black, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 63.0,
+          "protein_100": 1.4,
+          "fat_100": 0.41,
+          "carbs_100": 15.38
+        }
+      },
+      "source_snapshot_sha256": "10563ee880cb5f140fac6656cf158b1f3450c8042f5a9d3181fe1f04e0a8d626",
+      "kcal_100": 63.0,
+      "protein_100": 1.4,
+      "fat_100": 0.41,
+      "carbs_100": 15.38
+    },
+    {
       "candidate_id": "plan-sochevytsya-chervona-sukha",
       "name_uk": "Сочевиця червона (суха)",
       "name_ru": "Чечевица красная сухая",
@@ -8520,6 +10611,108 @@
       "carbs_100": 8.36
     },
     {
+      "candidate_id": "plan-soyevyi-napii-bez-tsukru",
+      "name_uk": "Соєвий напій без цукру",
+      "name_ru": "Соевый напиток без сахара",
+      "name_en": "Soy milk, unsweetened, plain, shelf stable",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 1750337,
+      "source_data_type": "Foundation",
+      "source_archive_version": "2026-04",
+      "source_archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip",
+      "source_food_description": "Soy milk, unsweetened, plain, shelf stable",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 2047,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 38.485,
+        "protein_100": 3.546875,
+        "fat_100": 2.125,
+        "carbs_100": 1.293125
+      },
+      "source_snapshot": {
+        "fdc_id": 1750337,
+        "description": "Soy milk, unsweetened, plain, shelf stable",
+        "source_nutrient_ids": {
+          "kcal_100": 2047,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 38.485,
+          "protein_100": 3.546875,
+          "fat_100": 2.125,
+          "carbs_100": 1.293125
+        }
+      },
+      "source_snapshot_sha256": "6cb9547aabe47dcf2c3a5c73c0252edbe4a34b0a44fd85848a5a66e8f0acefa7",
+      "kcal_100": 38.485,
+      "protein_100": 3.546875,
+      "fat_100": 2.125,
+      "carbs_100": 1.293125
+    },
+    {
+      "candidate_id": "plan-soyevyi-sous-klasychnyi",
+      "name_uk": "Соєвий соус класичний",
+      "name_ru": "Соевый соус классический",
+      "name_en": "Soy sauce made from soy and wheat (shoyu)",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 174277,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Soy sauce made from soy and wheat (shoyu)",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 53.0,
+        "protein_100": 8.14,
+        "fat_100": 0.57,
+        "carbs_100": 4.93
+      },
+      "source_snapshot": {
+        "fdc_id": 174277,
+        "description": "Soy sauce made from soy and wheat (shoyu)",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 53.0,
+          "protein_100": 8.14,
+          "fat_100": 0.57,
+          "carbs_100": 4.93
+        }
+      },
+      "source_snapshot_sha256": "c590812c33d779469dfc9ba78b4aa6368e1b29b8ddb68f07c6233a3a35cd0ab4",
+      "kcal_100": 53.0,
+      "protein_100": 8.14,
+      "fat_100": 0.57,
+      "carbs_100": 4.93
+    },
+    {
       "candidate_id": "plan-sparzha-syra",
       "name_uk": "Спаржа (сира)",
       "name_ru": "Спаржа сырая",
@@ -8569,6 +10762,57 @@
       "protein_100": 2.2,
       "fat_100": 0.12,
       "carbs_100": 3.88
+    },
+    {
+      "candidate_id": "plan-stehno-indychky-bez-shkiry-syre",
+      "name_uk": "Стегно індички без шкіри (сире)",
+      "name_ru": "Бедро индейки без кожи сырое",
+      "name_en": "Turkey, retail parts, thigh, meat only, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 174518,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Turkey, retail parts, thigh, meat only, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 116.0,
+        "protein_100": 20.6,
+        "fat_100": 3.69,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 174518,
+        "description": "Turkey, retail parts, thigh, meat only, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 116.0,
+          "protein_100": 20.6,
+          "fat_100": 3.69,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "45da66f3567a94c4d66457b8f2cb241c32a1499067f807b0e1aac5640cfaea90",
+      "kcal_100": 116.0,
+      "protein_100": 20.6,
+      "fat_100": 3.69,
+      "carbs_100": 0.0
     },
     {
       "candidate_id": "plan-svynyna-koreika-bez-kistky-syra",
@@ -9079,6 +11323,57 @@
       "protein_100": 7.54,
       "fat_100": 10.18,
       "carbs_100": 7.27
+    },
+    {
+      "candidate_id": "plan-syr-vershkovyi-naturalnyi",
+      "name_uk": "Сир вершковий натуральний",
+      "name_ru": "Сыр сливочный натуральный",
+      "name_en": "Cheese, cream",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 173418,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Cheese, cream",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 350.0,
+        "protein_100": 6.15,
+        "fat_100": 34.44,
+        "carbs_100": 5.52
+      },
+      "source_snapshot": {
+        "fdc_id": 173418,
+        "description": "Cheese, cream",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 350.0,
+          "protein_100": 6.15,
+          "fat_100": 34.44,
+          "carbs_100": 5.52
+        }
+      },
+      "source_snapshot_sha256": "65c721b8d7d4ff9c6751d617a85dfe1aedbcfbd6820396dce2c97237c82e6dc5",
+      "kcal_100": 350.0,
+      "protein_100": 6.15,
+      "fat_100": 34.44,
+      "carbs_100": 5.52
     },
     {
       "candidate_id": "plan-takhini-100",
@@ -9948,6 +12243,57 @@
       "carbs_100": 67.7
     },
     {
+      "candidate_id": "plan-vivsyanyi-napii-bez-tsukru",
+      "name_uk": "Вівсяний напій без цукру",
+      "name_ru": "Овсяный напиток без сахара",
+      "name_en": "Oat milk, unsweetened, plain, refrigerated",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 2257046,
+      "source_data_type": "Foundation",
+      "source_archive_version": "2026-04",
+      "source_archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip",
+      "source_food_description": "Oat milk, unsweetened, plain, refrigerated",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 2047,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 48.3298,
+        "protein_100": 0.796875,
+        "fat_100": 2.749,
+        "carbs_100": 5.100325
+      },
+      "source_snapshot": {
+        "fdc_id": 2257046,
+        "description": "Oat milk, unsweetened, plain, refrigerated",
+        "source_nutrient_ids": {
+          "kcal_100": 2047,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 48.3298,
+          "protein_100": 0.796875,
+          "fat_100": 2.749,
+          "carbs_100": 5.100325
+        }
+      },
+      "source_snapshot_sha256": "66bc695dd7642d4663a9c3b97d139241ddf478221a35b8e152a523ef2e8f072c",
+      "kcal_100": 48.3298,
+      "protein_100": 0.796875,
+      "fat_100": 2.749,
+      "carbs_100": 5.100325
+    },
+    {
       "candidate_id": "plan-voloskyi-horikh-yadro",
       "name_uk": "Волоський горіх (ядро)",
       "name_ru": "Грецкий орех ядро",
@@ -10099,6 +12445,108 @@
       "protein_100": 29.82,
       "fat_100": 2.08,
       "carbs_100": 4.4
+    },
+    {
+      "candidate_id": "plan-vynohrad-bilyi-syryi",
+      "name_uk": "Виноград білий (сирий)",
+      "name_ru": "Виноград зелёный свежий",
+      "name_en": "Grapes, green, seedless, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 2263891,
+      "source_data_type": "Foundation",
+      "source_archive_version": "2026-04",
+      "source_archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip",
+      "source_food_description": "Grapes, green, seedless, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 2047,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 80.1025,
+        "protein_100": 0.89875,
+        "fat_100": 0.2325,
+        "carbs_100": 18.60375
+      },
+      "source_snapshot": {
+        "fdc_id": 2263891,
+        "description": "Grapes, green, seedless, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 2047,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 80.1025,
+          "protein_100": 0.89875,
+          "fat_100": 0.2325,
+          "carbs_100": 18.60375
+        }
+      },
+      "source_snapshot_sha256": "fa56af5a98c382de4c27ca2cfc7e3ff159d2d621f83146ac4b730fc8e4e22008",
+      "kcal_100": 80.1025,
+      "protein_100": 0.89875,
+      "fat_100": 0.2325,
+      "carbs_100": 18.60375
+    },
+    {
+      "candidate_id": "plan-vynohrad-temnyi-syryi",
+      "name_uk": "Виноград темний (сирий)",
+      "name_ru": "Виноград красный свежий",
+      "name_en": "Grapes, red, seedless, raw",
+      "preparation_state": "raw",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 2263890,
+      "source_data_type": "Foundation",
+      "source_archive_version": "2026-04",
+      "source_archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip",
+      "source_food_description": "Grapes, red, seedless, raw",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 2047,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 85.919,
+        "protein_100": 0.914375,
+        "fat_100": 0.1638,
+        "carbs_100": 20.196825
+      },
+      "source_snapshot": {
+        "fdc_id": 2263890,
+        "description": "Grapes, red, seedless, raw",
+        "source_nutrient_ids": {
+          "kcal_100": 2047,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 85.919,
+          "protein_100": 0.914375,
+          "fat_100": 0.1638,
+          "carbs_100": 20.196825
+        }
+      },
+      "source_snapshot_sha256": "b7ed981c895aa790c0b4b314017b23c114454aaf15ae3bef249f158985e50534",
+      "kcal_100": 85.919,
+      "protein_100": 0.914375,
+      "fat_100": 0.1638,
+      "carbs_100": 20.196825
     },
     {
       "candidate_id": "plan-vyshnya-syra-bez-kistochky",
