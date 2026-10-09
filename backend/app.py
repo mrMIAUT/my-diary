@@ -2224,6 +2224,15 @@ def _food_rank(query:str,items:list):
         if quality[0]>=4:continue
         preparation=_food_preparation_rank(item) if broad_query else 0
         relation=_food_broad_relation_rank(query,item) if broad_query else 0
+        # Only demote clearly secondary forms on single-ingredient searches.
+        # Explicit queries such as "chicken skin" retain normal relevance.
+        secondary_cues=("skin","шкір","шкур","feet","foot","лап",
+                        "tail","хвіст","back","спин","meatless",
+                        "substitute","замінник","імітац")
+        secondary=(int(_food_contains_cue(_food_match_words(item.get("name") or ""),
+                                          secondary_cues))
+                   if broad_query and not _food_contains_cue(
+                       _food_match_words(query),secondary_cues) else 0)
         extra_meat=_food_extra_meat_count(query,item) if not broad_query else 0
         dish_conflicts=_food_named_dish_conflicts(query,item)
         # For broad ingredient searches the compact reference catalogue is
@@ -2232,11 +2241,11 @@ def _food_rank(query:str,items:list):
         quick_reference=(0 if broad_query and item.get("source")=="reference"
                          and quality[0]<=1 else 1)
         ranked.append((quality[0],quick_reference,relation,preparation,
-                       dish_conflicts,_food_local_tier(item),extra_meat,
+                       secondary,dish_conflicts,_food_local_tier(item),extra_meat,
                        quality[1],quality[2],quality[3],
                        (item.get("name") or "").lower(),item))
-    ranked.sort(key=lambda row:row[:11])
-    return _dedupe_food_items([row[11] for row in ranked])
+    ranked.sort(key=lambda row:row[:12])
+    return _dedupe_food_items([row[12] for row in ranked])
 
 CHICKEN_PREPARATIONS={
     "raw":{
