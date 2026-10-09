@@ -15,6 +15,7 @@ CALENDAR = (ROOT / "backend" / "static" / "js" / "calendar.js").read_text(encodi
 TRAINING_REDESIGN = (ROOT / "backend" / "static" / "js" / "training-redesign.js").read_text(encoding="utf-8")
 HOME = (ROOT / "backend" / "static" / "js" / "home-redesign.js").read_text(encoding="utf-8")
 NUTRITION = (ROOT / "backend" / "static" / "js" / "nutrition-redesign.js").read_text(encoding="utf-8")
+NUTRITION_JS = (ROOT / "backend" / "static" / "js" / "nutrition.js").read_text(encoding="utf-8")
 MORE = (ROOT / "backend" / "static" / "js" / "more-redesign.js").read_text(encoding="utf-8")
 LIBRARY = (ROOT / "backend" / "static" / "js" / "library.js").read_text(encoding="utf-8")
 WORKOUT_LYFTA = (ROOT / "backend" / "static" / "js" / "workout-lyfta.js").read_text(encoding="utf-8")
@@ -274,6 +275,13 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn('/static/js/timed-workout.js?v=1', INDEX)
         self.assertIn("'/static/js/timed-workout.js?v=1'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
+
+    def test_trainer_nutrition_targets_do_not_use_client_only_handler(self):
+        self.assertIn("function saveTrainerNutritionTargets", NUTRITION_JS)
+        self.assertIn("saveTrainerNutritionTargets(", NUTRITION_JS)
+        self.assertIn("await api('/client/'+cid+'/nutrition'", NUTRITION_JS)
+        self.assertNotIn("function saveNutritionTargets", NUTRITION_JS)
+        self.assertIn("window.saveNutritionTargets", NUTRITION)
 
     def test_training_day_title_modal_uses_redesign_ui(self):
         self.assertIn("trainer-day-title-modal", PROGRAM)

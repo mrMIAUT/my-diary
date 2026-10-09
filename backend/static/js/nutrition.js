@@ -59,7 +59,7 @@ function nutritionTargetEditorHTML(c,editing=false){
      <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" value="${c.carbs||0}"></label>
    </div>
    <div id="nutritionActions" class="trainer-nutrition-target-actions">
-     <button onclick="saveNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>
+     <button onclick="saveTrainerNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>
      ${editing?`<button class="dark" onclick="document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData)">Скасувати</button>`:''}
    </div>
  </div>`;
@@ -79,7 +79,7 @@ function editNutritionTargets(){
  if(box)box.innerHTML=nutritionHTML(window.currentClientData,true);
 }
 
-async function saveNutritionTargets(cid,button=null){
+async function saveTrainerNutritionTargets(cid,button=null){
  let restore=setActionLoading(button,'Зберігаємо…');
  try{let meals=(nutritionPlanDraft||[]).filter(x=>x.content.trim()).map((x,i)=>({...x,sort:i}));let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0,meal_plan:'',meals};await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify(body)});let d=await loadClientData(cid);window.currentClientData=d;nutritionPlanDraft=null;let box=$('#nutrition');if(box)box.innerHTML=nutritionHTML(d)
  }catch(e){restore();alert(e.message||'Не вдалося зберегти харчування. Спробуй ще раз.')}
