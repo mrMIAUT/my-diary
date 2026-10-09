@@ -1,6 +1,7 @@
 (() => {
   const $ = (s, root=document) => root.querySelector(s);
   const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const CIRCUMFERENCE = 2 * Math.PI * 54;
 
   const state = {
     role: 'trainer',
@@ -14,12 +15,15 @@
     reps: '10–15',
     rir: 2,
     previous: 25,
+    selectedExercise: 0,
+    completed: new Set(),
     timer: {
       phase: 'idle',
       currentSet: 1,
-      remaining: 30,
-      total: 30,
-      handle: null,
+      totalMs: 30000,
+      remainingMs: 30000,
+      endsAt: 0,
+      raf: 0,
       paused: false
     }
   };
@@ -39,6 +43,48 @@
     state.rir = clamp($('#rirValue')?.value,0,10,2);
   }
 
+  function clientExercises(){
+    return [
+      {
+        name: state.exercise,
+        format: state.format,
+        place: state.place,
+        sets: state.sets,
+        work: state.work,
+        rest: state.rest,
+        load: state.load,
+        reps: state.reps,
+        rir: state.rir,
+        previous: state.previous
+      },
+      {
+        name: 'Віджимання від підлоги',
+        format: 'reps',
+        place: 'Дім',
+        sets: 3,
+        reps: '8–12',
+        rir: 2,
+        load: 'Власна вага'
+      },
+      {
+        name: 'Ягодичний міст з резинкою',
+        format: 'time',
+        place: 'Дім',
+        sets: 3,
+        work: 35,
+        rest: 25,
+        load: 'Резинка',
+        previous: 30
+      }
+    ];
+  }
+
+  function selectedExercise(){
+    const list = clientExercises();
+    state.selectedExercise = Math.max(0,Math.min(list.length - 1,state.selectedExercise));
+    return list[state.selectedExercise];
+  }
+
   function setRole(role){
     state.role = role;
     $$('.role-switch button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
@@ -49,6 +95,8 @@
       resetTimer();
       renderClient();
       window.scrollTo({top:0,behavior:'smooth'});
+    }else{
+      stopTimerAnimation();
     }
   }
 
@@ -65,13 +113,17 @@
     }
     readBuilder();
     renderTrainerPreview();
-    renderClient();
+    if(state.role === 'client'){
+      resetTimer();
+      renderClient();
+    }
   }
 
   function setPlace(place){
     state.place = place;
     $$('#placeChips button').forEach(b => b.classList.toggle('active', b.dataset.place === place));
     renderTrainerPreview();
+    if(state.role === 'client') renderClientExerciseList();
   }
 
   function renderTrainerPreview(){
@@ -107,78 +159,132 @@
       </div>`;
   }
 
+  function renderClientExerciseList(){
+    const root = $('#clientExerciseList');
+    const list = clientExercises();
+    if($('#clientExerciseCount')) $('#clientExerciseCount').textContent = String(list.length);
+    if(!root) return;
+    root.innerHTML = list.map((x,i) => {
+      const done = state.completed.has(i);
+      const meta = x.format === 'time'
+        ? `${x.sets} підх. · ${x.work} сек / ${x.rest} сек`
+        : `${x.sets} підх. · ${x.reps} повт. · RIR ${x.rir}`;
+      return `
+        <button type="button" class="client-exercise-choice${i===state.selectedExercise?' active':''}${done?' done':''}" data-client-exercise="${i}">
+          <span class="client-exercise-choice-main">
+            <strong>${escapeHtml(x.name)}</strong>
+            <small>${escapeHtml(meta)}</small>
+          </span>
+          <span class="client-exercise-choice-mode">${done?'Виконано':(x.format==='time'?'За часом':'Класичне')}</span>
+          <span class="client-exercise-choice-arrow">›</span>
+        </button>`;
+    }).join('');
+    $$('[data-client-exercise]',root).forEach(btn => {
+      btn.addEventListener('click', () => selectClientExercise(Number(btn.dataset.clientExercise)));
+    });
+  }
+
+  function selectClientExercise(index){
+    const list = clientExercises();
+    if(!Number.isInteger(index) || index < 0 || index >= list.length) return;
+    state.selectedExercise = index;
+    resetTimer();
+    renderClient();
+    requestAnimationFrame(() => {
+      document.querySelector('.selected-exercise-title')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
+
   function renderClient(){
     readBuilder();
-    if($('#clientExerciseName')) $('#clientExerciseName').textContent = state.exercise;
-    if($('#classicExerciseTitle')) $('#classicExerciseTitle').textContent = state.exercise;
+    renderClientExerciseList();
+    const x = selectedExercise();
 
-    const timed = state.format === 'time';
+    if($('#clientExerciseName')) $('#clientExerciseName').textContent = x.name;
+    if($('#classicExerciseTitle')) $('#classicExerciseTitle').textContent = x.name;
+
+    const timed = x.format === 'time';
     $('#timedWorkoutCard')?.classList.toggle('hidden', !timed);
-    $('#progressionCard')?.classList.toggle?.('hidden', !timed);
+    $('#progressionCard')?.classList.toggle('hidden', !timed);
     $('#classicWorkoutCard')?.classList.toggle('hidden', timed);
 
-    if($('#loadChip')) $('#loadChip').textContent = state.load || 'Без ваги';
-    if($('#workPlan')) $('#workPlan').textContent = state.work + ' сек';
-    if($('#restPlan')) $('#restPlan').textContent = state.rest + ' сек';
-    if($('#previousTime')) $('#previousTime').textContent = state.previous + ' сек';
-    if($('#todayTime')) $('#todayTime').textContent = state.work + ' сек';
-    const delta = state.work - state.previous;
+    if($('#loadChip')) $('#loadChip').textContent = x.load || 'Без ваги';
+    if($('#workPlan')) $('#workPlan').textContent = (x.work || 0) + ' сек';
+    if($('#restPlan')) $('#restPlan').textContent = (x.rest || 0) + ' сек';
+
+    const previous = Number.isFinite(+x.previous) ? +x.previous : Math.max(5,(+x.work || 30)-5);
+    if($('#previousTime')) $('#previousTime').textContent = previous + ' сек';
+    if($('#todayTime')) $('#todayTime').textContent = (+x.work || 0) + ' сек';
+    const delta = (+x.work || 0) - previous;
     if($('#progressDelta')){
       $('#progressDelta').textContent = (delta >= 0 ? '+' : '') + delta + ' сек';
       $('#progressDelta').style.opacity = delta === 0 ? '.55' : '1';
     }
-    renderClassicRows();
-    if(timed) renderTimer();
+
+    renderClassicRows(x);
+    if(timed) renderTimer(true);
   }
 
-  function renderClassicRows(){
+  function renderClassicRows(x){
     const root = $('#classicRows');
-    if(!root) return;
-    root.innerHTML = Array.from({length:state.sets},(_,i) => `
+    if(!root || x.format !== 'reps') return;
+    root.innerHTML = Array.from({length:x.sets},(_,i) => `
       <div class="classic-row">
         <span>${i+1}</span>
         <input type="number" step="0.5" placeholder="кг" aria-label="Вага, підхід ${i+1}">
-        <input type="number" placeholder="${escapeHtml(state.reps)}" aria-label="Повтори, підхід ${i+1}">
+        <input type="number" placeholder="${escapeHtml(x.reps)}" aria-label="Повтори, підхід ${i+1}">
         <button type="button" data-classic-set="${i+1}">✓</button>
       </div>`).join('');
-    $$('[data-classic-set]').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('done')));
+    $$('[data-classic-set]',root).forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('done')));
   }
 
   function timerDurations(){
+    const x = selectedExercise();
     const quick = !!$('#quickTest')?.checked;
-    return quick ? {work:5,rest:3} : {work:state.work,rest:state.rest};
+    return quick ? {work:5,rest:3} : {work:+x.work || 30,rest:+x.rest || 0};
+  }
+
+  function stopTimerAnimation(){
+    if(state.timer.raf) cancelAnimationFrame(state.timer.raf);
+    state.timer.raf = 0;
   }
 
   function setTimerPhase(phase, seconds){
-    clearInterval(state.timer.handle);
-    state.timer.handle = null;
+    stopTimerAnimation();
+    const ms = Math.max(0,Number(seconds) || 0) * 1000;
     state.timer.phase = phase;
     state.timer.paused = false;
-    state.timer.total = Math.max(1,seconds || 1);
-    state.timer.remaining = Math.max(0,seconds || 0);
-    renderTimer();
+    state.timer.totalMs = Math.max(1,ms);
+    state.timer.remainingMs = ms;
+    state.timer.endsAt = performance.now() + ms;
+    renderTimer(true);
   }
 
-  function startInterval(){
-    clearInterval(state.timer.handle);
-    state.timer.handle = setInterval(() => {
-      if(state.timer.paused) return;
-      state.timer.remaining -= 1;
-      if(state.timer.remaining <= 0){
-        state.timer.remaining = 0;
-        renderTimer();
-        advanceTimer();
-        return;
-      }
-      renderTimer();
-    },1000);
+  function startTimerAnimation(){
+    stopTimerAnimation();
+    state.timer.raf = requestAnimationFrame(timerFrame);
+  }
+
+  function timerFrame(now){
+    if(state.timer.paused || !['work','rest'].includes(state.timer.phase)){
+      state.timer.raf = 0;
+      return;
+    }
+    state.timer.remainingMs = Math.max(0,state.timer.endsAt - now);
+    renderTimerFrame();
+    if(state.timer.remainingMs <= 0){
+      state.timer.raf = 0;
+      advanceTimer();
+      return;
+    }
+    state.timer.raf = requestAnimationFrame(timerFrame);
   }
 
   function startWork(){
     const d = timerDurations();
     setTimerPhase('work', d.work);
     pulse();
-    startInterval();
+    startTimerAnimation();
   }
 
   function startRest(){
@@ -190,18 +296,20 @@
     }
     setTimerPhase('rest', d.rest);
     pulse();
-    startInterval();
+    startTimerAnimation();
   }
 
   function advanceTimer(){
-    clearInterval(state.timer.handle);
-    state.timer.handle = null;
+    stopTimerAnimation();
+    const x = selectedExercise();
     if(state.timer.phase === 'work'){
-      if(state.timer.currentSet >= state.sets){
+      if(state.timer.currentSet >= x.sets){
         state.timer.phase = 'done';
-        state.timer.remaining = 0;
+        state.timer.remainingMs = 0;
+        state.completed.add(state.selectedExercise);
         pulse([120,80,120]);
-        renderTimer();
+        renderTimer(true);
+        renderClientExerciseList();
       }else{
         startRest();
       }
@@ -217,50 +325,50 @@
       startWork();
       return;
     }
-    state.timer.paused = !state.timer.paused;
-    if(!state.timer.paused && !state.timer.handle) startInterval();
-    renderTimer();
+
+    if(state.timer.paused){
+      state.timer.paused = false;
+      state.timer.endsAt = performance.now() + state.timer.remainingMs;
+      renderTimer(true);
+      startTimerAnimation();
+    }else{
+      state.timer.remainingMs = Math.max(0,state.timer.endsAt - performance.now());
+      state.timer.paused = true;
+      stopTimerAnimation();
+      renderTimer(true);
+    }
   }
 
   function resetTimer(){
-    clearInterval(state.timer.handle);
-    state.timer.handle = null;
+    stopTimerAnimation();
+    const d = timerDurations();
     state.timer.phase = 'idle';
     state.timer.currentSet = 1;
     state.timer.paused = false;
-    state.timer.total = state.work;
-    state.timer.remaining = state.work;
-    renderTimer();
+    state.timer.totalMs = Math.max(1,d.work * 1000);
+    state.timer.remainingMs = d.work * 1000;
+    state.timer.endsAt = 0;
+    renderTimer(true);
   }
 
-  function renderTimer(){
+  function renderTimer(full=false){
     const ring = $('#timerRing');
-    const value = $('#timerValue');
     const phase = $('#phaseLabel');
     const hint = $('#timerHint');
     const progress = $('#setProgressText');
     const primary = $('#timerPrimary');
-    if(!ring || !value || !phase || !hint || !progress || !primary) return;
+    if(!ring || !phase || !hint || !progress || !primary) return;
 
+    const x = selectedExercise();
     const t = state.timer;
-    let shown = t.phase === 'idle' ? (timerDurations().work) : t.remaining;
-    value.textContent = formatSeconds(shown);
     progress.textContent = t.phase === 'done'
-      ? `Завершено · ${state.sets} з ${state.sets}`
-      : `Підхід ${Math.min(t.currentSet,state.sets)} з ${state.sets}`;
+      ? `Завершено · ${x.sets} з ${x.sets}`
+      : `Підхід ${Math.min(t.currentSet,x.sets)} з ${x.sets}`;
 
     ring.classList.remove('work','rest','done');
     if(t.phase === 'work') ring.classList.add('work');
     if(t.phase === 'rest') ring.classList.add('rest');
     if(t.phase === 'done') ring.classList.add('done');
-
-    let ratio = 0;
-    if(t.phase === 'work' || t.phase === 'rest'){
-      ratio = t.total ? (t.total - t.remaining) / t.total : 0;
-    }else if(t.phase === 'done'){
-      ratio = 1;
-    }
-    ring.style.setProperty('--progress', Math.max(0,Math.min(360,ratio*360)) + 'deg');
 
     if(t.phase === 'idle'){
       phase.textContent = 'ГОТОВА';
@@ -279,6 +387,29 @@
       hint.textContent = 'усі підходи виконано';
       primary.textContent = 'Повторити';
     }
+
+    renderTimerFrame(full);
+  }
+
+  function renderTimerFrame(){
+    const value = $('#timerValue');
+    const circle = $('#timerProgressCircle');
+    if(!value || !circle) return;
+
+    const t = state.timer;
+    const idleMs = timerDurations().work * 1000;
+    const shownMs = t.phase === 'idle' ? idleMs : t.remainingMs;
+    value.textContent = formatMilliseconds(shownMs);
+
+    let ratio = 0;
+    if(t.phase === 'work' || t.phase === 'rest'){
+      ratio = t.totalMs ? (t.totalMs - t.remainingMs) / t.totalMs : 0;
+    }else if(t.phase === 'done'){
+      ratio = 1;
+    }
+    ratio = Math.max(0,Math.min(1,ratio));
+    circle.style.strokeDasharray = String(CIRCUMFERENCE);
+    circle.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - ratio));
   }
 
   function pulse(pattern=40){
@@ -287,8 +418,8 @@
     }catch(_){}
   }
 
-  function formatSeconds(sec){
-    sec = Math.max(0,Math.floor(sec || 0));
+  function formatMilliseconds(ms){
+    const sec = Math.max(0,Math.ceil((Number(ms) || 0) / 1000));
     const m = Math.floor(sec/60);
     const s = sec%60;
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
@@ -308,7 +439,10 @@
     $('#' + id)?.addEventListener('input', () => {
       readBuilder();
       renderTrainerPreview();
-      if(state.role === 'client') renderClient();
+      if(state.role === 'client'){
+        resetTimer();
+        renderClient();
+      }
     });
   });
 
@@ -331,6 +465,8 @@
   $('#quickTest')?.addEventListener('change', resetTimer);
   $('#completeClassic')?.addEventListener('click', () => {
     $$('[data-classic-set]').forEach(btn => btn.classList.add('done'));
+    state.completed.add(state.selectedExercise);
+    renderClientExerciseList();
     pulse([100,80,100]);
   });
 
