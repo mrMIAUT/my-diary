@@ -63,6 +63,9 @@ const ctx={
 };
 vm.createContext(ctx);
 vm.runInContext(src,ctx);
+// The live workout file also declares this function: override it in the sandbox
+// to exercise only the group completion contract without loading the UI stack.
+ctx.workoutEffectiveExercise=x=>x;
 let s={day_name:'День 6',day_kind:'standard',status:'finished',
        workout_day:'2026-10-10',program_snapshot:JSON.stringify([{id:12},{id:13}])};
 let d={program:[{id:12,day_name:'День 6'},{id:13,day_name:'День 6'},
