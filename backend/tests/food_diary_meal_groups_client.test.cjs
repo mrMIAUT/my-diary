@@ -57,8 +57,8 @@ assert.ok(mealMarkup("Сніданок").includes("5,6"));
 assert.ok(mealMarkup("Сніданок").includes("Галичина"));
 assert.ok(mealMarkup("Перекус").includes("133,5"));
 assert.ok(mealMarkup("Перекус").includes("Банан свіжий"));
-assert.equal(mealMarkup("Обід"),"");
-assert.equal(mealMarkup("Вечеря"),"");
+assert.ok(mealMarkup("Обід").includes("data-diary-meal-add"));
+assert.ok(mealMarkup("Вечеря").includes("data-diary-meal-add"));
 assert.ok(!elements.foodDiaryEntries.innerHTML.includes("9999"));
 assert.ok(elements.foodDiaryEntries.innerHTML.indexOf('data-diary-meal="Сніданок"')<
  elements.foodDiaryEntries.innerHTML.indexOf('data-diary-meal="Перекус"'));
@@ -66,7 +66,7 @@ assert.ok(elements.foodDiaryEntries.innerHTML.indexOf('data-diary-meal="Снід
 f.startDiaryEdit("milk");
 elements.diaryEditGrams.value="300";elements.diaryEditMeal.value="Вечеря";
 assert.equal(f.saveDiaryEdit("milk"),true);
-assert.equal(mealMarkup("Сніданок"),"");
+assert.ok(!mealMarkup("Сніданок").includes("foodDiaryMealEntries"));
 assert.ok(mealMarkup("Вечеря").includes("155,1"));
 assert.ok(mealMarkup("Перекус").includes("133,5"));
 assert.ok(elements.foodDiaryEntries.innerHTML.indexOf('data-diary-meal="Вечеря"')<
@@ -76,7 +76,7 @@ assert.equal(entries().find(x=>x.id==="milk").meal,"Вечеря");
 expectNear(entries().find(x=>x.id==="milk").protein,8.4,"Protein edited");
 // Delete banana and undo. Per-meal and day totals update consistently.
 assert.equal(f.removeDiaryEntry("banana"),true);
-assert.equal(mealMarkup("Перекус"),"");
+assert.ok(!mealMarkup("Перекус").includes("foodDiaryMealEntries"));
 assert.equal(elements.diaryKcal.textContent,"155,1");
 assert.equal(f.undoDiaryRemove(),true);
 assert.ok(mealMarkup("Перекус").includes("133,5"));
@@ -94,5 +94,6 @@ assert.equal(entries().find(x=>x.id==="yesterday").kcal,9999);
 assert.ok(f.saveDiary([]));
 f.renderDiary();
 assert.equal(elements.diaryKcal.textContent,"0");
-assert.match(elements.foodDiaryEntries.innerHTML,/За цей день ще немає записів/);
+assert.equal((elements.foodDiaryEntries.innerHTML.match(/data-diary-meal-add=/g)||[]).length,4);
+assert.ok(mealMarkup("Сніданок").includes("foodDiaryMealAdd"));
 console.log("Food diary groups: meal BJU, separate daily totals, edit/move, undo, legacy grouping and empty state PASS");
