@@ -64,7 +64,7 @@ assert.equal(elements.foodWeekNext.disabled,true,"Can't move beyond current week
 assert.equal(elements.foodWeekPrev.disabled,false);
 function dayMarkup(key){
  const h=elements.foodDiaryWeekDays.innerHTML,p=h.indexOf('data-diary-week-day="'+key+'"');
- return p<0?"":h.slice(p,h.indexOf("</button>",p)+9);
+ return p<0?"":h.slice(h.lastIndexOf("<button",p),h.indexOf("</button>",p)+9);
 }
 assert.ok(dayMarkup(today).includes("is-selected"));
 assert.ok(dayMarkup(today).includes("has-entry"));
