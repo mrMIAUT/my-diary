@@ -113,13 +113,13 @@ function loadLocalFoodCatalogue(){
 }
 foodLocalCatalog=loadLocalFoodCatalogue();
 function foodPreviewNormalize(query){
- const text=String(query||'').toLocaleLowerCase('uk-UA').replace(/ё/g,'е').trim().replace(/\\s+/g,' ');
+ const text=String(query||'').toLocaleLowerCase('uk-UA').replace(/ё/g,'е').trim().replace(/\s+/g,' ');
  if(!foodLocalCatalog)return text;
  const replacements=foodLocalCatalog.query_replacements||{};
  if(Object.prototype.hasOwnProperty.call(replacements,text))return replacements[text];
  let result=text;
  // Same word-boundary semantics as the Python normalizer, including Cyrillic.
- const escaped=x=>x.replace(/[.*+?^${}()|[\\]\\]/g,'\\const FOOD_DIARY_KEY='eplan12-food-diary-v1';');
+ const escaped=x=>Array.from(x).map(ch=>'\\^$.*+?()[]{}|'.includes(ch)?'\\'+ch:ch).join('');
  for(const [from,to] of Object.entries(replacements).sort((a,b)=>b[0].length-a[0].length)){
   const re=new RegExp('(^|[^\\p{L}\\p{N}])'+escaped(from)+'(?=$|[^\\p{L}\\p{N}])','gu');
   result=result.replace(re,(_,left)=>left+to);
@@ -129,7 +129,7 @@ function foodPreviewNormalize(query){
 function localFoodMatches(query){
  if(!foodLocalCatalog||!Array.isArray(foodLocalCatalog.items))return [];
  const raw=String(query||'').trim().toLocaleLowerCase('uk-UA');
- if(raw.length<2||/^\\d{8,14}$/.test(raw))return [];
+ if(raw.length<2||/^\d{8,14}$/.test(raw))return [];
  const normalized=foodPreviewNormalize(raw);
  const variants=[raw,normalized];
  const equivalents=Array.isArray(foodLocalCatalog.english_aliases)?foodLocalCatalog.english_aliases:[];
@@ -138,7 +138,7 @@ function localFoodMatches(query){
    variants.push(normalized.replace(src,dst));
   }
  }
- const terms=variants.map(v=>String(v).toLocaleLowerCase('uk-UA').split(/[^\\p{L}\\p{N}]+/u).filter(x=>x.length>1));
+ const terms=variants.map(v=>String(v).toLocaleLowerCase('uk-UA').split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>1));
  const scored=[];
  for(const item of foodLocalCatalog.items){
   if(!item||!item.name||!Number.isFinite(Number(item.kcal_100)))continue;
