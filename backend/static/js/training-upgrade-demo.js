@@ -181,20 +181,21 @@
   function exerciseCardHTML(x,i){
     const open=state.expanded===i;
     const done=state.completed.has(i);
-    const mode=x.format==='time'?'За часом':'Класичне';
-    const summary=x.format==='time'
-      ?`${x.sets} підх. · ${x.work} сек / ${x.rest} сек`
-      :`${x.sets} підх. · ${x.reps} повт. · RIR ${x.rir}`;
+    const plan=x.format==='time'
+      ?[`${x.sets} × ${x.work} сек`,`Відпочинок ${x.rest} сек`]
+      :[`${x.sets} × ${x.reps}`,`Відпочинок ${x.rest} сек`,`RIR ${x.rir}`];
     return `
-      <article class="client-workout-exercise${open?' open':''}${done?' done':''}" id="clientExerciseCard${i}">
-        <button type="button" class="client-workout-exercise-head" data-exercise-toggle="${i}">
-          <span class="client-workout-exercise-index">${done?'✓':i+1}</span>
-          <span class="client-workout-exercise-copy">
-            <strong>${esc(x.name)}</strong>
-            <small>${esc(summary)}</small>
+      <article class="main-live-exercise${open?' open':''}${done?' is-exercise-complete':''}" id="clientExerciseCard${i}">
+        <button type="button" class="main-live-toggle${open?' open':''}" data-exercise-toggle="${i}">
+          <span class="main-live-copy">
+            <span class="main-title-line"><strong>${esc(x.name)}</strong></span>
+            <span class="main-technique-row">Техніка</span>
+            <span class="main-plan-line">${plan.map(v=>`<span>${esc(v)}</span>`).join('')}</span>
           </span>
-          <span class="client-workout-exercise-status">${done?'Виконано':mode}</span>
-          <span class="client-workout-exercise-arrow">›</span>
+          <span class="main-toggle-side">
+            <span class="main-arrow">${open?'⌃':'⌄'}</span>
+            ${done?'<span class="main-done-badge">✓</span>':''}
+          </span>
         </button>
         ${open?exerciseBodyHTML(x,i):''}
       </article>`;
@@ -202,43 +203,52 @@
 
   function exerciseBodyHTML(x,i){
     const techniqueOpen=state.techniqueOpen.has(i);
-    const plan=x.format==='time'
-      ?[`${x.sets} підходи`,`${x.work} сек робота`,`${x.rest} сек відпочинок`,x.load||'Без ваги']
-      :[`${x.sets} підходи`,`${x.reps} повторів`,`RIR ${x.rir}`,`${x.rest} сек відпочинок`];
     return `
-      <div class="client-workout-exercise-body">
-        <div class="client-exercise-plan">${plan.map(v=>`<span>${esc(v)}</span>`).join('')}</div>
-        <div class="technique-row">
-          <div><strong>Техніка виконання</strong><small>Пояснення тренера або відео</small></div>
-          <button type="button" class="technique-toggle" data-technique-toggle="${i}">${techniqueOpen?'Сховати':'Техніка'}</button>
+      <div class="main-live-body">
+        <div class="main-body-actions">
+          <button type="button" class="main-technique-button" data-technique-toggle="${i}">▶ ${techniqueOpen?'Сховати техніку':'Техніка'}</button>
+          <button type="button" class="main-history-button">Історія та графік</button>
         </div>
-        <div class="technique-preview${techniqueOpen?' open':''}">
+        <div class="technique-preview main-technique-preview${techniqueOpen?' open':''}">
           <div class="technique-thumb">▶</div>
-          <div><strong>${esc(x.technique)}</strong><small>У реальній програмі тут відкривається прикріплене тренером відео.</small></div>
+          <div><strong>${esc(x.technique)}</strong><small>Тут буде прикріплене тренером відео або посилання на техніку.</small></div>
         </div>
         ${x.format==='time'
-          ?`<button type="button" class="start-timed-exercise" data-start-timed="${i}">${state.completed.has(i)?'Повторити вправу':'Почати вправу'}</button>`
+          ?timedBodyHTML(x,i)
           :classicRowsHTML(x,i)}
       </div>`;
+  }
+
+  function timedBodyHTML(x,i){
+    return `
+      <div class="main-timed-summary">
+        <div><span>Підходи</span><strong>${x.sets}</strong></div>
+        <div><span>Робота</span><strong>${x.work} сек</strong></div>
+        <div><span>Відпочинок</span><strong>${x.rest} сек</strong></div>
+      </div>
+      <button type="button" class="start-timed-exercise main-finish-action" data-start-timed="${i}">${state.completed.has(i)?'Повторити вправу':'Почати вправу'}</button>`;
   }
 
   function classicRowsHTML(x,i){
     const doneSets=state.classicDone.get(i)||new Set();
     return `
-      <div class="classic-set-list">
+      <div class="main-set-head">
+        <span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span>
+      </div>
+      <div class="main-set-list">
         ${Array.from({length:x.sets},(_,idx)=>{
           const n=idx+1,done=doneSets.has(n);
           return `
-            <div class="classic-set-row${done?' done':''}">
-              <span class="classic-set-number">${n}</span>
-              <span class="classic-set-target">
-                <strong>${esc(x.reps)} повторів</strong>
-                <small>RIR ${x.rir} · відпочинок ${x.rest} сек</small>
-              </span>
-              <button type="button" class="classic-set-check" data-exercise="${i}" data-classic-check="${n}" aria-label="Позначити підхід ${n}">${done?'✓':'○'}</button>
+            <div class="main-set-row${done?' done':''}">
+              <span class="main-set-number">${n}</span>
+              <input type="number" step="0.5" placeholder="кг" aria-label="Вага, підхід ${n}">
+              <input type="number" placeholder="${esc(x.reps)}" aria-label="Повтори, підхід ${n}">
+              <input type="number" value="${x.rir}" min="0" max="10" aria-label="RIR, підхід ${n}">
+              <button type="button" class="main-set-check" data-exercise="${i}" data-classic-check="${n}" aria-label="Позначити підхід ${n}">${done?'✓':'✓'}</button>
             </div>`;
         }).join('')}
-      </div>`;
+      </div>
+      <button type="button" class="main-add-set">＋ Додати підхід</button>`;
   }
 
   function toggleClassicSet(exerciseIndex,setNumber){
