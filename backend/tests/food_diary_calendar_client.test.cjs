@@ -10,7 +10,7 @@ for(const id of ["foodCalendar","foodCalendarToggle","foodDiaryTodayBtn"]){
  assert.ok(html.includes('id="'+id+'"'),"Missing "+id);
 }
 assert.ok(html.includes(".foodCalendarDot{"),"Green dot styling missing");
-assert.ok(html.includes("v=45"),"iPhone asset version wasn't updated");
+assert.ok(html.includes("v=46"),"iPhone asset version wasn't updated");
 const store=new Map(),diaryKey="eplan12-food-diary-v1";
 const localStorage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v))};
 const ids=["foodCalendar","foodCalendarToggle","foodDiaryTodayBtn",
