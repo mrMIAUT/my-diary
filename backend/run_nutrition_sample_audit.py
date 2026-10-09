@@ -142,7 +142,12 @@ def main():
             failures.append({"source": "off", "query": query, "error": type(exc).__name__,
                              "http_status": getattr(exc, "code", None)})
         time.sleep(6)
+    usda_rate_limited = False
     for query in QUERIES:
+        if usda_rate_limited:
+            failures.append({"source": "usda", "query": query,
+                             "error": "skipped_after_rate_limit", "http_status": 429})
+            continue
         try:
             params = urllib.parse.urlencode({"api_key": key, "query": query,
                                              "pageSize": 20, "dataType": "Foundation"})
@@ -152,10 +157,25 @@ def main():
                 failures.append({"source": "usda", "query": query, "error": "no_records"})
             items.extend(usda_record(p) for p in foods)
         except Exception as exc:
+            status = getattr(exc, "code", None)
             failures.append({"source": "usda", "query": query, "error": type(exc).__name__,
-                             "http_status": getattr(exc, "code", None)})
-        time.sleep(1)
+                             "http_status": status})
+            if status == 429:
+                usda_rate_limited = True
+        time.sleep(2)
+    # Report duplicate API hits, but assess each unique source record only once.
+    raw_count = len(items)
+    unique = {}
+    for item in items:
+        identity = (item.get("source"), str(item.get("source_id") or ""))
+        # Records without IDs cannot be safely deduplicated.
+        if not identity[1]:
+            identity = (identity[0], "__missing__" + str(len(unique)))
+        unique.setdefault(identity, item)
+    items = list(unique.values())
     report = audit(items)
+    report["raw_results"] = raw_count
+    report["duplicate_api_hits_removed"] = raw_count - len(items)
     # Incomplete nutrition fields and contradictory nutrition are different issues.
     report["quality_breakdown"] = {}
     for source in ("off", "usda"):
