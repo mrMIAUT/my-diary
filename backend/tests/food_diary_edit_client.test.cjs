@@ -24,6 +24,7 @@ const foodEsc=x=>String(x??"").replace(/[&<>"']/g,ch=>({
 }[ch]));
 const foodFmt=x=>Number(x).toLocaleString("uk-UA",{maximumFractionDigits:1});
 const ctx=vm.createContext({$,localStorage,Date,Math,console,foodEsc,foodFmt,
+ FOOD_DIARY_KEY:"eplan12-food-diary-v1",
  selectedFood:null,activeFoodProfile:null,foodPrepMeta:null,
  currentPrepValid:true,foodWeightBasis:"raw",currentFoodTotals:null,
  prepModeLabel:()=>""});
