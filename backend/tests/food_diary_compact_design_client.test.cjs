@@ -8,10 +8,10 @@ for(const selector of [
  "foodDiaryDaySummary","foodDiaryDailyKcal","foodDiaryDailyMacros",
  "foodDiaryMealAdd","foodDiaryEditBtn"
 ])assert.ok(html.includes(selector)||js.includes(selector),"Missing "+selector);
-assert.ok(html.includes("/static/calculator-prototype.js?v=43"),"iOS browser assets must refresh");
+assert.ok(html.includes("/static/calculator-prototype.js?v=44"),"iOS browser assets must refresh");
 assert.ok(!html.includes('ПІДСУМОК ЗА ДЕНЬ'),"Duplicated summary caption removed");
 const start=js.indexOf("function localDayKey(){");
-const end=js.indexOf("\n$('foodCalendarToggle').addEventListener(",start);
+const end=js.indexOf("\n$('foodWeekPrev').addEventListener(",start);
 assert.ok(start>=0&&end>start);
 const savedData=[];
 let stored=JSON.stringify(savedData),lastFocus=null,scrolls=0,bound=[];
