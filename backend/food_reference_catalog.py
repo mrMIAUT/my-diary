@@ -68,4 +68,11 @@ def reference_food_items():
         # An invalid optional reviewed catalog must never break existing food
         # search or make a half-reviewed entry available in the diary.
         reviewed = ()
-    return illustrative + [dict(item) for item in reviewed]
+    try:
+        from food_manufacturer_catalog import manufacturer_label_food_items
+        labels = manufacturer_label_food_items()
+    except (ImportError, OSError, ValueError, TypeError):
+        # Manufacturer label records remain optional and fail closed:
+        # never misrepresent an invalid product label as approved food.
+        labels = ()
+    return illustrative + [dict(item) for item in reviewed] + [dict(item) for item in labels]
