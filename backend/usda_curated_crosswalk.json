@@ -1081,6 +1081,294 @@
       "name_uk": "Арахіс (сирий)",
       "fdc_id": 172430,
       "name_ru": "Арахис сырой"
+    },
+    {
+      "name_uk": "Куряче філе (сире)",
+      "fdc_id": 171077,
+      "name_ru": "Куриное филе сырое без кожи",
+      "expected_source_description": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw"
+    },
+    {
+      "name_uk": "Куряче стегно без шкіри (сире)",
+      "fdc_id": 173627,
+      "name_ru": "Куриное бедро без кожи сырое",
+      "expected_source_description": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw"
+    },
+    {
+      "name_uk": "Куряча гомілка без шкіри (сира)",
+      "fdc_id": 173614,
+      "name_ru": "Куриная голень без кожи сырая",
+      "expected_source_description": "Chicken, broilers or fryers, dark meat, drumstick, meat only, raw"
+    },
+    {
+      "name_uk": "Курка ціла без шкіри (сира)",
+      "fdc_id": 171052,
+      "name_ru": "Курица без кожи сырая",
+      "expected_source_description": "Chicken, broilers or fryers, meat only, raw"
+    },
+    {
+      "name_uk": "Філе індички (сире)",
+      "fdc_id": 171098,
+      "name_ru": "Филе индейки сырое",
+      "expected_source_description": "Turkey, whole, breast, meat only, raw"
+    },
+    {
+      "name_uk": "Філе індички (запечене)",
+      "fdc_id": 171496,
+      "name_ru": "Филе индейки запечённое",
+      "expected_source_description": "Turkey, whole, breast, meat only, cooked, roasted"
+    },
+    {
+      "name_uk": "Стегно індички без шкіри (сире)",
+      "fdc_id": 174518,
+      "name_ru": "Бедро индейки без кожи сырое",
+      "expected_source_description": "Turkey, retail parts, thigh, meat only, raw"
+    },
+    {
+      "name_uk": "Щука (сира)",
+      "fdc_id": 173680,
+      "name_ru": "Щука северная сырая",
+      "expected_source_description": "Fish, pike, northern, raw"
+    },
+    {
+      "name_uk": "Морська капуста (сира)",
+      "fdc_id": 168457,
+      "name_ru": "Морская капуста ламинария сырая",
+      "expected_source_description": "Seaweed, kelp, raw"
+    },
+    {
+      "name_uk": "Йогурт грецький натуральний 5%",
+      "fdc_id": 171304,
+      "name_ru": "Йогурт греческий натуральный 5%",
+      "expected_source_description": "Yogurt, Greek, plain, whole milk"
+    },
+    {
+      "name_uk": "Сир вершковий натуральний",
+      "fdc_id": 173418,
+      "name_ru": "Сыр сливочный натуральный",
+      "expected_source_description": "Cheese, cream"
+    },
+    {
+      "name_uk": "Рис дикий (сухий)",
+      "fdc_id": 169726,
+      "name_ru": "Рис дикий сухой",
+      "expected_source_description": "Wild rice, raw"
+    },
+    {
+      "name_uk": "Манна крупа (суха)",
+      "fdc_id": 168933,
+      "name_ru": "Манная крупа сухая",
+      "expected_source_description": "Semolina, unenriched"
+    },
+    {
+      "name_uk": "Полента на воді",
+      "fdc_id": 171672,
+      "name_ru": "Полента кукурузная на воде",
+      "expected_source_description": "Cereals, corn grits, yellow, regular and quick, enriched, cooked with water, without salt"
+    },
+    {
+      "name_uk": "Макарони цільнозернові (сухі)",
+      "fdc_id": 169738,
+      "name_ru": "Макароны цельнозерновые сухие",
+      "expected_source_description": "Pasta, whole-wheat, dry (Includes foods for USDA's Food Distribution Program)"
+    },
+    {
+      "name_uk": "Макарони цільнозернові (відварені)",
+      "fdc_id": 168910,
+      "name_ru": "Макароны цельнозерновые варёные",
+      "expected_source_description": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)"
+    },
+    {
+      "name_uk": "Локшина рисова (суха)",
+      "fdc_id": 169742,
+      "name_ru": "Лапша рисовая сухая",
+      "expected_source_description": "Rice noodles, dry"
+    },
+    {
+      "name_uk": "Локшина рисова (відварена)",
+      "fdc_id": 168914,
+      "name_ru": "Лапша рисовая варёная",
+      "expected_source_description": "Rice noodles, cooked"
+    },
+    {
+      "name_uk": "Борошно пшеничне вищого ґатунку",
+      "fdc_id": 169761,
+      "name_ru": "Мука пшеничная белая высший сорт",
+      "expected_source_description": "Wheat flour, white, all-purpose, unenriched"
+    },
+    {
+      "name_uk": "Борошно пшеничне цільнозернове",
+      "fdc_id": 168893,
+      "name_ru": "Мука пшеничная цельнозерновая",
+      "expected_source_description": "Wheat flour, whole-grain (Includes foods for USDA's Food Distribution Program)"
+    },
+    {
+      "name_uk": "Борошно житнє",
+      "fdc_id": 2512375,
+      "name_ru": "Мука ржаная",
+      "expected_source_description": "Flour, rye"
+    },
+    {
+      "name_uk": "Борошно кукурудзяне",
+      "fdc_id": 170290,
+      "name_ru": "Мука кукурузная цельнозерновая",
+      "expected_source_description": "Corn flour, whole-grain, yellow"
+    },
+    {
+      "name_uk": "Крохмаль кукурудзяний",
+      "fdc_id": 169698,
+      "name_ru": "Крахмал кукурузный",
+      "expected_source_description": "Cornstarch"
+    },
+    {
+      "name_uk": "Квасоля біла (суха)",
+      "fdc_id": 175202,
+      "name_ru": "Фасоль белая сухая",
+      "expected_source_description": "Beans, white, mature seeds, raw"
+    },
+    {
+      "name_uk": "Квасоля біла (відварена)",
+      "fdc_id": 175203,
+      "name_ru": "Фасоль белая варёная",
+      "expected_source_description": "Beans, white, mature seeds, cooked, boiled, without salt"
+    },
+    {
+      "name_uk": "Рукола (сира)",
+      "fdc_id": 169387,
+      "name_ru": "Руккола сырая",
+      "expected_source_description": "Arugula, raw"
+    },
+    {
+      "name_uk": "Селера коренева (сира)",
+      "fdc_id": 170400,
+      "name_ru": "Сельдерей корневой сырой",
+      "expected_source_description": "Celeriac, raw"
+    },
+    {
+      "name_uk": "Кукурудза консервована (без рідини)",
+      "fdc_id": 169214,
+      "name_ru": "Кукуруза консервированная без жидкости",
+      "expected_source_description": "Corn, sweet, yellow, canned, whole kernel, drained solids"
+    },
+    {
+      "name_uk": "Виноград білий (сирий)",
+      "fdc_id": 2263891,
+      "name_ru": "Виноград зелёный свежий",
+      "expected_source_description": "Grapes, green, seedless, raw"
+    },
+    {
+      "name_uk": "Виноград темний (сирий)",
+      "fdc_id": 2263890,
+      "name_ru": "Виноград красный свежий",
+      "expected_source_description": "Grapes, red, seedless, raw"
+    },
+    {
+      "name_uk": "Смородина чорна (сира)",
+      "fdc_id": 173963,
+      "name_ru": "Смородина чёрная сырая",
+      "expected_source_description": "Currants, european black, raw"
+    },
+    {
+      "name_uk": "Смородина червона (сира)",
+      "fdc_id": 173964,
+      "name_ru": "Смородина красная сырая",
+      "expected_source_description": "Currants, red and white, raw"
+    },
+    {
+      "name_uk": "Фініки сушені (без кісточок)",
+      "fdc_id": 168191,
+      "name_ru": "Финики меджул сушёные",
+      "expected_source_description": "Dates, medjool"
+    },
+    {
+      "name_uk": "Родзинки (сушені)",
+      "fdc_id": 168165,
+      "name_ru": "Изюм тёмный сушёный",
+      "expected_source_description": "Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)"
+    },
+    {
+      "name_uk": "Кокосова стружка без цукру",
+      "fdc_id": 170170,
+      "name_ru": "Кокосовая стружка без сахара",
+      "expected_source_description": "Nuts, coconut meat, dried (desiccated), not sweetened"
+    },
+    {
+      "name_uk": "Кокосова м'якоть свіжа",
+      "fdc_id": 170169,
+      "name_ru": "Кокосовая мякоть свежая",
+      "expected_source_description": "Nuts, coconut meat, raw"
+    },
+    {
+      "name_uk": "Гірчична олія",
+      "fdc_id": 172337,
+      "name_ru": "Горчичное масло",
+      "expected_source_description": "Oil, mustard"
+    },
+    {
+      "name_uk": "Хлібці рисові",
+      "fdc_id": 170250,
+      "name_ru": "Рисовые хлебцы без соли",
+      "expected_source_description": "Snacks, rice cakes, brown rice, plain, unsalted"
+    },
+    {
+      "name_uk": "Булочка пшенична без начинки",
+      "fdc_id": 172793,
+      "name_ru": "Булочка пшеничная простая",
+      "expected_source_description": "Rolls, dinner, plain, commercially prepared (includes brown-and-serve)"
+    },
+    {
+      "name_uk": "Булочка цільнозернова без начинки",
+      "fdc_id": 172794,
+      "name_ru": "Булочка цельнозерновая",
+      "expected_source_description": "Rolls, dinner, whole-wheat"
+    },
+    {
+      "name_uk": "Галети пшеничні",
+      "fdc_id": 171856,
+      "name_ru": "Галеты пшеничные",
+      "expected_source_description": "Crackers, water biscuits"
+    },
+    {
+      "name_uk": "Мед натуральний",
+      "fdc_id": 169640,
+      "name_ru": "Мёд натуральный",
+      "expected_source_description": "Honey"
+    },
+    {
+      "name_uk": "Шоколад молочний",
+      "fdc_id": 167587,
+      "name_ru": "Шоколад молочный",
+      "expected_source_description": "Candies, milk chocolate"
+    },
+    {
+      "name_uk": "Помідори консервовані у власному соку",
+      "fdc_id": 170051,
+      "name_ru": "Помидоры консервированные в собственном соку",
+      "expected_source_description": "Tomatoes, red, ripe, canned, packed in tomato juice"
+    },
+    {
+      "name_uk": "Соєвий соус класичний",
+      "fdc_id": 174277,
+      "name_ru": "Соевый соус классический",
+      "expected_source_description": "Soy sauce made from soy and wheat (shoyu)"
+    },
+    {
+      "name_uk": "Гірчиця столова",
+      "fdc_id": 172234,
+      "name_ru": "Горчица столовая",
+      "expected_source_description": "Mustard, prepared, yellow"
+    },
+    {
+      "name_uk": "Вівсяний напій без цукру",
+      "fdc_id": 2257046,
+      "name_ru": "Овсяный напиток без сахара",
+      "expected_source_description": "Oat milk, unsweetened, plain, refrigerated"
+    },
+    {
+      "name_uk": "Соєвий напій без цукру",
+      "fdc_id": 1750337,
+      "name_ru": "Соевый напиток без сахара",
+      "expected_source_description": "Soy milk, unsweetened, plain, shelf stable"
     }
   ]
 }
