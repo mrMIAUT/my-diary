@@ -583,6 +583,33 @@ class FoodSearchRanking(unittest.TestCase):
             "Сир кисломолочний", "Chicken Drumsticks Raw",
         ):
             self.assertEqual(R["_food_preparation_rank"](food(name,"UA",True)),0)
+    def test_broad_ingredient_ranking_across_food_groups(self):
+        # All groups use the same ranking algorithm, not per-product overrides.
+        scenarios = (
+            ("Курица", "Куряче філе", "Курка гриль", "Салат з куркою"),
+            ("Картошка", "Картопля", "Картопля запечена", "Пюре з картоплі"),
+            ("Рис", "Рис басматі", "Рис відварений", "Рис з овочами"),
+            ("Лосось", "Лосось філе", "Лосось на парі", "Лосось з овочами"),
+            ("Молоко", "Молоко", "Молоко пастеризоване", "Молочний коктейль"),
+        )
+        for query, basic, prepared, dish in scenarios:
+            with self.subTest(query=query):
+                candidates = [food(dish, "UA", True),
+                              food(prepared, "UA", True),
+                              food(basic, "UA", True)]
+                ranked = self.rank(query, candidates)
+                self.assertEqual(ranked[0]["name"], basic)
+                self.assertIn(dish, [x["name"] for x in ranked])
+
+    def test_explicit_prepared_food_query_not_hidden(self):
+        candidates = [
+            food("Картопля", "UA", True),
+            food("Картопля запечена", "UA", True),
+            food("Картопля з сиром", "UA", True),
+        ]
+        self.assertEqual(self.rank("Картопля з сиром", candidates)[0]["name"],
+                         "Картопля з сиром")
+
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
         twice = [x["name"] for x in self.rank("Говядина")]
