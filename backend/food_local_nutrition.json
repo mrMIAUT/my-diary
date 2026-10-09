@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "provenance_policy": "Only per-100g edible-portion USDA records matched to candidate state, with archive fingerprint, source metadata, independent review and documented energy exceptions.",
+  "records": []
+}
