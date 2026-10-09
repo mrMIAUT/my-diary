@@ -2766,6 +2766,25 @@ def _food_result_page(raw,normalized,variants,candidates,limit,page,food_type):
     }
 
 
+@app.get("/api/prototype/foods/local-catalog")
+def prototype_food_local_catalog():
+    """Small searchable local catalogue that browsers can warm on page load.
+
+    This endpoint NEVER fetches OFF or USDA. All data are existing local
+    approximate references or records already passed through FDC review.
+    The browser may use the result for clearly marked preliminary matches,
+    and the complete search remains authoritative.
+    """
+    if not PROTOTYPE_MODE:
+        raise HTTPException(404,"Прототип пошуку недоступний")
+    return JSONResponse({
+        "items":reference_food_items(),
+        "query_replacements":FOOD_QUERY_REPLACEMENTS,
+        "english_aliases":FOOD_USDA_ALIASES,
+        "preliminary":True,
+    },headers={"Cache-Control":"private, max-age=300"})
+
+
 @app.get("/api/prototype/foods/preview")
 def prototype_food_preview(
     q:str=Query(...,min_length=2,max_length=120),
