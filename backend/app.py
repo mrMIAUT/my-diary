@@ -2930,13 +2930,13 @@ def prototype_food_search(
 @app.get("/")
 def home():
     if PROTOTYPE_MODE:
-        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+        return FileResponse(BASE/"static"/"training-upgrade-demo.html",headers={"Cache-Control":"no-store"})
     return _app_index()
 
 @app.get("/app")
 def pwa_app():
     if PROTOTYPE_MODE:
-        return FileResponse(BASE/"static"/"calculator-prototype.html",headers={"Cache-Control":"no-store"})
+        return FileResponse(BASE/"static"/"training-upgrade-demo.html",headers={"Cache-Control":"no-store"})
     return _app_index()
 
 @app.get("/pwa-reset")
