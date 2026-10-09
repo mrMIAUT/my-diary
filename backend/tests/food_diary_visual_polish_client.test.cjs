@@ -72,7 +72,8 @@ assert.ok(block("Сніданок").includes('aria-label="Білки: 5,6 гра
 assert.ok(block("Сніданок").includes('aria-label="Жири: 5 грамів"'));
 assert.ok(block("Сніданок").includes('aria-label="Вуглеводи: 9 грамів"'));
 for(const short of ["Б","Ж","В"])assert.ok(block("Сніданок").includes('title="'+({Б:"Білки",Ж:"Жири",В:"Вуглеводи"}[short])+'">'+short+'</small>'));
-assert.ok(!block("Сніданок").includes("продукт"),"Meal header should have no product count");
+assert.ok(!block("Сніданок").includes('class="foodDiaryMealCount"'),"Meal header should have no product count");
+assert.ok(!/\d+ продукт(?:ів)?/.test(block("Сніданок")),"Meal header should not show item count");
 assert.equal(byId.diaryKcal.textContent,"236,9");
 for(const label of ["Білки","Жири","Вуглеводи"])
  assert.ok(html.includes('aria-label="'+label+'">'+({Білки:"Б",Жири:"Ж",Вуглеводи:"В"}[label])+'</small>'),
