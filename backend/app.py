@@ -2083,6 +2083,8 @@ def create_program_template(x:ProgramTemplateCreateIn,user:AuthUser=Depends(requ
         items=db.execute("""SELECT * FROM program WHERE client_id=%s
                             ORDER BY day_name,COALESCE(sort,0),id""",(x.source_client_id,)).fetchall()
         if not items:raise HTTPException(400,"У клієнта ще немає програми")
+        if any(normalize_execution_mode(item.get("execution_mode"))=="time" for item in items):
+            raise HTTPException(400,"Шаблони вправ за часом додамо окремим етапом. Поточну програму клієнта не змінено.")
         tid=db.execute("""INSERT INTO program_templates(trainer_id,name,description)
                           VALUES(%s,%s,%s) RETURNING id""",(user.user_id,name,x.description.strip())).fetchone()["id"]
         days=db.execute("""SELECT day_name,title FROM program_days WHERE client_id=%s""",(x.source_client_id,)).fetchall()
