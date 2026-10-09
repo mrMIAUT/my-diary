@@ -197,6 +197,10 @@ function supersetRestLabel(items){
 }
 function programExecutionMode(x){return String(x?.execution_mode||'reps').toLowerCase()==='time'?'time':'reps'}
 function isTimedProgramExercise(x){return programExecutionMode(x)==='time'}
+function timedRestLabel(x){
+ let s=Math.max(0,+x?.rest_seconds||0);
+ return s?String(s)+' сек':'';
+}
 function programExecutionPlanText(x){
  if(isTimedProgramExercise(x))return String(Math.max(1,+x?.work_seconds||1))+' сек';
  return repeatPlanText(x);
@@ -209,7 +213,7 @@ function toggleProgramExecutionFields(scope='new'){
  root.querySelectorAll(edit?'.edit-time-only':'.program-time-only').forEach(el=>el.classList.toggle('hidden',!timed));
 }
 function programExtraHTML(x,showRest=true){
- let rest=showRest?restLabel(x):'',rp=rirPlan(x);
+ let rest=showRest?(isTimedProgramExercise(x)?timedRestLabel(x):restLabel(x)):'',rp=rirPlan(x);
  if(isTimedProgramExercise(x)){
    return `<div class="program-extra"><span class="badge">За часом</span>${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}</div>`;
  }
