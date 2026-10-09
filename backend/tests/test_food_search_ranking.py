@@ -590,7 +590,7 @@ class FoodSearchRanking(unittest.TestCase):
             ("Картошка", "Картопля", "Картопля запечена", "Пюре з картоплі"),
             ("Рис", "Рис басматі", "Рис відварений", "Рис з овочами"),
             ("Лосось", "Лосось філе", "Лосось на парі", "Лосось з овочами"),
-            ("Молоко", "Молоко", "Молоко пастеризоване", "Молочний коктейль"),
+            ("Молоко", "Молоко", "Молоко пастеризоване", "Молоко з шоколадом"),
         )
         for query, basic, prepared, dish in scenarios:
             with self.subTest(query=query):
@@ -609,6 +609,27 @@ class FoodSearchRanking(unittest.TestCase):
         ]
         self.assertEqual(self.rank("Картопля з сиром", candidates)[0]["name"],
                          "Картопля з сиром")
+
+    def test_broad_food_prefers_ordinary_products_to_secondary_parts(self):
+        for query, basic, secondary in (
+            ("chicken", "Chicken breast", "Chicken skin"),
+            ("chicken", "Chicken thighs", "Chicken feet"),
+            ("chicken", "Chicken breast", "Chicken, meatless"),
+            ("pork", "Pork fillet", "Pork tail"),
+            ("potato", "Potato", "Potato skins"),
+        ):
+            with self.subTest(query=query, secondary=secondary):
+                ranked=self.rank(query,[food(secondary,"UA",True),
+                                        food(basic,"Foreign",False)])
+                self.assertEqual(ranked[0]["name"],basic)
+                self.assertEqual(len(ranked),2)
+
+    def test_specific_secondary_part_search_remains_accurate(self):
+        ranked=self.rank("Chicken skin",[
+            food("Chicken breast","UA",True),
+            food("Chicken skin","Foreign",False),
+        ])
+        self.assertEqual(ranked[0]["name"],"Chicken skin")
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
