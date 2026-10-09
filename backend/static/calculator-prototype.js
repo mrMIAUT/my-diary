@@ -104,6 +104,22 @@ const FOOD_LOCAL_CATALOG_TTL=6*60*60*1000;
 let foodLocalCatalog=null,foodFullLoading=false,foodLocalLoadPromise=null;
 let foodLocalResults=[],foodLocalShown=0,foodSearchStage='idle',foodRemotePage=0,foodRemoteHasMore=false;
 function loadLocalFoodCatalogue(){
+ // The server embeds the current local reference foods into the same HTML
+ // document. They are ready synchronously, even on first visit or if
+ // localStorage is disabled by Safari private-browsing restrictions.
+ try{
+  const node=typeof document==='undefined'?null:
+   document.getElementById('eplan-local-food-catalog-bootstrap');
+  if(node&&node.textContent){
+   const embedded=JSON.parse(node.textContent);
+   if(embedded&&Array.isArray(embedded.items)&&embedded.items.length>=26){
+    const value={...embedded,savedAt:Date.now()};
+    try{localStorage.setItem(FOOD_LOCAL_CATALOG_KEY,JSON.stringify(value))}catch(_){}
+    return value;
+   }
+  }
+ }catch(_){}
+ // Graceful fallback for legacy static pages and temporarily offline users.
  try{
   const stored=JSON.parse(localStorage.getItem(FOOD_LOCAL_CATALOG_KEY)||'null');
   if(!stored||!Array.isArray(stored.items)||stored.items.length<26
@@ -569,5 +585,7 @@ document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener
 
 renderDiary();
 syncAdjust();
-warmLocalFoodCatalogue();
+// The inline bootstrap is authoritative on every fresh page. Only fetch
+// separately as fallback if the HTML did not include the food catalogue.
+if(!foodLocalCatalog)warmLocalFoodCatalogue();
 })();
