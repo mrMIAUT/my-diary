@@ -20,10 +20,16 @@ class FoodReferenceAuditTests(unittest.TestCase):
         for item in items:
             with self.subTest(food=item["name"]):
                 self.assertEqual(item["source"], "reference")
-                self.assertEqual(item["data_type"], "reference")
+                self.assertIn(item["data_type"], {"reference", "manufacturer_label"})
                 self.assertIn(item["preparation_state"], {"raw", "dry", "cooked", "as_sold"})
                 self.assertTrue(item["source_id"].startswith("eplan12-"))
                 if item.get("approximate") is True:
+                    self.assertNotIn("source_fdc_id",item)
+                elif item.get("source_kind")=="manufacturer_label":
+                    self.assertEqual(item["review_status"],"manufacturer_label_reviewed")
+                    self.assertEqual(item["food_type"],"branded")
+                    self.assertTrue(item["brand"])
+                    self.assertTrue(item["source_url"].startswith("https://"))
                     self.assertNotIn("source_fdc_id",item)
                 else:
                     self.assertEqual(item["review_status"],"approved")
@@ -53,10 +59,13 @@ class FoodReferenceAuditTests(unittest.TestCase):
                 if discrepancy > 25:
                     self.assertEqual(item["source"], "reference")
                     if item.get("approximate") is not True:
-                        # Imported records retain official USDA energy rather
-                        # than inventing numbers from a universal 4/9/4 rule.
-                        self.assertEqual(item["review_status"],"approved")
-                        self.assertGreater(item["source_fdc_id"],0)
+                        # Verified USDA values or separately declared
+                        # manufacturer labels must retain their own source.
+                        if item.get("source_kind")=="manufacturer_label":
+                            self.assertEqual(item["review_status"],"manufacturer_label_reviewed")
+                        else:
+                            self.assertEqual(item["review_status"],"approved")
+                            self.assertGreater(item["source_fdc_id"],0)
 
     def test_dry_and_cooked_rice_remain_distinct(self):
         items = {x["source_id"]: x for x in reference_food_items()}
