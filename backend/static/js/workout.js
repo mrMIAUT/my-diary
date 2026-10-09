@@ -620,7 +620,7 @@ function activeExercisesHTML(items,d,cid){
   let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
       doneToday=timed?(d.timed_result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
       shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
-  let rest=showRest?restLabel(effective):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
+  let rest=showRest?(timed?timedRestLabel(effective):restLabel(effective)):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
       rir=timed?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
       swap=!timed&&exerciseAlternatives(x).length&&!todaySets(d,x.id).length?'<button class="swap-exercise-btn" onclick="chooseWorkoutExercise('+x.id+','+cid+')">⇄ Замінити вправу</button>':'',
       content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid);
