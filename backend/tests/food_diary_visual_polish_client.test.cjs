@@ -15,8 +15,9 @@ assert.ok(html.includes(".foodCalendarDay.is-selected{background:#e9f0ff"),"Mont
 assert.ok(html.includes(".foodCalendarDot{background:#4679d0"),"History indicators must use brand blue");
 for(const field of ["diaryKcal","diaryProtein","diaryFat","diaryCarbs"])
  assert.ok(html.includes('id="'+field+'"'),"Keep exact diary totals "+field);
-for(const heading of ["Білки","Жири","Вуглеводи"])
- assert.ok(html.includes('class="foodDiaryMacroLabel">'+heading),"Readable daily labels");
+for(const [label,short] of [["Білки","Б"],["Жири","Ж"],["Вуглеводи","В"]])
+ assert.ok(html.includes('class="foodDiaryMacroLabel" title="'+label+'" aria-label="'+label+'">'+short+'</small>'),
+ "Readable abbreviated daily label: "+label);
 const begin=js.indexOf("function localDayKey(){");
 const end=js.indexOf("\n$('foodWeekPrev').addEventListener(",begin);
 assert.ok(begin>=0&&end>begin);
