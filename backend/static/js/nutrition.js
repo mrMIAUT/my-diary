@@ -47,16 +47,25 @@ function nutritionTargetSummaryHTML(c){
  </div>`;
 }
 
+function syncTrainerNutritionTargetKcal(){
+ let kcal=document.getElementById('nkcal'),protein=document.getElementById('nprotein'),fat=document.getElementById('nfat'),carbs=document.getElementById('ncarbs');
+ if(!kcal||!protein||!fat||!carbs)return;
+ let hasMacros=[protein,fat,carbs].some(el=>String(el.value||'').trim()!=='');
+ if(!hasMacros)return;
+ let p=Math.max(0,+protein.value||0),f=Math.max(0,+fat.value||0),c=Math.max(0,+carbs.value||0);
+ kcal.value=Math.round(p*4+f*9+c*4);
+}
+
 function nutritionTargetEditorHTML(c,editing=false){
  return `<div class="card trainer-nutrition-target-card is-editing">
    <div class="trainer-nutrition-target-head">
-     <div><h2>Цільове харчування</h2><p class="muted">Вкажи калорійність та БЖВ клієнта.</p></div>
+     <div><h2>Цільове харчування</h2><p class="muted">Вкажи БЖВ клієнта — калорійність перерахується автоматично.</p></div>
    </div>
    <div class="trainer-nutrition-target-fields">
-     <label><span>Ккал</span><input id="nkcal" type="number" value="${c.kcal||0}"></label>
-     <label><span>Білки, г</span><input id="nprotein" type="number" value="${c.protein||0}"></label>
-     <label><span>Жири, г</span><input id="nfat" type="number" value="${c.fat||0}"></label>
-     <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" value="${c.carbs||0}"></label>
+     <label><span>Ккал</span><input id="nkcal" type="number" value="${c.kcal||0}" inputmode="numeric"></label>
+     <label><span>Білки, г</span><input id="nprotein" type="number" value="${c.protein||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
+     <label><span>Жири, г</span><input id="nfat" type="number" value="${c.fat||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
+     <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" value="${c.carbs||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
    </div>
    <div id="nutritionActions" class="trainer-nutrition-target-actions">
      <button onclick="saveTrainerNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>
