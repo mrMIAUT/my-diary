@@ -660,7 +660,8 @@ function activeExercisesHTML(items,d,cid){
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  function card(x,inner=false,showRest=true){
   let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
-      doneToday=timed?(d.timed_result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
+      timedDoneCount=timed?(d.timed_result_sets||[]).filter(function(r){return +r.program_id===+x.id&&r.day===activeDay}).length:0,
+      doneToday=timed?timedDoneCount>=Math.max(1,+effective.sets||1):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
       shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
   let rest=showRest?(timed?timedRestLabel(effective):restLabel(effective)):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
       rir=timed?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
