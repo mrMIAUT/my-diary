@@ -73,9 +73,11 @@ def validate_reviewed_record(record, by_id):
     if type(fdc_id) is not int or fdc_id <= 0:
         raise ValueError("A positive numeric USDA FDC ID is required")
     if record.get("source_data_type") not in (
-        "Foundation", "SR Legacy", "Survey (FNDDS)", "Branded"
+        "Foundation", "SR Legacy", "Survey (FNDDS)"
     ):
-        raise ValueError("Unknown USDA record type")
+        # Branded product values cannot be presented as universal nutrition
+        # for a generic food unless the exact brand/label is also preserved.
+        raise ValueError("Unqualified branded or unknown USDA record type")
     for field in ("source_archive_version", "reviewed_by", "reviewed_at",
                   "source_food_description", "source_portion_basis"):
         value = record.get(field)
@@ -88,11 +90,29 @@ def validate_reviewed_record(record, by_id):
     # the candidate before approval, not merely its food name.
     if record.get("source_portion_basis") != "100g_edible_portion":
         raise ValueError("Nutrition must be per 100g edible portion")
+    # Explicitly store the nutrient IDs and original numbers copied from
+    # the source record. Catch transcription/normalization errors before a
+    # reviewed record can be displayed to the user.
+    source_nutrient_ids = record.get("source_nutrient_ids")
+    if not isinstance(source_nutrient_ids, dict) or (
+        source_nutrient_ids.get("kcal_100") not in (1008, 2047, 2048)
+        or source_nutrient_ids.get("protein_100") != 1003
+        or source_nutrient_ids.get("fat_100") != 1004
+        or source_nutrient_ids.get("carbs_100") != 1005
+    ):
+        raise ValueError("Missing USDA nutrient identifiers")
+    source_values = record.get("source_nutrients_100g")
+    if not isinstance(source_values, dict):
+        raise ValueError("Original official nutrient values required")
     values = {}
     for key in NUTRIENTS:
-        n = record.get(key)
-        if type(n) not in (int, float) or not math.isfinite(n):
-            raise ValueError("Missing or non-finite nutrition: " + key)
+        n, original = record.get(key), source_values.get(key)
+        if any(type(v) not in (int, float) for v in (n, original)):
+            raise ValueError("Missing source or normalized nutrition: " + key)
+        if not math.isfinite(n) or not math.isfinite(original):
+            raise ValueError("Non-finite nutrition: " + key)
+        if abs(n - original) > .011:
+            raise ValueError("Normalized nutrition differs from cited source")
         values[key] = float(n)
     if not (0 < values["kcal_100"] <= 900):
         raise ValueError("Energy outside allowed bounds")
