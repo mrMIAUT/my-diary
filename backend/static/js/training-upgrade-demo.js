@@ -19,6 +19,7 @@
     completed:new Set(),
     techniqueOpen:new Set(),
     classicDone:new Map(),
+    classicExtra:new Map(),
     timed:{
       exerciseIndex:null,
       phase:'idle',
@@ -173,8 +174,15 @@
       btn.addEventListener('click',()=>openTimedExercise(Number(btn.dataset.startTimed)));
     });
 
-    $$('[data-classic-check]',root).forEach(btn=>{
+    $('[data-classic-check]',root).forEach(btn=>{
       btn.addEventListener('click',()=>toggleClassicSet(Number(btn.dataset.exercise),Number(btn.dataset.classicCheck)));
+    });
+    $('[data-add-classic]',root).forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const i=Number(btn.dataset.addClassic);
+        state.classicExtra.set(i,(state.classicExtra.get(i)||0)+1);
+        renderClientWorkout();
+      });
     });
   }
 
@@ -207,7 +215,6 @@
       <div class="main-live-body">
         <div class="main-body-actions">
           <button type="button" class="main-technique-button" data-technique-toggle="${i}">▶ ${techniqueOpen?'Сховати техніку':'Техніка'}</button>
-          <button type="button" class="main-history-button">Історія та графік</button>
         </div>
         <div class="technique-preview main-technique-preview${techniqueOpen?' open':''}">
           <div class="technique-thumb">▶</div>
@@ -231,12 +238,13 @@
 
   function classicRowsHTML(x,i){
     const doneSets=state.classicDone.get(i)||new Set();
+    const total=x.sets+(state.classicExtra.get(i)||0);
     return `
       <div class="main-set-head">
         <span>Підхід</span><span>Вага</span><span>Повтори</span><span>RIR</span><span></span>
       </div>
       <div class="main-set-list">
-        ${Array.from({length:x.sets},(_,idx)=>{
+        ${Array.from({length:total},(_,idx)=>{
           const n=idx+1,done=doneSets.has(n);
           return `
             <div class="main-set-row${done?' done':''}">
@@ -248,7 +256,7 @@
             </div>`;
         }).join('')}
       </div>
-      <button type="button" class="main-add-set">＋ Додати підхід</button>`;
+      <button type="button" class="main-add-set" data-add-classic="${i}">＋ Додати підхід</button>`;
   }
 
   function toggleClassicSet(exerciseIndex,setNumber){
@@ -257,6 +265,7 @@
     let set=state.classicDone.get(exerciseIndex);
     if(!set){set=new Set();state.classicDone.set(exerciseIndex,set);}
     const wasDone=set.has(setNumber);
+    const total=x.sets+(state.classicExtra.get(exerciseIndex)||0);
     if(wasDone){
       set.delete(setNumber);
       state.completed.delete(exerciseIndex);
@@ -264,7 +273,7 @@
     }else{
       set.add(setNumber);
       pulse();
-      if(set.size>=x.sets){
+      if(set.size>=total){
         state.completed.add(exerciseIndex);
         stopRestTimer();
       }else{
