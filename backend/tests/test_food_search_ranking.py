@@ -9,7 +9,7 @@ FUNCTIONS = {
     "normalize_food_query", "usda_food_query", "food_search_variants",
     "_food_match_words", "_food_match_word", "_food_match_coverage",
     "_food_match_quality", "_food_local_tier", "_food_rank",
-    "_food_preparation_rank", "_food_broad_relation_rank",
+    "_food_preparation_rank", "_food_broad_relation_rank", "_food_title_language_rank",
     "_food_contains_cue",
     "_food_search_related_terms", "_food_full_title_matches",
     "_food_expand_specific_candidates", "_food_native_local_match_count",
@@ -630,6 +630,45 @@ class FoodSearchRanking(unittest.TestCase):
             food("Chicken skin","Foreign",False),
         ])
         self.assertEqual(ranked[0]["name"],"Chicken skin")
+
+    def test_language_preference_detection_has_safe_unknown_group(self):
+        examples = (
+            ("Куряче філе",0),
+            ("Картопля з грибами",0),
+            ("Молоко с витамином",2),
+            ("Куриное филе",2),
+            ("Курица",2),
+            ("Молоко",1),
+            ("Chicken breast",3),
+            ("Milk",3),
+        )
+        for name,expected in examples:
+            with self.subTest(name=name):
+                self.assertEqual(R["_food_title_language_rank"]({"name":name}),expected)
+
+    def test_language_tie_breaker_ukrainian_russian_english(self):
+        candidates=[
+            food("Milk with vitamin D3","Same",True),
+            food("Молоко с витамином D3","Same",True),
+            food("Молоко з вітаміном D3","Same",True),
+        ]
+        ranked=self.rank("Молоко",candidates)
+        self.assertEqual([item["name"] for item in ranked],[
+            "Молоко з вітаміном D3",
+            "Молоко с витамином D3",
+            "Milk with vitamin D3",
+        ])
+
+    def test_relevance_and_preparation_beat_language_preference(self):
+        # English plain food must still beat a Ukrainian multi-ingredient dish.
+        candidates=[
+            food("Молоко з шоколадом","Local",True),
+            food("Milk","Local",True),
+        ]
+        ranked=self.rank("Молоко",candidates)
+        self.assertEqual(ranked[0]["name"],"Milk")
+        # Explicit English names still remain accessible.
+        self.assertEqual(self.rank("Milk",candidates)[0]["name"],"Milk")
 
     def test_stable_across_repeated_calls(self):
         once = [x["name"] for x in self.rank("Говядина")]
