@@ -18022,3 +18022,59 @@ body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete{
   box-shadow:0 2px 6px rgba(32,107,64,.035)!important;
 }
 
+/* v248 — completed workout headers remain neutral; only checks/inner sets green.
+   A superset earns its own completion check when every exercise is finished. */
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete:not(.workout-live-exercise-inner){
+  border-color:#dfe7f1!important;
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete>.workout-live-toggle,
+body.eplan-redesign.client-ui .workout-live-exercise.is-exercise-complete>.workout-live-toggle.open,
+body.eplan-redesign.client-ui .workout-live-superset .workout-live-exercise.is-exercise-complete>.workout-live-toggle{
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset-status{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+body.eplan-redesign.client-ui .workout-live-superset-status .exercise-done-badge.compact{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:#e6f6ec!important;
+  color:#278e53!important;
+  font-size:18px!important;
+  font-weight:900!important;
+}
+body.eplan-redesign.client-ui .workout-live-superset-status .workout-live-superset-arrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  flex:0 0 16px;
+}
+/* iOS: match text/caret line metrics and avoid padding-induced vertical shift.
+   Keep the input's datalist, inline technique autofill and picker behavior. */
+body.eplan-redesign.trainer-ui #supersetModal #ssex{
+  display:block!important;
+  box-sizing:border-box!important;
+  height:48px!important;
+  min-height:48px!important;
+  max-height:48px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  font-size:16px!important;
+  line-height:22px!important;
+  text-align:left!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+}
+
