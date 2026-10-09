@@ -154,6 +154,29 @@
  .foodDiaryMealMacro b{font-size:12px}
  .foodDiaryMealMacros .foodDiaryMealMacro{padding:0 4px}
 }
+
+/* ЄПЛАН diary v5: quiet, compact nutrient notation, with readable units. */
+.foodDiaryDaySummary .foodDiaryDailyMacros{gap:1px}
+.foodDiaryDaySummary .foodDiaryMacroItem{gap:3px;padding:0 2px}
+.foodDiaryDaySummary .foodDiaryMacroItem+.foodDiaryMacroItem{border-left:0}
+.foodDiaryDaySummary .foodDiaryMacroLabel{font-size:11px;line-height:1.15;letter-spacing:.035em;font-weight:650;color:#8292a9}
+.foodDiaryDaySummary .foodDiaryMacroValue{gap:2px;line-height:1.2}
+.foodDiaryDaySummary .foodDiaryMacroValue b{font-size:16px;letter-spacing:-.015em}
+.foodDiaryDaySummary .foodDiaryMacroValue em{font-size:10px;color:#8c9aad}
+.foodDiaryMealMacros{display:flex;align-items:center;justify-content:flex-start;gap:17px;margin-top:7px;padding-top:8px}
+.foodDiaryMealMacros .foodDiaryMealMacro{display:inline-flex;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:5px;width:auto;padding:0;border:0;background:transparent}
+.foodDiaryMealMacros .foodDiaryMealMacro+.foodDiaryMealMacro{border-left:0}
+.foodDiaryMealMacro small{font-size:11px;font-weight:650;color:#8797ac;line-height:1.1}
+.foodDiaryMealMacro b{font-size:13px;font-weight:720;letter-spacing:-.01em;color:#283b57;line-height:1.2}
+.foodDiaryMealMacro em{margin-left:2px;font-size:10px;color:#9aa6b5}
+.foodDiaryMealTitle{gap:0}
+@media(max-width:390px){
+ .foodDiaryDaySummary .foodDiaryMacroItem{padding:0 1px}
+ .foodDiaryDaySummary .foodDiaryMacroValue b{font-size:15px}
+ .foodDiaryMealMacros{gap:13px}
+ .foodDiaryMealMacros .foodDiaryMealMacro{gap:4px;padding:0}
+ .foodDiaryMealMacro b{font-size:12px}
+}
 </style></head><body><main class="wrap"><div class="brand">Є ПЛАН 1.2</div><section class="card"><span class="badge">ПРОТОТИП</span><h1>Калькулятор калорій і БЖВ</h1><p>Розрахуємо стартовий орієнтир. Дані цього прототипу не зберігаються.</p><div class="grid">
 <label>Стать<select id="sex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>
 <label>Вік<input id="age" type="number" inputmode="numeric" placeholder="років"></label>
@@ -191,9 +214,9 @@
 <div class="foodDiaryTotals">
   <div class="foodDiaryDailyKcal"><b id="diaryKcal">0</b><span>ккал</span></div>
   <div class="foodDiaryDailyMacros">
-   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Білки</small><strong class="foodDiaryMacroValue"><b id="diaryProtein">0</b><em>г</em></strong></div>
-   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Жири</small><strong class="foodDiaryMacroValue"><b id="diaryFat">0</b><em>г</em></strong></div>
-   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Вуглеводи</small><strong class="foodDiaryMacroValue"><b id="diaryCarbs">0</b><em>г</em></strong></div>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel" title="Білки" aria-label="Білки">Б</small><strong class="foodDiaryMacroValue"><b id="diaryProtein">0</b><em>г</em></strong></div>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel" title="Жири" aria-label="Жири">Ж</small><strong class="foodDiaryMacroValue"><b id="diaryFat">0</b><em>г</em></strong></div>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel" title="Вуглеводи" aria-label="Вуглеводи">В</small><strong class="foodDiaryMacroValue"><b id="diaryCarbs">0</b><em>г</em></strong></div>
   </div>
 </div></section>
 <div id="foodDiaryEntries" class="foodDiaryEntries"></div>
@@ -214,4 +237,4 @@
 <button id="adaptBtn" type="button">Переглянути ціль</button>
 <div style="display:flex;gap:8px;margin-top:10px"><button id="changeGoalBtn" type="button" style="margin:0;background:#eef4ff;color:#245cae">Змінити ціль</button><button id="stopGoalBtn" type="button" style="margin:0;background:#fff;color:#566477;border:1px solid #dce3ec">Зупинити ціль</button></div>
 <div class="result" id="goalActionResult"></div><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=45" defer></script></body></html>
+</main><script src="/static/calculator-prototype.js?v=46" defer></script></body></html>
