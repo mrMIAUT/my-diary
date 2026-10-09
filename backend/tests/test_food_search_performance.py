@@ -121,6 +121,25 @@ class FoodSearchPerformance(unittest.TestCase):
         first["items"][0]["name"]="edited"
         self.assertEqual(candidates[0][0]["name"],"Generic A")
 
+    def test_local_preview_uses_only_reference_catalogue(self):
+        ns=load_helpers(extra={"prototype_food_preview"})
+        ns.update({
+            "reference_food_items":lambda: [
+                {"name":"Рис","source":"reference"},
+                {"name":"Молоко","source":"reference"},
+            ],
+            "normalize_food_query":lambda q:q.casefold(),
+            "_food_match_words":lambda q:q.split(),
+            "_food_match_quality":lambda q,item:(
+                (0,) if q in item["name"].casefold() else (4,)
+            ),
+            "_food_rank":lambda q,items:items,
+            "_food_search_type":lambda item:"generic",
+        })
+        response=ns["prototype_food_preview"](q="Рис",limit=8)
+        self.assertTrue(response["preliminary"])
+        self.assertEqual([item["name"] for item in response["items"]],["Рис"])
+
     def test_cache_hit_skips_all_external_sources_even_for_page_two(self):
         ns=load_helpers(extra={"prototype_food_search"})
         candidates=(
