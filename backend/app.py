@@ -2149,29 +2149,15 @@ def _food_preparation_rank(item:dict):
     return 0
 
 def _food_broad_relation_rank(query:str,item:dict):
-    """Demote secondary forms only for broad, single-ingredient searches.
-
-    Explicit requests for a skin, substitute, or other speciality retain the
-    original relevance ranking. This applies before preparation/locality
-    ranking without replacing the established relevance sort.
-    """
-    if len(_food_match_words(query)) != 1:
+    """A meat query can match animal products, but meat is preferred to eggs."""
+    if normalize_food_query(query) not in FOOD_BROAD_MEAT_TERMS:
         return 0
     name_words=_food_match_words(item.get("name") or "")
     cat=" ".join(str(x).lower() for x in (item.get("categories_tags") or ()))
-    # A replacement product is not the same as the named ingredient.
-    if _food_contains_cue(name_words,("meatless","substitute","замінник","імітац")):
-        return 2
-    if normalize_food_query(query) not in FOOD_BROAD_MEAT_TERMS:
-        return 0
-    if _food_contains_cue(name_words,("skin","шкір","feet","foot","лап",
-                                      "tail","хвіст","back","спин")):
-        return 2
     return int(
         _food_contains_cue(name_words,FOOD_NON_MEAT_ANIMAL_STEMS)
         or "en:eggs" in cat or "en:egg-" in cat
     )
-
 def _food_named_dish_conflicts(query:str,item:dict):
     """Count alternate named dishes not requested, without filtering results."""
     query_words=_food_match_words(query)
