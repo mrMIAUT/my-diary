@@ -85,13 +85,14 @@ window.timedExerciseTimerState=window.timedExerciseTimerState||null;
 function closeTimedExerciseTimer(force){
   force=!!force;
   var s=window.timedExerciseTimerState;
-  if(s&&s.raf)cancelAnimationFrame(s.raf);
   if(!force&&s&&['work','rest'].includes(s.phase)&&s.remainingMs>0){
-    if(!confirm('Закрити таймер цієї вправи? Поточний підхід не буде збережено.'))return;
+    if(!confirm('Закрити таймер цієї вправи? Поточний підхід не буде збережено.'))return false;
   }
+  if(s&&s.raf)cancelAnimationFrame(s.raf);
   window.timedExerciseTimerState=null;
   var modal=document.getElementById('timedExerciseWorkoutModal');
   if(modal)modal.remove();
+  return true;
 }
 
 function openTimedExerciseTimer(cid,pid,repeat){
@@ -141,7 +142,9 @@ function openTimedExerciseTimer(cid,pid,repeat){
 
   document.body.insertAdjacentHTML('beforeend',html);
   var modal=document.getElementById('timedExerciseWorkoutModal');
-  if(modal)modal.addEventListener('click',function(e){if(e.target===modal)closeTimedExerciseTimer()});
+  if(modal)modal.addEventListener('click',function(e){
+    if(e.target===modal)e.preventDefault();
+  });
   renderTimedExerciseTimer();
 }
 
@@ -257,7 +260,7 @@ async function finishTimedExerciseTimer(){
     // Start the common superset rest immediately after the final exercise of a
     // round. Doing this before the UI refresh avoids losing the automatic timer.
     if(singleSet&&isLast&&hasNextRound&&sharedRest>0){
-      await startRestTimer(sharedRest,null,false);
+      startAutomaticRestTimer(sharedRest,false);
     }
 
     s.phase='done';
