@@ -4,7 +4,7 @@ const fs=require("node:fs"),vm=require("node:vm"),assert=require("node:assert/st
 const js=fs.readFileSync("backend/static/calculator-prototype.js","utf8");
 const html=fs.readFileSync("backend/static/calculator-prototype.html","utf8");
 const start=js.indexOf("function localDayKey(){");
-const stop=js.indexOf("\n$('foodCalendarToggle').addEventListener(",start);
+const stop=js.indexOf("\n$('foodWeekPrev').addEventListener(",start);
 assert.ok(start>=0&&stop>start,"Diary code located");
 assert.ok(html.includes('id="foodDiaryNotice"'),"Undo notice present");
 assert.ok(html.includes('scroll-margin-top:calc(78px + env(safe-area-inset-top,0px))'),
