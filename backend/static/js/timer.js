@@ -88,11 +88,9 @@ async function ensureTimerNotifications(){
  try{return (await Notification.requestPermission())==='granted'}catch(e){return false}
 }
 
-async function startRestTimer(seconds,sourceBtn=null,tracking=null){
+function startRestTimerCore(seconds,sourceBtn=null,tracking=null){
  document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));
  if(sourceBtn)sourceBtn.classList.add('selected');
- await unlockTimerSound();
- await ensureTimerNotifications();
  clearRestTimerPaused();
  let end=Date.now()+seconds*1000;localStorage.setItem(REST_TIMER_KEY,String(end));
  if(tracking===false){
@@ -101,6 +99,19 @@ async function startRestTimer(seconds,sourceBtn=null,tracking=null){
  }else if(tracking)beginTrackedRest(tracking,end);else updateTrackedRestEnd(end);
  $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
+ return end;
+}
+
+async function startRestTimer(seconds,sourceBtn=null,tracking=null){
+ await unlockTimerSound();
+ await ensureTimerNotifications();
+ return startRestTimerCore(seconds,sourceBtn,tracking);
+}
+
+function startAutomaticRestTimer(seconds,tracking=false){
+ // Auto-started rests happen after an exercise timer finishes, outside a direct user gesture.
+ // Do not wait for AudioContext/notification permission prompts here: on iOS PWA those can stall.
+ return startRestTimerCore(seconds,null,tracking);
 }
 
 function addRestTimer(seconds){
