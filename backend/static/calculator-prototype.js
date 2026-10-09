@@ -487,6 +487,7 @@ function updateFoodPer100(){
  const item=activeFoodProfile||selectedFood;if(!item)return;
  const el=$('foodPer100');if(el)el.textContent='На 100 г: '+foodFmt(item.kcal_100)+' ккал · Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100);
 }
+let foodPreferredMeal='Сніданок';
 function selectFood(index){
  const item=foodItems[index];if(!item)return;
  selectedFood=item;activeFoodProfile=item;foodPrepMeta=detectPrepMeta(item);currentPrepValid=true;
@@ -500,6 +501,8 @@ function selectFood(index){
   +'<div class="foodTotals"><span><b id="foodKcal">0</b>ккал</span><span><b id="foodProtein">0</b>білки, г</span><span><b id="foodFat">0</b>жири, г</span><span><b id="foodCarbs">0</b>вуглеводи, г</span></div>'
   +'<div class="foodAddRow"><select id="foodMeal"><option value="Сніданок">Сніданок</option><option value="Обід">Обід</option><option value="Вечеря">Вечеря</option><option value="Перекус">Перекус</option></select><button type="button" id="foodAddBtn">Додати в щоденник</button></div><div class="foodAddDateNotice" id="foodEntryTargetDate">Додаємо за '+diaryDateLabel(diarySelectedDate)+'</div><div class="foodAddStatus" id="foodAddStatus"></div>';
  portion.classList.add('show');
+ $('foodMeal').value=FOOD_MEALS.includes(foodPreferredMeal)?foodPreferredMeal:'Сніданок';
+ $('foodMeal').addEventListener('change',()=>{foodPreferredMeal=$('foodMeal').value});
  $('foodGrams').addEventListener('input',updateFoodPortion);
  $('foodAddBtn').addEventListener('click',addFoodToDiary);
  if(foodPrepMeta){
@@ -706,8 +709,8 @@ function diaryEntryHtml(x){
    brand+
    '<div class="foodDiaryMeta">'+foodFmt(x.grams)+' г'+
    (x.prep?' · '+foodEsc(x.prep):'')+' · '+foodFmt(x.kcal)+' ккал</div></div>'+
-  '<div class="foodDiaryActions"><button type="button" data-diary-edit="'+id+
-  '" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">Редагувати</button>'+
+  '<div class="foodDiaryActions"><button type="button" class="foodDiaryEditBtn" data-diary-edit="'+id+
+  '" title="Редагувати" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">✎</button>'+
   '<button type="button" class="foodDiaryRemove" data-diary-remove="'+id+
   '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div>'+edit+'</div>';
 }
@@ -725,15 +728,34 @@ function diaryNutritionTotals(items){
 function diaryMealGroupHtml(meal,items){
  const totals=diaryNutritionTotals(items);
  const label=items.length===1?'1 продукт':items.length+' продуктів';
- return '<section class="foodDiaryMeal" data-diary-meal="'+foodEsc(meal)+'">'+
-  '<div class="foodDiaryMealHead"><div><strong>'+foodEsc(meal)+'</strong>'+
-   '<span class="foodDiaryMealCount">'+label+'</span></div>'+
-   '<strong class="foodDiaryMealKcal">'+foodFmt(totals.kcal)+' <small>ккал</small></strong></div>'+
-  '<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
+ const supportedMeal=FOOD_MEALS.includes(meal);
+ const addButton=supportedMeal?'<button type="button" class="foodDiaryMealAdd" data-diary-meal-add="'+foodEsc(meal)+
+  '" aria-label="Додати продукт: '+foodEsc(meal)+'" title="Додати продукт">+</button>':'';
+ return '<section class="foodDiaryMeal'+(items.length?'':' is-empty')+'" data-diary-meal="'+foodEsc(meal)+'">'+
+  '<div class="foodDiaryMealHead"><div class="foodDiaryMealTitle"><strong>'+foodEsc(meal)+'</strong>'+
+   (items.length?'<span class="foodDiaryMealCount">'+label+'</span>':'')+'</div>'+
+   '<div class="foodDiaryMealRight"><strong class="foodDiaryMealKcal">'+
+   (items.length?foodFmt(totals.kcal)+' <small>ккал</small>':'—')+
+   '</strong>'+addButton+'</div></div>'+
+  (items.length?'<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
    '<span>Б <b>'+foodFmt(totals.protein)+'</b></span>'+
    '<span>Ж <b>'+foodFmt(totals.fat)+'</b></span>'+
    '<span>В <b>'+foodFmt(totals.carbs)+'</b></span></div>'+
-  '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div></section>';
+   '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div>':'')+'</section>';
+}
+function selectMealForFoodSearch(meal){
+ if(!FOOD_MEALS.includes(meal))return false;
+ foodPreferredMeal=meal;
+ const mealSelect=$('foodMeal');
+ if(mealSelect)mealSelect.value=meal;
+ const query=$('foodQuery');
+ if(query){
+  if(typeof query.scrollIntoView==='function'){
+   query.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  if(typeof query.focus==='function')query.focus({preventScroll:true});
+ }
+ return true;
 }
 function renderDiary(){
  const all=loadDiary(),day=diarySelectedDate,items=all.filter(x=>x.date===day);
@@ -746,17 +768,20 @@ function renderDiary(){
  renderFoodCalendar(all);
  const box=$('foodDiaryEntries');
  if(!items.length){
-  box.innerHTML='<div class="foodDiaryEmpty">За цей день ще немає записів. Обери продукт вище та додай його на вибрану дату.</div>';
- }else{
+  // All four meals still render with a quick add action on an empty day.
+ }
+ {
+  // Empty meals stay available as compact one-tap add rows.
   const sections=FOOD_MEALS.map(meal=>{
    const group=items.filter(item=>item.meal===meal);
-   return group.length?diaryMealGroupHtml(meal,group):'';
+   return diaryMealGroupHtml(meal,group);
   });
   // Never hide entries created by an older diary version with a custom meal.
   const other=items.filter(item=>!FOOD_MEALS.includes(item.meal));
   if(other.length)sections.push(diaryMealGroupHtml('Інше',other));
   box.innerHTML=sections.join('');
  }
+ box.querySelectorAll('[data-diary-meal-add]').forEach(btn=>btn.onclick=()=>selectMealForFoodSearch(btn.dataset.diaryMealAdd));
  box.querySelectorAll('[data-diary-remove]').forEach(btn=>btn.onclick=()=>removeDiaryEntry(btn.dataset.diaryRemove));
  box.querySelectorAll('[data-diary-edit]').forEach(btn=>btn.onclick=()=>startDiaryEdit(btn.dataset.diaryEdit));
  box.querySelectorAll('[data-diary-save]').forEach(btn=>btn.onclick=()=>saveDiaryEdit(btn.dataset.diarySave));
