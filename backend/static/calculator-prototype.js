@@ -811,26 +811,24 @@ function diaryNutritionTotals(items){
 }
 function diaryMealGroupHtml(meal,items){
  const totals=diaryNutritionTotals(items);
- const label=items.length===1?'1 продукт':items.length+' продуктів';
  const supportedMeal=FOOD_MEALS.includes(meal);
  const folded=items.length>0&&diaryCollapsedMeals.has(diarySelectedDate+'|'+meal);
  const addButton=supportedMeal?'<button type="button" class="foodDiaryMealAdd" data-diary-meal-add="'+foodEsc(meal)+
   '" aria-label="Додати продукт: '+foodEsc(meal)+'" title="Додати продукт">+</button>':'';
- const title='<span class="foodDiaryMealTitle"><strong>'+foodEsc(meal)+'</strong>'+
-   (items.length?'<span class="foodDiaryMealCount">'+label+'</span>':'')+'</span>';
+ const title='<span class="foodDiaryMealTitle"><strong>'+foodEsc(meal)+'</strong></span>';
  const calories=items.length?foodFmt(totals.kcal)+' <small>ккал</small>':'';
  const heading=items.length?'<button type="button" class="foodDiaryMealToggle" data-diary-meal-toggle="'+foodEsc(meal)+
   '" aria-expanded="'+(folded?'false':'true')+'" aria-label="'+(folded?'Розгорнути':'Згорнути')+' '+foodEsc(meal)+'">'+
   title+'<span class="foodDiaryMealToggleRight"><strong class="foodDiaryMealKcal">'+calories+
   '</strong><span class="foodDiaryMealChevron" aria-hidden="true">'+(folded?'⌄':'⌃')+'</span></span></button>':
   '<span class="foodDiaryMealEmptyTitle">'+title+'</span>';
- const macroCell=(label,value)=>'<span class="foodDiaryMealMacro"><small>'+label+'</small><b>'+foodFmt(value)+' <em>г</em></b></span>';
+ const macroCell=(initial,label,value)=>'<span class="foodDiaryMealMacro" aria-label="'+label+': '+foodFmt(value)+' грамів"><small title="'+label+'">'+initial+'</small><b>'+foodFmt(value)+'<em>г</em></b></span>';
  return '<section class="foodDiaryMeal'+(items.length?'':' is-empty')+(folded?' is-collapsed':'')+'" data-diary-meal="'+foodEsc(meal)+'">'+
   '<div class="foodDiaryMealHead">'+heading+addButton+'</div>'+
   (items.length&&!folded?'<div class="foodDiaryMealBody" data-diary-meal-body="'+foodEsc(meal)+'">'+
    '<div class="foodDiaryMealMacros" aria-label="БЖВ: '+foodEsc(meal)+'">'+
-    macroCell('Білки',totals.protein)+macroCell('Жири',totals.fat)+
-    macroCell('Вуглеводи',totals.carbs)+'</div>'+
+    macroCell('Б','Білки',totals.protein)+macroCell('Ж','Жири',totals.fat)+
+    macroCell('В','Вуглеводи',totals.carbs)+'</div>'+
    '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div></div>':'')+
   '</section>';
 }
