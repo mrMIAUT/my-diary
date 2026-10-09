@@ -662,3 +662,404 @@ button{cursor:pointer}
   .timer-inner strong{font-size:46px}
   .version{font-size:7.5px}
 }
+
+
+/* Training upgrade prototype: main-app workout flow */
+.client-workout-list{
+  display:grid;
+  gap:10px;
+}
+.prototype-test-toggle{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:0 0 12px;
+  padding:11px 12px;
+  border:1px solid #dfe7f2;
+  border-radius:14px;
+  background:#fff;
+}
+.prototype-test-toggle input{
+  width:18px;
+  height:18px;
+  margin:1px 0 0;
+  accent-color:var(--blue);
+}
+.prototype-test-toggle span{
+  display:grid;
+  gap:2px;
+}
+.prototype-test-toggle strong{
+  color:#435671;
+  font-size:9.5px;
+}
+.prototype-test-toggle small{
+  color:#909cac;
+  font-size:8.5px;
+}
+.client-workout-exercise{
+  overflow:hidden;
+  border:1px solid #dfe7f2;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:var(--shadow);
+}
+.client-workout-exercise.done{
+  border-color:#cfe8da;
+  background:linear-gradient(180deg,#fff 0%,#f7fcf9 100%);
+}
+.client-workout-exercise-head{
+  width:100%;
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto 18px;
+  gap:10px;
+  align-items:center;
+  min-height:78px;
+  padding:12px 13px;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+}
+.client-workout-exercise-index{
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  background:#eef4fc;
+  color:#47607f;
+  font-size:11px;
+  font-weight:950;
+}
+.client-workout-exercise.done .client-workout-exercise-index{
+  background:var(--green-soft);
+  color:var(--green);
+}
+.client-workout-exercise-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.client-workout-exercise-copy strong{
+  overflow:hidden;
+  color:#132241;
+  font-size:12px;
+  font-weight:900;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.client-workout-exercise-copy small{
+  color:#8794a6;
+  font-size:8.7px;
+  font-weight:750;
+}
+.client-workout-exercise-status{
+  padding:5px 7px;
+  border-radius:999px;
+  background:#edf4ff;
+  color:var(--blue);
+  font-size:7.8px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.client-workout-exercise.done .client-workout-exercise-status{
+  background:var(--green-soft);
+  color:var(--green);
+}
+.client-workout-exercise-arrow{
+  color:#95a2b3;
+  font-size:16px;
+  font-weight:900;
+}
+.client-workout-exercise.open .client-workout-exercise-arrow{
+  transform:rotate(90deg);
+}
+.client-workout-exercise-body{
+  padding:0 13px 13px;
+  border-top:1px solid #edf1f6;
+}
+.client-exercise-plan{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:11px 0 10px;
+}
+.client-exercise-plan span{
+  padding:6px 8px;
+  border-radius:9px;
+  background:#f1f5fa;
+  color:#52647d;
+  font-size:8.6px;
+  font-weight:850;
+}
+.technique-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 0;
+  border-top:1px solid #edf1f6;
+}
+.technique-row>div{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.technique-row strong{
+  color:#263a58;
+  font-size:10px;
+}
+.technique-row small{
+  color:#93a0b1;
+  font-size:8.5px;
+}
+.technique-toggle{
+  flex:0 0 auto;
+  min-height:34px;
+  padding:7px 10px;
+  border:1px solid #c9dcf8;
+  border-radius:10px;
+  background:#edf5ff;
+  color:#1677ff;
+  font-size:9px;
+  font-weight:900;
+}
+.technique-preview{
+  display:none;
+  grid-template-columns:76px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  margin:0 0 10px;
+  padding:9px;
+  border-radius:12px;
+  background:#f5f8fc;
+}
+.technique-preview.open{display:grid}
+.technique-thumb{
+  position:relative;
+  display:grid;
+  place-items:center;
+  aspect-ratio:16/10;
+  border-radius:9px;
+  background:linear-gradient(135deg,#dce7f5,#edf3fa);
+  color:#1677ff;
+  font-size:22px;
+  font-weight:900;
+}
+.technique-preview strong{
+  display:block;
+  color:#314560;
+  font-size:9.5px;
+}
+.technique-preview small{
+  display:block;
+  margin-top:3px;
+  color:#93a0b1;
+  font-size:8.3px;
+  line-height:1.35;
+}
+.start-timed-exercise{
+  width:100%;
+  min-height:44px;
+  margin-top:2px;
+  border:1px solid #bfd8fc;
+  border-radius:12px;
+  background:#edf5ff;
+  color:#1677ff;
+  font-size:10.5px;
+  font-weight:900;
+}
+.classic-set-list{
+  display:grid;
+  gap:7px;
+  margin-top:2px;
+}
+.classic-set-row{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) 42px;
+  gap:8px;
+  align-items:center;
+  min-height:48px;
+  padding:6px 8px;
+  border:1px solid #e1e8f1;
+  border-radius:12px;
+  background:#fafbfd;
+}
+.classic-set-row.done{
+  border-color:#cae8d7;
+  background:#f1faf5;
+}
+.classic-set-number{
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border-radius:9px;
+  background:#edf3fa;
+  color:#516680;
+  font-size:10px;
+  font-weight:900;
+}
+.classic-set-row.done .classic-set-number{
+  background:#dff4e8;
+  color:#168553;
+}
+.classic-set-target{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.classic-set-target strong{
+  color:#223753;
+  font-size:10px;
+}
+.classic-set-target small{
+  color:#8a97a9;
+  font-size:8.3px;
+}
+.classic-set-check{
+  width:38px;
+  height:38px;
+  padding:0;
+  border:1px solid #cdddf1;
+  border-radius:11px;
+  background:#edf4ff;
+  color:#1677ff;
+  font-size:16px;
+  font-weight:950;
+}
+.classic-set-row.done .classic-set-check{
+  border-color:#bfe3cf;
+  background:#dff4e8;
+  color:#168553;
+}
+
+.prototype-modal{
+  position:fixed;
+  inset:0;
+  z-index:20000;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0;
+  background:rgba(8,17,35,.56);
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+}
+.prototype-modal.hidden{display:none!important}
+.prototype-modal-card{
+  width:min(100%,560px);
+  max-height:92dvh;
+  overflow:auto;
+  padding:18px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius:26px 26px 0 0;
+  background:#fff;
+  box-shadow:0 -14px 40px rgba(10,23,56,.18);
+}
+.prototype-modal-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  gap:12px;
+  align-items:start;
+  margin-bottom:12px;
+}
+.prototype-modal-head h3{
+  margin:4px 0 0;
+  color:#0a1738;
+  font-size:20px;
+  line-height:1.15;
+}
+.modal-close{
+  width:44px;
+  height:44px;
+  padding:0;
+  border:1px solid #dbe5f0;
+  border-radius:13px;
+  background:#f3f7fc;
+  color:#183253;
+  font-size:18px;
+  font-weight:800;
+}
+.prototype-modal .timer-ring{
+  width:min(64vw,250px);
+  height:min(64vw,250px);
+}
+.prototype-modal .timer-inner strong{
+  font-size:46px;
+}
+
+.rest-timer-bar{
+  position:fixed;
+  left:50%;
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:21000;
+  width:min(calc(100% - 24px),520px);
+  transform:translateX(-50%);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px 12px;
+  align-items:center;
+  padding:12px 12px 10px;
+  border:1px solid #d8e3f0;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 14px 38px rgba(20,45,80,.18);
+}
+.rest-timer-bar.hidden{display:none!important}
+.rest-timer-copy{
+  display:grid;
+  grid-template-columns:auto auto;
+  gap:2px 8px;
+  align-items:baseline;
+}
+.rest-timer-copy span{
+  color:#1677ff;
+  font-size:8.5px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.rest-timer-copy strong{
+  color:#0a1738;
+  font-size:18px;
+}
+.rest-timer-copy small{
+  grid-column:1/-1;
+  color:#8e9aac;
+  font-size:8px;
+}
+.rest-timer-bar button{
+  min-height:36px;
+  padding:7px 10px;
+  border:1px solid #dce6f2;
+  border-radius:10px;
+  background:#f5f8fc;
+  color:#4d6079;
+  font-size:8.8px;
+  font-weight:900;
+}
+.rest-timer-progress{
+  grid-column:1/-1;
+  height:4px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#eaf0f7;
+}
+.rest-timer-progress i{
+  display:block;
+  width:0%;
+  height:100%;
+  border-radius:inherit;
+  background:#1677ff;
+}
+
+@media(min-width:700px){
+  .prototype-modal{
+    align-items:center;
+    padding:24px;
+  }
+  .prototype-modal-card{
+    border-radius:24px;
+  }
+}
