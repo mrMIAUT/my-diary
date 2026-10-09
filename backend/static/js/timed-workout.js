@@ -247,11 +247,24 @@ async function finishTimedExerciseTimer(){
       method:'POST',
       body:JSON.stringify({client_id:s.cid,program_id:s.pid,exercise:s.exercise,sets:s.results})
     });
+
+    var cid=s.cid,pid=s.pid,round=s.currentSet,singleSet=s.singleSet,
+        d=window.currentClientData||{},raw=(d.program||[]).find(function(v){return +v.id===+pid}),
+        isLast=singleSet&&raw?workoutSupersetIsLast(raw,d):!!s.isLastSupersetPeer,
+        sharedRest=singleSet&&raw?workoutSupersetRestSeconds(raw,d):Math.max(0,+s.sharedRest||0),
+        hasNextRound=round<Math.max(1,+s.sets||1);
+
+    // Start the common superset rest immediately after the final exercise of a
+    // round. Doing this before the UI refresh avoids losing the automatic timer.
+    if(singleSet&&isLast&&hasNextRound&&sharedRest>0){
+      await startRestTimer(sharedRest,null,false);
+    }
+
     s.phase='done';
     s.remainingMs=0;
     renderTimedExerciseTimer();
     try{if(navigator.vibrate)navigator.vibrate([100,70,100])}catch(e){}
-    var cid=s.cid,pid=s.pid,round=s.currentSet,singleSet=s.singleSet,isLast=s.isLastSupersetPeer,sharedRest=s.sharedRest;
+
     setTimeout(async function(){
       closeTimedExerciseTimer(true);
       var fresh=await loadClientData(cid);
@@ -259,8 +272,7 @@ async function finishTimedExerciseTimer(){
       await showClientTraining(cid);
       if(singleSet){
         if(isLast){
-          if(sharedRest>0)await startRestTimer(sharedRest,null,false);
-          if(round<s.sets)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
+          if(hasNextRound)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
         }else{
           setTimeout(function(){focusSupersetNextExercise(pid,round)},80);
         }

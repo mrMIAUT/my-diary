@@ -272,8 +272,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-review-timed-exercise", RESULTS)
         self.assertIn("path==='/timed-result-sets'&&m==='POST'", CORE)
         self.assertIn("timed_result_sets", CORE)
-        self.assertIn('/static/js/timed-workout.js?v=2', INDEX)
-        self.assertIn("'/static/js/timed-workout.js?v=2'", SW)
+        self.assertIn('/static/js/timed-workout.js?v=3', INDEX)
+        self.assertIn("'/static/js/timed-workout.js?v=3'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
     def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
@@ -355,6 +355,17 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("startRestTimer(sharedRest,null,false)", TIMED_WORKOUT)
         self.assertIn("без відпочинку до кінця кола", TIMED_WORKOUT)
 
+    def test_superset_group_collapses_together_and_timed_rest_starts_before_refresh(self):
+        self.assertIn("function toggleWorkoutSuperset", WORKOUT)
+        self.assertIn("workout-live-superset-toggle", WORKOUT)
+        self.assertIn("workout-live-superset-body hidden", WORKOUT)
+        self.assertIn("workout-live-grouped-exercise-head", WORKOUT)
+        self.assertIn("workout-live-grouped-body", WORKOUT)
+        self.assertIn("focusWorkoutExerciseCard(nextPid)", WORKOUT)
+        self.assertIn("if(singleSet&&isLast&&hasNextRound&&sharedRest>0)", TIMED_WORKOUT)
+        finish_block = TIMED_WORKOUT.split("async function finishTimedExerciseTimer()",1)[1].split("function renderTimedExerciseTimer",1)[0]
+        self.assertLess(finish_block.index("startRestTimer(sharedRest,null,false)"), finish_block.index("loadClientData(cid)"))
+
     def test_exercise_submit_actions_use_save_labels(self):
         self.assertIn(">Зберегти вправу</button>", PROGRAM)
         self.assertIn("save.textContent=show?'Зберегти суперсет':'Зберегти вправу'", PROGRAM)
@@ -382,7 +393,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("function supersetRestLabel", PROGRAM)
         self.assertIn("programExtraHTML(x,!isSuper)", PROGRAM)
         self.assertIn("redesignTrainingExerciseRow(y,xs.indexOf(y)+1,true,false)", TRAINING_REDESIGN)
-        self.assertIn("card(y,true,false)", WORKOUT)
+        self.assertIn("card(y,true,false,true)", WORKOUT)
 
     def test_alternative_technique_uses_clean_top_row(self):
         self.assertIn("alternative-chip-top", PROGRAM)
