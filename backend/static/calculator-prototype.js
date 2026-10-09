@@ -159,6 +159,22 @@ async function searchFoods(query,append=false){
   $('foodQuery').value=q;
   if(append||!foodItems.length)$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо продукти…';
   $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
+  let fullFinished=false;
+  if(!append&&!foodItems.length){
+   // Display the local reference instantly while the full OFF/USDA search
+   // continues. Ignore late preview responses after the full result arrives.
+   fetch('/api/prototype/foods/preview?q='+encodeURIComponent(q)+'&limit=8',
+         {headers:{'Accept':'application/json'}})
+    .then(r=>r.ok?r.json():null)
+    .then(data=>{
+     if(fullFinished||requestId!==foodRequestId||foodItems.length||selectedFood)return;
+     const preview=Array.isArray(data&&data.items)?data.items:[];
+     if(preview.length){
+      foodItems=preview;
+      renderFoodResults(foodItems,'Попередні довідкові результати. Шукаємо більше продуктів…');
+     }
+    }).catch(()=>{});
+  }
   try{
    const url='/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8&page='+foodPage;
    const response=await fetch(url,{headers:{'Accept':'application/json'}});
@@ -183,6 +199,7 @@ async function searchFoods(query,append=false){
    foodHasMore=false;
    renderFoodResults(foodItems,message);
   }finally{
+   fullFinished=true;
    if(requestId===foodRequestId){$('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false}
   }
 }
