@@ -1214,7 +1214,7 @@ class ResultIn(BaseModel):
 class SupersetIn(BaseModel):
     superset_group:str=Field(default="",max_length=64)
 class SetIn(BaseModel):
-    set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+    set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int|None=Field(default=None,ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
 class WorkoutAuxSetIn(BaseModel):
     kind:str=Field(max_length=16)
     parent_set_number:int|None=Field(default=None,ge=1,le=MAX_SET_COUNT)
@@ -1245,7 +1245,7 @@ class CompletedWorkoutSetIn(BaseModel):
     set_number:int=Field(ge=1,le=MAX_SET_COUNT)
     weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False)
     reps:int=Field(ge=1,le=MAX_REPS)
-    rir:int=Field(ge=0,le=MAX_RIR)
+    rir:int|None=Field(default=None,ge=0,le=MAX_RIR)
     rest_seconds:int|None=Field(default=None,ge=0,le=3600)
 class CompletedWorkoutAuxSetIn(BaseModel):
     program_id:int
@@ -1323,7 +1323,7 @@ class CommentIn(BaseModel):
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:date; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class HistoricalSetIn(BaseModel):
-    program_id:int; exercise:str=Field(max_length=255); set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int=Field(ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
+    program_id:int; exercise:str=Field(max_length=255); set_number:int=Field(ge=1,le=MAX_SET_COUNT); weight:float=Field(ge=0,le=MAX_WEIGHT_KG,allow_inf_nan=False); reps:int=Field(ge=1,le=MAX_REPS); rir:int|None=Field(default=None,ge=0,le=MAX_RIR); rest_seconds:int|None=Field(default=None,ge=0,le=3600)
 class HistoricalWorkoutIn(BaseModel):
     client_id:int; day:date; day_name:str=Field(max_length=128); sets:List[HistoricalSetIn]=Field(max_length=200)
 

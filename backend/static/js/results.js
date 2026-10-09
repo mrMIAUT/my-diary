@@ -610,7 +610,7 @@ function trainerDayResultsHTML(d,dayName){
        </button>
        <div id="${esc(bodyId)}" class="hidden" style="margin-top:10px">${cur.map(s=>{
         let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode);
-        return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${p.weight} кг × ${repeatResultText(p.reps,p.repeat_mode||mode)} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
+        return `<div style="padding:8px 0;border-top:1px solid var(--line)"><div>Підхід ${s.set_number}: <strong>${workoutRecordedSetText(s,mode)}</strong>${workoutRecordedMetaText(s)?' · '+workoutRecordedMetaText(s):''}</div>${p?`<div class="muted" style="margin-top:4px">Минулого ${workoutRecordedSetText(p,p.repeat_mode||mode)}${workoutRecordedMetaText(p)?' · '+workoutRecordedMetaText(p):''} · різниця: вага ${resultDelta((+s.weight)-(+p.weight))} кг · повтори ${resultDelta((+s.reps)-(+p.reps))}</div>`:'<div class="muted" style="margin-top:4px">Немає попереднього результату для порівняння.</div>'}</div>`;
        }).join('')}</div>
       </div>`;
     }).join('')}

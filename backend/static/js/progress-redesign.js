@@ -257,7 +257,7 @@ function progressWorkoutDetailHTML(d,sid){
      if(skippedSet.has(n))return '<div class="progress-workout-set-group"><div class="calendar-workout-set skipped"><span>Підхід '+esc(n)+'</span><strong>Пропущено</strong><em>не виконано</em></div></div>';
      let set=setMap.get(n);if(!set)return '';
      let drops=(x.aux||[]).filter(a=>a.kind==='drop'&&+a.parent_set_number===+set.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
-     return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.weight)+' кг × '+esc(repeatResultText(set.reps,set.repeat_mode))+'</strong><em>RIR '+esc(set.rir)+(+set.rest_seconds>0?' · ⏱ '+esc(formatSetRest(set.rest_seconds)):'')+'</em></div>'
+     return '<div class="progress-workout-set-group"><div class="calendar-workout-set"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(workoutRecordedSetText(set,set.repeat_mode))+'</strong><em>'+esc(workoutRecordedMetaText(set))+'</em></div>'
        +drops.map((a,i)=>'<div class="progress-workout-drop"><span>↳ Дроп '+(i+1)+'</span><strong>'+esc(a.weight)+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||set.repeat_mode))+'</strong></div>').join('')+'</div>';
    }).join('');
    let rowCount=numbers.length;
@@ -388,10 +388,10 @@ async function saveCompletedWorkoutEdit(sid,button=null){
      let reps=String(row.querySelector('[data-field="reps"]')?.value||'').trim();
      let rir=String(row.querySelector('[data-field="rir"]')?.value||'').trim();
      if(!weight&&!reps&&!rir)continue;
-     if(weight===''||reps===''||rir==='')return alert('Заповни вагу, повтори та RIR у кожному внесеному робочому підході.');
+     if(reps==='')return alert('Заповни кількість повторів у кожному внесеному робочому підході.');
      let setNumber=+row.dataset.setNumber,rest=String(row.dataset.restSeconds||'').trim();
      savedNumbers.add(setNumber);
-     sets.push({program_id:pid,exercise,set_number:setNumber,weight:+weight,reps:+reps,rir:+rir,rest_seconds:rest===''?null:+rest});
+     sets.push({program_id:pid,exercise,set_number:setNumber,weight:weight===''?0:+weight,reps:+reps,rir:rir===''?null:+rir,rest_seconds:rest===''?null:+rest});
    }
    for(const row of card.querySelectorAll('.completed-workout-edit-aux-row')){
      let kind=row.dataset.kind||'',parent=+row.dataset.parentSet||0;

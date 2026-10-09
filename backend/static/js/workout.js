@@ -1,6 +1,18 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
 
+// A missing RIR is not the same as RIR 0.
+function workoutRecordedRirText(set){
+ return set?.rir===undefined||set?.rir===null||set?.rir===''?'':'RIR '+set.rir;
+}
+function workoutRecordedMetaText(set){
+ return [workoutRecordedRirText(set),+set?.rest_seconds>0?'⏱ '+formatSetRest(set.rest_seconds):''].filter(Boolean).join(' · ');
+}
+function workoutRecordedSetText(set,mode){
+ let suffix=repeatModeSuffix(mode||set?.repeat_mode);
+ return +set?.weight>0?set.weight+' кг × '+set.reps+suffix:set.reps+' повт.'+suffix;
+}
+
 function workoutHistoryNameKey(value){
  return String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('uk-UA');
 }
@@ -48,10 +60,10 @@ function previousExerciseHTML(d,pid){
    <div class="muted">Останнє виконання · ${esc(latest)}${previous?` · порівняно з ${esc(previous)}`:''}</div>
    ${cur.map(s=>{
       let p=prev.find(z=>z.set_number===s.set_number&&normalizeRepeatMode(z.repeat_mode)===normalizeRepeatMode(s.repeat_mode));
-      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>`;
+      if(!p)return `<div style="margin-top:7px">Підхід ${s.set_number}: <strong>${workoutRecordedSetText(s,s.repeat_mode)}</strong>${workoutRecordedMetaText(s)?' · '+workoutRecordedMetaText(s):''}</div>`;
       return `<div style="margin-top:9px">
-        <div>Підхід ${s.set_number}: <strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode)}</strong> · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</div>
-        <div class="muted" style="margin-top:3px">Минулого: ${p.weight} кг × ${repeatResultText(p.reps,p.repeat_mode)} · RIR ${p.rir}${+p.rest_seconds>0?` · ⏱ ${formatSetRest(p.rest_seconds)}`:''}</div>
+        <div>Підхід ${s.set_number}: <strong>${workoutRecordedSetText(s,s.repeat_mode)}</strong>${workoutRecordedMetaText(s)?' · '+workoutRecordedMetaText(s):''}</div>
+        <div class="muted" style="margin-top:3px">Минулого: ${workoutRecordedSetText(p,p.repeat_mode)}${workoutRecordedMetaText(p)?' · '+workoutRecordedMetaText(p):''}</div>
         <div class="muted" style="margin-top:3px">Різниця: вага ${signedDelta((+s.weight)-(+p.weight))} кг · повтори ${signedDelta((+s.reps)-(+p.reps))}</div>
       </div>`;
    }).join('')}
@@ -101,7 +113,7 @@ function completedExerciseHTML(x,d,cid){
        if(skippedSet.has(n))return `<div class="workout-completed-set skipped"><span>Підхід ${n}</span><strong>Пропущено</strong><em>не виконано</em></div>`;
        let s=doneMap.get(n);if(!s)return '';
        let drops=workoutAuxSetsFor(d,x.id).filter(a=>a.kind==='drop'&&+a.parent_set_number===+s.set_number).sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
-       return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${s.weight} кг × ${repeatResultText(s.reps,s.repeat_mode||x.repeat_mode)}</strong><em>RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`;
+       return `<div class="workout-completed-set-group"><div class="workout-completed-set"><span>Підхід ${s.set_number}</span><strong>${workoutRecordedSetText(s,s.repeat_mode||x.repeat_mode)}</strong><em>${workoutRecordedMetaText(s)}</em></div>${drops.map((a,i)=>`<div class="workout-completed-drop"><span>↳ Дроп ${i+1}</span><strong>${a.weight} кг × ${repeatResultText(a.reps,x.repeat_mode)}</strong></div>`).join('')}</div>`;
      }).join('')}
    </div>
    <button class="workout-completed-edit" data-exercise="${esc(x.exercise)}" data-reps="${esc(x.reps)}" onclick="editCompletedExercise(${cid},${x.id},this.dataset.exercise,${Math.max(+x.sets||1,...done.map(s=>+s.set_number||0),...persistedSkipped)},this.dataset.reps,${x.target_rir})">Редагувати результати</button>
@@ -766,9 +778,10 @@ async function saveSets(cid,pid,exercise,count){
   if(skipped.has(n))continue;
   let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
   if(!w||!r||!i)continue;
-  if(!w.value&&!r.value&&!i.value)continue;
-  if(!w.value||!r.value||!i.value)return alert(`Заповни вагу, повтори та RIR у підході ${n}`);
-  raw.push({set_number:n,weight:+w.value,reps:+r.value,rir:+i.value});
+  let weight=w.value.trim(),reps=r.value.trim(),rir=i.value.trim();
+  if(!weight&&!reps&&!rir)continue;
+  if(!reps)return alert(`Заповни кількість повторів у підході ${n}`);
+  raw.push({set_number:n,weight:weight===''?0:+weight,reps:+reps,rir:rir===''?null:+rir});
  }
  if(!raw.length&&!skipped.size)return alert('Заповни хоча б один підхід або познач пропущений');
  // Finalize the currently running rest timer before reading the draft so the
@@ -792,7 +805,7 @@ async function saveSets(cid,pid,exercise,count){
  clearWorkoutDraft(sid,pid);
  let body=$('#exerciseBody'+pid);
  if(body){
-   let savedRows=[...sets.map(s=>({n:s.set_number,text:`${s.weight} кг × ${repeatResultText(s.reps,repeatMode)} · RIR ${s.rir}${+s.rest_seconds>0?` · ⏱ ${formatSetRest(s.rest_seconds)}`:''}`,skipped:false})),...skippedSets.map(n=>({n,text:'Пропущено',skipped:true}))].sort((a,b)=>a.n-b.n);
+   let savedRows=[...sets.map(s=>({n:s.set_number,text:`${workoutRecordedSetText(s,repeatMode)}${workoutRecordedMetaText(s)?' · '+workoutRecordedMetaText(s):''}`,skipped:false})),...skippedSets.map(n=>({n,text:'Пропущено',skipped:true}))].sort((a,b)=>a.n-b.n);
    body.innerHTML=`<div class="exercise" style="margin-top:12px"><strong>Виконано ✓</strong>${savedRows.map(row=>`<div class="muted${row.skipped?' workout-saved-skip':''}" style="margin-top:6px">Підхід ${row.n}: ${row.text}</div>`).join('')}<div style="margin-top:12px"><button class="dark" onclick="showClientTraining(${cid})">Редагувати</button></div></div>`;
    body.classList.add('hidden');
    let toggle=body.previousElementSibling;if(toggle)toggle.classList.remove('open');
