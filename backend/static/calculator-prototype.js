@@ -575,12 +575,16 @@ function diaryWeekLabel(monday){
  const start=diaryDateFromKey(monday);
  if(!start)return '';
  const end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6,12);
- const monthOptions={month:'long'};
+ // Ukrainian month names after a day number take the genitive form:
+ // "5–11 жовтня", not "5–11 жовтень".
+ const monthAfterDay=date=>date.toLocaleDateString('uk-UA',{
+  day:'numeric',month:'long'
+ }).replace(/^\d+\s+/, '');
  if(start.getMonth()===end.getMonth()&&start.getFullYear()===end.getFullYear()){
-  return start.getDate()+'–'+end.getDate()+' '+end.toLocaleDateString('uk-UA',monthOptions);
+  return start.getDate()+'–'+end.getDate()+' '+monthAfterDay(end);
  }
- return start.getDate()+' '+start.toLocaleDateString('uk-UA',monthOptions)+
-  ' — '+end.getDate()+' '+end.toLocaleDateString('uk-UA',monthOptions);
+ return start.getDate()+' '+monthAfterDay(start)+
+  ' — '+end.getDate()+' '+monthAfterDay(end);
 }
 function diaryWeekMarkup(records,monday){
  const start=diaryDateFromKey(monday);
