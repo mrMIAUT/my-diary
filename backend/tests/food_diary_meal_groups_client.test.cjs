@@ -7,7 +7,7 @@ const html=fs.readFileSync("backend/static/calculator-prototype.html","utf8");
 assert.ok(html.includes('class="foodDiaryDaySummary"'),"Daily totals must have a separate visual container");
 assert.ok(html.includes("Разом за день"),"Explicit daily total heading");
 assert.ok(html.includes(".foodDiaryMealMacros{"),"Meal-level BJU styling must exist");
-const start=js.indexOf("function localDayKey(){"),end=js.indexOf("\n$('foodCalendarToggle').addEventListener(",start);
+const start=js.indexOf("function localDayKey(){"),end=js.indexOf("\n$('foodWeekPrev').addEventListener(",start);
 assert.ok(start>=0&&end>start,"Actual diary logic located");
 const store=new Map(),key="eplan12-food-diary-v1";
 const localStorage={
