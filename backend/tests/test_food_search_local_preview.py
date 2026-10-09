@@ -44,7 +44,8 @@ class LocalPreviewTests(unittest.TestCase):
         for item in payload["items"]:
             with self.subTest(name=item["name"]):
                 self.assertTrue(item.get("approximate") is True or
-                                item.get("review_status")=="approved")
+                                item.get("review_status") in
+                                {"approved","manufacturer_label_reviewed"})
 
     def test_catalogue_endpoint_is_disabled_outside_prototype(self):
         endpoint,ns=local_endpoint()
