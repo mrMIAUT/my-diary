@@ -232,7 +232,7 @@ const foodFmt=value=>{
  return n.toLocaleString('uk-UA',{maximumFractionDigits:n<10?1:0});
 };
 function foodResultLabel(item){
- const brand=item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+'</span>':item.approximate?'<span class="foodBrand">Довідкові БЖВ · орієнтовно</span>':item.review_status==='approved'&&item.source_fdc_id?'<span class="foodBrand">База ЄПЛАН · USDA FDC №'+foodEsc(item.source_fdc_id)+'</span>':'';
+ const brand=item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+(item.source_kind==='manufacturer_label'?' · дані виробника':'')+'</span>':item.approximate?'<span class="foodBrand">Довідкові БЖВ · орієнтовно</span>':item.review_status==='approved'&&item.source_fdc_id?'<span class="foodBrand">База ЄПЛАН · USDA FDC №'+foodEsc(item.source_fdc_id)+'</span>':'';
  const macro='<span class="foodMacros">'+foodFmt(item.kcal_100)+' ккал<br>Б '+foodFmt(item.protein_100)+' · Ж '+foodFmt(item.fat_100)+' · В '+foodFmt(item.carbs_100)+'</span>';
  return '<span><strong>'+foodEsc(item.name)+'</strong>'+brand+'</span>'+macro;
 }
