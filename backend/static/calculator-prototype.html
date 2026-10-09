@@ -65,6 +65,48 @@
  .foodDiaryMealRight{gap:5px}
  .foodDiaryMealAdd{width:32px;min-width:32px;height:34px}
 }
+
+/* ЄПЛАН diary v3: visible weekly day circles and denser FatSecret-inspired
+   information hierarchy, with independent original blue/green EPLAN styling. */
+.foodDiaryWeek{margin-top:13px;border:1px solid #e1e8f2;border-radius:15px;padding:8px 9px 7px;background:#fff}
+.foodDiaryWeekTop{display:flex;justify-content:space-between;align-items:center;min-height:28px;padding:0 1px 2px}
+.foodDiaryWeekTop strong{font-size:12px;font-weight:700;color:#738198;text-transform:capitalize;letter-spacing:.01em}
+.foodDiaryWeekTop button{width:31px;min-width:31px;height:29px;padding:0;margin:0;border:0;border-radius:8px;color:#54729c;background:#f5f8fc;font-size:23px;line-height:1}
+.foodDiaryWeekTop button:disabled{opacity:.3;cursor:default}
+.foodDiaryWeekDays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;align-items:stretch}
+.foodWeekDay{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:3px 0 2px;margin:0;border:0;border-radius:11px;background:transparent;color:#77869a;width:100%;height:70px;min-width:0;font-weight:600}
+.foodWeekDayLabel{display:block;text-align:center;color:#8391a4;font-size:10px;font-weight:650}
+.foodWeekDayCircle{display:grid;place-items:center;width:39px;height:39px;max-width:calc(100% - 1px);border:1px solid #e5eaf2;border-radius:50%;background:#f7f9fc;color:#25354e;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
+.foodWeekDay.has-entry:not(.is-selected) .foodWeekDayCircle{background:#eaf7ef;border-color:#bee4ce;color:#258352}
+.foodWeekDay.is-today:not(.is-selected) .foodWeekDayCircle{border:2px solid #8daedf;background:#f2f7ff;color:#315f9d}
+.foodWeekDay.is-selected .foodWeekDayCircle{background:#41b776;border-color:#41b776;color:#fff;box-shadow:0 2px 7px rgba(39,154,91,.2)}
+.foodWeekDayMarker{height:5px;display:flex;align-items:center;justify-content:center}
+.foodWeekDayMarker .foodCalendarDot{width:5px;height:5px}
+.foodWeekDay.is-selected .foodWeekDayMarker .foodCalendarDot{background:#41b776}
+.foodWeekDay:disabled{opacity:.3;cursor:default}
+.foodWeekDay:active:not(:disabled) .foodWeekDayCircle{transform:scale(.94)}
+.foodDiaryNavigator{margin-top:8px}
+.foodDiaryNavigator button{min-height:32px;padding:6px 11px;font-size:11px}
+.foodDiaryDaySummary{margin-top:10px;padding:12px 13px}
+.foodDiaryDaySummary .foodDiaryTotals{margin-top:5px!important}
+.foodDiaryDaySummaryHead strong{font-size:12px}
+.foodDiaryDailyKcal b{font-size:27px}
+.foodDiaryDaySummary .foodDiaryTotals .foodDiaryDailyKcal>span{border:0;border-radius:0;padding:0;background:transparent;color:#7b889b;font-size:11px;text-align:left}
+.foodDiaryMeal{padding:10px 12px 7px}
+.foodDiaryMeal.is-empty{padding:7px 12px}
+.foodDiaryMealAdd{width:31px;min-width:31px;height:31px}
+.foodDiaryMealEntries .foodDiaryEntry{padding:8px 1px}
+.foodDiaryMealMacros{margin-top:4px}
+.foodDiaryMealEntries{margin-top:6px}
+@media(max-width:390px){
+ .foodDiaryWeek{padding:7px 6px}
+ .foodDiaryWeekDays{gap:1px}
+ .foodWeekDayCircle{width:35px;height:35px}
+ .foodWeekDay{height:66px}
+ .foodDiaryDaySummary{padding:11px 10px}
+ .foodDiaryDailyKcal b{font-size:24px}
+ .foodDiaryMeal.is-empty{padding:6px 10px}
+}
 </style></head><body><main class="wrap"><div class="brand">Є ПЛАН 1.2</div><section class="card"><span class="badge">ПРОТОТИП</span><h1>Калькулятор калорій і БЖВ</h1><p>Розрахуємо стартовий орієнтир. Дані цього прототипу не зберігаються.</p><div class="grid">
 <label>Стать<select id="sex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>
 <label>Вік<input id="age" type="number" inputmode="numeric" placeholder="років"></label>
@@ -85,6 +127,14 @@
 <div class="foodChips"><button type="button" data-food-query="Молокія сир 5%">Молокія 5%</button><button type="button" data-food-query="рис басматі">Рис басматі</button><button type="button" data-food-query="куряча грудка">Куряча грудка</button><button type="button" data-food-query="4820045702266">Штрихкод</button></div>
 <div class="foodStatus" id="foodStatus" aria-live="polite">Пошук ще не запускався.</div><div class="foodResults" id="foodResults"></div><button class="foodMore" id="foodMoreBtn" type="button" hidden>Показати ще</button><div class="result foodPortion" id="foodPortion"></div><div class="foodDiary" id="foodDiary">
 <div class="foodDiaryHead"><div><span class="kicker" id="foodDiaryDayKicker">СЬОГОДНІ</span><strong>Щоденник харчування</strong></div><span id="foodDiaryDate"></span></div>
+<nav class="foodDiaryWeek" aria-label="Тижневий календар харчування">
+<div class="foodDiaryWeekTop">
+<button type="button" id="foodWeekPrev" aria-label="Попередній тиждень">‹</button>
+<strong id="foodDiaryWeekTitle"></strong>
+<button type="button" id="foodWeekNext" aria-label="Наступний тиждень">›</button>
+</div>
+<div class="foodDiaryWeekDays" id="foodDiaryWeekDays" role="group" aria-label="Оберіть день тижня"></div>
+</nav>
 <div class="foodDiaryNavigator">
 <button type="button" id="foodCalendarToggle" aria-expanded="false" aria-controls="foodCalendar">Обрати дату</button>
 <button type="button" id="foodDiaryTodayBtn" hidden>Сьогодні</button>
@@ -118,4 +168,4 @@
 <button id="adaptBtn" type="button">Переглянути ціль</button>
 <div style="display:flex;gap:8px;margin-top:10px"><button id="changeGoalBtn" type="button" style="margin:0;background:#eef4ff;color:#245cae">Змінити ціль</button><button id="stopGoalBtn" type="button" style="margin:0;background:#fff;color:#566477;border:1px solid #dce3ec">Зупинити ціль</button></div>
 <div class="result" id="goalActionResult"></div><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=43" defer></script></body></html>
+</main><script src="/static/calculator-prototype.js?v=44" defer></script></body></html>
