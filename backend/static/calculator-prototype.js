@@ -145,8 +145,19 @@ async function searchFoods(query,append=false){
   const q=String(query||$('foodQuery').value||'').trim();
   if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
   const requestId=++foodRequestId;
-  if(!append){foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=[];$('foodResults').innerHTML='';$('foodPortion').classList.remove('show')}
-  $('foodQuery').value=q;$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо продукти…';
+  if(!append){
+   foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=[];selectedFood=null;
+   $('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
+   // Previously viewed products can appear immediately while authoritative
+   // server results are loading. Never pretend this cache is the full list.
+   const preview=cachedFoodMatches(q);
+   if(preview.length){
+    foodItems=preview;
+    renderFoodResults(foodItems,'Попередні результати з кешу. Оновлюємо пошук…');
+   }
+  }
+  $('foodQuery').value=q;
+  if(append||!foodItems.length)$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо продукти…';
   $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
   try{
    const url='/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8&page='+foodPage;
@@ -156,13 +167,17 @@ async function searchFoods(query,append=false){
    if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
    const incoming=Array.isArray(data.items)?data.items:[];
    saveFoodCache(incoming);
-   // Fresh server ranking is authoritative. Cache is fallback-only.
+   // If the user already selected a cached preview, preserve the portion
+   // editor rather than discarding their selection when network returns.
+   if(!append&&selectedFood)return;
+   // Fresh server ranking is authoritative unless a preview was selected.
    foodItems=append?mergeFoodItems(foodItems,incoming):incoming;
    foodHasMore=Boolean(data.has_more);
    renderFoodResults(foodItems);
    if(data.normalized_query&&data.normalized_query.toLowerCase()!==q.toLowerCase())$('foodStatus').textContent+=' Запит нормалізовано: «'+data.normalized_query+'».';
   }catch(err){
    if(requestId!==foodRequestId)return;
+   if(!append&&selectedFood)return;
    if(!append)foodItems=cachedFoodMatches(q);
    const message=foodItems.length?'Показано кешовані результати. Зовнішній пошук тимчасово недоступний.':'Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
    foodHasMore=false;
