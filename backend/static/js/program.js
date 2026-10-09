@@ -193,7 +193,9 @@ function orderedSupersetItems(items){
 }
 function supersetRestLabel(items){
  let xs=orderedSupersetItems(items),last=xs[xs.length-1];
- return last?restLabel(last):'';
+ if(!last)return '';
+ if(xs.some(isTimedProgramExercise))return timedRestLabel(last)||restLabel(last);
+ return restLabel(last);
 }
 function programExecutionMode(x){return String(x?.execution_mode||'reps').toLowerCase()==='time'?'time':'reps'}
 function isTimedProgramExercise(x){return programExecutionMode(x)==='time'}
@@ -767,21 +769,83 @@ async function addExercise(button=null){
 }
 
 
+function supersetSourceExercise(sourceId){
+ return (window.currentClientData?.program||[]).find(x=>+x.id===+sourceId)||null;
+}
+function supersetSourceRestSeconds(source){
+ let direct=Math.max(0,+source?.rest_seconds||0);
+ if(direct)return direct;
+ let match=String(source?.rest_text||'').replace(',','.').match(/(\d+(?:\.\d+)?)/);
+ return match?Math.max(0,Math.round(parseFloat(match[1])*60)):90;
+}
+function toggleSupersetExecutionFields(sourceId){
+ let source=supersetSourceExercise(sourceId),mode=String(document.getElementById('ssexecutionmode')?.value||'reps'),
+     timed=mode==='time',mixed=timed||isTimedProgramExercise(source),
+     sets=document.getElementById('sssets'),rest=document.getElementById('ssrest'),restLabelEl=document.getElementById('ssrestlabel');
+ document.querySelectorAll('#supersetModal .superset-reps-only').forEach(el=>el.classList.toggle('hidden',timed));
+ document.querySelectorAll('#supersetModal .superset-time-only').forEach(el=>el.classList.toggle('hidden',!timed));
+ if(sets&&source){
+   if(mixed){sets.value=Math.max(1,+source.sets||1);sets.readOnly=true;sets.classList.add('is-locked')}
+   else{sets.readOnly=false;sets.classList.remove('is-locked')}
+ }
+ if(rest&&restLabelEl){
+   let wasMixed=rest.dataset.mode==='seconds';
+   if(mixed){
+     restLabelEl.textContent='Відпочинок після суперсету, сек';
+     if(!wasMixed)rest.value=String(supersetSourceRestSeconds(source));
+     rest.placeholder='60';
+     rest.dataset.mode='seconds';
+   }else{
+     restLabelEl.textContent='Відпочинок після суперсету';
+     if(wasMixed)rest.value=String(source?.rest_text||'2').replace(/\s*(хв|min|мин)\.?$/i,'')||'2';
+     rest.placeholder='2 хв';
+     rest.dataset.mode='minutes';
+   }
+ }
+ let note=document.getElementById('ssroundnote');
+ if(note)note.classList.toggle('hidden',!mixed);
+}
+
 function addSupersetExercise(sourceId,dayName){
+ let source=supersetSourceExercise(sourceId),sourceSets=Math.max(1,+source?.sets||3),sourceTimed=isTimedProgramExercise(source),
+     sourceRest=sourceTimed?supersetSourceRestSeconds(source):String(source?.rest_text||'2').replace(/\s*(хв|min|мин)\.?$/i,'')||'2';
  document.getElementById('supersetModal')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. Посилання на техніку підтягнеться автоматично, якщо воно є в бібліотеці.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи</span><input id="sssets" type="number" min="1" value="3" placeholder="3"></label><label><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label><span>Як рахувати повтори</span>${repeatModeSelectHTML('ssrepeatmode','normal')}</label><label><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="wide"><span>Відпочинок</span><input id="ssrest" value="2" placeholder="2 хв"></label></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">Зберегти вправу</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. У суперсеті вправи виконуються по черзі, а відпочинок запускається після завершення всього кола.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи / кола</span><input id="sssets" type="number" min="1" value="${sourceSets}" placeholder="3"></label><label><span>Тип виконання</span><select id="ssexecutionmode" onchange="toggleSupersetExecutionFields(${sourceId})"><option value="reps">Повтори</option><option value="time">За часом</option></select></label><label class="superset-reps-only"><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label class="superset-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('ssrepeatmode','normal')}</label><label class="superset-reps-only"><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label class="superset-reps-only"><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="superset-time-only hidden"><span>Робота, сек</span><input id="ssworkseconds" type="number" min="5" max="3600" value="30" placeholder="30"></label><label class="wide"><span id="ssrestlabel">${sourceTimed?'Відпочинок після суперсету, сек':'Відпочинок після суперсету'}</span><input id="ssrest" data-mode="${sourceTimed?'seconds':'minutes'}" value="${esc(String(sourceRest))}" placeholder="${sourceTimed?'60':'2 хв'}"></label><p id="ssroundnote" class="wide muted trainer-superset-round-note ${sourceTimed?'':'hidden'}">У суперсеті з вправою за часом кількість підходів однакова для обох вправ — це кількість кіл.</p></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">Зберегти вправу</button></div></div>`);
+ toggleSupersetExecutionFields(sourceId);
  setTimeout(()=>document.getElementById('ssex')?.focus(),30);
 }
 
 async function saveSupersetExercise(sourceId,dayName,button=null){
- let exercise=(document.getElementById('ssex')?.value||'').trim();
+ let source=supersetSourceExercise(sourceId),exercise=(document.getElementById('ssex')?.value||'').trim();
+ if(!source)return alert('Основну вправу суперсету не знайдено. Онови сторінку і спробуй ще раз.');
  if(!exercise)return alert('Вкажи вправу');
  let technique=(document.getElementById('sstech')?.value||'').trim();
  if(technique&&!safeTechniqueUrl(technique))return alert('Посилання на техніку має починатися з https://');
  technique=safeTechniqueUrl(technique);
+ let mode=String(document.getElementById('ssexecutionmode')?.value||'reps'),timed=mode==='time',
+     mixed=timed||isTimedProgramExercise(source),sets=+document.getElementById('sssets')?.value||Math.max(1,+source.sets||1);
+ if(mixed)sets=Math.max(1,+source.sets||1);
+ let restRaw=String(document.getElementById('ssrest')?.value||'').trim(),restSeconds=0,restText='';
+ if(mixed){
+   restSeconds=Math.max(0,Math.min(3600,Math.round(+restRaw||0)));
+ }else{
+   restText=restRaw;
+ }
+ let workSeconds=timed?(+document.getElementById('ssworkseconds')?.value||0):0;
+ if(timed&&workSeconds<5)return alert('Вкажи щонайменше 5 секунд роботи');
  let restore=setActionLoading(button,'Додаємо…');
  try{
-   await api('/program',{method:'POST',body:JSON.stringify({client_id:selected,day_name:dayName,exercise,sets:+sssets.value||3,reps:ssreps.value||'8-12',repeat_mode:normalizeRepeatMode(document.getElementById('ssrepeatmode')?.value),execution_mode:'reps',work_seconds:0,target_rir:+ssrir.value||2,superset_group:'',superset_order:0,superset_with_id:sourceId,technique_url:technique,rest_seconds:0,rest_text:ssrest.value.trim(),rir_by_set:ssrirset.value.trim()})});
+   await api('/program',{method:'POST',body:JSON.stringify({
+     client_id:selected,day_name:dayName,exercise,sets,
+     reps:timed?'1':(document.getElementById('ssreps')?.value||'8-12'),
+     repeat_mode:timed?'normal':normalizeRepeatMode(document.getElementById('ssrepeatmode')?.value),
+     execution_mode:mode,work_seconds:workSeconds,
+     target_rir:timed?0:(+document.getElementById('ssrir')?.value||2),
+     superset_group:'',superset_order:0,superset_with_id:sourceId,technique_url:technique,
+     rest_seconds:restSeconds,rest_text:restText,
+     rir_by_set:timed?'':String(document.getElementById('ssrirset')?.value||'').trim(),
+     alternatives_json:'[]'
+   })});
    if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
    supersetModal.remove();
    await openClient(selected,'program');
