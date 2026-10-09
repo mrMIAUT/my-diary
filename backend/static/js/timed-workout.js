@@ -47,7 +47,7 @@ function timedExercisePreviousHTML(x,d){
 function timedExerciseHTML(x,d,cid){
   var done=todayTimedSets(d,x.id);
   var planned=Math.max(1,+x.work_seconds||1);
-  var rest=lyftaRestSeconds(x);
+  var rest=Math.max(0,+x.rest_seconds||0);
   if(done.length){
     return '<div class="workout-completed-summary workout-timed-completed">'
       +'<div class="workout-completed-summary-head"><span class="workout-completed-summary-icon">✓</span><div><strong>Виконано</strong><small>Вправа за часом збережена</small></div></div>'
@@ -90,7 +90,7 @@ function openTimedExerciseTimer(cid,pid,repeat){
   closeTimedExerciseTimer(true);
 
   var work=Math.max(1,+x.work_seconds||1);
-  var rest=lyftaRestSeconds(x);
+  var rest=Math.max(0,+x.rest_seconds||0);
   var sets=Math.max(1,+x.sets||1);
 
   window.timedExerciseTimerState={
