@@ -469,7 +469,10 @@ function workoutSessionMatchesCurrentProgram(d,session){
  let currentIds=current.map(x=>+x.id).filter(x=>Number.isInteger(x)&&x>0).sort((a,b)=>a-b);
  let snapshotIds=workoutSessionProgramIds(session);
  if(snapshotIds.length&&currentIds.length){
-   return snapshotIds.length===currentIds.length&&snapshotIds.every((id,i)=>id===currentIds[i]);
+   // Adding exercises (for example a second superset peer) must not erase a
+   // completed day from this week's cycle. Removed/replaced old IDs still
+   // invalidate the session, so the former program never marks a new one done.
+   return snapshotIds.every(id=>currentIds.includes(id));
  }
 
  // Legacy/manual fallback: if a session has no usable snapshot, only count it
@@ -626,6 +629,19 @@ function workoutSupersetPeers(x,d=window.currentClientData||{}){
  if(!x?.superset_group)return [];
  return orderedSupersetItems((d?.program||[]).filter(v=>v.day_name===x.day_name&&v.superset_group===x.superset_group));
 }
+// A superset is finished only when EVERY peer has recorded all planned rounds.
+// Checking only one exercise, or one saved set, would show a misleading badge.
+function workoutSupersetAllExercisesDone(pair,d,day){
+ if(!Array.isArray(pair)||pair.length<2)return false;
+ return pair.every(raw=>{
+  let x=workoutEffectiveExercise(raw),planned=Math.max(1,+x.sets||1),
+      saved=isTimedWorkoutExercise(x)?(d?.timed_result_sets||[]):(d?.result_sets||[]);
+  let numbers=new Set(saved.filter(r=>+r.program_id===+raw.id&&r.day===day)
+                           .map(r=>+r.set_number)
+                           .filter(n=>Number.isInteger(n)&&n>=1&&n<=planned));
+  return numbers.size>=planned;
+ });
+}
 function workoutSupersetRestSeconds(x,d=window.currentClientData||{}){
  let peers=workoutSupersetPeers(x,d),last=peers[peers.length-1];
  if(!last)return 0;
@@ -711,8 +727,9 @@ function activeExercisesHTML(items,d,cid){
    let pair=orderedSupersetItems(items.filter(y=>y.superset_group===x.superset_group));pair.forEach(y=>used.add(y.id));
    let effectivePair=pair.map(workoutEffectiveExercise),superRest=supersetRestLabel(effectivePair),
        hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1),
-       groupBodyId='workoutSupersetBody'+pair[0].id;
-   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-arrow">⌄</span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+       groupBodyId='workoutSupersetBody'+pair[0].id,
+       groupDone=workoutSupersetAllExercisesDone(pair,d,activeDay);
+   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true,false)}
  }
  return html;
