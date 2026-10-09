@@ -2269,6 +2269,8 @@ def _food_search_type(item:dict):
     product catalogue, including entries whose brand metadata is missing.
     Mixed prepared meals take precedence over package/generic distinctions.
     """
+    if item.get("source_kind")=="manufacturer_label":
+        return "branded"
     if _food_preparation_rank(item)>=3:
         return "dish"
     if item.get("source")=="reference":
