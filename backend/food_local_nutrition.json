@@ -7500,6 +7500,57 @@
       "carbs_100": 28.88
     },
     {
+      "candidate_id": "plan-nasinnya-maku-sukhe",
+      "name_uk": "Насіння маку (сухе)",
+      "name_ru": "Семена мака сухие",
+      "name_en": "Spices, poppy seed",
+      "preparation_state": "dry",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171330,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Spices, poppy seed",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 525.0,
+        "protein_100": 17.99,
+        "fat_100": 41.56,
+        "carbs_100": 28.13
+      },
+      "source_snapshot": {
+        "fdc_id": 171330,
+        "description": "Spices, poppy seed",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 525.0,
+          "protein_100": 17.99,
+          "fat_100": 41.56,
+          "carbs_100": 28.13
+        }
+      },
+      "source_snapshot_sha256": "1b6daa9a124e52a9f48224a269e3d4b2a0940f3f28da362d3bac38ff9bd19afd",
+      "kcal_100": 525.0,
+      "protein_100": 17.99,
+      "fat_100": 41.56,
+      "carbs_100": 28.13
+    },
+    {
       "candidate_id": "plan-nasinnya-sonyashnyka-ochyshchene-smazhene",
       "name_uk": "Насіння соняшника очищене (смажене)",
       "name_ru": "Семена подсолнечника очищенные жареные",
@@ -10815,6 +10866,57 @@
       "carbs_100": 0.0
     },
     {
+      "candidate_id": "plan-svynyachyi-smalets",
+      "name_uk": "Свинячий смалець",
+      "name_ru": "Смалец свиной топлёный",
+      "name_en": "Lard",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171401,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Lard",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 902.0,
+        "protein_100": 0.0,
+        "fat_100": 100.0,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 171401,
+        "description": "Lard",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 902.0,
+          "protein_100": 0.0,
+          "fat_100": 100.0,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "e2ea3d44c9260e838a2bd8548360d71720a02d143f1344b3a567adf01623583a",
+      "kcal_100": 902.0,
+      "protein_100": 0.0,
+      "fat_100": 100.0,
+      "carbs_100": 0.0
+    },
+    {
       "candidate_id": "plan-svynyna-koreika-bez-kistky-syra",
       "name_uk": "Свинина корейка без кістки (сира)",
       "name_ru": "Свиная корейка без кости сырая",
@@ -13056,6 +13158,57 @@
       "kcal_100": 137.0,
       "protein_100": 21.41,
       "fat_100": 5.0,
+      "carbs_100": 0.0
+    },
+    {
+      "candidate_id": "plan-yalovychyi-zhyr-toplenyi",
+      "name_uk": "Яловичий жир топлений",
+      "name_ru": "Жир говяжий топлёный",
+      "name_en": "Fat, beef tallow",
+      "preparation_state": "as_sold",
+      "review_status": "approved",
+      "source_system": "USDA_FDC",
+      "fdc_id": 171400,
+      "source_data_type": "SR Legacy",
+      "source_archive_version": "2018-04",
+      "source_archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "source_food_description": "Fat, beef tallow",
+      "source_portion_basis": "100g_edible_portion",
+      "reviewed_by": "EPLAN USDA exact-ID crosswalk; manual description/state review",
+      "reviewed_at": "2026-10-09",
+      "source_nutrient_ids": {
+        "kcal_100": 1008,
+        "protein_100": 1003,
+        "fat_100": 1004,
+        "carbs_100": 1005
+      },
+      "source_nutrients_100g": {
+        "kcal_100": 902.0,
+        "protein_100": 0.0,
+        "fat_100": 100.0,
+        "carbs_100": 0.0
+      },
+      "source_snapshot": {
+        "fdc_id": 171400,
+        "description": "Fat, beef tallow",
+        "source_nutrient_ids": {
+          "kcal_100": 1008,
+          "protein_100": 1003,
+          "fat_100": 1004,
+          "carbs_100": 1005
+        },
+        "source_nutrients_100g": {
+          "kcal_100": 902.0,
+          "protein_100": 0.0,
+          "fat_100": 100.0,
+          "carbs_100": 0.0
+        }
+      },
+      "source_snapshot_sha256": "8b1e3fc449bf29fa2f50e8630140be9bca678d728c7dfad4fcfced52ca193676",
+      "kcal_100": 902.0,
+      "protein_100": 0.0,
+      "fat_100": 100.0,
       "carbs_100": 0.0
     },
     {
