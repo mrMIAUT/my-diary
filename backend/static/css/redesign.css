@@ -18010,3 +18010,15 @@ body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete .lyfta-drop-zone{
   background:#f1faf4!important;
   border-left-color:#d8ebdf!important;
 }
+
+/* v247 — distinct completed-set cards: spacing and a quiet outline prevent
+   neighbouring mint surfaces from visually merging into one large panel.
+   Keep the existing swipe clipping, white input fields and checked state. */
+body.eplan-redesign.client-ui .lyfta-set-wrap.is-complete{
+  margin-top:6px!important;
+  margin-bottom:12px!important;
+  border:1px solid #dbece1!important;
+  border-radius:16px!important;
+  box-shadow:0 2px 6px rgba(32,107,64,.035)!important;
+}
+
