@@ -301,6 +301,15 @@ function completedWorkoutEditWorkGroupHTML(n,set={},targetRir=2,aux=[]){
 
 function completedWorkoutEditorExerciseHTML(p,data){
  let pid=+p.id||0,existing=(data.exercises||[]).find(x=>+x.pid===pid),exercise=existing?.name||p.exercise||'Вправа';
+ let timed=String(p?.execution_mode||'reps').toLowerCase()==='time'||(existing?.timed||[]).length>0;
+ if(timed){
+   let rows=(existing?.timed||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
+   return '<section class="completed-workout-edit-exercise timed-readonly" data-program-id="'+pid+'" data-exercise="'+esc(exercise)+'" data-timed-readonly="1">'
+     +'<div class="completed-workout-edit-exercise-head"><div><strong>'+esc(exercise)+'</strong><small>Вправа за часом</small></div><span>'+rows.length+' підх.</span></div>'
+     +'<div class="completed-workout-timed-readonly">'+(rows.length?rows.map(s=>'<div><span>Підхід '+esc(s.set_number)+'</span><strong>'+esc(s.work_seconds)+' сек</strong><small>план '+esc(s.planned_seconds)+' сек'+(+s.rest_seconds>0?' · відпочинок '+esc(s.rest_seconds)+' сек':'')+'</small></div>').join(''):'<p>Результати ще не збережені.</p>')+'</div>'
+     +'<p class="completed-workout-timed-note">Результати вправ за часом у цьому редакторі поки доступні лише для перегляду. Історія зберігається окремо.</p>'
+   +'</section>';
+ }
  let current=(existing?.sets||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0)),aux=(existing?.aux||[]).slice();
  let warmups=aux.filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
  let count=Math.max(1,+p.sets||0,...current.map(x=>+x.set_number||0));
@@ -329,11 +338,12 @@ function openCompletedWorkoutEditor(sid){
  }
  if(!plan.length)return alert('У цьому тренуванні немає вправ для редагування.');
  document.getElementById('completedWorkoutEditModal')?.remove();
+ let hasClassic=plan.some(p=>String(p?.execution_mode||'reps').toLowerCase()!=='time');
  document.body.insertAdjacentHTML('beforeend','<div class="modal completed-workout-edit-modal" id="completedWorkoutEditModal" onclick="if(event.target===this)this.remove()">'
    +'<div class="card completed-workout-edit-card">'
-     +'<div class="completed-workout-edit-head"><div><small>'+esc(formatProgressDate(data.day))+'</small><h2>Редагувати тренування</h2><p>Внеси фактичні ваги, повтори та RIR. Розминка й дроп-сети також зберігаються.</p></div><button type="button" class="dark" aria-label="Закрити" onclick="completedWorkoutEditModal.remove()">✕</button></div>'
+     +'<div class="completed-workout-edit-head"><div><small>'+esc(formatProgressDate(data.day))+'</small><h2>Редагувати тренування</h2><p>Класичні вправи можна редагувати тут. Результати вправ за часом показуємо без зміни, щоб не втратити історію.</p></div><button type="button" class="dark" aria-label="Закрити" onclick="completedWorkoutEditModal.remove()">✕</button></div>'
      +'<div class="completed-workout-edit-list">'+plan.map(p=>completedWorkoutEditorExerciseHTML(p,data)).join('')+'</div>'
-     +'<button type="button" class="completed-workout-save" onclick="saveCompletedWorkoutEdit('+sid+',this)">Зберегти зміни</button>'
+     +(hasClassic?'<button type="button" class="completed-workout-save" onclick="saveCompletedWorkoutEdit('+sid+',this)">Зберегти зміни</button>':'')
    +'</div></div>');
 }
 
@@ -371,6 +381,7 @@ async function saveCompletedWorkoutEdit(sid,button=null){
  let modal=document.getElementById('completedWorkoutEditModal');if(!modal)return;
  let sets=[],auxSets=[];
  for(const card of modal.querySelectorAll('.completed-workout-edit-exercise')){
+   if(card.dataset.timedReadonly==='1')continue;
    let pid=+card.dataset.programId||0,exercise=card.dataset.exercise||'',savedNumbers=new Set();
    for(const row of card.querySelectorAll('.completed-workout-edit-set')){
      let weight=String(row.querySelector('[data-field="weight"]')?.value||'').trim();
