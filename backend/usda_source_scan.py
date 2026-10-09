@@ -176,7 +176,14 @@ def main():
     report["note"]="Automated candidates ONLY. Similar description is not sufficient for approval."
     dest=args.out/"usda_source_proposals.json"
     dest.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print("SOURCE AUDIT SUCCESS:",dest,flush=True)
+    # Full 8K validated nutrient rows retained for deterministic human
+    # matching. No products are auto-approved or inserted by this workflow.
+    all_source=args.out/"usda_all_source_foods.json"
+    all_source.write_text(json.dumps(records,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+    candidates_file=Path(__file__).resolve().parent/"food_catalog_candidates.json"
+    if candidates_file.exists():
+        (args.out/"food_catalog_candidates.json").write_bytes(candidates_file.read_bytes())
+    print("SOURCE AUDIT SUCCESS:",dest,"full records",len(records),flush=True)
 
 if __name__=="__main__":
     main()
