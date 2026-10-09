@@ -2224,16 +2224,16 @@ def _food_title_language_rank(item:dict):
 
     # Clear single-word conjunctions/prepositions distinguish the scripts'
     # shared letters without using brand- or product-specific exceptions.
-    if re.search(r"(?<!\\w)(?:з|із|зі|та)(?!\\w)",name):
+    if re.search(r"(?<!\w)(?:з|із|зі|та)(?!\w)",name):
         return 0
-    if re.search(r"(?<!\\w)(?:из|со|с)(?!\\w)",name):
+    if re.search(r"(?<!\w)(?:из|со|с)(?!\w)",name):
         return 2
 
     # Reuse the existing Russian -> Ukrainian search vocabulary for
     # unambiguous Russian spellings such as картошка, курица, творог.
     for russian,ukrainian in FOOD_QUERY_REPLACEMENTS.items():
         if russian==ukrainian or len(russian)<4:continue
-        if re.search(r"(?<!\\w)"+re.escape(russian)+r"(?!\\w)",name):
+        if re.search(r"(?<!\w)"+re.escape(russian)+r"(?!\w)",name):
             return 2
     return 1
 
