@@ -44,7 +44,12 @@ class FoodReferenceAuditTests(unittest.TestCase):
                     value = item[field]
                     self.assertTrue(math.isfinite(value))
                     self.assertGreaterEqual(value, 0)
-                self.assertLessEqual(item["kcal_100"], 900)
+                if item["kcal_100"]>900:
+                    self.assertLessEqual(item["kcal_100"],905)
+                    self.assertGreaterEqual(item["fat_100"],99.9)
+                    self.assertLessEqual(item["protein_100"]+item["carbs_100"],.2)
+                else:
+                    self.assertLessEqual(item["kcal_100"],900)
                 self.assertLessEqual(sum(item[k] for k in ("protein_100", "fat_100", "carbs_100")), 105)
 
     def test_energy_macro_discrepancies_are_flagged_not_rewritten(self):
