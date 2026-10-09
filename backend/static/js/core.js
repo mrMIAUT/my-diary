@@ -315,7 +315,7 @@ async function api(path,opt={}){
 }
 
 const EPLAN_PAGE_SIZE=50;
-const EPLAN_CLIENT_COLLECTIONS=['program','program_days','results','result_sets','timed_result_sets','aux_sets','skipped_sets','nutrition','nutrition_plan','measurements','workout_sessions','comments','cardio','checkins'];
+const EPLAN_CLIENT_COLLECTIONS=['program','program_days','results','result_sets','timed_result_sets','nutrition','nutrition_plan','measurements','workout_sessions','comments','cardio'];
 
 function mergeClientPage(merged,page){
  if(!merged){
