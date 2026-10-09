@@ -956,6 +956,8 @@ function saveDiaryEdit(id){
  }
  diaryLastRemoved=null;
  activeDiaryEditId=null;
+ // A moved product should remain visible in its new meal section.
+ diaryCollapsedMeals.delete(diarySelectedDate+'|'+draft.meal);
  renderDiary();
  return true;
 }
