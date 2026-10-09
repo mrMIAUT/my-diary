@@ -50,7 +50,7 @@ function timedExerciseHTML(x,d,cid){
   var rest=Math.max(0,+x.rest_seconds||0);
   if(done.length){
     return '<div class="workout-completed-summary workout-timed-completed">'
-      +'<div class="workout-completed-summary-head"><span class="workout-completed-summary-icon">✓</span><div><strong>Виконано</strong><small>Вправа за часом збережена</small></div></div>'
+      +'<div class="workout-completed-summary-head"><span class="workout-completed-summary-icon">✓</span><div><strong>Виконано ✓</strong><small>Вправа за часом збережена</small></div></div>'
       +'<div class="workout-completed-sets">'
       +done.map(function(s){
         return '<div class="workout-completed-set"><span>Підхід '+esc(s.set_number)+'</span><strong>'+esc(s.work_seconds)+' сек</strong><em>план '+esc(s.planned_seconds)+' сек'+(+s.rest_seconds>0?' · відпочинок '+esc(s.rest_seconds)+' сек':'')+'</em></div>';
