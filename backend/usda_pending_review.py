@@ -177,6 +177,51 @@ def candidate_sources():
         if source["archive_sha256"]!=EXPECTED_ARCHIVE_SHA256[label]:
             raise RuntimeError("Official USDA archive fingerprint changed")
         samples.extend(source["foods"])
+    # Independent re-audit of already imported records against source rows,
+    # not only against their own stored hashes and values.
+    actual_by_fdc={r["fdc_id"]:r for r in samples}
+    source_errors=[]
+    source_flags=[]
+    for saved in stored["records"]:
+        name=saved["name_uk"]
+        official=actual_by_fdc.get(saved["fdc_id"])
+        if official is None:
+            source_errors.append({"name":name,"error":"official_FDC_ID_missing"})
+            continue
+        for field,actual in (
+            ("source_food_description",official["description"]),
+            ("source_archive_sha256",official["source_archive_sha256"]),
+            ("source_data_type",official["source_type"]),
+        ):
+            if saved.get(field)!=actual:
+                source_errors.append({"name":name,"error":"source_"+field+"_mismatch"})
+        for nutrient in ("kcal_100","protein_100","fat_100","carbs_100"):
+            try:
+                if abs(saved[nutrient]-official[nutrient])>.011:
+                    source_errors.append({"name":name,"error":"nutrition_"+nutrient+"_mismatch"})
+            except (KeyError,TypeError,ValueError):
+                source_errors.append({"name":name,"error":"missing_"+nutrient})
+        source_description=official["description"].lower()
+        if saved["preparation_state"]=="raw" and (
+            any(cue in source_description for cue in (
+                "cooked","roasted","fried","boiled","braised","smoked",
+                "canned","pickled","dry roasted","drained solids"
+            ))):
+            source_flags.append({"name":name,"warning":"raw_label_may_be_prepared",
+                                 "source":official["description"]})
+        elif saved["preparation_state"]=="cooked" and not any(
+            cue in source_description for cue in (
+                "cooked","boiled","roasted","baked","steamed","broiled",
+                "fried","stewed","simmered","braised","grilled"
+            )
+        ):
+            source_flags.append({"name":name,"warning":"cooked_label_unclear",
+                                 "source":official["description"]})
+    print("USDA_EXISTING_AUDIT "+json.dumps({
+        "stored_records":len(stored["records"]),
+        "source_mismatch_errors":source_errors,
+        "label_review_flags":source_flags
+    },ensure_ascii=False),flush=True)
     groups={}
     for c in pending:
         opts=QUERIES.get(c["name_uk"],"").split(";")
