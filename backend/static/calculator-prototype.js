@@ -498,7 +498,7 @@ function selectFood(index){
   +(foodPrepMeta?prepControlsHtml(foodPrepMeta):'')
   +'<div class="foodGramRow"><label>Кількість, г<input id="foodGrams" type="number" inputmode="decimal" min="1" max="5000" value="100"></label><div><span class="kicker">ПОРЦІЯ</span><b id="foodPortionName">100 г</b></div></div>'
   +'<div class="foodTotals"><span><b id="foodKcal">0</b>ккал</span><span><b id="foodProtein">0</b>білки, г</span><span><b id="foodFat">0</b>жири, г</span><span><b id="foodCarbs">0</b>вуглеводи, г</span></div>'
-  +'<div class="foodAddRow"><select id="foodMeal"><option value="Сніданок">Сніданок</option><option value="Обід">Обід</option><option value="Вечеря">Вечеря</option><option value="Перекус">Перекус</option></select><button type="button" id="foodAddBtn">Додати в щоденник</button></div><div class="foodAddStatus" id="foodAddStatus"></div>';
+  +'<div class="foodAddRow"><select id="foodMeal"><option value="Сніданок">Сніданок</option><option value="Обід">Обід</option><option value="Вечеря">Вечеря</option><option value="Перекус">Перекус</option></select><button type="button" id="foodAddBtn">Додати в щоденник</button></div><div class="foodAddDateNotice" id="foodEntryTargetDate">Додаємо за '+diaryDateLabel(diarySelectedDate)+'</div><div class="foodAddStatus" id="foodAddStatus"></div>';
  portion.classList.add('show');
  $('foodGrams').addEventListener('input',updateFoodPortion);
  $('foodAddBtn').addEventListener('click',addFoodToDiary);
@@ -537,6 +537,111 @@ function localDayKey(){
 }
 const FOOD_MEALS=['Сніданок','Обід','Вечеря','Перекус'];
 let activeDiaryEditId=null,diaryLastRemoved=null;
+// Browsing a date changes the view, NOT the data. Existing localStorage
+// entries remain byte-for-byte untouched until a deliberate save/edit/delete.
+let diarySelectedDate=localDayKey(),diaryCalendarOpen=false;
+let diaryCalendarYear=Number(diarySelectedDate.slice(0,4));
+let diaryCalendarMonth=Number(diarySelectedDate.slice(5,7))-1;
+function diaryDateFromKey(key){
+ if(typeof key!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(key))return null;
+ const [year,month,day]=key.split('-').map(Number);
+ if(year<1900||year>2100||month<1||month>12||day<1||day>31)return null;
+ // Local noon avoids UTC conversions and DST boundary off-by-one errors.
+ const parsed=new Date(year,month-1,day,12);
+ if(parsed.getFullYear()!==year||parsed.getMonth()!==month-1||
+    parsed.getDate()!==day)return null;
+ return parsed;
+}
+function diaryDateLabel(dayKey){
+ const date=diaryDateFromKey(dayKey);
+ return date?date.toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'}):'';
+}
+function diaryCalendarMarkup(records){
+ const first=new Date(diaryCalendarYear,diaryCalendarMonth,1,12);
+ const days=new Date(diaryCalendarYear,diaryCalendarMonth+1,0,12).getDate();
+ const offset=(first.getDay()+6)%7,slots=Math.ceil((offset+days)/7)*7;
+ const today=localDayKey(),currentMonth=today.slice(0,7);
+ const selectedMonth=String(diaryCalendarYear)+'-'+String(diaryCalendarMonth+1).padStart(2,'0');
+ const previousAvailable=diaryCalendarYear>1900||diaryCalendarMonth>0;
+ const nextAvailable=selectedMonth<currentMonth;
+ const marked=new Set(records.map(x=>x&&x.date).filter(day=>diaryDateFromKey(day)));
+ let body='';
+ for(let index=0;index<slots;index++){
+  const day=index-offset+1;
+  if(day<1||day>days){body+='<span class="foodCalendarBlank" aria-hidden="true"></span>';continue}
+  const key=selectedMonth+'-'+String(day).padStart(2,'0'),future=key>today;
+  const selected=key===diarySelectedDate,filled=marked.has(key);
+  body+='<button type="button" class="foodCalendarDay'+
+   (selected?' is-selected':'')+(key===today?' is-today':'')+
+   (filled?' has-entry':'')+'" data-diary-day="'+key+'"'+
+   (selected?' aria-pressed="true"':' aria-pressed="false"')+
+   (future?' disabled aria-disabled="true"':'')+
+   ' aria-label="'+diaryDateLabel(key)+(filled?', є записи харчування':'')+'">'+
+   '<span>'+day+'</span>'+(filled?'<i class="foodCalendarDot" aria-hidden="true"></i>':'')+
+   '</button>';
+ }
+ const monthTitle=first.toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+ return '<div class="foodCalendarMonthBar">'+
+  '<button type="button" data-diary-month="-1" aria-label="Попередній місяць"'+
+   (previousAvailable?'':' disabled')+'>‹</button>'+
+  '<strong>'+foodEsc(monthTitle)+'</strong>'+
+  '<button type="button" data-diary-month="1" aria-label="Наступний місяць"'+
+   (nextAvailable?'':' disabled')+'>›</button></div>'+
+  '<div class="foodCalendarGrid">'+
+  ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span class="foodCalendarWeek">'+x+'</span>').join('')+
+  body+'</div><p class="foodCalendarLegend"><i class="foodCalendarDot" aria-hidden="true"></i> Є записи харчування</p>';
+}
+function renderFoodCalendar(records){
+ const calendar=$('foodCalendar');
+ if(!calendar)return;
+ const today=localDayKey(),historical=diarySelectedDate!==today;
+ const toggle=$('foodCalendarToggle'),todayButton=$('foodDiaryTodayBtn');
+ if(toggle){
+  toggle.setAttribute('aria-expanded',diaryCalendarOpen?'true':'false');
+  toggle.textContent=diaryCalendarOpen?'Згорнути календар':'Обрати дату';
+ }
+ if(todayButton)todayButton.hidden=!historical;
+ const kicker=$('foodDiaryDayKicker');
+ if(kicker)kicker.textContent=historical?'ІСТОРІЯ ХАРЧУВАННЯ':'СЬОГОДНІ';
+ const portionDate=$('foodEntryTargetDate');
+ if(portionDate)portionDate.textContent='Додаємо за '+diaryDateLabel(diarySelectedDate);
+ calendar.hidden=!diaryCalendarOpen;
+ if(!diaryCalendarOpen){calendar.innerHTML='';return}
+ calendar.innerHTML=diaryCalendarMarkup(records);
+ calendar.querySelectorAll('[data-diary-day]').forEach(button=>{
+  button.addEventListener('click',()=>selectDiaryDate(button.dataset.diaryDay));
+ });
+ calendar.querySelectorAll('[data-diary-month]').forEach(button=>{
+  button.addEventListener('click',()=>moveDiaryCalendarMonth(Number(button.dataset.diaryMonth)));
+ });
+}
+function toggleFoodCalendar(){
+ diaryCalendarOpen=!diaryCalendarOpen;
+ if(diaryCalendarOpen){
+  diaryCalendarYear=Number(diarySelectedDate.slice(0,4));
+  diaryCalendarMonth=Number(diarySelectedDate.slice(5,7))-1;
+ }
+ renderFoodCalendar(loadDiary());
+}
+function moveDiaryCalendarMonth(direction){
+ if(!diaryCalendarOpen||![1,-1].includes(direction))return false;
+ const date=new Date(diaryCalendarYear,diaryCalendarMonth+direction,1,12);
+ const key=String(date.getFullYear())+'-'+String(date.getMonth()+1).padStart(2,'0');
+ if(date.getFullYear()<1900||key>localDayKey().slice(0,7))return false;
+ diaryCalendarYear=date.getFullYear();diaryCalendarMonth=date.getMonth();
+ renderFoodCalendar(loadDiary());
+ return true;
+}
+function selectDiaryDate(dayKey){
+ if(!diaryDateFromKey(dayKey)||dayKey>localDayKey())return false;
+ // A stale open edit/delete action cannot operate on a different date.
+ activeDiaryEditId=null;diaryLastRemoved=null;
+ diarySelectedDate=dayKey;diaryCalendarOpen=false;
+ diaryCalendarYear=Number(dayKey.slice(0,4));
+ diaryCalendarMonth=Number(dayKey.slice(5,7))-1;
+ renderDiary();
+ return true;
+}
 function loadDiary(){
  try{const x=JSON.parse(localStorage.getItem(FOOD_DIARY_KEY)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}
 }
@@ -631,16 +736,17 @@ function diaryMealGroupHtml(meal,items){
   '<div class="foodDiaryMealEntries">'+items.map(diaryEntryHtml).join('')+'</div></section>';
 }
 function renderDiary(){
- const all=loadDiary(),day=localDayKey(),items=all.filter(x=>x.date===day);
+ const all=loadDiary(),day=diarySelectedDate,items=all.filter(x=>x.date===day);
  const totals=diaryNutritionTotals(items);
  $('diaryKcal').textContent=foodFmt(totals.kcal);
  $('diaryProtein').textContent=foodFmt(totals.protein);
  $('diaryFat').textContent=foodFmt(totals.fat);
  $('diaryCarbs').textContent=foodFmt(totals.carbs);
- const date=new Date();$('foodDiaryDate').textContent=date.toLocaleDateString('uk-UA',{day:'numeric',month:'long'});
+ $('foodDiaryDate').textContent=diaryDateLabel(day);
+ renderFoodCalendar(all);
  const box=$('foodDiaryEntries');
  if(!items.length){
-  box.innerHTML='<div class="foodDiaryEmpty">Поки що нічого не додано. Обери продукт і прийом їжі вище.</div>';
+  box.innerHTML='<div class="foodDiaryEmpty">За цей день ще немає записів. Обери продукт вище та додай його на вибрану дату.</div>';
  }else{
   const sections=FOOD_MEALS.map(meal=>{
    const group=items.filter(item=>item.meal===meal);
@@ -669,7 +775,7 @@ function renderDiary(){
  }
 }
 function startDiaryEdit(id){
- const entry=loadDiary().find(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ const entry=loadDiary().find(x=>x.date===diarySelectedDate&&String(x.id)===String(id));
  if(!entry)return;
  diaryLastRemoved=null;
  activeDiaryEditId=String(id);
@@ -692,7 +798,7 @@ function diaryDraft(){
 }
 function updateDiaryEditPreview(){
  if(!activeDiaryEditId)return;
- const entry=loadDiary().find(x=>x.date===localDayKey()&&String(x.id)===activeDiaryEditId);
+ const entry=loadDiary().find(x=>x.date===diarySelectedDate&&String(x.id)===activeDiaryEditId);
  const draft=diaryDraft(),totals=entry&&draft?diaryTotalsForGrams(entry,draft.grams):null;
  const preview=$('diaryEditPreview'),error=$('diaryEditError');
  if(!preview||!error)return;
@@ -710,7 +816,7 @@ function saveDiaryEdit(id){
  const draft=diaryDraft(),error=$('diaryEditError');
  if(!draft){if(error)error.textContent='Введи кількість від 1 до 5000 г.';return false}
  const all=loadDiary();
- const idx=all.findIndex(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ const idx=all.findIndex(x=>x.date===diarySelectedDate&&String(x.id)===String(id));
  if(idx<0)return false;
  const entry=all[idx],totals=diaryTotalsForGrams(entry,draft.grams);
  if(!totals){if(error)error.textContent='Не вдалося перерахувати продукт.';return false}
@@ -727,7 +833,7 @@ function saveDiaryEdit(id){
 }
 function removeDiaryEntry(id){
  const all=loadDiary();
- const index=all.findIndex(x=>x.date===localDayKey()&&String(x.id)===String(id));
+ const index=all.findIndex(x=>x.date===diarySelectedDate&&String(x.id)===String(id));
  if(index<0)return false;
  const removed=all[index];
  all.splice(index,1);
@@ -771,7 +877,7 @@ function addFoodToDiary(){
  };
  const entry={
   id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10),
-  date:localDayKey(),meal,name:selectedFood.name,brand:selectedFood.brand||'',
+  date:diarySelectedDate,meal,name:selectedFood.name,brand:selectedFood.brand||'',
   grams:currentFoodTotals.grams,kcal:currentFoodTotals.kcal,protein:currentFoodTotals.protein,
   fat:currentFoodTotals.fat,carbs:currentFoodTotals.carbs,oil:currentFoodTotals.oil||0,
   per100,prep,source:selectedFood.source||'',source_id:selectedFood.source_id||'',
@@ -786,6 +892,8 @@ function addFoodToDiary(){
  status.textContent='Додано до щоденника.';
 }
 
+$('foodCalendarToggle').addEventListener('click',toggleFoodCalendar);
+$('foodDiaryTodayBtn').addEventListener('click',()=>selectDiaryDate(localDayKey()));
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
 $('foodQuery').addEventListener('input',()=>{
  const q=$('foodQuery').value.trim();
