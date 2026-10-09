@@ -101,7 +101,8 @@ const FOOD_CACHE_KEY='eplan12-food-cache-v2';
 const FOOD_DIARY_KEY='eplan12-food-diary-v1';
 const FOOD_LOCAL_CATALOG_KEY='eplan12-local-food-catalog-v1';
 const FOOD_LOCAL_CATALOG_TTL=6*60*60*1000;
-let foodLocalCatalog=null,foodFullLoading=false;
+let foodLocalCatalog=null,foodFullLoading=false,foodLocalLoadPromise=null;
+let foodLocalResults=[],foodLocalShown=0,foodSearchStage='idle',foodRemotePage=0,foodRemoteHasMore=false;
 function loadLocalFoodCatalogue(){
  try{
   const stored=JSON.parse(localStorage.getItem(FOOD_LOCAL_CATALOG_KEY)||'null');
@@ -126,7 +127,7 @@ function foodPreviewNormalize(query){
  }
  return result;
 }
-function localFoodMatches(query){
+function localFoodMatches(query,limit=8){
  if(!foodLocalCatalog||!Array.isArray(foodLocalCatalog.items))return [];
  const raw=String(query||'').trim().toLocaleLowerCase('uk-UA');
  if(raw.length<2||/^\d{8,14}$/.test(raw))return [];
@@ -159,27 +160,33 @@ function localFoodMatches(query){
  scored.sort((a,b)=>a.score-b.score||a.approx-b.approx||
    a.item.name.length-b.item.name.length||
    a.item.name.localeCompare(b.item.name,'uk'));
- return scored.slice(0,8).map(x=>x.item);
+ return (limit===null?scored:scored.slice(0,limit)).map(x=>x.item);
 }
 function warmLocalFoodCatalogue(){
- fetch('/api/prototype/foods/local-catalog',{headers:{'Accept':'application/json'}})
+ if(foodLocalLoadPromise)return foodLocalLoadPromise;
+ foodLocalLoadPromise=fetch('/api/prototype/foods/local-catalog',
+    {headers:{'Accept':'application/json'}})
   .then(response=>response.ok?response.json():null)
   .then(data=>{
-   if(!data||!Array.isArray(data.items)||data.items.length<26)return;
+   if(!data||!Array.isArray(data.items)||data.items.length<26)return null;
    foodLocalCatalog={...data,savedAt:Date.now()};
    try{localStorage.setItem(FOOD_LOCAL_CATALOG_KEY,JSON.stringify(foodLocalCatalog))}catch(_){}
-   if(foodFullLoading&&foodActiveQuery&&!foodItems.length&&!selectedFood){
-    const matches=localFoodMatches(foodActiveQuery);
-    if(matches.length){
-     foodItems=matches;
-     renderFoodResults(foodItems,'Швидкі результати бази ЄПЛАН. Довантажуємо інші джерела…');
-    }
+   if(foodSearchStage==='idle'&&foodActiveQuery&&!selectedFood){
+    showLocalFoodResults(foodActiveQuery);
    }
-  }).catch(()=>{});
+   return foodLocalCatalog;
+  })
+  .catch(()=>null)
+  .finally(()=>{foodLocalLoadPromise=null});
+ return foodLocalLoadPromise;
 }
 
 const foodEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-function foodKey(item){return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''))}
+function foodKey(item){
+ const fdc=item.source_fdc_id||(item.source==='usda'?item.source_id:null);
+ if(fdc&&/^\\d+$/.test(String(fdc)))return 'fdc:'+fdc;
+ return String(item.barcode||'')||((item.source||'')+':'+String(item.source_id||''));
+}
 function loadFoodCache(){
  try{const x=JSON.parse(localStorage.getItem(FOOD_CACHE_KEY)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}
 }
@@ -214,82 +221,134 @@ function foodResultLabel(item){
  return '<span><strong>'+foodEsc(item.name)+'</strong>'+brand+'</span>'+macro;
 }
 function renderFoodResults(items,message){
-  const box=$('foodResults'),portion=$('foodPortion');selectedFood=null;portion.classList.remove('show');portion.innerHTML='';
-  if(!items.length){box.innerHTML='';$('foodStatus').textContent=message||'Нічого не знайдено у цій категорії. Спробуй інший тип або назву.';$('foodMoreBtn').hidden=true;return}
-  $('foodStatus').textContent=message||('Показано '+items.length+' варіант'+(items.length===1?'':'ів')+'. Обери продукт.');
-  box.innerHTML=items.map((item,i)=>'<button type="button" class="foodItem" data-food-index="'+i+'">'+foodResultLabel(item)+'</button>').join('');
-  box.querySelectorAll('[data-food-index]').forEach(btn=>btn.onclick=()=>selectFood(Number(btn.dataset.foodIndex)));
-  $('foodMoreBtn').hidden=!foodHasMore;
+ const box=$('foodResults'),portion=$('foodPortion');
+ // Loading extra pages must not close the portion editor the user opened.
+ if(!selectedFood){portion.classList.remove('show');portion.innerHTML=''}
+ if(!items.length){
+  box.innerHTML='';
+  $('foodStatus').textContent=message||'Нічого не знайдено. Спробуй іншу назву.';
+  $('foodMoreBtn').hidden=true;
+  return;
+ }
+ $('foodStatus').textContent=message||('Показано '+items.length+' варіант'+(items.length===1?'':'ів')+'. Обери продукт.');
+ box.innerHTML=items.map((item,i)=>'<button type="button" class="foodItem" data-food-index="'+i+'">'+foodResultLabel(item)+'</button>').join('');
+ box.querySelectorAll('[data-food-index]').forEach(btn=>btn.onclick=()=>selectFood(Number(btn.dataset.foodIndex)));
+ $('foodMoreBtn').hidden=!foodHasMore;
+ $('foodMoreBtn').textContent=foodSearchStage==='local'&&foodLocalShown>=foodLocalResults.length
+  ?'Показати ще · інші бази':'Показати ще';
+}
+function resetFoodSearch(query){
+ ++foodRequestId;
+ foodActiveQuery=query;
+ foodPage=1;foodRemotePage=0;foodRemoteHasMore=false;
+ foodSearchStage='idle';foodFullLoading=false;foodHasMore=false;
+ foodLocalResults=[];foodLocalShown=0;foodItems=[];
+ selectedFood=null;activeFoodProfile=null;currentFoodTotals=null;
+ $('foodResults').innerHTML='';
+ $('foodPortion').classList.remove('show');
+ $('foodPortion').innerHTML='';
+ $('foodMoreBtn').hidden=true;
+ $('foodMoreBtn').disabled=false;
+ $('foodSearchBtn').disabled=false;
+}
+function showLocalFoodResults(query){
+ const local=localFoodMatches(query,null);
+ if(!local.length)return false;
+ foodActiveQuery=query;
+ foodSearchStage='local';
+ foodLocalResults=local;
+ foodLocalShown=Math.min(8,local.length);
+ foodItems=local.slice(0,foodLocalShown);
+ // The button can always request more from OFF/USDA after local pages.
+ foodHasMore=true;
+ renderFoodResults(foodItems,'Показано '+foodLocalShown+' з '+local.length+
+  ' продуктів бази ЄПЛАН. Обери продукт без очікування.');
+ return true;
+}
+async function fetchExternalFoods(query,requestId,page,keepLocal){
+ if(foodFullLoading)return;
+ foodFullLoading=true;
+ $('foodMoreBtn').disabled=true;
+ $('foodSearchBtn').disabled=true;
+ const status=$('foodStatus');
+ status.textContent=keepLocal
+  ?'Продукти ЄПЛАН доступні. Шукаємо додаткові товари в інших базах…'
+  :'Шукаємо у відкритих базах продуктів…';
+ try{
+  const url='/api/prototype/foods/search?q='+encodeURIComponent(query)+'&limit=8&page='+page;
+  const response=await fetch(url,{headers:{'Accept':'application/json'}});
+  const data=await response.json().catch(()=>({}));
+  if(requestId!==foodRequestId)return;
+  if(!response.ok)throw new Error(typeof data.detail==='string'
+   ?data.detail:'Не вдалося виконати пошук');
+  const incoming=Array.isArray(data.items)?data.items:[];
+  saveFoodCache(incoming);
+  foodItems=keepLocal?mergeFoodItems(foodItems,incoming):incoming;
+  foodRemotePage=page;
+  foodRemoteHasMore=Boolean(data.has_more);
+  foodHasMore=foodRemoteHasMore;
+  foodSearchStage='remote';
+  renderFoodResults(foodItems,foodItems.length
+   ?'Показано '+foodItems.length+' продуктів. Обери продукт.'
+   :'За цим запитом продуктів не знайдено.');
+ }catch(err){
+  if(requestId!==foodRequestId)return;
+  // Keep already-visible local food and retry option if remote API fails.
+  foodHasMore=Boolean(foodItems.length);
+  foodSearchStage=keepLocal?'local':'remote-retry';
+  renderFoodResults(foodItems,foodItems.length
+   ?'Продукти ЄПЛАН доступні. Інші бази тимчасово недоступні — можна спробувати ще раз.'
+   :'Зовнішній пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка'));
+  if(!foodItems.length){
+   foodHasMore=true;
+   $('foodMoreBtn').hidden=false;
+  }
+ }finally{
+  if(requestId===foodRequestId){
+   foodFullLoading=false;
+   $('foodSearchBtn').disabled=false;
+   $('foodMoreBtn').disabled=false;
+  }
+ }
 }
 async function searchFoods(query,append=false){
-  const q=String(query||$('foodQuery').value||'').trim();
-  if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
-  const requestId=++foodRequestId;
-  if(!append){
-   foodPage=1;foodActiveQuery=q;foodHasMore=false;foodItems=[];selectedFood=null;
-   $('foodResults').innerHTML='';$('foodPortion').classList.remove('show');
-   // Previously viewed products can appear immediately while authoritative
-   // server results are loading. Never pretend this cache is the full list.
-   // Warmed local catalogue is available without a network round trip.
-   const localPreview=localFoodMatches(q);
-   const preview=localPreview.length?localPreview:cachedFoodMatches(q);
-   if(preview.length){
-    foodItems=preview;
-    renderFoodResults(foodItems,localPreview.length
-      ?'Швидкі результати бази ЄПЛАН. Довантажуємо інші джерела…'
-      :'Попередні результати з кешу. Оновлюємо пошук…');
-   }
+ const q=String(query||$('foodQuery').value||'').trim();
+ if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
+ if(append){
+  if(foodFullLoading||!foodActiveQuery)return;
+  if(foodSearchStage==='local'&&foodLocalShown<foodLocalResults.length){
+   foodLocalShown=Math.min(foodLocalShown+8,foodLocalResults.length);
+   foodItems=foodLocalResults.slice(0,foodLocalShown);
+   foodHasMore=true;
+   renderFoodResults(foodItems,'Показано '+foodLocalShown+' з '+
+    foodLocalResults.length+' продуктів бази ЄПЛАН.');
+   return;
   }
-  $('foodQuery').value=q;
-  if(!append)foodFullLoading=true;
-  if(append||!foodItems.length)$('foodStatus').textContent=append?'Завантажуємо ще…':'Шукаємо продукти…';
-  $('foodSearchBtn').disabled=true;$('foodMoreBtn').disabled=true;
-  let fullFinished=false;
-  if(!append&&!foodItems.length){
-   // Display the local reference instantly while the full OFF/USDA search
-   // continues. Ignore late preview responses after the full result arrives.
-   fetch('/api/prototype/foods/preview?q='+encodeURIComponent(q)+'&limit=8',
-         {headers:{'Accept':'application/json'}})
-    .then(r=>r.ok?r.json():null)
-    .then(data=>{
-     if(fullFinished||requestId!==foodRequestId||foodItems.length||selectedFood)return;
-     const preview=Array.isArray(data&&data.items)?data.items:[];
-     if(preview.length){
-      foodItems=preview;
-      renderFoodResults(foodItems,'Попередні довідкові результати. Шукаємо більше продуктів…');
-     }
-    }).catch(()=>{});
+  if(foodSearchStage==='local'||foodSearchStage==='remote-retry'){
+   return fetchExternalFoods(foodActiveQuery,foodRequestId,
+    foodSearchStage==='remote-retry'&&foodRemotePage>0?foodRemotePage:1,
+    foodItems.length>0);
   }
-  try{
-   const url='/api/prototype/foods/search?q='+encodeURIComponent(q)+'&limit=8&page='+foodPage;
-   const response=await fetch(url,{headers:{'Accept':'application/json'}});
-   const data=await response.json().catch(()=>({}));
-   if(requestId!==foodRequestId)return;
-   if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Не вдалося виконати пошук');
-   const incoming=Array.isArray(data.items)?data.items:[];
-   saveFoodCache(incoming);
-   // If the user already selected a cached preview, preserve the portion
-   // editor rather than discarding their selection when network returns.
-   if(!append&&selectedFood)return;
-   // Fresh server ranking is authoritative unless a preview was selected.
-   foodItems=append?mergeFoodItems(foodItems,incoming):incoming;
-   foodHasMore=Boolean(data.has_more);
-   renderFoodResults(foodItems);
-   if(data.normalized_query&&data.normalized_query.toLowerCase()!==q.toLowerCase())$('foodStatus').textContent+=' Запит нормалізовано: «'+data.normalized_query+'».';
-  }catch(err){
-   if(requestId!==foodRequestId)return;
-   if(!append&&selectedFood)return;
-   if(!append&&!foodItems.length)foodItems=cachedFoodMatches(q);
-   const message=foodItems.length?'Показано попередні результати. Зовнішній пошук тимчасово недоступний.':'Пошук тимчасово недоступний: '+(err&&err.message?err.message:'невідома помилка');
-   foodHasMore=false;
-   renderFoodResults(foodItems,message);
-  }finally{
-   fullFinished=true;
-   if(requestId===foodRequestId){
-    foodFullLoading=false;
-    $('foodSearchBtn').disabled=false;$('foodMoreBtn').disabled=false
-   }
+  if(foodSearchStage==='remote'&&foodRemoteHasMore){
+   return fetchExternalFoods(foodActiveQuery,foodRequestId,foodRemotePage+1,true);
   }
+  return;
+ }
+ resetFoodSearch(q);
+ $('foodQuery').value=q;
+ const requestId=foodRequestId;
+ const barcode=/^\d{8,14}$/.test(q.replace(/\s/g,''));
+ if(!barcode&&!foodLocalCatalog){
+  // An initial search shares the preloading request, never races it by
+  // starting a slow external search before the local catalogue arrives.
+  await (foodLocalLoadPromise||warmLocalFoodCatalogue());
+  if(requestId!==foodRequestId)return;
+ }
+ if(!barcode&&showLocalFoodResults(q))return;
+ // A barcode or an ingredient genuinely absent from the own catalogue
+ // needs the complete OFF/USDA search immediately.
+ foodSearchStage='remote';
+ return fetchExternalFoods(q,requestId,1,false);
 }
 
 const PREP_PATTERNS=[
@@ -497,20 +556,15 @@ function addFoodToDiary(){
 
 $('foodSearchBtn').addEventListener('click',()=>searchFoods());
 $('foodQuery').addEventListener('input',()=>{
- // Local suggestions are synchronous; external APIs are contacted only
- // after the explicit Search button/Enter action.
- if(foodFullLoading)return;
  const q=$('foodQuery').value.trim();
- if(q.length<2)return;
- const suggestions=localFoodMatches(q);
- if(!suggestions.length)return;
- foodRequestId+=1;
- foodPage=1;foodActiveQuery=q;foodHasMore=false;
- foodItems=suggestions;
- renderFoodResults(foodItems,'Швидкі результати бази ЄПЛАН. Натисни «Знайти», щоб переглянути всі джерела.');
+ resetFoodSearch(q);  // Also invalidates any previous external request.
+ if(q.length<2){$('foodStatus').textContent='Введи хоча б 2 символи.';return}
+ if(!showLocalFoodResults(q)){
+  $('foodStatus').textContent='У базі ЄПЛАН немає збігів. Натисни «Знайти» для пошуку в інших базах.';
+ }
 });
 $('foodQuery').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchFoods()}});
-$('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;foodPage+=1;searchFoods(foodActiveQuery,true)});
+$('foodMoreBtn').addEventListener('click',()=>{if(!foodHasMore||!foodActiveQuery)return;searchFoods(foodActiveQuery,true)});
 document.querySelectorAll('[data-food-query]').forEach(btn=>btn.addEventListener('click',()=>searchFoods(btn.dataset.foodQuery)));
 
 renderDiary();
