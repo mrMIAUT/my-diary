@@ -2602,8 +2602,9 @@ def add_program(x:ProgramIn,user:AuthUser=Depends(require_trainer)):
         superset_group=x.superset_group.strip()
         superset_order=x.superset_order
         if x.superset_with_id:
-            source=c.execute("SELECT id,day_name,superset_group FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
+            source=c.execute("SELECT id,day_name,superset_group,execution_mode FROM program WHERE id=%s AND client_id=%s FOR UPDATE",(x.superset_with_id,x.client_id)).fetchone()
             if not source: raise HTTPException(404,"Вправу для суперсету не знайдено")
+            if normalize_execution_mode(source.get("execution_mode"))!="reps": raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
             if str(source["day_name"] or "").strip()!=day: raise HTTPException(400,"Вправи суперсету мають бути в одному тренувальному дні")
             if str(source["superset_group"] or "").strip(): raise HTTPException(409,"Ця вправа вже входить у суперсет")
             superset_group=f"SS{source['id']}"
@@ -2856,8 +2857,13 @@ def reorder_program(x:ProgramOrderIn,user:AuthUser=Depends(require_trainer)):
 
 @app.patch("/api/program/{pid}/superset")
 def set_superset(pid:int,x:SupersetIn,user:AuthUser=Depends(require_trainer)):
-    owned_record(user,"program",pid)
-    run("UPDATE program SET superset_group=? WHERE id=?",(x.superset_group,pid))
+    p=owned_record(user,"program",pid)
+    group=(x.superset_group or "").strip()
+    if group:
+        current=one("SELECT execution_mode FROM program WHERE id=?",(pid,))
+        if current and normalize_execution_mode(current.get("execution_mode"))!="reps":
+            raise HTTPException(400,"Вправи за часом поки не додаються у суперсет")
+    run("UPDATE program SET superset_group=? WHERE id=?",(group,pid))
     return {"ok":True}
 
 @app.delete("/api/program/{pid}")
@@ -2940,14 +2946,22 @@ def add_timed_result_sets(x:TimedSetResultIn,user:AuthUser=Depends(require_clien
         raise HTTPException(400,"Номери підходів не мають повторюватися")
     with con() as c:
         c.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,))
-        active=c.execute("""SELECT workout_day,started_at FROM workout_sessions
+        active=c.execute("""SELECT workout_day,started_at,program_snapshot FROM workout_sessions
                             WHERE client_id=%s AND status='training'
                             ORDER BY id DESC LIMIT 1""",(x.client_id,)).fetchone()
         if not active:
             raise HTTPException(400,"Немає активного тренування")
         result_day=str((active or {}).get("workout_day") or kyiv_today())[:10]
-        current=c.execute("SELECT execution_mode,work_seconds FROM program WHERE id=%s AND client_id=%s",(x.program_id,x.client_id)).fetchone()
-        if current and normalize_execution_mode(current.get("execution_mode"))!="time":
+        snapshot_item=None
+        try:
+            snapshot=json.loads(active.get("program_snapshot") or "[]")
+            if isinstance(snapshot,list):
+                snapshot_item=next((p for p in snapshot if isinstance(p,dict) and int(p.get("id") or 0)==x.program_id),None)
+        except (TypeError,ValueError):
+            snapshot_item=None
+        if not snapshot_item:
+            raise HTTPException(400,"Ця вправа не входить до активного тренування")
+        if normalize_execution_mode(snapshot_item.get("execution_mode"))!="time":
             raise HTTPException(400,"Ця вправа не налаштована як вправа за часом")
         c.execute("DELETE FROM timed_result_sets WHERE client_id=%s AND program_id=%s AND day=%s",(x.client_id,x.program_id,result_day))
         ids=[]
