@@ -107,6 +107,53 @@
  .foodDiaryDailyKcal b{font-size:24px}
  .foodDiaryMeal.is-empty{padding:6px 10px}
 }
+
+/* ЄПЛАН diary v4 — blue accent, foldable meals, clean nutrient hierarchy.
+   Existing local diary storage and nutritional calculations stay unchanged. */
+.foodWeekDay.is-selected .foodWeekDayCircle{background:#3868cb;border-color:#3868cb;color:#fff;box-shadow:0 2px 7px rgba(56,104,203,.19)}
+.foodWeekDay.has-entry:not(.is-selected) .foodWeekDayCircle{background:#ecf2ff;border-color:#c7d7f5;color:#3864b5}
+.foodWeekDay.is-today:not(.is-selected) .foodWeekDayCircle{border-color:#779bdd;background:#f0f5ff;color:#3263b1}
+.foodCalendarDot{background:#4679d0}
+.foodWeekDay.is-selected .foodWeekDayMarker .foodCalendarDot{background:#4679d0}
+.foodCalendarDay.is-selected{background:#e9f0ff;border-color:#afc5ef;color:#315fac}
+.foodCalendarDay.is-today:not(.is-selected){border-color:#b9cef2;color:#3868cb}
+.foodDiaryDailyMacros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:0}
+.foodDiaryMacroItem{display:flex;flex-direction:column;min-width:0;gap:5px;align-items:center;justify-content:center;padding:0 5px;text-align:center}
+.foodDiaryMacroItem+.foodDiaryMacroItem{border-left:1px solid #dce5f2}
+.foodDiaryMacroLabel{font-size:11px;color:#7e8ba0;line-height:1.1;font-weight:500}
+.foodDiaryMacroValue{display:flex;align-items:baseline;justify-content:center;gap:3px;color:#17243a;white-space:nowrap;font-size:17px;line-height:1.15}
+.foodDiaryMacroValue b{font-size:17px;line-height:1.15;font-weight:750;color:#17243a}
+.foodDiaryMacroValue em{font-style:normal;font-size:10px;color:#93a0b2;font-weight:400}
+.foodDiaryDaySummary .foodDiaryTotals{align-items:center}
+.foodDiaryMealHead{gap:7px;min-width:0;align-items:center}
+.foodDiaryMealToggle{display:flex;align-items:center;justify-content:space-between;flex:1;min-width:0;gap:7px;margin:0;border:0;padding:6px 0;background:transparent;color:inherit;text-align:left;border-radius:7px}
+.foodDiaryMealToggle:focus-visible{outline:2px solid #5685d6;outline-offset:2px}
+.foodDiaryMealToggleRight{display:flex;align-items:center;gap:9px;flex:none}
+.foodDiaryMealChevron{display:grid;place-items:center;width:17px;height:20px;line-height:1;font-size:22px;font-weight:500;color:#9aa8bd}
+.foodDiaryMealEmptyTitle{flex:1;display:flex;align-items:center;min-width:0;padding:6px 0}
+.foodDiaryMeal.is-collapsed{padding-bottom:8px}
+.foodDiaryMeal.is-collapsed .foodDiaryMealHead{min-height:30px}
+.foodDiaryMealBody{margin-top:2px}
+.foodDiaryMealMacros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:0;margin-top:8px;border-top:1px solid #eef2f7;padding-top:9px}
+.foodDiaryMealMacros .foodDiaryMealMacro{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:0 8px;min-width:0;border:0;border-radius:0;background:transparent;text-align:left}
+.foodDiaryMealMacros .foodDiaryMealMacro:first-child{padding-left:0}
+.foodDiaryMealMacros .foodDiaryMealMacro+.foodDiaryMealMacro{border-left:1px solid #e3e9f3}
+.foodDiaryMealMacro small{font-size:10px;color:#8795a8;font-weight:500;white-space:nowrap}
+.foodDiaryMealMacro b{font-size:13px;font-weight:700;color:#283b57;line-height:1.2;white-space:nowrap}
+.foodDiaryMealMacro em{font-size:10px;font-weight:400;font-style:normal;color:#8392a6}
+.foodDiaryMealEntries{margin-top:9px}
+.foodDiaryMeal.is-empty .foodDiaryMealHead{min-height:32px}
+.foodDiaryMealAdd{flex:none}
+.foodSearch+.foodStatus:empty{display:none}
+@media(max-width:390px){
+ .foodDiaryMacroItem{padding:0 2px}
+ .foodDiaryMacroValue b{font-size:15px}
+ .foodDiaryMacroLabel{font-size:10px}
+ .foodDiaryMealToggleRight{gap:4px}
+ .foodDiaryMealChevron{width:14px}
+ .foodDiaryMealMacro b{font-size:12px}
+ .foodDiaryMealMacros .foodDiaryMealMacro{padding:0 4px}
+}
 </style></head><body><main class="wrap"><div class="brand">Є ПЛАН 1.2</div><section class="card"><span class="badge">ПРОТОТИП</span><h1>Калькулятор калорій і БЖВ</h1><p>Розрахуємо стартовий орієнтир. Дані цього прототипу не зберігаються.</p><div class="grid">
 <label>Стать<select id="sex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>
 <label>Вік<input id="age" type="number" inputmode="numeric" placeholder="років"></label>
@@ -123,9 +170,8 @@
 </div><button id="calcBtn" type="button">Розрахувати</button><div class="result" id="result"></div><p id="calcError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
 
 <section class="card" id="foodPrototype"><span class="badge">ХАРЧУВАННЯ</span><h1 style="font-size:22px">Пошук продуктів</h1><p>Знайди продукт, вкажи кількість і додай його до щоденника. У прототипі записи щоденника зберігаються лише на цьому пристрої.</p>
-<div class="foodSearch"><input id="foodQuery" type="search" autocomplete="off" placeholder="Напр. Молокія сир 5%"><button id="foodSearchBtn" type="button">Знайти</button></div>
-<div class="foodChips"><button type="button" data-food-query="Молокія сир 5%">Молокія 5%</button><button type="button" data-food-query="рис басматі">Рис басматі</button><button type="button" data-food-query="куряча грудка">Куряча грудка</button><button type="button" data-food-query="4820045702266">Штрихкод</button></div>
-<div class="foodStatus" id="foodStatus" aria-live="polite">Пошук ще не запускався.</div><div class="foodResults" id="foodResults"></div><button class="foodMore" id="foodMoreBtn" type="button" hidden>Показати ще</button><div class="result foodPortion" id="foodPortion"></div><div class="foodDiary" id="foodDiary">
+<div class="foodSearch"><input id="foodQuery" type="search" autocomplete="off" placeholder="Пошук продуктів або штрихкод" aria-label="Пошук продуктів або штрихкод"><button id="foodSearchBtn" type="button">Знайти</button></div>
+<div class="foodStatus" id="foodStatus" aria-live="polite"></div><div class="foodResults" id="foodResults"></div><button class="foodMore" id="foodMoreBtn" type="button" hidden>Показати ще</button><div class="result foodPortion" id="foodPortion"></div><div class="foodDiary" id="foodDiary">
 <div class="foodDiaryHead"><div><span class="kicker" id="foodDiaryDayKicker">СЬОГОДНІ</span><strong>Щоденник харчування</strong></div><span id="foodDiaryDate"></span></div>
 <nav class="foodDiaryWeek" aria-label="Тижневий календар харчування">
 <div class="foodDiaryWeekTop">
@@ -145,9 +191,9 @@
 <div class="foodDiaryTotals">
   <div class="foodDiaryDailyKcal"><b id="diaryKcal">0</b><span>ккал</span></div>
   <div class="foodDiaryDailyMacros">
-   <span>Білки<b id="diaryProtein">0</b><small>г</small></span>
-   <span>Жири<b id="diaryFat">0</b><small>г</small></span>
-   <span>Вуглеводи<b id="diaryCarbs">0</b><small>г</small></span>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Білки</small><strong class="foodDiaryMacroValue"><b id="diaryProtein">0</b><em>г</em></strong></div>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Жири</small><strong class="foodDiaryMacroValue"><b id="diaryFat">0</b><em>г</em></strong></div>
+   <div class="foodDiaryMacroItem"><small class="foodDiaryMacroLabel">Вуглеводи</small><strong class="foodDiaryMacroValue"><b id="diaryCarbs">0</b><em>г</em></strong></div>
   </div>
 </div></section>
 <div id="foodDiaryEntries" class="foodDiaryEntries"></div>
@@ -168,4 +214,4 @@
 <button id="adaptBtn" type="button">Переглянути ціль</button>
 <div style="display:flex;gap:8px;margin-top:10px"><button id="changeGoalBtn" type="button" style="margin:0;background:#eef4ff;color:#245cae">Змінити ціль</button><button id="stopGoalBtn" type="button" style="margin:0;background:#fff;color:#566477;border:1px solid #dce3ec">Зупинити ціль</button></div>
 <div class="result" id="goalActionResult"></div><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=44" defer></script></body></html>
+</main><script src="/static/calculator-prototype.js?v=45" defer></script></body></html>
