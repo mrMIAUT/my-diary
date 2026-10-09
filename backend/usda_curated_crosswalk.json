@@ -1369,6 +1369,24 @@
       "fdc_id": 1750337,
       "name_ru": "Соевый напиток без сахара",
       "expected_source_description": "Soy milk, unsweetened, plain, shelf stable"
+    },
+    {
+      "name_uk": "Насіння маку (сухе)",
+      "fdc_id": 171330,
+      "name_ru": "Семена мака сухие",
+      "expected_source_description": "Spices, poppy seed"
+    },
+    {
+      "name_uk": "Свинячий смалець",
+      "fdc_id": 171401,
+      "name_ru": "Смалец свиной топлёный",
+      "expected_source_description": "Lard"
+    },
+    {
+      "name_uk": "Яловичий жир топлений",
+      "fdc_id": 171400,
+      "name_ru": "Жир говяжий топлёный",
+      "expected_source_description": "Fat, beef tallow"
     }
   ]
 }
