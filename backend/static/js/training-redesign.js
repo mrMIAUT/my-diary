@@ -13,7 +13,7 @@ async function switchClientTrainingTab(key){
 }
 
 function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
-  let timed=isTimedWorkoutExercise(x),rest=showRest?restLabel(x):'',rir=timed?'':rirPlan(x).join(' / '),
+  let timed=isTimedWorkoutExercise(x),rest=showRest?(timed?timedRestLabel(x):restLabel(x)):'',rir=timed?'':rirPlan(x).join(' / '),
       alts=timed?[]:exerciseAlternativeConfigs(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url),
       plan=timed?timedWorkoutPlanText(x):repeatPlanText(x);
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
