@@ -50,6 +50,56 @@ function restTimerRemaining(){return Math.max(0,Math.ceil((restTimerEnd()-Date.n
 function restTimerPausedSeconds(){return Math.max(0,+(localStorage.getItem('eplanRestTimerPausedSeconds')||0))}
 function clearRestTimerPaused(){localStorage.removeItem('eplanRestTimerPausedSeconds')}
 
+// Larger rest display for ordinary repetition-based exercise cards only.
+// It reads the existing timer/storage and never creates a second countdown.
+function featuredRestTimerHTML(pid,total,inSuperset=false){
+ return '<section class="workout-featured-rest" data-rest-featured-pid="'+(+pid||0)+'" data-rest-featured-total="'+Math.max(1,+total||1)+'" data-rest-featured-superset="'+(inSuperset?'1':'0')+'" hidden>'
+   +'<div class="workout-featured-rest-head"><span class="workout-featured-rest-heading">◷ Таймер відпочинку</span>'
+   +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">⚙ Налаштувати</button></div>'
+   +'<div class="workout-featured-rest-main">'
+   +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>⏱</span></div>'
+   +'<div class="workout-featured-rest-countdown"><strong class="workout-featured-rest-value">00:00</strong><small class="workout-featured-rest-next">Наступний підхід</small></div>'
+   +'<div class="workout-featured-rest-actions">'
+   +'<button type="button" class="workout-featured-rest-pause" onclick="toggleRestTimerPlayback()" aria-label="Пауза таймера">Ⅱ</button>'
+   +'<button type="button" class="workout-featured-rest-skip" onclick="cancelRestTimer()" aria-label="Пропустити відпочинок">⏭</button>'
+   +'</div></div><div class="workout-featured-rest-status">Відпочинок між підходами</div></section>';
+}
+
+function syncFeaturedRestTimer(seconds,pausedSeconds){
+ var panels=document.querySelectorAll('.workout-featured-rest');
+ if(!panels.length)return;
+ var track=readTrackedRest(),remaining=Math.max(0,+seconds||0),paused=Math.max(0,+pausedSeconds||0),
+     shown=remaining||paused,active=(window.currentClientData?.workout_sessions||[]).find(function(x){return x.status==='training'});
+ var tracked=!!shown&&!!track?.pid&&!!track?.sid&&!!active&&+active.id===+track.sid;
+ panels.forEach(function(panel){
+   var visible=tracked&&+panel.dataset.restFeaturedPid===+track.pid;
+   panel.hidden=!visible;
+   panel.classList.toggle('is-visible',visible);
+   if(!visible)return;
+   panel.classList.toggle('is-paused',!remaining&&paused>0);
+   var time=panel.querySelector('.workout-featured-rest-value');
+   if(time)time.textContent=formatRestTimer(shown);
+   var total=Math.max(1,+panel.dataset.restFeaturedTotal||1),next=(+track.set_number||0)+1,
+       nextLabel=panel.dataset.restFeaturedSuperset==='1'?'коло':'підхід',
+       caption=next<=total?'Наступн'+(nextLabel==='коло'?'е коло':'ий підхід')+': '+next+' з '+total:'Після останнього підходу';
+   var label=panel.querySelector('.workout-featured-rest-next');
+   if(label)label.textContent=caption;
+   var btn=panel.querySelector('.workout-featured-rest-pause');
+   if(btn){btn.textContent=remaining?'Ⅱ':'▶';btn.setAttribute('aria-label',remaining?'Призупинити відпочинок':'Продовжити відпочинок');}
+   var status=panel.querySelector('.workout-featured-rest-status');
+   if(status)status.textContent=remaining?'Відпочинок між підходами':'Таймер на паузі';
+   var circle=panel.querySelector('.workout-featured-rest-progress');
+   if(circle){
+     var circumference=2*Math.PI*44,baseline=Math.max(1,+panel.dataset.restFeaturedDuration||0,shown);
+     if(!panel.dataset.restFeaturedDuration)panel.dataset.restFeaturedDuration=String(baseline);
+     // Add-time is still driven by the existing timer; only ring scaling changes.
+     if(shown>baseline){baseline=shown;panel.dataset.restFeaturedDuration=String(baseline);}
+     circle.style.strokeDasharray=String(circumference);
+     circle.style.strokeDashoffset=String(circumference*(1-Math.min(1,shown/baseline)));
+   }
+ });
+}
+
 function restTimerPanelHTML(){
  return restTimerInlineHTML()+restTimerInlineControlsHTML();
 }
@@ -173,6 +223,7 @@ function updateRestTimerUI(s){
    p.setAttribute('aria-label',running?'Поставити таймер на паузу':'Запустити таймер відпочинку');
    p.setAttribute('title',running?'Пауза':'Запустити таймер');
  }
+ syncFeaturedRestTimer(s,paused);
 }
 
 async function unlockTimerSound(){

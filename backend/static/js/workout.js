@@ -742,6 +742,8 @@ function activeExercisesHTML(items,d,cid){
         +'<span class="muted workout-plan-line"><span class="workout-plan-meta">'+effective.sets+' × '+esc(plan)+'</span>'
         +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span>',
       side='<span class="workout-live-toggle-side">'+(grouped?'':'<span class="arrow">⌄</span>')+(doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':'')+'</span>';
+  // The large rest display is presentation-only; never attached to timed exercises.
+  if(!timed)content=featuredRestTimerHTML(x.id,effective.sets,!!x.superset_group)+content;
   if(grouped){
     return '<div class="workout-live-exercise workout-live-exercise-inner'+(doneToday?' is-exercise-complete':'')+'">'
       +'<div class="workout-live-toggle workout-live-grouped-exercise-head">'+title+side+'</div>'
