@@ -18,7 +18,11 @@ function finalizeTrackedRest(reason='cancel'){
  let track=readTrackedRest();if(!track)return 0;
  let started=+track.started_at||0,end=+track.end_at||0,stop=Date.now();
  if(reason==='finish'&&end)stop=Math.min(stop,end);
- let seconds=started?Math.max(0,Math.min(3600,Math.round((stop-started)/1000))):0;
+ let pausedMs=Math.max(0,+track.paused_total_ms||0);
+ if(track.paused&&+track.paused_at>0)pausedMs+=Math.max(0,stop-(+track.paused_at));
+ // Exclude manual pauses from the actual rest period. Old records lacking
+ // pause timestamps remain readable without changing their saved data.
+ let seconds=started?Math.max(0,Math.min(3600,Math.round((stop-started-pausedMs)/1000))):0;
  try{
    if(track.sid&&track.pid&&track.set_number&&typeof saveWorkoutDraft==='function'){
      saveWorkoutDraft(+track.sid,+track.pid,+track.set_number,'rest_seconds',seconds);
@@ -31,15 +35,25 @@ function beginTrackedRest(context,end){
  let existing=readTrackedRest();
  if(existing)finalizeTrackedRest(existing.end_at&&Date.now()>=+existing.end_at?'finish':'cancel');
  if(!context?.sid||!context?.pid||!context?.set_number)return;
- writeTrackedRest({sid:+context.sid,pid:+context.pid,set_number:+context.set_number,started_at:Date.now(),end_at:+end||0,paused:false});
+ writeTrackedRest({sid:+context.sid,pid:+context.pid,set_number:+context.set_number,started_at:Date.now(),end_at:+end||0,paused:false,paused_at:0,paused_total_ms:0});
 }
 function updateTrackedRestEnd(end){
  let track=readTrackedRest();if(!track)return;
+ // Resuming the existing rest must not count time spent on pause.
+ if(track.paused){
+   if(+track.paused_at>0)track.paused_total_ms=Math.max(0,+track.paused_total_ms||0)+Math.max(0,Date.now()-(+track.paused_at));
+   track.paused_at=0;
+ }
  track.end_at=+end||0;track.paused=false;writeTrackedRest(track);
 }
 function setTrackedRestPaused(paused){
  let track=readTrackedRest();if(!track)return;
- track.paused=!!paused;writeTrackedRest(track);
+ if(paused&&!track.paused){track.paused_at=Date.now();track.paused=true;}
+ else if(!paused&&track.paused){
+   if(+track.paused_at>0)track.paused_total_ms=Math.max(0,+track.paused_total_ms||0)+Math.max(0,Date.now()-(+track.paused_at));
+   track.paused_at=0;track.paused=false;
+ }
+ writeTrackedRest(track);
 }
 function recoverTrackedRest(){
  let track=readTrackedRest();if(!track||track.paused)return;
@@ -60,7 +74,8 @@ function featuredRestTimerIcon(name){
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   pause:'<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
   play:'<path d="m7 4 12 8-12 8V4Z"/>',
-  skip:'<path d="m5 5 10 7-10 7V5Z"/><path d="M19 5v14"/>'
+  stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8"/>'
  };
  return base+(shapes[name]||shapes.clock)+'</svg>';
 }
@@ -70,12 +85,12 @@ function featuredRestTimerHTML(pid,total,inSuperset=false){
    +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">'+featuredRestTimerIcon('settings')+'<span>Налаштувати</span></button></div>'
    +'<div class="workout-featured-rest-main">'
    +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg class="workout-featured-rest-ring-track" viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>'+featuredRestTimerIcon('clock')+'</span></div>'
-   +'<div class="workout-featured-rest-countdown"><strong class="workout-featured-rest-value">00:00</strong><small class="workout-featured-rest-next">Наступний підхід</small></div>'
+   +'<div class="workout-featured-rest-countdown"><strong class="workout-featured-rest-value">00:00</strong><small class="workout-featured-rest-next">Наступний підхід</small><small class="workout-featured-rest-status">Відпочинок між підходами</small></div>'
    +'<div class="workout-featured-rest-actions">'
    +'<button type="button" class="workout-featured-rest-pause" onclick="toggleRestTimerPlayback()" aria-label="Призупинити відпочинок"><span class="workout-rest-icon-pause">'+featuredRestTimerIcon('pause')+'</span><span class="workout-rest-icon-play">'+featuredRestTimerIcon('play')+'</span><small class="workout-rest-control-caption">Пауза</small></button>'
-   +'<button type="button" class="workout-featured-rest-skip" onclick="cancelRestTimer()" aria-label="Пропустити відпочинок">'+featuredRestTimerIcon('skip')+'<small class="workout-rest-control-caption">Пропустити</small></button>'
-   +'</div></div><div class="workout-featured-rest-footer"><span class="workout-featured-rest-status">Відпочинок між підходами</span>'
-   +'<button type="button" class="workout-featured-rest-add" onclick="extendFeaturedRestTimer(30)" aria-label="Додати 30 секунд відпочинку">+30 сек</button></div></section>';
+   +'<button type="button" class="workout-featured-rest-stop" onclick="cancelRestTimer()" aria-label="Стоп — завершити відпочинок">'+featuredRestTimerIcon('stop')+'<small class="workout-rest-control-caption">Стоп</small></button>'
+   +'<button type="button" class="workout-featured-rest-add" onclick="extendFeaturedRestTimer(30)" aria-label="Додати 30 секунд відпочинку">'+featuredRestTimerIcon('plus')+'<span>+30 сек</span></button>'
+   +'</div></div></section>';
 }
 
 // Reuse the existing adjustment when running; while paused extend the stored
@@ -116,12 +131,17 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
    if(status)status.textContent=remaining?'Відпочинок між підходами':'Таймер на паузі';
    var circle=panel.querySelector('.workout-featured-rest-progress');
    if(circle){
-     var circumference=2*Math.PI*44,baseline=Math.max(1,+panel.dataset.restFeaturedDuration||0,shown);
-     if(!panel.dataset.restFeaturedDuration)panel.dataset.restFeaturedDuration=String(baseline);
-     // Add-time is still driven by the existing timer; only ring scaling changes.
+     var trackKey=[track.sid,track.pid,track.set_number,track.started_at].join(':');
+     if(panel.dataset.restFeaturedTrackKey!==trackKey){
+       panel.dataset.restFeaturedTrackKey=trackKey;
+       panel.dataset.restFeaturedDuration=String(Math.max(1,shown));
+     }
+     var circumference=2*Math.PI*44,baseline=Math.max(1,+panel.dataset.restFeaturedDuration||0);
      if(shown>baseline){baseline=shown;panel.dataset.restFeaturedDuration=String(baseline);}
-     circle.style.strokeDasharray=String(circumference);
-     circle.style.strokeDashoffset=String(circumference*(1-Math.min(1,shown/baseline)));
+     // SVG is rotated -90deg: draw the remaining arc clockwise from 12 o'clock.
+     // Shorten the arc as the rest counts down, including after +30 sec.
+     circle.style.strokeDasharray=String(circumference*Math.min(1,shown/baseline))+' '+String(circumference);
+     circle.style.strokeDashoffset='0';
    }
  });
 }
