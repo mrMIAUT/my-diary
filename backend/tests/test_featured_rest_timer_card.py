@@ -35,11 +35,11 @@ class FeaturedRestTimerTests(unittest.TestCase):
 
     def test_pwa_assets(self):
         for source in (INDEX,SW):
-            for asset in ("/static/js/timer.js?v=164",
-                          "/static/js/workout.js?v=184",
-                          "/static/css/redesign.css?v=255"):
+            for asset in ("/static/js/timer.js?v=165",
+                          "/static/js/workout.js?v=185",
+                          "/static/css/redesign.css?v=256"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v212'",SW)
+        self.assertIn("const VERSION='eplan-v213'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):
