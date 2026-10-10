@@ -68,6 +68,7 @@ const ctx={window:{currentClientData:d,workoutExerciseChoices:{}},
 };
 vm.createContext(ctx);vm.runInContext(program,ctx);vm.runInContext(timed,ctx);
 ctx.renderTimedExerciseTimer=()=>{};
+ctx.todayTimedSets=()=>[];
 ctx.finishTimedExerciseTimer=async()=>{finishCalls++};
 ctx.timedExerciseFrame=()=>{};
 async function complete(){
