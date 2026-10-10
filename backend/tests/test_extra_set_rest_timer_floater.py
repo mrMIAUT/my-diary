@@ -107,7 +107,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const src=fs.readFileSync('backend/static/js/timer.js','utf8');
 let html='',remaining=90;
 const ctx={
- console,Math,REST_TIMER_KEY:'timer',
+ console,Math,REST_TIMER_KEY:'timer',setTimeout:()=>0,
  localStorage:{getItem(k){if(k==='timer')return String(Date.now()+remaining*1000);return null}},
  window:{},
  document:{body:{classList:{contains(n){return ['eplan-redesign','client-ui'].includes(n)}},
