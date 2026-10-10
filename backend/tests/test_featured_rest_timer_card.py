@@ -35,11 +35,11 @@ class FeaturedRestTimerTests(unittest.TestCase):
 
     def test_pwa_assets(self):
         for source in (INDEX,SW):
-            for asset in ("/static/js/timer.js?v=163",
+            for asset in ("/static/js/timer.js?v=164",
                           "/static/js/workout.js?v=184",
-                          "/static/css/redesign.css?v=254"):
+                          "/static/css/redesign.css?v=255"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v211'",SW)
+        self.assertIn("const VERSION='eplan-v212'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):
@@ -84,7 +84,12 @@ let template=ctx.featuredRestTimerHTML(25,4,false);
 assert(template.includes('data-rest-featured-pid="25"'));
 assert(template.includes('onclick="toggleRestTimerPlayback()"'));
 assert(template.includes('onclick="cancelRestTimer()"'));
-assert(template.includes('Пропустити'));
+assert(template.includes('Стоп'));
+assert(!template.includes('Пропустити'));
+assert(template.includes('workout-featured-rest-stop'));
+assert(template.includes('workout-featured-rest-add'));
+assert(template.indexOf('workout-featured-rest-stop') < template.indexOf('workout-featured-rest-add'));
+assert(template.includes('workout-featured-rest-status'));
 assert(template.includes('onclick="extendFeaturedRestTimer(30)"'));
 assert(template.includes('Налаштувати'));
 assert(!template.includes('⏭'));
@@ -100,7 +105,10 @@ assert.equal(a.pieces['.workout-featured-rest-pause'].attrs['aria-label'],'Пр�
 assert.equal(a.pieces['.workout-featured-rest-pause .workout-rest-control-caption'].textContent,'Пауза');
 ctx.extendFeaturedRestTimer(30);
 assert(ctx.restTimerRemaining()>=119);
-assert(Number.isFinite(+a.pieces['.workout-featured-rest-progress'].style.strokeDashoffset));
+assert.equal(a.pieces['.workout-featured-rest-progress'].style.strokeDashoffset,'0');
+const fullArc=+a.pieces['.workout-featured-rest-progress'].style.strokeDasharray.split(' ')[0];
+ctx.updateRestTimerUI(ctx.restTimerRemaining());
+assert(+a.pieces['.workout-featured-rest-progress'].style.strokeDasharray.split(' ')[0] <= fullArc);
 ctx.pauseRestTimer();
 assert.equal(a.hidden,false);
 assert.equal(a.classes['is-paused'],true);
