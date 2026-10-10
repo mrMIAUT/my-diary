@@ -15,7 +15,7 @@ function lyftaHistoryRows(d,pid,exerciseName=''){
 }
 
 function lyftaPreviousDaySets(d,pid,exerciseName=''){
-  let rows=lyftaHistoryRows(d,pid,exerciseName).filter(s=>s.day<workoutDataDay(d));
+  let rows=workoutSamePhasePreviousRows(d,lyftaHistoryRows(d,pid,exerciseName)).filter(s=>s.day<workoutDataDay(d));
   if(!rows.length)return [];
   let day=rows[rows.length-1].day;
   return rows.filter(s=>s.day===day).sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));

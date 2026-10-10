@@ -30,7 +30,7 @@ function timedWorkoutPlanText(x){
 }
 
 function timedExercisePreviousHTML(x,d){
-  var rows=timedWorkoutHistoryRows(d,x.id,workoutExerciseName(x));
+  var rows=workoutSamePhasePreviousRows(d,timedWorkoutHistoryRows(d,x.id,workoutExerciseName(x)));
   var today=workoutDataDay(d);
   var dates=[...new Set(rows.map(function(r){return r.day}))].filter(function(day){return day<today}).sort();
   if(!dates.length){

@@ -37,6 +37,25 @@ function workoutHistoryRows(d,pid,exerciseName=''){
  });
 }
 
+// The periodization tag belongs to a workout session, not to individual sets.
+// Unclassified legacy workouts remain in the full history but never pretend to
+// be a previous heavy/medium/light week.
+function workoutLoadPhaseLabel(value){
+ return {heavy:'Важкий тиждень',medium:'Середній тиждень',light:'Легкий тиждень'}[String(value||'')]||'';
+}
+function workoutCurrentLoadPhase(d){
+ return String((d?.workout_sessions||[]).find(s=>s.status==='training')?.load_phase||'');
+}
+function workoutSamePhasePreviousRows(d,rows){
+ let phase=workoutCurrentLoadPhase(d);
+ if(!workoutLoadPhaseLabel(phase))return rows;
+ let today=workoutDataDay(d);
+ let matchingDays=new Set((d?.workout_sessions||[])
+    .filter(s=>s.status==='finished'&&s.load_phase===phase&&sessionDay(s)<today)
+    .map(sessionDay));
+ return rows.filter(r=>matchingDays.has(String(r.day||'').slice(0,10)));
+}
+
 function exerciseHistoryDates(d,pid,exerciseName=''){
  return [...new Set(workoutHistoryRows(d,pid,exerciseName).map(r=>r.day))].sort();
 }
@@ -48,7 +67,7 @@ function workoutDataDay(d){
 }
 
 function previousExerciseHTML(d,pid){
- let history=workoutHistoryRows(d,pid),dates=[...new Set(history.map(r=>r.day))].sort().filter(day=>day<workoutDataDay(d));
+ let history=workoutSamePhasePreviousRows(d,workoutHistoryRows(d,pid)),dates=[...new Set(history.map(r=>r.day))].sort().filter(day=>day<workoutDataDay(d));
  if(!dates.length)return '<div class="muted" style="margin-top:10px">Попередніх результатів ще немає.</div>';
 
  let latest=dates[dates.length-1];
@@ -71,7 +90,7 @@ function previousExerciseHTML(d,pid){
 }
 
 function completedComparisonHTML(x,d){
- let history=workoutHistoryRows(d,x.id,workoutExerciseName(x)),dates=[...new Set(history.map(r=>r.day))].sort();
+ let history=workoutSamePhasePreviousRows(d,workoutHistoryRows(d,x.id,workoutExerciseName(x))),dates=[...new Set(history.map(r=>r.day))].sort();
  if(dates.length<2)return '';
  let currentDay=dates[dates.length-1],previousDay=dates[dates.length-2];
  let cur=history.filter(r=>r.day===currentDay).sort((a,b)=>a.set_number-b.set_number);
@@ -355,15 +374,24 @@ function previewWorkout(day,cid){
 function startWorkout(cid,day,btn=null){
  document.getElementById('workoutStartConfirmModal')?.remove();
  let count=(window.currentClientData?.program||[]).filter(x=>x.day_name===day).length;
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="workoutStartConfirmModal" onclick="if(event.target===this)this.remove()"><div class="card workout-start-confirm"><button type="button" class="workout-confirm-close" aria-label="Закрити" onclick="workoutStartConfirmModal.remove()">✕</button><span class="workout-confirm-icon">🏋️</span><h2>Почати тренування?</h2><p><strong>${esc(day)}</strong>${count?' · '+count+' '+(count===1?'вправа':count<5?'вправи':'вправ'):''}</p><small>Таймер тренування запуститься одразу після підтвердження.</small><div class="workout-confirm-actions"><button type="button" class="workout-confirm-secondary" onclick="workoutStartConfirmModal.remove()">Скасувати</button><button type="button" class="workout-confirm-primary" data-cid="${cid}" data-day="${esc(day)}" onclick="confirmWorkoutStart(this)">Почати</button></div></div></div>`);
+ let phases=[['heavy','Важкий тиждень','Високе навантаження'],['medium','Середній тиждень','Помірне навантаження'],['light','Легкий тиждень','Знижене навантаження']];
+ let phaseChoices=phases.map(([value,label,description])=>`<label class="workout-phase-option" data-phase="${value}"><input type="radio" name="workoutLoadPhase" value="${value}" onchange="selectWorkoutLoadPhase(this)"><span class="workout-phase-indicator" aria-hidden="true"></span><span class="workout-phase-copy"><strong>${label}</strong><small>${description}</small></span></label>`).join('');
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="workoutStartConfirmModal" onclick="if(event.target===this)this.remove()"><div class="card workout-start-confirm"><button type="button" class="workout-confirm-close" aria-label="Закрити" onclick="workoutStartConfirmModal.remove()">✕</button><span class="workout-confirm-icon">🏋️</span><h2>Почати тренування?</h2><p><strong>${esc(day)}</strong>${count?' · '+count+' '+(count===1?'вправа':count<5?'вправи':'вправ'):''}</p><div class="workout-phase-select"><strong>Який тип навантаження сьогодні?</strong><div class="workout-phase-options">${phaseChoices}</div><small>Порівняємо результати з попереднім тренуванням такого самого типу.</small></div><small>Таймер тренування запуститься одразу після підтвердження.</small><div class="workout-confirm-actions"><button type="button" class="workout-confirm-secondary" onclick="workoutStartConfirmModal.remove()">Скасувати</button><button type="button" class="workout-confirm-primary" data-cid="${cid}" data-day="${esc(day)}" onclick="confirmWorkoutStart(this)" disabled>Почати</button></div></div></div>`);
+}
+function selectWorkoutLoadPhase(input){
+ let root=input?.closest('#workoutStartConfirmModal');if(!root)return;
+ root.querySelectorAll('.workout-phase-option').forEach(row=>row.classList.toggle('selected',!!row.querySelector('input')?.checked));
+ let start=root.querySelector('.workout-confirm-primary');if(start)start.disabled=!root.querySelector('input[name="workoutLoadPhase"]:checked');
 }
 
 async function confirmWorkoutStart(button){
  let cid=+button.dataset.cid,day=button.dataset.day;
+ let loadPhase=document.querySelector('#workoutStartConfirmModal input[name="workoutLoadPhase"]:checked')?.value||'';
+ if(!workoutLoadPhaseLabel(loadPhase))return alert('Обери тип навантаження перед початком тренування.');
  if(button.dataset.starting==='1')return;
  button.dataset.starting='1';button.disabled=true;button.textContent='Запускаємо…';
  try{
-   let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day})});
+   let s=await api('/workout/start',{method:'POST',body:JSON.stringify({client_id:cid,day_name:day,load_phase:loadPhase})});
    if(!s?.id)throw new Error('Не вдалося отримати тренування від сервера.');
    document.getElementById('workoutStartConfirmModal')?.remove();
    {let k=offlineLocalScopeKey();if(k)localStorage.setItem(`eplanActiveWorkoutV2_${k}_${cid}`,JSON.stringify(s));}
@@ -436,7 +464,7 @@ async function finishWorkout(cid,sid,button=null){
      totalSets=sets.length+timedSets.length,
      cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{})),canComment=!!clientAccess(d.client).features?.trainer_review;
  let workoutDay=sessionDay(s)||isoToday();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p><div class="finish-summary-grid workout-finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Підходів</span><div class="summary-number">${totalSets}</div></div><div><span class="muted">Тривалість</span><div class="summary-number duration">${formatWorkoutDuration(s.duration_seconds||0)}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}${canComment?`<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування? Щось боліло, було занадто легко або важко?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment(${cid},'${esc(workoutDay)}',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary(${cid})">Без коментаря</button></div></div>`:`<button style="width:100%" onclick="closeFinishWorkoutSummary(${cid})">Готово</button>`}<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById('finishSummaryModal')?.remove();openCompletedWorkoutEditor(${sid})">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout(${sid},this)">Скасувати завершення</button></div></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p>${workoutLoadPhaseLabel(s.load_phase)?'<div class="workout-finish-phase">'+esc(workoutLoadPhaseLabel(s.load_phase))+'</div>':''}<div class="finish-summary-grid workout-finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Підходів</span><div class="summary-number">${totalSets}</div></div><div><span class="muted">Тривалість</span><div class="summary-number duration">${formatWorkoutDuration(s.duration_seconds||0)}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}${canComment?`<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування? Щось боліло, було занадто легко або важко?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment(${cid},'${esc(workoutDay)}',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary(${cid})">Без коментаря</button></div></div>`:`<button style="width:100%" onclick="closeFinishWorkoutSummary(${cid})">Готово</button>`}<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById('finishSummaryModal')?.remove();openCompletedWorkoutEditor(${sid})">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout(${sid},this)">Скасувати завершення</button></div></div></div>`);
  }catch(e){
   alert(e?.message||'Не вдалося завершити тренування. Перевір інтернет і спробуй ще раз.');
   if(button){button.dataset.finishing='0';button.disabled=false;button.textContent=button.dataset.oldText||'Завершити тренування'}
@@ -697,6 +725,8 @@ function focusSupersetRoundStart(pid,round=1){
 function activeExercisesHTML(items,d,cid){
  let used=new Set(),active=(d.workout_sessions||[]).find(x=>x.status==='training'),activeDay=workoutDataDay(d);
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
+ let phaseLabel=active?workoutLoadPhaseLabel(active.load_phase):'';
+ if(phaseLabel)html='<div class="workout-current-phase" data-phase="'+esc(active.load_phase)+'"><span class="workout-phase-dot"></span><div><strong>'+esc(phaseLabel)+'</strong><small>Порівняння з попереднім '+(active.load_phase==='heavy'?'важким':active.load_phase==='medium'?'середнім':'легким')+' тижнем</small></div></div>'+html;
  function card(x,inner=false,showRest=true,grouped=false){
   let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
       timedDoneCount=timed?(d.timed_result_sets||[]).filter(function(r){return +r.program_id===+x.id&&r.day===activeDay}).length:0,

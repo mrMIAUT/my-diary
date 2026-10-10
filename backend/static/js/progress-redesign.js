@@ -116,7 +116,7 @@ function redesignProgressTrainingHTML(d){
   let limit=Math.max(8,+window.clientProgressTrainingLimit||8),shown=sessions.slice(0,limit),hasMore=shown.length<sessions.length;
   return '<div class="redesign-progress-training-list">'+shown.map(function(s){
     let day=sessionDay(s),title=s.day_name||'Тренування';
-    return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
+    return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+(workoutLoadPhaseLabel(s.load_phase)?' · '+esc(workoutLoadPhaseLabel(s.load_phase)):'')+'</small></span><b>›</b></button>';
   }).join('')+(hasMore?'<button type="button" class="redesign-progress-training-more" onclick="showMoreClientProgressTraining()">Показати ще</button>':'')+'</div>';
 }
 
@@ -263,7 +263,7 @@ function progressWorkoutDetailHTML(d,sid){
    let rowCount=numbers.length;
    return '<div class="progress-workout-exercise"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'</div><span>'+rowCount+' '+(rowCount===1?'підхід':rowCount<5?'підходи':'підходів')+'</span></div>'+warmHTML+'<div class="progress-workout-sets">'+setsHTML+'</div></div>';
  }).join(''):'<div class="redesign-empty-panel"><strong>Результати не записані</strong><span>Для цього тренування немає збережених підходів.</span></div>';
- return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+actions+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
+ return '<div class="progress-workout-detail-hero"><div><span>Завершене тренування</span><h1>'+esc(s.day_name||'Тренування')+'</h1><small>'+esc(formatProgressDate(data.day))+(workoutLoadPhaseLabel(s.load_phase)?' · '+esc(workoutLoadPhaseLabel(s.load_phase)):'')+'</small></div><div class="progress-workout-detail-duration"><span>Тривалість</span><strong>'+esc(duration)+'</strong></div></div>'+actions+review+progressWorkoutStatsHTML(data)+'<div class="progress-workout-detail-section"><div class="progress-workout-detail-section-head"><span>Вправи</span><strong>'+data.exercises.length+'</strong></div>'+exercises+'</div>';
 }
 
 function completedWorkoutEditSetRowHTML(n,set={},targetRir=2){

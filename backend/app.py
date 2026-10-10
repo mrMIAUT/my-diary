@@ -892,6 +892,8 @@ def init():
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS program_snapshot TEXT DEFAULT ''")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS workout_day DATE")
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS day_kind TEXT NOT NULL DEFAULT 'standard'")
+        # Client-selected periodization phase. Empty keeps old sessions unclassified.
+        c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS load_phase TEXT NOT NULL DEFAULT ''")
         # Legacy live sessions used PostgreSQL CURRENT_TIMESTAMP in a timezone-naive column (UTC wall time).
         # Convert that timestamp to the Kyiv calendar day once; manual daytime history remains on the same date.
         c.execute("""UPDATE workout_sessions SET workout_day=((started_at AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Kyiv')::date WHERE workout_day IS NULL AND started_at IS NOT NULL""")
@@ -1306,6 +1308,7 @@ class NutritionTargetIn(BaseModel):
     kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G); meal_plan:str=Field(default="",max_length=50000); meals:List[NutritionPlanItemIn]=Field(default_factory=list,max_length=100)
 class WorkoutStartIn(BaseModel):
     client_id:int; day_name:str=Field(max_length=128)
+    load_phase:str=Field(default="",pattern="^(|heavy|medium|light)$")
 class WorkoutReviewIn(BaseModel):
     comment:str=Field(default="",max_length=5000)
 class NotificationReadIn(BaseModel):
@@ -3299,9 +3302,9 @@ def start_workout(x:WorkoutStartIn,user:AuthUser=Depends(require_client)):
                     raise HTTPException(400,"У цьому тренуванні ще немає вправ")
                 for item in snapshot_rows:item["technique_url"]=safe_technique_url(item.get("technique_url") or "")
                 snapshot=json.dumps(snapshot_rows,ensure_ascii=False)
-                row=c.execute("""INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,workout_day,day_kind)
-                                 VALUES(%s,%s,%s,%s,CAST(%s AS DATE),%s) RETURNING *""",
-                              (x.client_id,x.day_name,"training",snapshot,today,day_kind)).fetchone()
+                row=c.execute("""INSERT INTO workout_sessions(client_id,day_name,status,program_snapshot,workout_day,day_kind,load_phase)
+                                 VALUES(%s,%s,%s,%s,CAST(%s AS DATE),%s,%s) RETURNING *""",
+                              (x.client_id,x.day_name,"training",snapshot,today,day_kind,x.load_phase)).fetchone()
                 session=dict(row)
                 created=True
             c.commit()
