@@ -116,7 +116,7 @@ function redesignProgressTrainingHTML(d){
   let limit=Math.max(8,+window.clientProgressTrainingLimit||8),shown=sessions.slice(0,limit),hasMore=shown.length<sessions.length;
   return '<div class="redesign-progress-training-list">'+shown.map(function(s){
     let day=sessionDay(s),title=s.day_name||'Тренування';
-    return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+'</small></span><b>›</b></button>';
+    return '<button data-session="'+(+s.id||0)+'" onclick="openProgressWorkout(+this.dataset.session)" class="redesign-progress-training-row"><span class="training-row-icon">'+uiIcon('dumbbell')+'</span><span><strong>'+esc(title)+'</strong><small>'+esc(formatProgressDate(day))+(workoutLoadPhaseLabel(s.load_phase)?' · '+esc(workoutLoadPhaseLabel(s.load_phase)):'')+'</small></span><b>›</b></button>';
   }).join('')+(hasMore?'<button type="button" class="redesign-progress-training-more" onclick="showMoreClientProgressTraining()">Показати ще</button>':'')+'</div>';
 }
 
