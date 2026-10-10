@@ -18078,3 +18078,33 @@ body.eplan-redesign.trainer-ui #supersetModal #ssex{
   appearance:none!important;
 }
 
+
+/* v249 — trainer inline superset: span the full editor, not a half-width grid cell.
+   The nested form and library chooser must never crush the name field on iPhone. */
+body.eplan-redesign.trainer-ui .trainer-program-editor-grid>.trainer-inline-superset-builder{
+  grid-column:1/-1!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+body.eplan-redesign.trainer-ui .trainer-inline-superset-fields,
+body.eplan-redesign.trainer-ui .trainer-inline-superset-grid{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+body.eplan-redesign.trainer-ui .trainer-inline-superset-grid>label,
+body.eplan-redesign.trainer-ui .trainer-inline-superset-grid .trainer-program-exercise-field{
+  min-width:0!important;
+  width:100%!important;
+}
+@media(max-width:520px){
+  body.eplan-redesign.trainer-ui .trainer-inline-superset-grid .trainer-program-exercise-field{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-inline-superset-grid .trainer-program-exercise-field>button{
+    min-width:0!important;
+    width:100%!important;
+    min-height:44px!important;
+  }
+}

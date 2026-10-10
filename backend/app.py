@@ -2675,7 +2675,7 @@ def edit_program(pid:int,x:ProgramIn,user:AuthUser=Depends(require_trainer)):
         raise HTTPException(400,"Для вправи за часом вкажіть щонайменше 5 секунд роботи")
     group=str(p.get("superset_group") or "").strip()
     if group:
-        peers=all("SELECT id,sets,execution_mode FROM program WHERE client_id=? AND day_name=? AND superset_group=? AND id<>?",(p["client_id"],p["day_name"],group,pid))
+        peers=rows("SELECT id,sets,execution_mode FROM program WHERE client_id=? AND day_name=? AND superset_group=? AND id<>?",(p["client_id"],p["day_name"],group,pid))
         has_timed_peer=any(normalize_execution_mode(v.get("execution_mode"))=="time" for v in peers)
         if (execution_mode=="time" or has_timed_peer) and any(int(v.get("sets") or 1)!=int(x.sets) for v in peers):
             raise HTTPException(400,"У суперсеті з вправою за часом кількість підходів має бути однакова — це кількість кіл")
