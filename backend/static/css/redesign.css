@@ -18135,3 +18135,139 @@ body.eplan-redesign.trainer-ui .trainer-client-actions-layer>.trainer-client-act
   }
 }
 
+
+/* v251 — client-only manual load phase, with accessible touch-size selection.
+   The selected phase is stored on each workout session, never on the plan. */
+body.eplan-redesign.client-ui #workoutStartConfirmModal{
+  z-index:12070!important;
+  padding:14px!important;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal>.workout-start-confirm{
+  max-height:calc(100dvh - 28px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+body.eplan-redesign.client-ui .workout-phase-select{
+  margin:18px 0 12px;
+  text-align:left;
+}
+body.eplan-redesign.client-ui .workout-phase-select>strong{
+  display:block;
+  margin:0 0 10px;
+  font-size:14px;
+  font-weight:850;
+  color:#152c4c;
+}
+body.eplan-redesign.client-ui .workout-phase-options{
+  display:grid;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .workout-phase-option{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-height:58px;
+  padding:9px 13px;
+  border:1px solid #dce6f2;
+  border-radius:14px;
+  background:#f8fafc;
+  cursor:pointer;
+  text-align:left;
+}
+body.eplan-redesign.client-ui .workout-phase-option.selected{
+  border-color:#86bafa;
+  background:#eff6ff;
+  box-shadow:inset 0 0 0 1px rgba(28,117,238,.16);
+}
+body.eplan-redesign.client-ui .workout-phase-option input{
+  appearance:none;
+  -webkit-appearance:none;
+  flex:none;
+  width:21px;
+  height:21px;
+  margin:0;
+  border:2px solid #b5c5d9;
+  border-radius:50%;
+  background:#fff;
+  outline-offset:3px;
+}
+body.eplan-redesign.client-ui .workout-phase-option input:checked{
+  border:6px solid #1677ff;
+}
+body.eplan-redesign.client-ui .workout-phase-indicator{
+  flex:none;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#d7923e;
+}
+body.eplan-redesign.client-ui .workout-phase-option[data-phase="medium"] .workout-phase-indicator{background:#408bde}
+body.eplan-redesign.client-ui .workout-phase-option[data-phase="light"] .workout-phase-indicator{background:#3ca36b}
+body.eplan-redesign.client-ui .workout-phase-copy{display:grid;gap:3px;min-width:0}
+body.eplan-redesign.client-ui .workout-phase-copy strong{font-size:13px;font-weight:850;color:#0a1738}
+body.eplan-redesign.client-ui .workout-phase-copy small{
+  display:block;
+  max-width:none;
+  margin:0;
+  font-size:11px;
+  line-height:1.25;
+  font-weight:650;
+  color:#8390a2!important;
+}
+body.eplan-redesign.client-ui .workout-phase-select>small{
+  display:block;
+  max-width:none;
+  margin:9px 0 0;
+  line-height:1.45;
+  text-align:left;
+  color:#7a889b!important;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-confirm-primary:disabled{
+  opacity:.48!important;
+  cursor:not-allowed;
+}
+body.eplan-redesign.client-ui .workout-current-phase{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin:0 0 12px;
+  padding:12px 14px;
+  border:1px solid #efdfc5;
+  border-radius:16px;
+  background:#fff9f1;
+}
+body.eplan-redesign.client-ui .workout-current-phase[data-phase="medium"]{
+  border-color:#d5e7fa;background:#f0f7ff;
+}
+body.eplan-redesign.client-ui .workout-current-phase[data-phase="light"]{
+  border-color:#d6eadd;background:#f0f9f3;
+}
+body.eplan-redesign.client-ui .workout-phase-dot{
+  display:block;
+  flex:0 0 11px;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:#d7923e;
+}
+body.eplan-redesign.client-ui .workout-current-phase[data-phase="medium"] .workout-phase-dot{background:#408bde}
+body.eplan-redesign.client-ui .workout-current-phase[data-phase="light"] .workout-phase-dot{background:#3ca36b}
+body.eplan-redesign.client-ui .workout-current-phase>div{display:grid;gap:3px;min-width:0}
+body.eplan-redesign.client-ui .workout-current-phase strong{font-size:13px;color:#183153}
+body.eplan-redesign.client-ui .workout-current-phase small{font-size:11px;color:#7c8da0;line-height:1.35}
+body.eplan-redesign.client-ui .workout-finish-phase{
+  display:inline-block;
+  padding:7px 12px;
+  margin:10px 0 4px;
+  border-radius:999px;
+  color:#936323;
+  background:#fff1de;
+  font-size:12px;
+  font-weight:850;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .workout-phase-option{min-height:54px;padding:8px 10px}
+  body.eplan-redesign.client-ui .workout-phase-select{margin:13px 0 8px}
+  body.eplan-redesign.client-ui #workoutStartConfirmModal>.workout-start-confirm{padding:18px 14px!important}
+}
