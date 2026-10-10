@@ -29,7 +29,13 @@ const $=id=>els[id]||null;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({
  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[c]));
-const fmt=n=>Number(n).toLocaleString("uk-UA",{maximumFractionDigits:1});
+// Use the real formatter instead of a test approximation. This also guards
+// 6.149999999999999 -> 6,2 at one decimal without touching stored values.
+const formatStart=js.indexOf("const foodFmt=value=>{");
+const formatEnd=js.indexOf("\nfunction foodResultLabel(",formatStart);
+assert.ok(formatStart>=0&&formatEnd>formatStart,"Source formatter found");
+const fmt=vm.runInNewContext(js.slice(formatStart,formatEnd)+"\nfoodFmt",{Number,Math});
+assert.equal(fmt(6.1499999999999995),"6,2");
 const ctx=vm.createContext({$,localStorage,foodEsc:esc,foodFmt:fmt,
  FOOD_DIARY_KEY:storageKey,Math,Date,Number,console});
 vm.runInContext(js.slice(start,stop),ctx);
