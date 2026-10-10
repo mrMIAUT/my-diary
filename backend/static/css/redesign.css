@@ -18795,3 +18795,107 @@ body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest
   }
 }
 
+
+/* v256 — iPhone timer polish: delicate stopwatch + wider horizontal floater.
+   Presentation only; both views consume the existing rest countdown. */
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span{
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#6d82a0!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span svg{
+  position:static!important;
+  display:block!important;
+  width:23px!important;
+  height:23px!important;
+  transform:none!important;
+  overflow:visible!important;
+  background:transparent!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.75!important;
+  color:#6d82a0!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>.workout-featured-rest-ring-track{
+  transform:rotate(-90deg)!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer{
+  right:14px!important;
+  bottom:calc(101px + env(safe-area-inset-bottom,0px))!important;
+  width:148px!important;
+  min-width:148px!important;
+  max-width:148px!important;
+  height:66px!important;
+  min-height:66px!important;
+  padding:9px 12px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:row!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  gap:11px!important;
+  border-radius:19px!important;
+  border:1px solid #cddff4!important;
+  background:rgba(249,251,255,.97)!important;
+  box-shadow:0 9px 28px rgba(30,69,114,.12)!important;
+  color:#123159!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer-icon{
+  width:29px!important;
+  height:29px!important;
+  flex:0 0 29px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer-icon svg{
+  display:block!important;
+  width:27px!important;
+  height:27px!important;
+  fill:none!important;
+  stroke:#4089ec!important;
+  stroke-width:1.8!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:3px;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer #floatingRestTimerValue{
+  display:block!important;
+  margin:0!important;
+  font-size:20px!important;
+  line-height:1!important;
+  letter-spacing:-.035em!important;
+  font-variant-numeric:tabular-nums;
+  font-weight:900!important;
+  color:#123159!important;
+}
+body.eplan-redesign.client-ui .redesign-floating-rest-timer-copy small{
+  display:block;
+  font-size:10px!important;
+  font-weight:650!important;
+  letter-spacing:0!important;
+  line-height:1.1!important;
+  color:#7b8ba1!important;
+}
+@media(max-width:390px){
+  body.eplan-redesign.client-ui .redesign-floating-rest-timer{
+    right:12px!important;
+    width:146px!important;
+    min-width:146px!important;
+    max-width:146px!important;
+    height:66px!important;
+    min-height:66px!important;
+    bottom:calc(99px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+

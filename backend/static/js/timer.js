@@ -72,6 +72,7 @@ function featuredRestTimerIcon(name){
  var shapes={
   settings:'<path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  stopwatch:'<path d="M9 2h6M12 2v3M18.5 6.5 20 5"/><circle cx="12" cy="14" r="7.5"/><path d="M12 9v5l3 2"/>',
   pause:'<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
   play:'<path d="m7 4 12 8-12 8V4Z"/>',
   stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
@@ -84,7 +85,7 @@ function featuredRestTimerHTML(pid,total,inSuperset=false){
    +'<div class="workout-featured-rest-head"><span class="workout-featured-rest-heading">'+featuredRestTimerIcon('clock')+' Таймер відпочинку</span>'
    +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">'+featuredRestTimerIcon('settings')+'<span>Налаштувати</span></button></div>'
    +'<div class="workout-featured-rest-main">'
-   +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg class="workout-featured-rest-ring-track" viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>'+featuredRestTimerIcon('clock')+'</span></div>'
+   +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg class="workout-featured-rest-ring-track" viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>'+featuredRestTimerIcon('stopwatch')+'</span></div>'
    +'<div class="workout-featured-rest-countdown"><strong class="workout-featured-rest-value">00:00</strong><small class="workout-featured-rest-next">Наступний підхід</small><small class="workout-featured-rest-status">Відпочинок між підходами</small></div>'
    +'<div class="workout-featured-rest-actions">'
    +'<button type="button" class="workout-featured-rest-pause" onclick="toggleRestTimerPlayback()" aria-label="Призупинити відпочинок"><span class="workout-rest-icon-pause">'+featuredRestTimerIcon('pause')+'</span><span class="workout-rest-icon-play">'+featuredRestTimerIcon('play')+'</span><small class="workout-rest-control-caption">Пауза</small></button>'
@@ -306,8 +307,8 @@ function renderFloatingRestTimer(){
    if(!el){
      document.body.insertAdjacentHTML('beforeend',
        '<button id="floatingRestTimer" class="redesign-floating-rest-timer" onclick="openRestTimerPicker()" aria-label="Таймер відпочинку">'
-       +'<span class="redesign-floating-rest-timer-icon">⏱</span>'
-       +'<span id="floatingRestTimerValue">'+formatRestTimer(s)+'</span>'
+       +'<span class="redesign-floating-rest-timer-icon">'+featuredRestTimerIcon('stopwatch')+'</span>'
+       +'<span class="redesign-floating-rest-timer-copy"><strong id="floatingRestTimerValue">'+formatRestTimer(s)+'</strong><small>Відпочинок</small></span>'
        +'</button>');
    }else{
      el.className='redesign-floating-rest-timer';
