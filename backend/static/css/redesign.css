@@ -18108,3 +18108,30 @@ body.eplan-redesign.trainer-ui .trainer-inline-superset-grid .trainer-program-ex
     min-height:44px!important;
   }
 }
+
+/* v250 — trainer client action sheet stays above bottom navigation (iPhone).
+   The nav is z-index 950; the original layer at 120 left Delete obscured.
+   Reserve room for the persistent nav and safe area, and allow short-screen scrolling. */
+body.eplan-redesign.trainer-ui .trainer-client-actions-layer{
+  z-index:12060!important;
+  box-sizing:border-box!important;
+  padding-bottom:calc(118px + env(safe-area-inset-bottom, 0px))!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-actions-layer>.trainer-client-actions-pop{
+  box-sizing:border-box!important;
+  width:min(100%,410px)!important;
+  min-width:0!important;
+  max-height:calc(100dvh - 160px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+@media(max-height:530px){
+  body.eplan-redesign.trainer-ui .trainer-client-actions-layer{
+    padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px))!important;
+  }
+  body.eplan-redesign.trainer-ui .trainer-client-actions-layer>.trainer-client-actions-pop{
+    max-height:calc(100dvh - 42px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))!important;
+  }
+}
+
