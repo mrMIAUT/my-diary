@@ -802,17 +802,17 @@ function diaryEntryHtml(x){
  return '<div class="foodDiaryEntry" data-diary-entry="'+id+'">'+
   '<div class="foodDiaryInfo"><strong>'+foodEsc(x.name||'Продукт')+'</strong>'+
    brand+prep+'</div>'+
-  '<div class="foodDiaryEntryRight"><span class="foodDiaryEntryKcal">'+foodFmt(x.kcal)+
-   '<small>ккал</small></span>'+
+  '<div class="foodDiaryEntryRight"><span class="foodDiaryEntryWeight" aria-label="Вага: '+foodFmt(x.grams)+' грамів">'+foodFmt(x.grams)+' г</span>'+
   '<div class="foodDiaryActions"><button type="button" class="foodDiaryEditBtn" data-diary-edit="'+id+
   '" title="Редагувати" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">✎</button>'+
   '<button type="button" class="foodDiaryRemove" data-diary-remove="'+id+
   '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div></div>'+
-  '<div class="foodDiaryEntryNutrition" aria-label="Вага та БЖВ продукту">'+
-   '<span class="foodDiaryEntryWeight">'+foodFmt(x.grams)+' г</span>'+
+  '<div class="foodDiaryEntryNutrition" aria-label="БЖВ та калорійність продукту">'+
    nutrient('Б','Білки','protein')+
    nutrient('Ж','Жири','fat')+
    nutrient('В','Вуглеводи','carbs')+
+   '<span class="foodDiaryEntryKcal" aria-label="Калорійність: '+foodFmt(Number(x.kcal)||0)+' ккал">'+
+    foodFmt(x.kcal)+'<small>ккал</small></span>'+
   '</div>'+edit+'</div>';
 }
 function diaryNutritionTotals(items){
