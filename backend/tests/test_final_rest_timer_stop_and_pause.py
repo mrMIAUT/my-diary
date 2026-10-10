@@ -17,7 +17,7 @@ class RestTimerFinalMobileTests(unittest.TestCase):
         start=TIMER.split("function featuredRestTimerHTML(",1)[1].split("\n// Reuse the existing",1)[0]
         self.assertIn('workout-featured-rest-pause',start)
         self.assertIn('workout-featured-rest-stop',start)
-        self.assertIn("onclick=\\"cancelRestTimer()\\"",start)
+        self.assertIn('onclick="cancelRestTimer()"',start)
         self.assertIn("featuredRestTimerIcon('stop')",start)
         self.assertIn('workout-featured-rest-add',start)
         self.assertIn('extendFeaturedRestTimer(30)',start)
