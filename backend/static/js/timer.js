@@ -52,17 +52,41 @@ function clearRestTimerPaused(){localStorage.removeItem('eplanRestTimerPausedSec
 
 // Larger rest display for ordinary repetition-based exercise cards only.
 // It reads the existing timer/storage and never creates a second countdown.
+function featuredRestTimerIcon(name){
+ // Fixed inline vector icons: no emoji glyph inconsistencies across iPhones.
+ var base='<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+ var shapes={
+  settings:'<path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pause:'<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
+  play:'<path d="m7 4 12 8-12 8V4Z"/>',
+  skip:'<path d="m5 5 10 7-10 7V5Z"/><path d="M19 5v14"/>'
+ };
+ return base+(shapes[name]||shapes.clock)+'</svg>';
+}
 function featuredRestTimerHTML(pid,total,inSuperset=false){
  return '<section class="workout-featured-rest" data-rest-featured-pid="'+(+pid||0)+'" data-rest-featured-total="'+Math.max(1,+total||1)+'" data-rest-featured-superset="'+(inSuperset?'1':'0')+'" hidden>'
-   +'<div class="workout-featured-rest-head"><span class="workout-featured-rest-heading">◷ Таймер відпочинку</span>'
-   +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">⚙ Налаштувати</button></div>'
+   +'<div class="workout-featured-rest-head"><span class="workout-featured-rest-heading">'+featuredRestTimerIcon('clock')+' Таймер відпочинку</span>'
+   +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">'+featuredRestTimerIcon('settings')+'<span>Налаштувати</span></button></div>'
    +'<div class="workout-featured-rest-main">'
-   +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>⏱</span></div>'
+   +'<div class="workout-featured-rest-ring" aria-hidden="true"><svg class="workout-featured-rest-ring-track" viewBox="0 0 100 100"><circle class="workout-featured-rest-track" cx="50" cy="50" r="44"/><circle class="workout-featured-rest-progress" cx="50" cy="50" r="44"/></svg><span>'+featuredRestTimerIcon('clock')+'</span></div>'
    +'<div class="workout-featured-rest-countdown"><strong class="workout-featured-rest-value">00:00</strong><small class="workout-featured-rest-next">Наступний підхід</small></div>'
    +'<div class="workout-featured-rest-actions">'
-   +'<button type="button" class="workout-featured-rest-pause" onclick="toggleRestTimerPlayback()" aria-label="Пауза таймера">Ⅱ</button>'
-   +'<button type="button" class="workout-featured-rest-skip" onclick="cancelRestTimer()" aria-label="Пропустити відпочинок">⏭</button>'
-   +'</div></div><div class="workout-featured-rest-status">Відпочинок між підходами</div></section>';
+   +'<button type="button" class="workout-featured-rest-pause" onclick="toggleRestTimerPlayback()" aria-label="Призупинити відпочинок"><span class="workout-rest-icon-pause">'+featuredRestTimerIcon('pause')+'</span><span class="workout-rest-icon-play">'+featuredRestTimerIcon('play')+'</span><small class="workout-rest-control-caption">Пауза</small></button>'
+   +'<button type="button" class="workout-featured-rest-skip" onclick="cancelRestTimer()" aria-label="Пропустити відпочинок">'+featuredRestTimerIcon('skip')+'<small class="workout-rest-control-caption">Пропустити</small></button>'
+   +'</div></div><div class="workout-featured-rest-footer"><span class="workout-featured-rest-status">Відпочинок між підходами</span>'
+   +'<button type="button" class="workout-featured-rest-add" onclick="extendFeaturedRestTimer(30)" aria-label="Додати 30 секунд відпочинку">+30 сек</button></div></section>';
+}
+
+// Reuse the existing adjustment when running; while paused extend the stored
+// remaining time without silently restarting the countdown or rest tracking.
+function extendFeaturedRestTimer(seconds=30){
+ var extra=Math.max(1,Math.min(3600,Math.round(+seconds||30)));
+ if(restTimerRemaining()>0){addRestTimer(extra);return;}
+ var paused=restTimerPausedSeconds();
+ if(paused<=0)return;
+ localStorage.setItem('eplanRestTimerPausedSeconds',String(Math.min(3600,paused+extra)));
+ updateRestTimerUI(0);
 }
 
 function syncFeaturedRestTimer(seconds,pausedSeconds){
@@ -85,7 +109,9 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
    var label=panel.querySelector('.workout-featured-rest-next');
    if(label)label.textContent=caption;
    var btn=panel.querySelector('.workout-featured-rest-pause');
-   if(btn){btn.textContent=remaining?'Ⅱ':'▶';btn.setAttribute('aria-label',remaining?'Призупинити відпочинок':'Продовжити відпочинок');}
+   if(btn){btn.setAttribute('aria-label',remaining?'Призупинити відпочинок':'Продовжити відпочинок');}
+   var pauseCaption=panel.querySelector('.workout-featured-rest-pause .workout-rest-control-caption');
+   if(pauseCaption)pauseCaption.textContent=remaining?'Пауза':'Старт';
    var status=panel.querySelector('.workout-featured-rest-status');
    if(status)status.textContent=remaining?'Відпочинок між підходами':'Таймер на паузі';
    var circle=panel.querySelector('.workout-featured-rest-progress');
