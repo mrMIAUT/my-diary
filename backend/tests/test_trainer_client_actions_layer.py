@@ -40,8 +40,8 @@ class ClientActionsLayerRegression(unittest.TestCase):
 
     def test_versioned_asset(self):
         for shell in (INDEX,SW):
-            self.assertIn("/static/css/redesign.css?v=253",shell)
-        self.assertIn("const VERSION='eplan-v210'",SW)
+            self.assertIn("/static/css/redesign.css?v=254",shell)
+        self.assertIn("const VERSION='eplan-v211'",SW)
 
 
 if __name__=="__main__":
