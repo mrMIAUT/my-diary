@@ -14,7 +14,7 @@ class WorkoutSetVisualContracts(unittest.TestCase):
         for source in (HTML,SW):
             self.assertIn("/static/css/redesign.css?v=251",source)
             self.assertNotIn("/static/css/redesign.css?v=250",source)
-        self.assertIn("const VERSION='eplan-v207'",SW)
+        self.assertIn("const VERSION='eplan-v208'",SW)
 
     def test_completed_set_has_green_surface_and_white_inputs(self):
         rules=CSS.split("/* v245 — client workout set:",1)[1]

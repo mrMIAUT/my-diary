@@ -26,7 +26,7 @@ function isTimedWorkoutExercise(x){
 }
 
 function timedWorkoutPlanText(x){
-  return String(Math.max(1,+((x&&x.work_seconds)||1)))+' сек';
+  return String(Math.max(1,+((x&&x.work_seconds)||1)))+' сек'+timedSideModeSuffix(x?.repeat_mode);
 }
 
 function timedExercisePreviousHTML(x,d){
@@ -49,6 +49,7 @@ function timedExerciseHTML(x,d,cid){
   var planned=Math.max(1,+x.work_seconds||1);
   var plannedSets=Math.max(1,+x.sets||1);
   var inSuperset=!!x.superset_group;
+  var sideSuffix=timedSideModeSuffix(x.repeat_mode);
   var complete=done.length>=plannedSets;
   var commonRest=inSuperset?workoutSupersetRestSeconds(x,d):Math.max(0,+x.rest_seconds||0);
 
@@ -57,7 +58,7 @@ function timedExerciseHTML(x,d,cid){
       +'<div class="workout-completed-summary-head"><span class="workout-completed-summary-icon">✓</span><div><strong>Виконано ✓</strong><small>'+(inSuperset?'Усі кола суперсету виконано':'Вправа за часом збережена')+'</small></div></div>'
       +'<div class="workout-completed-sets">'
       +done.map(function(s){
-        return '<div class="workout-completed-set"><span>'+(inSuperset?'Коло ':'Підхід ')+esc(s.set_number)+'</span><strong>'+esc(s.work_seconds)+' сек</strong><em>план '+esc(s.planned_seconds)+' сек'+(+s.rest_seconds>0?' · відпочинок '+esc(s.rest_seconds)+' сек':'')+'</em></div>';
+        return '<div class="workout-completed-set"><span>'+(inSuperset?'Коло ':'Підхід ')+esc(s.set_number)+'</span><strong>'+esc(s.work_seconds)+' сек'+esc(sideSuffix)+'</strong><em>план '+esc(s.planned_seconds)+' сек'+esc(sideSuffix)+(+s.rest_seconds>0?' · відпочинок '+esc(s.rest_seconds)+' сек':'')+'</em></div>';
       }).join('')
       +'</div>'
       +(inSuperset?'':'<button class="workout-completed-edit" onclick="openTimedExerciseTimer('+cid+','+x.id+',true)">Повторити вправу</button>')
@@ -74,7 +75,7 @@ function timedExerciseHTML(x,d,cid){
     +progress
     +'<div class="workout-timed-plan">'
     +'<div><span>'+(inSuperset?'Кола':'Підходи')+'</span><strong>'+esc(plannedSets)+'</strong></div>'
-    +'<div><span>Робота</span><strong>'+esc(planned)+' сек</strong></div>'
+    +'<div><span>Робота</span><strong>'+esc(planned)+' сек'+esc(sideSuffix)+'</strong></div>'
     +'<div><span>'+(inSuperset?'Після кола':'Відпочинок')+'</span><strong>'+esc(commonRest)+' сек</strong></div>'
     +'</div>'
     +'<button class="workout-finish-exercise workout-timed-start" onclick="openTimedExerciseTimer('+cid+','+x.id+')">'+(inSuperset?'Почати коло '+nextSet:'Почати вправу')+'</button>';
@@ -82,10 +83,21 @@ function timedExerciseHTML(x,d,cid){
 
 window.timedExerciseTimerState=window.timedExerciseTimerState||null;
 
+function timedSideTimerLabel(mode,index){
+ var kind=mode==='per_leg'?'Нога':mode==='per_arm'?'Рука':'Сторона';
+ return kind+' '+index+' із 2';
+}
+function timedSideSwitchMessage(mode){
+ return mode==='per_leg'?'ЗМІНИ НОГУ':mode==='per_arm'?'ЗМІНИ РУКУ':'ЗМІНИ СТОРОНУ';
+}
+function timedSideSwitchHint(mode){
+ return mode==='per_leg'?'Підготуй іншу ногу':mode==='per_arm'?'Підготуй іншу руку':'Підготуй іншу сторону';
+}
+
 function closeTimedExerciseTimer(force){
   force=!!force;
   var s=window.timedExerciseTimerState;
-  if(!force&&s&&['work','rest'].includes(s.phase)&&s.remainingMs>0){
+  if(!force&&s&&(['work','rest'].includes(s.phase)&&s.remainingMs>0||s.phase==='switch')){
     if(!confirm('Закрити таймер цієї вправи? Поточний підхід не буде збережено.'))return false;
   }
   if(s&&s.raf)cancelAnimationFrame(s.raf);
@@ -103,6 +115,8 @@ function openTimedExerciseTimer(cid,pid,repeat){
   closeTimedExerciseTimer(true);
 
   var work=Math.max(1,+x.work_seconds||1);
+  var sidesMode=timedSideMode(x.repeat_mode);
+  var sideCount=sidesMode==='normal'?1:2;
   var sets=Math.max(1,+x.sets||1);
   var inSuperset=!!x.superset_group;
   var existing=inSuperset?todayTimedSets(d,pid):[];
@@ -119,6 +133,7 @@ function openTimedExerciseTimer(cid,pid,repeat){
     cid:cid,pid:pid,exercise:workoutExerciseName(x),
     work:work,rest:internalRest,sharedRest:commonRest,sets:sets,currentSet:currentSet,
     singleSet:inSuperset,isLastSupersetPeer:isLast,
+    sideMode:sidesMode,sides:sideCount,sideIndex:1,
     phase:'idle',totalMs:work*1000,remainingMs:work*1000,
     endsAt:0,raf:0,paused:false,
     results:existing.map(function(v){
@@ -127,12 +142,12 @@ function openTimedExerciseTimer(cid,pid,repeat){
   };
 
   var meta=inSuperset
-    ?'Коло '+currentSet+' з '+sets+' · '+work+' сек'
-    :'Підхід 1 з '+sets+' · '+work+' сек · відпочинок '+internalRest+' сек';
+    ?'Коло '+currentSet+' з '+sets+' · '+work+' сек'+timedSideModeSuffix(sidesMode)
+    :'Підхід 1 з '+sets+' · '+work+' сек'+timedSideModeSuffix(sidesMode)+' · відпочинок '+internalRest+' сек';
   var html='<div class="modal workout-timed-modal" id="timedExerciseWorkoutModal">'
     +'<div class="card workout-timed-modal-card">'
     +'<div class="workout-timed-modal-head"><div><small>'+(inSuperset?'СУПЕРСЕТ · ВПРАВА ЗА ЧАСОМ':'ВПРАВА ЗА ЧАСОМ')+'</small><h2>'+esc(workoutExerciseName(x))+'</h2></div><button type="button" class="workout-timed-close" onclick="closeTimedExerciseTimer()" aria-label="Закрити">✕</button></div>'
-    +'<div class="workout-timed-modal-meta"><span id="timedExerciseSetLabel">'+meta+'</span><b>'+(inSuperset?'без відпочинку до кінця кола':work+' сек · відпочинок '+internalRest+' сек')+'</b></div>'
+    +'<div class="workout-timed-modal-meta"><span id="timedExerciseSetLabel">'+meta+'</span><b>'+(inSuperset?'без відпочинку до кінця кола'+(sideCount===2?' · 2 сторони':''):work+' сек'+timedSideModeSuffix(sidesMode)+' · відпочинок '+internalRest+' сек')+'</b></div>'
     +'<div class="workout-timed-ring" id="timedExerciseRing">'
     +'<svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="54"></circle><circle class="progress" id="timedExerciseProgress" cx="60" cy="60" r="54"></circle></svg>'
     +'<div><span id="timedExercisePhase">ГОТОВА</span><strong id="timedExerciseValue">'+formatTimedSeconds(work*1000)+'</strong><small id="timedExerciseHint">натисни «Старт»</small></div>'
@@ -182,7 +197,7 @@ function startTimedExerciseWork(){
 function startTimedExerciseRest(){
   var s=window.timedExerciseTimerState;
   if(!s)return;
-  if(s.rest<=0){s.currentSet+=1;startTimedExerciseWork();return}
+  if(s.rest<=0){s.currentSet+=1;s.sideIndex=1;startTimedExerciseWork();return}
   setTimedExercisePhase('rest',s.rest);
   try{if(navigator.vibrate)navigator.vibrate([60,40,60])}catch(e){}
   s.raf=requestAnimationFrame(timedExerciseFrame);
@@ -205,6 +220,14 @@ async function advanceTimedExerciseTimer(){
   var s=window.timedExerciseTimerState;
   if(!s)return;
   if(s.phase==='work'){
+    if(s.sides===2&&s.sideIndex===1){
+      // Do not silently start the other side: the client needs time to switch.
+      s.sideIndex=2;
+      setTimedExercisePhase('switch',s.work);
+      try{if(navigator.vibrate)navigator.vibrate([100,70,100])}catch(e){}
+      return;
+    }
+    s.sideIndex=1;
     s.results=s.results.filter(function(r){return r.set_number!==s.currentSet});
     s.results.push({
       set_number:s.currentSet,
@@ -217,6 +240,7 @@ async function advanceTimedExerciseTimer(){
     startTimedExerciseRest();
   }else if(s.phase==='rest'){
     s.currentSet+=1;
+    s.sideIndex=1;
     startTimedExerciseWork();
   }
 }
@@ -224,7 +248,7 @@ async function advanceTimedExerciseTimer(){
 function toggleTimedExerciseTimer(){
   var s=window.timedExerciseTimerState;
   if(!s)return;
-  if(s.phase==='idle'){startTimedExerciseWork();return}
+  if(s.phase==='idle'||s.phase==='switch'){startTimedExerciseWork();return}
   if(s.phase==='done'){closeTimedExerciseTimer(true);return}
   if(s.paused){
     s.paused=false;
@@ -286,6 +310,7 @@ async function finishTimedExerciseTimer(){
   }catch(e){
     s.phase='idle';
     if(!s.singleSet){s.currentSet=1;s.results=[]}
+    s.sideIndex=1;
     s.remainingMs=s.work*1000;
     renderTimedExerciseTimer();
     alert(e.message||'Не вдалося зберегти вправу за часом.');
@@ -304,14 +329,17 @@ function renderTimedExerciseTimer(){
 
   label.textContent=s.phase==='done'
     ?(s.singleSet?'Коло '+s.currentSet+' завершено':'Вправу завершено')
-    :(s.singleSet?'Коло '+Math.min(s.currentSet,s.sets)+' з '+s.sets:'Підхід '+Math.min(s.currentSet,s.sets)+' з '+s.sets);
+    :(s.singleSet?'Коло '+Math.min(s.currentSet,s.sets)+' з '+s.sets:'Підхід '+Math.min(s.currentSet,s.sets)+' з '+s.sets)
+      +(s.sides===2?' · '+timedSideTimerLabel(s.sideMode,s.sideIndex):'');
   ring.classList.toggle('rest',s.phase==='rest');
   ring.classList.toggle('done',s.phase==='done');
 
   if(s.phase==='idle'){
     phase.textContent='ГОТОВА';hint.textContent='натисни «Старт»';btn.textContent='Старт';btn.disabled=false;
   }else if(s.phase==='work'){
-    phase.textContent='РОБОТА';hint.textContent=s.paused?'таймер на паузі':'виконуй вправу';btn.textContent=s.paused?'Продовжити':'Пауза';btn.disabled=false;
+    phase.textContent=s.sides===2?timedSideTimerLabel(s.sideMode,s.sideIndex).toUpperCase():'РОБОТА';hint.textContent=s.paused?'таймер на паузі':'виконуй вправу';btn.textContent=s.paused?'Продовжити':'Пауза';btn.disabled=false;
+  }else if(s.phase==='switch'){
+    phase.textContent=timedSideSwitchMessage(s.sideMode);hint.textContent=timedSideSwitchHint(s.sideMode)+' · натисни «Старт»';btn.textContent='Старт · '+timedSideTimerLabel(s.sideMode,2);btn.disabled=false;
   }else if(s.phase==='rest'){
     phase.textContent='ВІДПОЧИНОК';hint.textContent=s.paused?'таймер на паузі':'наступний підхід автоматично';btn.textContent=s.paused?'Продовжити':'Пауза';btn.disabled=false;
   }else if(s.phase==='saving'){
