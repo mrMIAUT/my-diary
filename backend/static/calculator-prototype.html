@@ -256,6 +256,35 @@
  .foodDiaryEntryMacro small{font-size:10px}
  .foodDiaryEntryMacro b{font-size:11px}
 }
+/* Diary v9: show grams on the product title row; move item calories into
+   the compact B/J/V detail row. No change to persisted nutrition values. */
+.foodDiaryMealEntries .foodDiaryEntry{row-gap:6px}
+.foodDiaryEntryRight{align-self:start;gap:6px}
+.foodDiaryEntryRight .foodDiaryEntryWeight{
+ display:inline-block;margin:7px 1px 0 0;
+ font-size:12px;line-height:1.4;font-weight:700;color:#3d66a6;
+ font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.foodDiaryEntryNutrition{
+ grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;
+ column-gap:13px;row-gap:4px;min-width:0;padding-top:2px
+}
+.foodDiaryEntryNutrition .foodDiaryEntryMacro{gap:4px}
+.foodDiaryEntryNutrition .foodDiaryEntryKcal{
+ display:inline-flex;flex-direction:row;align-items:baseline;justify-content:flex-end;
+ gap:3px;margin-left:auto;color:#2f62b4;font-size:12px;font-weight:750;
+ line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums
+}
+.foodDiaryEntryNutrition .foodDiaryEntryKcal small{
+ font-size:10px;color:#8292a6;font-weight:500
+}
+@media(max-width:390px){
+ .foodDiaryEntryRight{gap:3px}
+ .foodDiaryEntryRight .foodDiaryEntryWeight{font-size:11px;margin-top:8px}
+ .foodDiaryEntryNutrition{column-gap:9px}
+ .foodDiaryEntryNutrition .foodDiaryEntryKcal{font-size:11px;gap:2px}
+ .foodDiaryEntryNutrition .foodDiaryEntryKcal small{font-size:9px}
+}
 </style></head><body><main class="wrap"><div class="brand">Є ПЛАН 1.2</div><section class="card"><span class="badge">ПРОТОТИП</span><h1>Калькулятор калорій і БЖВ</h1><p>Розрахуємо стартовий орієнтир. Дані цього прототипу не зберігаються.</p><div class="grid">
 <label>Стать<select id="sex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>
 <label>Вік<input id="age" type="number" inputmode="numeric" placeholder="років"></label>
@@ -316,4 +345,4 @@
 <button id="adaptBtn" type="button">Переглянути ціль</button>
 <div style="display:flex;gap:8px;margin-top:10px"><button id="changeGoalBtn" type="button" style="margin:0;background:#eef4ff;color:#245cae">Змінити ціль</button><button id="stopGoalBtn" type="button" style="margin:0;background:#fff;color:#566477;border:1px solid #dce3ec">Зупинити ціль</button></div>
 <div class="result" id="goalActionResult"></div><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=48" defer></script></body></html>
+</main><script src="/static/calculator-prototype.js?v=49" defer></script></body></html>
