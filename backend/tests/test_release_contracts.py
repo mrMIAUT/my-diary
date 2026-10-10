@@ -273,8 +273,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-review-timed-exercise", RESULTS)
         self.assertIn("path==='/timed-result-sets'&&m==='POST'", CORE)
         self.assertIn("timed_result_sets", CORE)
-        self.assertIn('/static/js/timed-workout.js?v=5', INDEX)
-        self.assertIn("'/static/js/timed-workout.js?v=5'", SW)
+        self.assertIn('/static/js/timed-workout.js?v=6', INDEX)
+        self.assertIn("'/static/js/timed-workout.js?v=6'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
     def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
