@@ -229,7 +229,11 @@ function mergeFoodItems(a,b){
 }
 const foodFmt=value=>{
  const n=Number(value)||0;
- return n.toLocaleString('uk-UA',{maximumFractionDigits:1});
+ // Keep storage/calculations at full precision. Normalize floating-point
+ // noise before UI formatting (e.g. 6.1499999999999995 -> 6.15 -> 6,2).
+ // Nine decimal places are more than enough for displayed 0.1 g/kcal.
+ const display=Math.round(n*1e9)/1e9;
+ return display.toLocaleString('uk-UA',{maximumFractionDigits:1});
 };
 function foodResultLabel(item){
  const brand=item.brand?'<span class="foodBrand">'+foodEsc(item.brand)+(item.source_kind==='manufacturer_label'?' · дані виробника':'')+'</span>':item.approximate?'<span class="foodBrand">Довідкові БЖВ · орієнтовно</span>':item.review_status==='approved'&&item.source_fdc_id?'<span class="foodBrand">База ЄПЛАН · USDA FDC №'+foodEsc(item.source_fdc_id)+'</span>':'';
