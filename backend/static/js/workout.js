@@ -294,6 +294,25 @@ function workoutExerciseSetCount(x,d){
  // added set can be removed even though the old persisted row still exists until Save.
  return draftCount>0?Math.max(planned,draftCount):Math.max(planned,actual);
 }
+// Keep the live rest panel (including its progress baseline) while editing sets.
+// Re-rendering only completedExerciseHTML used to remove the new timer card.
+function refreshWorkoutRepSetBody(cid,pid,x,d){
+ let body=document.getElementById('exerciseBody'+pid);
+ if(!body)return;
+ let panel=body.querySelector('.workout-featured-rest');
+ body.innerHTML=completedExerciseHTML(x,d,cid);
+ if(!panel){
+   body.insertAdjacentHTML('afterbegin',featuredRestTimerHTML(pid,workoutExerciseSetCount(x,d),!!x.superset_group));
+   panel=body.querySelector('.workout-featured-rest');
+ }else{
+   body.prepend(panel);
+ }
+ if(panel){
+   panel.dataset.restFeaturedTotal=String(workoutExerciseSetCount(x,d));
+   syncFeaturedRestTimer(restTimerRemaining(),restTimerPausedSeconds());
+ }
+ body.classList.remove('hidden');
+}
 function addWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
  if(!x||!sid)return;
@@ -301,11 +320,7 @@ function addWorkoutExtraSet(cid,pid){
  let count=workoutExerciseSetCount(x,d);
  if(count>=100)return alert('Досягнуто максимальну кількість підходів.');
  saveWorkoutDraftSetCount(sid,pid,count+1);
- let body=document.getElementById('exerciseBody'+pid);
- if(body){
-   body.innerHTML=completedExerciseHTML(x,d,cid);
-   body.classList.remove('hidden');
- }
+ refreshWorkoutRepSetBody(cid,pid,x,d);
 }
 function removeWorkoutExtraSet(cid,pid,setNumber=0){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
@@ -332,8 +347,7 @@ function removeWorkoutExtraSet(cid,pid,setNumber=0){
  draft.__drops=shiftedDrops;
  draft.__set_count=count-1;
  persistWorkoutDraft(sid,pid,draft);
- let body=document.getElementById('exerciseBody'+pid);
- if(body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+ refreshWorkoutRepSetBody(cid,pid,x,d);
 }
 
 function toggleWorkoutPlannedSetSkipped(cid,pid,setNumber){
@@ -357,8 +371,7 @@ function toggleWorkoutPlannedSetSkipped(cid,pid,setNumber){
  }
  draft.__skipped=[...skipped].sort((a,b)=>a-b);
  persistWorkoutDraft(sid,pid,draft);
- let body=document.getElementById('exerciseBody'+pid);
- if(body){body.innerHTML=completedExerciseHTML(x,d,cid);body.classList.remove('hidden')}
+ refreshWorkoutRepSetBody(cid,pid,x,d);
 }
 
 
