@@ -9,7 +9,7 @@ assert.ok(html.includes('placeholder="Пошук продуктів або шт�
 assert.ok(!html.includes('class="foodChips"'),"Preset suggestion chips must be removed");
 assert.ok(!html.includes('data-food-query='),"Hardcoded demo food suggestions must not appear");
 assert.ok(!js.includes("querySelectorAll('[data-food-query]')"),"Preset handlers must be absent");
-assert.ok(html.includes("/static/calculator-prototype.js?v=46"),"Refresh Safari JS cache");
+assert.ok(html.includes("/static/calculator-prototype.js?v=47"),"Refresh Safari JS cache");
 assert.ok(html.includes(".foodWeekDay.is-selected .foodWeekDayCircle{background:#3868cb"),"Selected week day must use brand blue");
 assert.ok(html.includes(".foodCalendarDay.is-selected{background:#e9f0ff"),"Month selection must use brand blue");
 assert.ok(html.includes(".foodCalendarDot{background:#4679d0"),"History indicators must use brand blue");
