@@ -727,6 +727,31 @@ def ensure_workout_start_indexes(c):
     else:
         safe_log("m06_day_index_skipped",logging.WARNING,count=int(day_dups))
 
+def backfill_legacy_workout_load_phases(c):
+    """One-time opt-in baseline: classify older finished sessions as heavy.
+
+    Runs atomically with init() on the shared PostgreSQL connection. A durable
+    migration marker prevents future unclassified manual history from silently
+    becoming heavy on later app restarts. The existing result sets are untouched.
+    """
+    c.execute("""CREATE TABLE IF NOT EXISTS eplan_data_migrations(
+        migration_key TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )""")
+    inserted=c.execute("""INSERT INTO eplan_data_migrations(migration_key)
+        VALUES(%s) ON CONFLICT(migration_key) DO NOTHING RETURNING migration_key""",
+        ("legacy_finished_workout_phase_heavy_v1",)).fetchone()
+    if not inserted:
+        return 0
+    updated=c.execute("""UPDATE workout_sessions
+        SET load_phase='heavy'
+        WHERE status='finished'
+          AND COALESCE(load_phase,'')=''""")
+    changed=updated.rowcount
+    print(json.dumps({"event":"legacy_finished_workouts_heavy","sessions_updated":changed}),flush=True)
+    return changed
+
+
 def init():
     configured_trainer_email()
     with con() as c:
@@ -894,6 +919,7 @@ def init():
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS day_kind TEXT NOT NULL DEFAULT 'standard'")
         # Client-selected periodization phase. Empty keeps old sessions unclassified.
         c.execute("ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS load_phase TEXT NOT NULL DEFAULT ''")
+        backfill_legacy_workout_load_phases(c)
         # Legacy live sessions used PostgreSQL CURRENT_TIMESTAMP in a timezone-naive column (UTC wall time).
         # Convert that timestamp to the Kyiv calendar day once; manual daytime history remains on the same date.
         c.execute("""UPDATE workout_sessions SET workout_day=((started_at AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Kyiv')::date WHERE workout_day IS NULL AND started_at IS NOT NULL""")
