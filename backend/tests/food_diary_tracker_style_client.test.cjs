@@ -4,7 +4,7 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
 const js=fs.readFileSync("backend/static/calculator-prototype.js","utf8");
 const html=fs.readFileSync("backend/static/calculator-prototype.html","utf8");
-assert.ok(html.includes("/static/calculator-prototype.js?v=47"),"Safari cache version");
+assert.ok(html.includes("/static/calculator-prototype.js?v=48"),"Safari cache version");
 for(const css of [
  ".foodDiaryMealIcon.is-sunrise",".foodDiaryMealIcon.is-day",
  ".foodDiaryMealIcon.is-sunset",".foodDiaryMealIcon.is-snack",
