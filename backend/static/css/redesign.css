@@ -18271,3 +18271,46 @@ body.eplan-redesign.client-ui .workout-finish-phase{
   body.eplan-redesign.client-ui .workout-phase-select{margin:13px 0 8px}
   body.eplan-redesign.client-ui #workoutStartConfirmModal>.workout-start-confirm{padding:18px 14px!important}
 }
+
+
+/* v252 — iPhone: draw an unmistakable checked state for the workout load phase.
+   Keep the native radio in the accessibility tree; its label remains tappable. */
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-phase-option{
+  position:relative;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-phase-option input[type="radio"]{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  opacity:0!important;
+  padding:0!important;
+  margin:0!important;
+  pointer-events:none!important;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-phase-check{
+  width:27px;
+  height:27px;
+  min-width:27px;
+  flex:0 0 27px;
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  border:1.5px solid #d2dff0;
+  border-radius:50%;
+  background:#f6f9fd;
+  color:transparent;
+  font-family:inherit;
+  font-size:16px;
+  line-height:1;
+  font-weight:900;
+  transition:background-color .12s ease,border-color .12s ease,color .12s ease;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-phase-option input[type="radio"]:checked + .workout-phase-check{
+  background:#1677ff;
+  border-color:#1677ff;
+  color:#fff;
+}
+body.eplan-redesign.client-ui #workoutStartConfirmModal .workout-phase-option input[type="radio"]:focus-visible + .workout-phase-check{
+  outline:2px solid #0059cc;
+  outline-offset:3px;
+}
