@@ -18482,3 +18482,164 @@ body.eplan-redesign.client-ui .workout-featured-rest-status{
   }
 }
 
+
+/* v254 — approved variant 1: quiet icon controls, explicit skip, +30 seconds. */
+body.eplan-redesign.client-ui .workout-featured-rest-heading{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:#15284b!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-heading svg{
+  flex:none;
+  width:18px;
+  height:18px;
+  color:#287af0;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-settings{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px;
+  padding:5px 2px!important;
+  min-height:34px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#73849f!important;
+  font-size:11px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-settings svg{
+  width:17px;
+  height:17px;
+  flex:none;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-main{
+  grid-template-columns:62px minmax(0,1fr) 114px;
+  gap:8px;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring{
+  width:62px;
+  height:62px;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span{
+  display:grid;
+  place-items:center;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span svg{
+  position:static;
+  inset:auto;
+  transform:none;
+  width:21px;
+  height:21px;
+  color:#7385a0;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-value{
+  font-size:clamp(32px,8vw,44px);
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions{
+  align-items:stretch;
+  gap:6px;
+  justify-content:flex-end;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>button,
+body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-pause,
+body.eplan-redesign.client-ui .workout-featured-rest.is-paused .workout-featured-rest-actions>.workout-featured-rest-pause{
+  display:flex!important;
+  flex-direction:column;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  flex:0 1 54px!important;
+  min-width:0!important;
+  width:54px!important;
+  height:64px!important;
+  min-height:60px!important;
+  padding:6px 3px!important;
+  border:1px solid #d7e3f3!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.83)!important;
+  color:#667c9b!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+  font-weight:650!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-pause{
+  color:#2475eb!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>button svg{
+  display:block;
+  flex:none;
+  width:20px;
+  height:20px;
+}
+body.eplan-redesign.client-ui .workout-rest-control-caption{
+  color:inherit;
+  font-size:9px;
+  line-height:1.15;
+  white-space:nowrap;
+  font-weight:700;
+}
+body.eplan-redesign.client-ui .workout-rest-icon-play{
+  display:none;
+}
+body.eplan-redesign.client-ui .workout-featured-rest.is-paused .workout-rest-icon-pause{
+  display:none;
+}
+body.eplan-redesign.client-ui .workout-featured-rest.is-paused .workout-rest-icon-play{
+  display:block;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:12px;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-footer .workout-featured-rest-status{
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-add{
+  flex:none;
+  min-height:36px!important;
+  padding:7px 13px!important;
+  border:1px solid #cfdef2!important;
+  background:rgba(255,255,255,.85)!important;
+  border-radius:12px!important;
+  color:#2473d9!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>button:active,
+body.eplan-redesign.client-ui .workout-featured-rest-add:active{
+  background:#eaf3ff!important;
+}
+@media(max-width:375px){
+  body.eplan-redesign.client-ui .workout-featured-rest-main{
+    grid-template-columns:54px minmax(0,1fr);
+    gap:7px;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-ring{
+    width:54px;
+    height:54px;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-actions{
+    grid-column:1/-1;
+    justify-content:flex-end;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-actions>button{
+    flex:0 0 88px!important;
+    width:88px!important;
+    height:43px!important;
+    min-height:43px!important;
+    flex-direction:row;
+    gap:6px!important;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-value{
+    font-size:34px;
+  }
+}
+
