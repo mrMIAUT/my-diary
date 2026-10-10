@@ -239,6 +239,23 @@
  .foodDiaryActions button,.foodDiaryActions button.foodDiaryRemove{width:29px;min-width:29px}
  .foodDiaryEntryKcal{font-size:12px}
 }
+/* Diary v8: full-width compact portion + BJU beneath each individual food.
+   Saved portion totals are displayed unchanged; no nutrition recalc here. */
+.foodDiaryMealEntries .foodDiaryEntry{row-gap:5px;padding:10px 1px 11px}
+.foodDiaryEntryNutrition{grid-column:1/-1;display:flex;align-items:baseline;flex-wrap:wrap;column-gap:12px;row-gap:4px;min-width:0;font-variant-numeric:tabular-nums}
+.foodDiaryEntryWeight{font-size:12px;font-weight:680;color:#4772ac;white-space:nowrap}
+.foodDiaryEntryMacro{display:inline-flex;align-items:baseline;gap:4px;white-space:nowrap;min-width:0}
+.foodDiaryEntryMacro small{font-size:11px;color:#8c9bad;font-weight:650}
+.foodDiaryEntryMacro b{font-size:12px;color:#3a4f6e;font-weight:710;letter-spacing:-.01em}
+.foodDiaryPrep{display:block;margin-top:3px;color:#8998ac;font-size:10px;line-height:1.35;overflow-wrap:anywhere}
+.foodDiaryMealEntries .foodDiaryEntry .foodDiaryInfo strong{font-size:13px}
+@media(max-width:390px){
+ .foodDiaryEntryNutrition{column-gap:9px}
+ .foodDiaryEntryWeight{font-size:11px}
+ .foodDiaryEntryMacro{gap:3px}
+ .foodDiaryEntryMacro small{font-size:10px}
+ .foodDiaryEntryMacro b{font-size:11px}
+}
 </style></head><body><main class="wrap"><div class="brand">Є ПЛАН 1.2</div><section class="card"><span class="badge">ПРОТОТИП</span><h1>Калькулятор калорій і БЖВ</h1><p>Розрахуємо стартовий орієнтир. Дані цього прототипу не зберігаються.</p><div class="grid">
 <label>Стать<select id="sex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>
 <label>Вік<input id="age" type="number" inputmode="numeric" placeholder="років"></label>
@@ -299,4 +316,4 @@
 <button id="adaptBtn" type="button">Переглянути ціль</button>
 <div style="display:flex;gap:8px;margin-top:10px"><button id="changeGoalBtn" type="button" style="margin:0;background:#eef4ff;color:#245cae">Змінити ціль</button><button id="stopGoalBtn" type="button" style="margin:0;background:#fff;color:#566477;border:1px solid #dce3ec">Зупинити ціль</button></div>
 <div class="result" id="goalActionResult"></div><div class="result" id="adaptResult"></div><p id="adaptError" style="display:none;color:#b42318;font-size:13px;margin-top:12px"></p></section>
-</main><script src="/static/calculator-prototype.js?v=47" defer></script></body></html>
+</main><script src="/static/calculator-prototype.js?v=48" defer></script></body></html>
