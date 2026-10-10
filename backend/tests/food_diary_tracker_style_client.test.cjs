@@ -4,7 +4,7 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
 const js=fs.readFileSync("backend/static/calculator-prototype.js","utf8");
 const html=fs.readFileSync("backend/static/calculator-prototype.html","utf8");
-assert.ok(html.includes("/static/calculator-prototype.js?v=48"),"Safari cache version");
+assert.ok(html.includes("/static/calculator-prototype.js?v=49"),"Safari cache version");
 for(const css of [
  ".foodDiaryMealIcon.is-sunrise",".foodDiaryMealIcon.is-day",
  ".foodDiaryMealIcon.is-sunset",".foodDiaryMealIcon.is-snack",
@@ -64,7 +64,7 @@ assert.ok(head.includes('class="foodDiaryMealSummaryToggle"'));
 assert.ok(head.includes('aria-label="Білки: 8,1 грамів"'));
 assert.ok(head.includes('aria-label="Жири: 3,3 грамів"'));
 assert.ok(head.includes('aria-label="Вуглеводи: 26,7 грамів"'));
-assert.ok(head.includes('class="foodDiaryEntryKcal">165,5<small>ккал</small>'));
+assert.ok(head.includes('class="foodDiaryEntryKcal" aria-label="Калорійність: 165,5 ккал">165,5<small>ккал</small>'));
 assert.ok(head.includes('data-diary-edit="oats"'));
 assert.ok(head.includes('data-diary-remove="oats"'));
 assert.ok(head.includes('200 г'));
