@@ -788,17 +788,28 @@ function diaryEntryHtml(x){
    '<div class="foodDiaryEditActions"><button type="button" data-diary-save="'+id+'">Зберегти</button>'+
    '<button type="button" class="foodDiaryCancel" data-diary-cancel="'+id+'">Скасувати</button></div></div>';
  }
+ // Use each entry's *saved, unrounded* nutrition for this portion.
+ // Never re-derive BJU from the product catalogue: historical records must
+ // remain correct when an upstream food entry changes.
+ const nutrient=(short,label,key)=>'<span class="foodDiaryEntryMacro" aria-label="'+
+  label+': '+foodFmt(Number(x[key])||0)+' грамів"><small>'+short+'</small><b>'+
+  foodFmt(Number(x[key])||0)+'</b></span>';
+ const prep=x.prep?'<span class="foodDiaryPrep">'+foodEsc(x.prep)+'</span>':'';
  return '<div class="foodDiaryEntry" data-diary-entry="'+id+'">'+
   '<div class="foodDiaryInfo"><strong>'+foodEsc(x.name||'Продукт')+'</strong>'+
-   brand+
-   '<div class="foodDiaryMeta">'+foodFmt(x.grams)+' г'+
-   (x.prep?' · '+foodEsc(x.prep):'')+'</div></div>'+
+   brand+prep+'</div>'+
   '<div class="foodDiaryEntryRight"><span class="foodDiaryEntryKcal">'+foodFmt(x.kcal)+
    '<small>ккал</small></span>'+
   '<div class="foodDiaryActions"><button type="button" class="foodDiaryEditBtn" data-diary-edit="'+id+
   '" title="Редагувати" aria-label="Редагувати '+foodEsc(x.name||'продукт')+'">✎</button>'+
   '<button type="button" class="foodDiaryRemove" data-diary-remove="'+id+
-  '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div></div>'+edit+'</div>';
+  '" aria-label="Видалити '+foodEsc(x.name||'продукт')+'">×</button></div></div>'+
+  '<div class="foodDiaryEntryNutrition" aria-label="Вага та БЖВ продукту">'+
+   '<span class="foodDiaryEntryWeight">'+foodFmt(x.grams)+' г</span>'+
+   nutrient('Б','Білки','protein')+
+   nutrient('Ж','Жири','fat')+
+   nutrient('В','Вуглеводи','carbs')+
+  '</div>'+edit+'</div>';
 }
 function diaryNutritionTotals(items){
  // Work from stored full-precision entries, never from rounded UI labels.
