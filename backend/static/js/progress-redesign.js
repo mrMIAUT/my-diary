@@ -244,10 +244,12 @@ function progressWorkoutDetailHTML(d,sid){
  let exercises=data.exercises.length?data.exercises.map(x=>{
    let replacement=x.planned&&x.planned!==x.name?'<span class="calendar-workout-replacement">За планом: '+esc(x.planned)+'</span>':'';
    if((x.timed||[]).length){
+     // Resolve side mode from the workout's historical snapshot, never today's edited plan.
+     let sideSuffix=timedSideModeSuffix(x.planItem?.repeat_mode);
      let timedRows=(x.timed||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
-     let rows=timedRows.map(set=>'<div class="progress-workout-set-group"><div class="calendar-workout-set timed"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.work_seconds)+' сек</strong><em>план '+esc(set.planned_seconds)+' сек'+(+set.rest_seconds>0?' · відпочинок '+esc(set.rest_seconds)+' сек':'')+'</em></div></div>').join('');
+     let rows=timedRows.map(set=>'<div class="progress-workout-set-group"><div class="calendar-workout-set timed"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.work_seconds)+' сек'+esc(sideSuffix)+'</strong><em>план '+esc(set.planned_seconds)+' сек'+esc(sideSuffix)+(+set.rest_seconds>0?' · відпочинок '+esc(set.rest_seconds)+' сек':'')+'</em></div></div>').join('');
      let count=timedRows.length;
-     return '<div class="progress-workout-exercise timed"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'<small class="progress-timed-label">За часом</small></div><span>'+count+' '+(count===1?'підхід':count<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+rows+'</div></div>';
+     return '<div class="progress-workout-exercise timed"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'<small class="progress-timed-label">За часом'+esc(sideSuffix)+'</small></div><span>'+count+' '+(count===1?'підхід':count<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+rows+'</div></div>';
    }
    let warm=(x.aux||[]).filter(a=>a.kind==='warmup').sort((a,b)=>(+a.aux_number||0)-(+b.aux_number||0));
    let warmHTML=warm.length?'<div class="progress-workout-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(a.weight)+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||x.sets[0]?.repeat_mode))+'</span>').join('')+'</div>':'';
