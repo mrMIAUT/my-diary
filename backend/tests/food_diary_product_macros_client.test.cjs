@@ -9,7 +9,7 @@ for(const required of [
  ".foodDiaryEntryNutrition{",".foodDiaryEntryMacro{",
  ".foodDiaryEntryWeight{",".foodDiaryPrep{"
 ])assert.ok(html.includes(required),"Missing per-food nutrient CSS: "+required);
-assert.ok(html.includes("/static/calculator-prototype.js?v=48"),"Updated Safari asset required");
+assert.ok(html.includes("/static/calculator-prototype.js?v=49"),"Updated Safari asset required");
 const start=js.indexOf("function localDayKey(){");
 const stop=js.indexOf("\n$('foodWeekPrev').addEventListener(",start);
 assert.ok(start>=0&&stop>start);
@@ -62,17 +62,25 @@ assert.equal(stored.get(storageKey),before,"Pure display must not rewrite diary"
 assert.equal(writes,writesBefore);
 const potatoHtml=f.diaryEntryHtml(potato);
 assert.ok(potatoHtml.includes('class="foodDiaryEntryNutrition"'));
-assert.ok(potatoHtml.includes('<span class="foodDiaryEntryWeight">200 г</span>'));
+assert.ok(potatoHtml.includes('<div class="foodDiaryEntryRight"><span class="foodDiaryEntryWeight" aria-label="Вага: 200 грамів">200 г</span>'));
+assert.ok(potatoHtml.includes('<div class="foodDiaryEntryNutrition" aria-label="БЖВ та калорійність продукту">'));
+const nutritionStart=potatoHtml.indexOf('<div class="foodDiaryEntryNutrition"');
+assert.ok(nutritionStart>potatoHtml.indexOf('class="foodDiaryEntryWeight"'),
+ "Weight appears near edit/delete above macros");
+assert.ok(!potatoHtml.slice(nutritionStart).includes('class="foodDiaryEntryWeight"'),
+ "Weight should not repeat in the macro row");
 assert.ok(potatoHtml.includes('aria-label="Білки: 4,1 грамів"'));
 assert.ok(potatoHtml.includes('aria-label="Жири: 0,2 грамів"'));
 assert.ok(potatoHtml.includes('aria-label="Вуглеводи: 35 грамів"'));
-assert.ok(potatoHtml.includes('class="foodDiaryEntryKcal">154<small>ккал</small>'));
+assert.ok(potatoHtml.includes('class="foodDiaryEntryKcal" aria-label="Калорійність: 154 ккал">154<small>ккал</small>'));
+assert.ok(potatoHtml.indexOf('class="foodDiaryEntryKcal"')>nutritionStart,
+ "Calories are in the bottom B/J/V line, not beside edit buttons");
 assert.ok(potatoHtml.includes('Сира · до приготування'));
 assert.ok(potatoHtml.includes('data-diary-edit="potato"'));
 assert.ok(potatoHtml.includes('data-diary-remove="potato"'));
 const milkHtml=f.diaryEntryHtml(milk);
 assert.ok(milkHtml.includes("Галичина"));
-assert.ok(milkHtml.includes('<span class="foodDiaryEntryWeight">200 г</span>'));
+assert.ok(milkHtml.includes('class="foodDiaryEntryWeight" aria-label="Вага: 200 грамів">200 г</span>'));
 for(const expected of ["Білки: 5,6 грамів","Жири: 5 грамів","Вуглеводи: 9 грамів"])
  assert.ok(milkHtml.includes(expected),expected);
 assert.ok(f.diaryEntryHtml(old).includes("Білки: 0 грамів"),
@@ -97,14 +105,14 @@ assert.ok(Math.abs(updated.protein-6.15)<1e-8);
 assert.ok(Math.abs(updated.fat-.3)<1e-8);
 assert.equal(updated.carbs,52.5);
 const modifiedHtml=f.diaryEntryHtml(updated);
-assert.ok(modifiedHtml.includes('<span class="foodDiaryEntryWeight">300 г</span>'));
+assert.ok(modifiedHtml.includes('class="foodDiaryEntryWeight" aria-label="Вага: 300 грамів">300 г</span>'));
 assert.ok(modifiedHtml.includes("Білки: 6,2 грамів"));
 assert.ok(modifiedHtml.includes("Жири: 0,3 грамів"));
 assert.ok(modifiedHtml.includes("Вуглеводи: 52,5 грамів"));
-assert.ok(modifiedHtml.includes("231<small>ккал</small>"));
+assert.ok(modifiedHtml.includes('aria-label="Калорійність: 231 ккал">231<small>ккал</small>'));
 assert.equal(f.loadDiary().find(x=>x.id==="milk").grams,200);
 assert.equal(f.loadDiary().find(x=>x.id==="yesterday").kcal,9999);
 assert.equal(els.diaryKcal.textContent,"454,4");
 const escaped=f.diaryEntryHtml({...milk,id:"unsafe",name:'<img src=x onerror="alert(1)">'});
 assert.ok(!escaped.includes('<img src=x'),"HTML injection must remain escaped");
-console.log("Per-product BJU: weight, protein/fat/carbs, brand, cooking, kcal, old entries, fold/edit and totals PASS");
+console.log("Per-product BJU: grams beside actions, kcal with macros, brand, cooking, old entries, fold/edit and totals PASS");
