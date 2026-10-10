@@ -28,7 +28,7 @@ class WorkoutPhaseCheckmarkVisualTests(unittest.TestCase):
         selected=part.split('input[type="radio"]:checked + .workout-phase-check{',1)[1].split("}",1)[0]
         for rule in ("background:#1677ff","border-color:#1677ff","color:#fff"):
             self.assertIn(rule,selected)
-        normal=part.split(".workout-phase-option .workout-phase-check{",1)[1].split("}",1)[0]
+        normal=part.split(" .workout-phase-check{",1)[1].split("}",1)[0]
         self.assertIn("border-radius:50%",normal)
         self.assertIn("color:transparent",normal)
         self.assertIn('input[type="radio"]:focus-visible + .workout-phase-check',part)
