@@ -38,8 +38,8 @@ class WorkoutPhaseCheckmarkVisualTests(unittest.TestCase):
     def test_cache_bumped_without_touching_workout_api(self):
         for source in (INDEX,SW):
             self.assertIn("/static/js/workout.js?v=184",source)
-            self.assertIn("/static/css/redesign.css?v=253",source)
-        self.assertIn("const VERSION='eplan-v210'",SW)
+            self.assertIn("/static/css/redesign.css?v=254",source)
+        self.assertIn("const VERSION='eplan-v211'",SW)
         self.assertIn("day_name:day,load_phase:loadPhase",WORKOUT)
 
 

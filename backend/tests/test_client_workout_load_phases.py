@@ -48,7 +48,7 @@ class ClientLoadPhaseContracts(unittest.TestCase):
 
     def test_pwa_cache_consistency(self):
         assets=[
-          "/static/css/redesign.css?v=253",
+          "/static/css/redesign.css?v=254",
           "/static/js/workout.js?v=184",
           "/static/js/workout-lyfta.js?v=171",
           "/static/js/timed-workout.js?v=6",
@@ -57,7 +57,7 @@ class ClientLoadPhaseContracts(unittest.TestCase):
         ]
         for source in (INDEX,SW):
             for asset in assets:self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v210'",SW)
+        self.assertIn("const VERSION='eplan-v211'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for browser-free JS regression")
     def test_legacy_and_phase_specific_comparisons(self):

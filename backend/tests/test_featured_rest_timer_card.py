@@ -35,11 +35,11 @@ class FeaturedRestTimerTests(unittest.TestCase):
 
     def test_pwa_assets(self):
         for source in (INDEX,SW):
-            for asset in ("/static/js/timer.js?v=162",
+            for asset in ("/static/js/timer.js?v=163",
                           "/static/js/workout.js?v=184",
-                          "/static/css/redesign.css?v=253"):
+                          "/static/css/redesign.css?v=254"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v210'",SW)
+        self.assertIn("const VERSION='eplan-v211'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):
@@ -50,7 +50,7 @@ let store={},saved=[];
 function makePanel(pid,total,superset='0'){
   const pieces={};
   for(const s of ['.workout-featured-rest-value','.workout-featured-rest-next',
-     '.workout-featured-rest-pause','.workout-featured-rest-status',
+     '.workout-featured-rest-pause','.workout-featured-rest-pause .workout-rest-control-caption','.workout-featured-rest-status',
      '.workout-featured-rest-progress']){
     pieces[s]={textContent:'',style:{},attrs:{},
       setAttribute(k,v){this.attrs[k]=v}};
@@ -84,21 +84,38 @@ let template=ctx.featuredRestTimerHTML(25,4,false);
 assert(template.includes('data-rest-featured-pid="25"'));
 assert(template.includes('onclick="toggleRestTimerPlayback()"'));
 assert(template.includes('onclick="cancelRestTimer()"'));
+assert(template.includes('Пропустити'));
+assert(template.includes('onclick="extendFeaturedRestTimer(30)"'));
+assert(template.includes('Налаштувати'));
+assert(!template.includes('⏭'));
+assert(!template.includes('⚙'));
+assert(template.includes('<svg'));
+
 assert(template.includes('hidden'));
 ctx.startRestTimerCore(90,null,{sid:7,pid:25,set_number:2});
 assert.equal(a.hidden,false);assert.equal(b.hidden,true);
 assert.equal(a.pieces['.workout-featured-rest-next'].textContent,'Наступний підхід: 3 з 4');
 assert.match(a.pieces['.workout-featured-rest-value'].textContent,/01:3[01]/);
-assert.equal(a.pieces['.workout-featured-rest-pause'].textContent,'Ⅱ');
+assert.equal(a.pieces['.workout-featured-rest-pause'].attrs['aria-label'],'Призупинити відпочинок');
+assert.equal(a.pieces['.workout-featured-rest-pause .workout-rest-control-caption'].textContent,'Пауза');
+ctx.extendFeaturedRestTimer(30);
+assert(ctx.restTimerRemaining()>=119);
 assert(Number.isFinite(+a.pieces['.workout-featured-rest-progress'].style.strokeDashoffset));
 ctx.pauseRestTimer();
 assert.equal(a.hidden,false);
 assert.equal(a.classes['is-paused'],true);
-assert.equal(a.pieces['.workout-featured-rest-pause'].textContent,'▶');
+assert.equal(a.pieces['.workout-featured-rest-pause'].attrs['aria-label'],'Продовжити відпочинок');
+assert.equal(a.pieces['.workout-featured-rest-pause .workout-rest-control-caption'].textContent,'Старт');
+const beforeExtension=ctx.restTimerPausedSeconds();
+ctx.extendFeaturedRestTimer(30);
+assert.equal(ctx.restTimerPausedSeconds(),beforeExtension+30);
+assert.equal(ctx.restTimerRemaining(),0);
+assert.equal(a.pieces['.workout-featured-rest-value'].textContent,ctx.formatRestTimer(beforeExtension+30));
 assert.equal(ctx.restTimerRemaining(),0);
 ctx.startRestTimerCore(ctx.restTimerPausedSeconds());
 assert.equal(a.hidden,false);
 assert.equal(a.classes['is-paused'],false);
+assert(ctx.restTimerRemaining()>=148);
 ctx.cancelRestTimer();
 assert.equal(a.hidden,true);assert.equal(b.hidden,true);
 assert.equal(ctx.readTrackedRest(),null);
