@@ -9,7 +9,7 @@ assert.ok(html.includes('id="foodWeekNext"'),"Next week arrow missing");
 assert.ok(html.includes(".foodWeekDayCircle{"),"Circular day CSS missing");
 assert.ok(html.includes(".foodWeekDay.is-selected .foodWeekDayCircle{"),"Selected day contrast missing");
 assert.ok(html.includes(".foodWeekDay.has-entry:not(.is-selected)"),"Logged day highlighting missing");
-assert.ok(html.includes("/static/calculator-prototype.js?v=47"),"Safari asset cache version not bumped");
+assert.ok(html.includes("/static/calculator-prototype.js?v=48"),"Safari asset cache version not bumped");
 const a=js.indexOf("function localDayKey(){");
 const b=js.indexOf("\n$('foodWeekPrev').addEventListener(",a);
 assert.ok(a>=0&&b>a,"Actual diary functions missing");
