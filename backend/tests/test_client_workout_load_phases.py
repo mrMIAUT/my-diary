@@ -51,13 +51,13 @@ class ClientLoadPhaseContracts(unittest.TestCase):
           "/static/css/redesign.css?v=251",
           "/static/js/workout.js?v=182",
           "/static/js/workout-lyfta.js?v=171",
-          "/static/js/timed-workout.js?v=5",
-          "/static/js/progress-redesign.js?v=168",
+          "/static/js/timed-workout.js?v=6",
+          "/static/js/progress-redesign.js?v=169",
           "/static/js/calendar.js?v=163",
         ]
         for source in (INDEX,SW):
             for asset in assets:self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v207'",SW)
+        self.assertIn("const VERSION='eplan-v208'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for browser-free JS regression")
     def test_legacy_and_phase_specific_comparisons(self):
