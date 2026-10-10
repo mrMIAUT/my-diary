@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="uk">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#f7faff">
+ <title>Є ПЛАН · 1.2 Заміри — тест дизайну</title>
+ <link rel="stylesheet" href="/static/css/redesign.css">
+ <style>
+  :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#0d2748;background:#f5f8fc}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body.eplan-redesign.client-ui{margin:0;background:#f6f9fd;min-height:100vh;font-family:inherit}
+  .demo-app{width:min(440px,100%);min-height:100vh;margin:auto;padding:env(safe-area-inset-top) 16px calc(36px + env(safe-area-inset-bottom));background:#f9fbfe;box-shadow:0 15px 45px rgba(28,60,112,.10)}
+  .demo-top{display:flex;align-items:center;justify-content:space-between;padding:24px 0 20px}
+  .demo-brand{font-size:16px;font-weight:950;letter-spacing:.045em;color:#112a49}
+  .demo-brand span{color:#1680ff}
+  .demo-tag{border-radius:50px;background:#ebf3ff;border:1px solid #cee3fc;color:#3371b0;font-size:11px;font-weight:800;padding:8px 10px}
+  .demo-title{margin:0;font-size:28px;letter-spacing:-.04em}
+  .demo-sub{margin:4px 0 18px;font-size:12px;line-height:1.5;color:#8190a4}
+  .demo-controls{background:#fff;border-radius:17px;border:1px solid #e0e8f3;padding:13px 14px;margin-bottom:15px;display:grid;grid-template-columns:1fr 1fr;gap:12px;box-shadow:0 4px 15px rgba(35,70,108,.035)}
+  .demo-controls label{min-width:0;display:grid;gap:6px;font-size:11px;color:#6e829c;font-weight:800}
+  .demo-controls select{min-width:0;width:100%;height:42px;border:1px solid #d9e5f2;background:#f7faff;border-radius:11px;padding:0 8px;color:#173758;font:700 13px inherit}
+  .demo-note{padding:10px 12px;background:#eef7ff;border:1px solid #d6eafb;border-radius:12px;font-size:11px;line-height:1.55;color:#54718f;margin-bottom:14px}
+  #previewPanel{margin:0 0 20px}
+  .demo-section-title{font-size:19px;margin:17px 0 10px}
+  body.eplan-redesign.client-ui .measurement-visual-overview{display:block}
+  .measurement-places-grid{padding:0 0 12px}
+  .demo-form{margin:14px 0;background:#fff;border-radius:16px;border:1px solid #dce8f3;padding:14px}
+  .demo-form h3{font-size:16px;margin:0 0 6px}
+  .demo-form p{font-size:11px;color:#8294a9;margin:0 0 12px}
+  .demo-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .demo-form-grid label{display:grid;gap:5px;color:#697f9b;font-size:11px;font-weight:750}
+  .demo-form-grid input{width:100%;min-height:40px;border-radius:10px;border:1px solid #dce7f3;background:#fff;color:#173758;padding:8px 10px;font-size:15px}
+  .demo-save{width:100%;border:0;border-radius:12px;background:#197cff;color:#fff;padding:13px 10px;margin-top:14px;font-weight:850}
+  .demo-back{margin:12px 0;color:#6c809b;font-size:11px}
+  .demo-back a{color:#1478ee}
+  .hidden{display:none!important}
+  @media(min-width:600px){.demo-app{margin:25px auto;border:1px solid #e1eaf4;border-radius:26px;min-height:850px}}
+ </style>
+</head>
+<body class="eplan-redesign client-ui">
+ <main class="demo-app">
+  <header class="demo-top"><div class="demo-brand"><span>Є</span> | ПЛАН</div><span class="demo-tag">1.2 · Заміри</span></header>
+  <h1 class="demo-title">Заміри</h1>
+  <p class="demo-sub">Тестовий екран · світла тема · чоловіча та жіноча фігура</p>
+  <div class="demo-controls">
+   <label>Стать у профілі
+    <select id="demoSex" onchange="renderPreview()">
+     <option value="Чоловіча">Чоловіча</option>
+     <option value="Жіноча">Жіноча</option>
+     <option value="">Не вказано</option>
+    </select>
+   </label>
+   <label>Дані замірів
+    <select id="demoState" onchange="renderPreview()">
+     <option value="sample">Приклад</option>
+     <option value="empty">Без замірів</option>
+    </select>
+   </label>
+  </div>
+  <div class="demo-note">Це окреме демо дизайну. Перемикач вище імітує вибір статі в анкеті; у справжньому застосунку фігура змінюється автоматично. Дані вигадані та не записуються до бази.</div>
+  <div id="previewPanel"></div>
+  <section id="dueMeasurementForm" class="demo-form hidden">
+   <h3>Оновити тестові заміри</h3>
+   <p>Значення змінюються лише на цьому екрані, без збереження.</p>
+   <div class="demo-form-grid" id="demoFormGrid"></div>
+   <button class="demo-save" onclick="applyPreviewValues()" type="button">Оновити приклад</button>
+  </section>
+  <h2 class="demo-section-title" id="metricDetails">Детальні значення</h2>
+  <div class="measurement-visual-overview" id="previewCards"></div>
+  <p class="demo-back">Експериментальна гілка <a href="https://github.com/mrMIAUT/my-diary/tree/eplan-1.2-zamiry">eplan-1.2-zamiry</a>. Основний сайт «Є ПЛАН» не змінено.</p>
+ </main>
+ <script>
+  function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function fmtProgress(x){return (Math.round(Number(x)*10)/10).toLocaleString('uk-UA',{maximumFractionDigits:1});}
+ </script>
+ <script src="/static/js/measurements.js"></script>
+ <script>
+  const examples={
+   male:{weight:82,shoulders:119,neck:39,chest:102,waist:82,hips:98,arms_left:37,arms_right:38,calves_left:37,calves_right:38,thighs_left:58,thighs_right:59,forearms_left:31,forearms_right:32},
+   female:{weight:65,shoulders:104,neck:33,chest:92,waist:70,hips:98,arms_left:29,arms_right:30,calves_left:34,calves_right:35,thighs_left:54,thighs_right:55,forearms_left:25,forearms_right:26}
+  };
+  let edits={};
+  function renderPreview(){
+    const sex=document.getElementById('demoSex').value;
+    const state=document.getElementById('demoState').value;
+    const gender=sex==='Жіноча'?'female':'male';
+    const data=state==='sample'?{...examples[gender],...edits[gender]}:null;
+    const d={client:{sex},measurements:data?[data]:[]};
+    window.currentClientData=d;
+    document.getElementById('dueMeasurementForm').classList.add('hidden');
+    document.getElementById('previewPanel').innerHTML=measurementFigurePanelHTML(data,d,true);
+    document.getElementById('previewCards').innerHTML=data?measurementVisualCards(data,{},d):'<div class="demo-note">Немає доданих замірів. Можеш скористатися кнопкою вище, щоб побачити приклад.</div>';
+    const entries=[['chest','Груди'],['waist','Талія'],['hips','Стегна'],['arms_right','Рука права'],['arms_left','Рука ліва'],['thighs_right','Стегно праве'],['thighs_left','Стегно ліве'],['calves_right','Гомілка права'],['calves_left','Гомілка ліва']];
+    document.getElementById('demoFormGrid').innerHTML=entries.map(([id,title])=>'<label>'+esc(title)+'<input type="number" id="demo-'+id+'" min="0" step="0.1" value="'+esc(data?.[id]||'')+'" placeholder="см"></label>').join('');
+  }
+  function applyPreviewValues(){
+    const sex=document.getElementById('demoSex').value==='Жіноча'?'female':'male';
+    const out={};
+    document.querySelectorAll('#demoFormGrid input').forEach(input=>{
+      let key=input.id.slice(5),v=Number(input.value);
+      if(Number.isFinite(v)&&v>=0)out[key]=v;
+    });
+    edits[sex]={...(edits[sex]||{}),...out};
+    document.getElementById('demoState').value='sample';
+    renderPreview();
+  }
+  renderPreview();
+ </script>
+</body>
+</html>
