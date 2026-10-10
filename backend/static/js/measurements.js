@@ -60,6 +60,63 @@ function measurementVisualIcon(key,d=window.currentClientData||{}){
 }
 
 
+
+// Experimental ЄПЛАН 1.2 заміри: the silhouette comes from the client profile,
+// not from a separate screen toggle. Unknown or blank sex defaults to male.
+function measurementFigureValue(row,key){
+ if(!row)return '—';
+ if(Object.prototype.hasOwnProperty.call(measurementPairConfig(),key)){
+  let p=measurementPairValues(row,key),values=[p.right,p.left].filter(v=>v>0);
+  if(values.length)return values.map(v=>fmtProgress(v)).join('/');
+  return p.legacy>0?fmtProgress(p.legacy):'—';
+ }
+ let v=+row[key]||0;
+ return v>0?fmtProgress(v):'—';
+}
+function measurementFigureLabel(row,key,title,side,position){
+ let value=measurementFigureValue(row,key);
+ return '<button type="button" class="measurement-figure-label '+side+' '+position+'" data-metric="'+key+'" onclick="measurementJumpToMetric(this.dataset.metric)" aria-label="'+esc(title)+(value==='—'?', немає заміру':', '+esc(value)+' сантиметрів')+'">'
+   +'<span class="measurement-figure-label-name">'+esc(title)+'</span>'
+   +'<strong>'+esc(value)+(value==='—'?'':' <small>см</small>')+'</strong>'
+   +'</button>';
+}
+function measurementFigurePanelHTML(last,d=window.currentClientData||{},canWrite=false){
+ let gender=measurementGender(d),src='/static/img/measurements/figure-'+gender+'.svg';
+ let display=gender==='female'?'Жіноча фігура':'Чоловіча фігура';
+ let left=[['chest','Груди','label-chest'],['waist','Талія','label-waist'],['hips','Стегна','label-hips']];
+ let right=[['arms','Руки','label-arms'],['thighs','Стегно','label-thighs'],['calves','Гомілки','label-calves']];
+ return '<section class="measurement-figure-panel" aria-label="Схема замірів тіла">'
+  +'<div class="measurement-figure-head"><div><h2>Об’єми тіла</h2><p>'+(last?'Останні зафіксовані значення':'Заміри ще не додані')+'</p></div><span class="measurement-figure-sex" aria-label="'+display+'">'+(gender==='female'?'Жіноча':'Чоловіча')+'</span></div>'
+  +'<div class="measurement-figure-view-labels" aria-hidden="true"><span>Спереду</span><span>Ззаду</span></div>'
+  +'<div class="measurement-figure-stage">'
+  +'<div class="measurement-figure-art"><img src="'+src+'" alt="'+display+', вигляд спереду і ззаду" loading="lazy">'
+  +'<svg class="measurement-figure-guides" viewBox="0 0 528 765" aria-hidden="true" focusable="false">'
+  +'<g fill="none" stroke="#27ad6e" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 7" opacity=".88">'
+  +'<path d="M89 228 Q140 236 191 228"/><path d="M96 340 Q140 351 184 340"/><path d="M81 399 Q140 410 199 399"/>'
+  +'<path d="M446 236 Q466 242 486 236"/><path d="M344 505 Q368 512 395 505"/><path d="M346 623 Q369 631 390 623"/>'
+  +'</g><g fill="#27ad6e"><circle cx="89" cy="228" r="4"/><circle cx="184" cy="340" r="4"/><circle cx="81" cy="399" r="4"/><circle cx="486" cy="236" r="4"/><circle cx="395" cy="505" r="4"/><circle cx="390" cy="623" r="4"/></g></svg></div>'
+  +left.map(([key,title,position])=>measurementFigureLabel(last,key,title,'left',position)).join('')
+  +right.map(([key,title,position])=>measurementFigureLabel(last,key,title,'right',position)).join('')
+  +'</div>'
+  +'<div class="measurement-figure-foot"><span>Права / ліва сторона через /</span><span>Натисни на замір для деталей</span></div>'
+  +(canWrite?'<button type="button" class="measurement-figure-add" onclick="measurementShowAddForm()">+ Додати заміри</button>':'')
+  +'</section>';
+}
+function measurementShowAddForm(){
+ let form=document.getElementById('dueMeasurementForm')||document.getElementById('earlyMeasurementForm');
+ if(!form)return;
+ form.classList.remove('hidden');
+ form.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function measurementJumpToMetric(key){
+ let item=document.getElementById('measurementMetricCard-'+key);
+ if(item){
+  item.scrollIntoView({behavior:'smooth',block:'center'});
+  item.classList.add('measurement-metric-selected');
+  setTimeout(()=>item.classList.remove('measurement-metric-selected'),1400);
+ }else measurementShowAddForm();
+}
+
 function measurementVisualCards(last,prev,d=window.currentClientData||{}){
  let metrics=measurementMetricConfig().filter(([k])=>k!=='weight');
  let cards=metrics.map(([k,n,u])=>{
@@ -80,10 +137,10 @@ function measurementVisualCards(last,prev,d=window.currentClientData||{}){
      +'</div>'
     :(cur.legacy?'<strong>'+fmtProgress(cur.legacy)+' <small>'+u+'</small></strong>':'<strong>—</strong>');
    let note=!hasPair?(cur.legacy?'<em>Старий замір</em>':'<em>Ще не додано</em>'):'';
-   return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div>'+pairHtml+note+'</div>';
+   return '<div id="measurementMetricCard-'+k+'" class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div>'+pairHtml+note+'</div>';
   }
   let v=+last?.[k]||0,pv=+prev?.[k]||0,delta=(v>0&&pv>0)?v-pv:null;
-  return '<div class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div><strong>'+(v>0?fmtProgress(v)+' <small>'+u+'</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="neutral-change">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
+  return '<div id="measurementMetricCard-'+k+'" class="measurement-place-card metric-'+k+'"><div class="measurement-place-top">'+measurementVisualIcon(k,d)+'<span>'+n+'</span></div><strong>'+(v>0?fmtProgress(v)+' <small>'+u+'</small>':'—')+'</strong>'+(v<=0?'<em>Ще не додано</em>':delta===null?'<em>Без порівняння</em>':'<em class="neutral-change">'+(delta>0?'+':'')+fmtProgress(delta)+' '+u+'</em>')+'</div>';
  }).join('');
  return '<div class="measurement-places-grid">'+cards+'</div>';
 }
@@ -224,6 +281,7 @@ function clientMeasurementsHTML(d,cid){
    ${canWrite&&due?`<button onclick="document.getElementById('dueMeasurementForm').classList.toggle('hidden')">Зробити заміри</button>`:''}
   </div>
   ${canWrite&&due?`<div id="dueMeasurementForm" class="hidden card">${measurementFormHTML(cid)}</div>`:''}
+  ${measurementFigurePanelHTML(last,d,canWrite)}
   ${last?`<div class="measurement-visual-overview"><div class="measurement-section-title"><div><h2>Останні заміри</h2><p class="muted">${formatProgressDate(last.day)}</p></div></div>${measurementWeightVisual(last,prev,d)}<div class="measurement-visual-subhead"><h3>Вимірювання тіла</h3><span>Останні значення</span></div>${measurementVisualCards(last,prev,d)}</div>`:''}
   ${xs.length>1?measurementComparisonHTML(xs):''}
   ${canWrite?'<div class="card measurement-early"><p class="muted">Можеш додати контрольні заміри раніше або внести старі заміри за будь-яку минулу дату.</p><button class="dark" onclick="document.getElementById(\'earlyMeasurementForm\').classList.toggle(\'hidden\')">Додати заміри за іншу дату</button><div id="earlyMeasurementForm" class="hidden" style="margin-top:14px">'+measurementFormHTML(cid,true)+'</div></div>':''}

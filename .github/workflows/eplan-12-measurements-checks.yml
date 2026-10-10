@@ -1,0 +1,19 @@
+name: EPLAN 1.2 Measurements Checks
+on:
+  push:
+    branches: [eplan-1.2-zamiry]
+  workflow_dispatch:
+
+jobs:
+  measurement-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python backend syntax
+        run: python3 -m py_compile backend/app.py
+      - name: Measurement and existing regression tests
+        run: python3 -m unittest discover -s backend/tests -p 'test_*.py'
+      - name: JavaScript syntax
+        run: find backend/static/js -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: App manifest syntax
+        run: python3 -m json.tool backend/static/manifest.webmanifest >/dev/null
