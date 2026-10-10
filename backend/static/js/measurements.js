@@ -84,7 +84,7 @@ function measurementFigurePanelHTML(last,d=window.currentClientData||{},canWrite
  let gender=measurementGender(d),src='/static/img/measurements/figure-'+gender+'.svg';
  let display=gender==='female'?'Жіноча фігура':'Чоловіча фігура';
  let left=[['chest','Груди','label-chest'],['waist','Талія','label-waist'],['hips','Стегна','label-hips']];
- let right=[['arms','Руки','label-arms'],['thighs','Стегна','label-thighs'],['calves','Гомілки','label-calves']];
+ let right=[['arms','Руки','label-arms'],['thighs','Стегно','label-thighs'],['calves','Гомілки','label-calves']];
  return '<section class="measurement-figure-panel" aria-label="Схема замірів тіла">'
   +'<div class="measurement-figure-head"><div><h2>Об’єми тіла</h2><p>'+(last?'Останні зафіксовані значення':'Заміри ще не додані')+'</p></div><span class="measurement-figure-sex" aria-label="'+display+'">'+(gender==='female'?'Жіноча':'Чоловіча')+'</span></div>'
   +'<div class="measurement-figure-view-labels" aria-hidden="true"><span>Спереду</span><span>Ззаду</span></div>'
