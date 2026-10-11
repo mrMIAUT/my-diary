@@ -98,7 +98,7 @@ window.structuredDailySummaryHTML=function(){
  const totals=dayMacros(),actual=dayMacros(true);
  const c=window.currentClientData?.client||{};
  const goal={kcal:c.kcal||0,protein:c.protein||0,fat:c.fat||0,carbs:c.carbs||0};
- return '<div id="structuredDailySummary" class="structured-daily-summary"><strong>Підсумок на день</strong><small>Враховано лише перший варіант кожного прийому</small>'
+ return '<div id="structuredDailySummary" class="structured-daily-summary"><div class="day-head"><h2>Добова ціль і поточні підсумки</h2><span class="daily-pct">'+Math.round(goal.kcal?totals.kcal/goal.kcal*100:0)+'% від цілі</span></div><small>Враховано перший варіант кожного прийому</small>'
  +'<div class="structured-daily-grid">'+keys.map(k=>{
   const pct=goal[k]>0?Math.round(totals[k]/goal[k]*100):0;
   return '<div class="nutrition-stat stat-'+k+'"><div class="nutrition-stat-head"><span>'+labels[k]+'</span></div>'
@@ -235,8 +235,15 @@ function renderDetails(){
   const v=Number(input.value);
   if(input.value&&Number.isFinite(v)&&v>=1&&v<=(egg?8:2000)&&(!egg||Number.isInteger(v))){
    picker.qty=v;
-   renderDetails();
-   $('pickerQty')?.focus();
+   // Update all figures without replacing the focused numeric input while typing.
+   const portion=macros(food,v*(egg?(food.grams_per_piece||50):1));
+   const stats=$('structuredFoodDetail')?.querySelector('.selected-macros .picker-stats');
+   if(stats)stats.outerHTML=miniStats(portion);
+   const impact=$('structuredFoodDetail')?.querySelector('.picker-impact');
+   const projected=projectedTotals();
+   if(impact&&projected)impact.innerHTML='<strong>Після оновлення</strong><span>Прийом їжі: '+macroText(projected.meal)+'</span><span>За день: '+macroText(projected.day)+'</span>';
+   const hint=$('structuredFoodDetail')?.querySelector('.quantity-section .hint');
+   if(hint)hint.textContent='≈ '+fmt(v*(food.grams_per_piece||50))+' г їстівної частини · 1 яйце ≈ 50 г без шкаралупи';
   }
  };
  const toggle=$('pickerIncludeVeg');
