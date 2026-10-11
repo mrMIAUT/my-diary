@@ -119,12 +119,36 @@ function redesignNutritionTodayHTML(d,c,cid){
     +'<div class="redesign-nutrition-actions">'
       +(x?'<button onclick="openRedesignNutritionEntry('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>')
       +(!clientAccess(c).features?.meal_plan?'<button class="nutrition-targets-button" onclick="openNutritionTargetsModal('+cid+')">'+uiIcon('edit')+' Налаштувати цілі</button>':'')
+      +'<button type="button" class="nutrition-food-search-button" onclick="openFoodSearchLazy()">'+uiIcon('search')+' Пошук продуктів</button>'
     +'</div>'
     +(clientAccess(c).features?.meal_plan
       ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
       :'<div class="card nutrition-coaching-upsell"><span class="nutrition-kicker">ПОСЛУГА ТРЕНЕРА</span><strong>Персональний план харчування</strong><p>Щоденник БЖВ доступний у твоєму тарифі. Персональний план харчування складається тренером окремо.</p><button onclick="showClientTrainers('+cid+')">Переглянути тренерів ›</button></div>')
   +'</div>';
 }
+
+// Do not load the food-search module during application bootstrap. A network or
+// script error in optional search must never prevent the training app from starting.
+window.openFoodSearchLazy = async function(){
+  if(typeof window.openFoodSearchModal==='function')return window.openFoodSearchModal();
+  try{
+    if(!window.eplanFoodSearchLoader){
+      window.eplanFoodSearchLoader=new Promise((resolve,reject)=>{
+        const script=document.createElement('script');
+        script.src='/static/js/food-lookup.js?v=2';
+        script.onload=()=>resolve();
+        script.onerror=()=>reject(new Error('Food search module unavailable'));
+        document.head.appendChild(script);
+      }).catch(e=>{window.eplanFoodSearchLoader=null;throw e;});
+    }
+    await window.eplanFoodSearchLoader;
+    if(typeof window.openFoodSearchModal!=='function')throw new Error('Food search failed to initialize');
+    window.openFoodSearchModal();
+  }catch(e){
+    console.warn('Є ПЛАН: food search unavailable',e);
+    alert('Не вдалося відкрити пошук продуктів. Перевір з’єднання та спробуй знову.');
+  }
+};
 
 window.openNutritionTargetsModal = function(cid){
   document.getElementById('nutritionTargetsModal')?.remove();
