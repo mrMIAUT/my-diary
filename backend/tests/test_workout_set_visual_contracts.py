@@ -12,9 +12,9 @@ SW=(ROOT/"sw.js").read_text(encoding="utf-8")
 class WorkoutSetVisualContracts(unittest.TestCase):
     def test_pwa_uses_updated_workout_css(self):
         for source in (HTML,SW):
-            self.assertIn("/static/css/redesign.css?v=260",source)
-            self.assertNotIn("/static/css/redesign.css?v=259",source)
-        self.assertIn("const VERSION='eplan-v218'",SW)
+            self.assertIn("/static/css/redesign.css?v=261",source)
+            self.assertNotIn("/static/css/redesign.css?v=260",source)
+        self.assertIn("const VERSION='eplan-v219'",SW)
 
     def test_completed_set_has_green_surface_and_white_inputs(self):
         rules=CSS.split("/* v245 — client workout set:",1)[1]
