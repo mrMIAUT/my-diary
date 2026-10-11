@@ -2,7 +2,13 @@
 // Keep this file declaration-only so all functions exist before startup runs.
 
 function planFromData(d){
- let items=(d.nutrition_plan||[]).map(x=>({meal_number:+x.meal_number||1,variant_number:+x.variant_number||1,content:x.content||'',sort:+x.sort||0}));
+ let items=(d.nutrition_plan||[]).map(x=>{
+  let foods=[];
+  try{const raw=x.foods_json||x.foods||'[]';foods=Array.isArray(raw)?raw:JSON.parse(raw);}
+  catch(e){console.warn('Invalid structured meal draft',e)}
+  return {meal_number:+x.meal_number||1,variant_number:+x.variant_number||1,
+          content:x.content||'',sort:+x.sort||0,foods:Array.isArray(foods)?foods:[]};
+ });
  if(!items.length&&d.client.meal_plan)items=[{meal_number:1,variant_number:1,content:d.client.meal_plan,sort:0}];
  if(!items.length)items=[{meal_number:1,variant_number:1,content:'',sort:0},{meal_number:2,variant_number:1,content:'',sort:0},{meal_number:3,variant_number:1,content:'',sort:0}];
  return items;
@@ -12,14 +18,22 @@ function mealPlanEditorHTML(d,editing=false){
  if(!nutritionPlanDraft)nutritionPlanDraft=planFromData(d);
  let nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))].sort((a,b)=>a-b);
  return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('nutritionPlanBody',this)"><span><strong>План харчування</strong><span class="muted" style="display:block;margin-top:5px">Прийоми їжі та альтернативні варіанти</span></span><span class="arrow">⌄</span></button>
-  <div class="meal-autoplan-toolbar"><button type="button" class="meal-autoplan-open" onclick="openAutoMealPlanBuilder(${d.client.id})">${uiIcon('plus')} Створити план автоматично</button></div>
+  <div class="meal-autoplan-toolbar">
+   <button type="button" class="meal-autoplan-open" onclick="openAutoMealPlanBuilder(${d.client.id})">${uiIcon('plus')} Створити план автоматично</button>
+   ${!editing?'<button class="meal-plan-edit-open" type="button" onclick="openTrainerStructuredMealPlan()">Редагувати план</button>':''}
+  </div>
   <div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
 }
 
 function mealEditorBlock(n,editing){
  let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
  if(!editing)return `<div class="meal-view"><strong>Прийом їжі ${n}</strong>${xs.filter(x=>x.content.trim()).map(x=>`<div class="meal-option"><span class="variant-pill">Варіант ${x.variant_number}</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">${esc(x.content)}</div></div>`).join('')||'<div class="muted" style="margin-top:8px">Ще не заповнено.</div>'}</div>`;
- return `<div class="meal-editor"><div class="meal-editor-head"><strong>Прийом їжі ${n}</strong>${nutritionPlanDraft.some(x=>x.meal_number!==n)?`<button class="dark icon-btn" onclick="removeMealBlock(${n})">${uiIcon('trash')} Видалити</button>`:''}</div>${xs.map(x=>`<div class="meal-variant"><div class="between"><span class="muted">Варіант ${x.variant_number}</span>${xs.length>1?`<button class="dark icon-btn" onclick="removeMealVariant(${n},${x.variant_number})">${uiIcon('trash')}</button>`:''}</div><textarea data-meal="${n}" data-variant="${x.variant_number}" oninput="updateMealDraft(this)" placeholder="Продукти, кількість, примітки...">${esc(x.content)}</textarea></div>`).join('')}<div class="meal-actions"><button class="dark icon-btn" onclick="addMealVariant(${n})">${uiIcon('plus')} Додати варіант</button></div></div>`;
+ return `<div class="meal-editor"><div class="meal-editor-head"><strong>Прийом їжі ${n}</strong>${nutritionPlanDraft.some(x=>x.meal_number!==n)?`<button class="dark icon-btn" onclick="removeMealBlock(${n})">${uiIcon('trash')} Видалити</button>`:''}</div>${xs.map(x=>`<div class="meal-variant"><div class="between"><span class="muted">Варіант ${x.variant_number}</span>${xs.length>1?`<button class="dark icon-btn" onclick="removeMealVariant(${n},${x.variant_number})">${uiIcon('trash')}</button>`:''}</div>${Array.isArray(x.foods)&&x.foods.length
+ ? (typeof window.renderStructuredMealHTML==='function'
+    ? window.renderStructuredMealHTML(x)
+    : `<div class="structured-meal-loader"><p>Продукти збережено зі своїми БЖВ</p><button type="button" onclick="openTrainerStructuredMealPlan()">Редагувати продукти</button></div>`)
+ : `<textarea data-meal="${n}" data-variant="${x.variant_number}" oninput="updateMealDraft(this)" placeholder="Продукти, кількість, примітки...">${esc(x.content)}</textarea>
+   <button type="button" class="structured-start" onclick="addStructuredMealFood(${n},${x.variant_number})">+ Додати продукт з бази</button>`}</div>`).join('')}<div class="meal-actions"><button class="dark icon-btn" onclick="addMealVariant(${n})">${uiIcon('plus')} Додати варіант</button></div></div>`;
 }
 
 function updateMealDraft(el){let x=nutritionPlanDraft.find(v=>v.meal_number===+el.dataset.meal&&v.variant_number===+el.dataset.variant);if(x)x.content=el.value}
@@ -61,9 +75,15 @@ window.saveTrainerMealPlanDraft = async function(cid,button){
  const data=window.currentClientData||{},c=data.client||{};
  if(session?.role!=='trainer'||+c.id!==+cid||!clientAccess(c).features?.meal_plan)return;
  const items=(nutritionPlanDraft||[]).filter(x=>String(x.content||'').trim()).map((x,i)=>({
-   meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i
+   meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i,
+   foods:Array.isArray(x.foods)?x.foods.map(food=>({
+     source_id:food.source_id,grams:food.grams,count:food.count,
+     count_in_targets:food.count_in_targets!==false
+   })):[]
  }));
  if(!items.length)return alert('Спочатку додай хоча б один прийом їжі.');
+ if(items.some(item=>item.foods.length&&item.foods.some(food=>!food.source_id||!Number.isFinite(Number(food.grams))||food.grams<=0)))
+   return alert('Перевір порції та продукти у плані.');
  if(!confirm('Призначити цей план харчування клієнту? Перевір грамовки та БЖВ.'))return;
  let restore=setActionLoading(button,'Зберігаємо…');
  try{
@@ -74,6 +94,42 @@ window.saveTrainerMealPlanDraft = async function(cid,button){
    const host=document.querySelector('#nutrition');
    if(host)host.innerHTML=nutritionHTML(window.currentClientData);
  }catch(e){restore();alert(e.message||'Не вдалося зберегти план.');}
+};
+
+// Structured nutrition controls are optional. The application loads unchanged
+// without this module; catalogue is fetched only if a trainer enters this editor.
+window.ensureStructuredMealEditor=async function(){
+ if(typeof window.renderStructuredMealHTML==='function'&&window.structuredCatalog?.length)return;
+ if(!window.eplanStructuredMealPromise){
+   window.eplanStructuredMealPromise=(async()=>{
+     await new Promise((resolve,reject)=>{
+       const script=document.createElement('script');
+       script.src='/static/js/structured-meal-editor.js?v=1';
+       script.onload=resolve;script.onerror=()=>reject(Error('Editor JS unavailable'));
+       document.head.appendChild(script);
+     });
+     await window.loadStructuredMealCatalog();
+   })().catch(e=>{window.eplanStructuredMealPromise=null;throw e;});
+ }
+ return window.eplanStructuredMealPromise;
+};
+window.openTrainerStructuredMealPlan=async function(){
+ try{
+   await window.ensureStructuredMealEditor();
+   if(!document.querySelector('#nutritionPlanBody textarea')&&!document.querySelector('.meal-editor')){
+     editNutritionTargets();
+   }else if(!document.querySelector('#nutritionPlanBody .meal-editor')){
+     editNutritionTargets();
+   }
+   rerenderNutritionPlan(true);
+   document.querySelector('#nutritionPlanBody')?.classList.remove('hidden');
+ }catch(e){console.warn(e);alert('Не вдалося відкрити редактор продуктів.');}
+};
+window.addStructuredMealFood=async function(n,v){
+ try{
+   await window.ensureStructuredMealEditor();
+   window.pickStructuredFood(n,v,-1);
+ }catch(e){console.warn(e);alert('Не вдалося завантажити базу продуктів.');}
 };
 
 function nutritionTargetSummaryHTML(c){
