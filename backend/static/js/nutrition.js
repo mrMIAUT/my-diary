@@ -59,7 +59,7 @@ function syncTrainerNutritionTargetKcal(){
 function nutritionTargetEditorHTML(c,editing=false){
  return `<div class="card trainer-nutrition-target-card is-editing">
    <div class="trainer-nutrition-target-head">
-     <div><h2>Цільове харчування</h2><p class="muted">Введи нові значення або скористайся калькулятором.</p></div>
+     <div><h2>Цільове харчування</h2><p class="muted">Вкажи БЖВ або скористайся калькулятором — калорійність перерахується автоматично.</p></div>
    </div>
    <button type="button" class="nutrition-calc-button trainer-nutrition-calc-launch" onclick="openTrainerNutritionCalculator(${c.id})">${uiIcon('chart')} Розрахувати калорії та БЖВ</button>
    ${(+c.kcal||+c.protein||+c.fat||+c.carbs)?`<p class="trainer-nutrition-current">Збережено: ${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p>`:''}
