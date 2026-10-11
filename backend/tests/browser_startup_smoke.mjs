@@ -247,8 +247,10 @@ try{
     'Plan editor was not expanded');
 
   // Explicit save must carry IDs and whole-egg pieces, not browser-supplied macros.
-  await page.locator('.meal-autoplan-save').click();
-  await page.waitForFunction(()=>false,{},{timeout:150}).catch(()=>{});
+  await Promise.all([
+    page.waitForResponse(r=>r.url().includes('/api/client/999/nutrition')&&r.request().method()==='PATCH',{timeout:3000}),
+    page.locator('.meal-autoplan-save').click()
+  ]);
   assert.equal(mealPlanWriteCalls,1,'Saved meal request not issued exactly once');
   assert.ok(mealPlanSavedPayload?.meals?.[0]?.foods?.length,'Structured food IDs not persisted');
   assert.equal(mealPlanSavedPayload.meals[0].foods[0].count,2);
