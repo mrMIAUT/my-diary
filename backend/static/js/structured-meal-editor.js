@@ -94,6 +94,14 @@ window.renderStructuredMealHTML=function(item){
  +(keys.some(k=>Math.abs(actual[k]-tracked[k])>.05)?'<small>Фактично з овочами: '+macroText(actual)+'</small>':'')
  +'</div></div>';
 };
+// Every meal alternative has its own nutrition totals.
+window.structuredVariantHeaderHTML=function(item){
+ const totals=mealMacros(item);
+ return '<span class="variant-macro-kcal">'+fmt(totals.kcal)+' ккал</span>'
+  +'<span class="variant-macro-part">Б '+fmt(totals.protein)+'</span>'
+  +'<span class="variant-macro-part">Ж '+fmt(totals.fat)+'</span>'
+  +'<span class="variant-macro-part">В '+fmt(totals.carbs)+'</span>';
+};
 window.structuredDailySummaryHTML=function(){
  const totals=dayMacros(),actual=dayMacros(true);
  const c=window.currentClientData?.client||{};
