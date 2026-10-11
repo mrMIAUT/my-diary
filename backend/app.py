@@ -3964,11 +3964,9 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
     return {"ok":True}
 
 @app.patch("/api/client/{cid}/nutrition-targets")
-def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_client)):
+def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,cid)
     access=require_active_client(cid,'nutrition')
-    if access["features"].get("meal_plan",False):
-        raise HTTPException(403,"Цілі БЖВ у цьому тарифі задає тренер")
     run("UPDATE clients SET kcal=?,protein=?,fat=?,carbs=? WHERE id=?",(x.kcal,x.protein,x.fat,x.carbs,cid))
     row=one("SELECT * FROM clients WHERE id=?",(cid,))
     return client_response({**row,"access":access})
