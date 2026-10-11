@@ -80,8 +80,8 @@ function featuredRestTimerIcon(name){
  };
  return base+(shapes[name]||shapes.clock)+'</svg>';
 }
-function featuredRestTimerHTML(pid,total,inSuperset=false){
- return '<section class="workout-featured-rest" data-rest-featured-pid="'+(+pid||0)+'" data-rest-featured-total="'+Math.max(1,+total||1)+'" data-rest-featured-superset="'+(inSuperset?'1':'0')+'" hidden>'
+function featuredRestTimerHTML(pid,total,inSuperset=false,isGlobal=false){
+ return '<section class="workout-featured-rest" data-rest-featured-pid="'+(+pid||0)+'" data-rest-featured-total="'+Math.max(1,+total||1)+'" data-rest-featured-superset="'+(inSuperset?'1':'0')+'" data-rest-featured-global="'+(isGlobal?'1':'0')+'" hidden>'
    +'<div class="workout-featured-rest-head"><span class="workout-featured-rest-heading">'+featuredRestTimerIcon('clock')+' Таймер відпочинку</span>'
    +'<button type="button" class="workout-featured-rest-settings" onclick="openRestTimerPicker()" aria-label="Налаштувати час відпочинку">'+featuredRestTimerIcon('settings')+'<span>Налаштувати</span></button></div>'
    +'<div class="workout-featured-rest-main">'
@@ -119,16 +119,27 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
        ?workoutSupersetPeers(completed,window.currentClientData):[],
      displayPid=peers.length?+peers[0].id:+track?.pid||0;
  panels.forEach(function(panel){
-   var visible=tracked&&+panel.dataset.restFeaturedPid===displayPid;
+   // The client active-workout header owns the only displayed rest card.
+   // Legacy per-exercise cards are still understood for older tests/screens.
+   var global=panel.dataset.restFeaturedGlobal==='1',
+       visible=global?(!!shown&&!!active&&(!track?.sid||+active.id===+track.sid))
+                     :(tracked&&+panel.dataset.restFeaturedPid===displayPid);
    panel.hidden=!visible;
    panel.classList.toggle('is-visible',visible);
    if(!visible)return;
    panel.classList.toggle('is-paused',!remaining&&paused>0);
    var time=panel.querySelector('.workout-featured-rest-value');
    if(time)time.textContent=formatRestTimer(shown);
-   var total=Math.max(1,+panel.dataset.restFeaturedTotal||1),next=(+track.set_number||0)+1,
-       nextLabel=panel.dataset.restFeaturedSuperset==='1'?'коло':'підхід',
-       caption=next<=total?'Наступн'+(nextLabel==='коло'?'е коло':'ий підхід')+': '+next+' з '+total:'Після останнього підходу';
+   var context=global&&tracked?((peers.length&&peers[0])||completed):null;
+   var total=context
+       ?(typeof workoutExerciseSetCount==='function'
+         ?workoutExerciseSetCount(context,window.currentClientData)
+         :Math.max(1,+context.sets||1))
+       :Math.max(1,+panel.dataset.restFeaturedTotal||1),
+       next=(+track?.set_number||0)+1,
+       nextLabel=(global?peers.length>1:panel.dataset.restFeaturedSuperset==='1')?'коло':'підхід',
+       caption=!tracked?'Відпочинок перед наступним підходом'
+         :(next<=total?'Наступн'+(nextLabel==='коло'?'е коло':'ий підхід')+': '+next+' з '+total:'Після останнього підходу');
    var label=panel.querySelector('.workout-featured-rest-next');
    if(label)label.textContent=caption;
    var btn=panel.querySelector('.workout-featured-rest-pause');
@@ -139,7 +150,8 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
    if(status)status.textContent=remaining?'Відпочинок між підходами':'Таймер на паузі';
    var circle=panel.querySelector('.workout-featured-rest-progress');
    if(circle){
-     var trackKey=[track.sid,track.pid,track.set_number,track.started_at].join(':');
+     var trackKey=tracked?[track.sid,track.pid,track.set_number,track.started_at].join(':')
+          :['manual',active.id,restTimerEnd()||'paused'].join(':');
      if(panel.dataset.restFeaturedTrackKey!==trackKey){
        panel.dataset.restFeaturedTrackKey=trackKey;
        panel.dataset.restFeaturedDuration=String(Math.max(1,shown));
