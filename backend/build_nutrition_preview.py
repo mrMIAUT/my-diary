@@ -18,6 +18,17 @@ shutil.copyfile(backend/"static/js/structured-meal-editor.js",out/"static/js/str
 shutil.copyfile(backend/"static/js/nutrition-constructor-demo.js",out/"static/js/nutrition-constructor-demo.js")
 catalog={"items":foods_for_trainer()}
 plan=generate_meal_plan(2380,160,60,300,meals=4,variants=2)
+# The static sample should contain real dish descriptions, not arbitrary
+# ingredients or oil as a separate food to eat.
+assert plan["meals"] and len(plan["meals"])==8
+assert plan["within_tolerance"],f"Sample macro tolerance failed: {plan['deviations_pct']}"
+for meal in plan["meals"]:
+    assert len(meal["dish_title"])>=12 and len(meal["preparation"])>=35
+    assert meal["foods"],"A composed meal cannot have an empty ingredient list"
+    for ingredient in meal["foods"]:
+        if ingredient["name"]=="Оливкова олія":
+            assert ingredient["usage_note"] and "окрем" in ingredient["usage_note"]
+            assert "оливков" in meal["preparation"].lower()
 demo={"targets":plan["targets"],"meals":plan["meals"]}
 for filename,payload in (("catalog.json",catalog),("plan.json",demo)):
     (out/filename).write_text(json.dumps(payload,ensure_ascii=False),encoding="utf-8")
