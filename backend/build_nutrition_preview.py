@@ -89,6 +89,8 @@ MIN_PORTIONS={"walnuts":10,"almonds":10,"avocado":30,"chia":8,"oil":3}
 PORTIONS={"breakfast":.27,"lunch":.35,"snack":.14,"dinner":.24,"evening":.11}
 templates=[]
 for category,menu in MEAL_SOURCES.items():
+    if category=="evening":
+        continue  # Reuse the 15 snack choices without duplicating food templates.
     portion=PORTIONS[category]
     meal_target=tuple(float(plan["targets"][k])*portion for k in ("kcal","protein","fat","carbs"))
     for recipe in menu:
@@ -152,7 +154,7 @@ for category,menu in MEAL_SOURCES.items():
           "minutes":recipe["minutes"],"tags":recipe["tags"],
           "foods":food_rows,"totals":totals,"actual_totals":actual,
         })
-assert len(templates)==66 and len({rec["id"] for rec in templates})==len(templates)
+assert len(templates)==60 and len({rec["id"] for rec in templates})==len(templates)
 assert all(len([r for r in templates if r["category"]==kind])==15
            for kind in ("breakfast","lunch","dinner","snack"))
 assert all(r["minutes"]<=20 for r in templates)
