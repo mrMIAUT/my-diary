@@ -66,7 +66,7 @@ class ProgramRirTests(unittest.TestCase):
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const full=fs.readFileSync('backend/static/js/workout-lyfta.js','utf8');
 const start=full.indexOf('function setRows(');
-const end=full.indexOf('\nfunction ',start+20);
+const end=full.length; // setRows is the final helper
 assert(start>=0&&end>start);
 const ctx={
  console,Math,window:{},
