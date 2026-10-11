@@ -47,7 +47,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertIn("/static/js/food-lookup.js?v=2", nutrition)
         self.assertNotIn("/static/js/food-lookup.js", shell)
         self.assertIn("nutrition-redesign.js?v=293", index)
-        self.assertIn("nutrition-redesign.js?v=292", shell)
+        self.assertIn("nutrition-redesign.js?v=293", shell)
 
 
 if __name__ == "__main__":
