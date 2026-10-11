@@ -24,7 +24,16 @@ try{
  const errors=[];
  page.on('pageerror',error=>errors.push(error.message));
  await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'load'});
- await page.locator('.structured-food-row').first().waitFor({timeout:15000});
+ try{
+  await page.locator('.structured-food-row').first().waitFor({timeout:5500});
+ }catch(err){
+  console.error('PREVIEW STARTUP DEBUG',JSON.stringify({
+   pageErrors:errors,
+   pageText:(await page.locator('body').innerText()).slice(0,1800),
+   scriptUrls:await page.locator('script[src]').evaluateAll(nodes=>nodes.map(n=>n.src))
+  }));
+  throw err;
+ }
  assert.equal(await page.locator('img').count(),0,'Images must be absent');
  assert.equal(await page.locator('.ration-tab:not(.ration-tab-add)').count(),2,'Two initial whole-day rations missing');
  assert.equal(await page.locator('.variant-card').count(),4,'Meals stacked as variants instead of ration pages');
