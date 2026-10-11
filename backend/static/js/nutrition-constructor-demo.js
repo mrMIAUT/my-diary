@@ -40,8 +40,7 @@ window.rerenderNutritionPlan=function(){
   return '<article class="meal-card" data-meal="'+n+'">'
    +'<button class="meal-head" type="button" onclick="toggleMeal('+n+')" aria-expanded="'+expanded+'">'
    +'<div class="meal-title"><span class="meal-symbol">'+mealSymbol(n)+'</span><span><strong>'+mealName(n)+'</strong><small>'+variants.length+' варіант(и)</small></span></div>'
-   +'<span class="meal-day-totals" aria-label="Поточні калорії, білки, жири та вуглеводи за весь день">'+window.structuredDayHeaderHTML()+'</span>'
-   +'<span class="meal-actions"><span class="meal-kcal">'+fmtDemo(mealKcal(variants[0]))+' ккал</span><span class="meal-chevron">'+(expanded?'⌃':'⌄')+'</span></span></button>'
+   +'<span class="meal-actions"><span class="meal-chevron">'+(expanded?'⌃':'⌄')+'</span></span></button>'
    +(expanded?'<div class="meal-body">'+variants.map(x=>
      '<div class="variant-card"><div class="variant-title"><strong>Варіант '+x.variant_number+'</strong>'
      +'<span class="variant-macros" aria-label="Калорії та БЖВ цього варіанта">'+window.structuredVariantHeaderHTML(x)+'</span>'
