@@ -3,7 +3,7 @@
 let nutritionPlanDraft=[];
 let demoSource=null;
 let openMeals=new Set([1,2,3,4]);
-const DEMO_STORAGE_KEY='eplan-nutrition-preview-v2';
+const DEMO_STORAGE_KEY='eplan-nutrition-preview-v3';
 window.currentClientData={client:{id:999,kcal:2380,protein:160,fat:60,carbs:300}};
 const fmtDemo=v=>Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1});
 const escapeDish=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
