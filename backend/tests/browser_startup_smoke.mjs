@@ -14,6 +14,11 @@ const server=http.createServer(async(req,res)=>{
   if(pathname==='/api/session'){
     res.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});res.end('{"detail":"Unauthorized"}');return;
   }
+  if(pathname==='/api/foods/search'){
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({items:[{name:'Гречка варена',source:'USDA',source_label:'Перевірений довідник',approximate:false,kcal_100:100,protein_100:4,fat_100:1,carbs_100:20}],has_more:false}));
+    return;
+  }
   if(pathname.startsWith('/api/')){
     res.writeHead(404,{'content-type':'application/json'});res.end('{"detail":"Not found in browser smoke"}');return;
   }
@@ -66,8 +71,23 @@ try{
   assert.ok(values.protein>100&&values.fat>40&&values.carbs>0,'Invalid macros');
   await page.locator('.nutrition-calc-manual summary').click();
   assert.equal(await page.locator('#targetKcal').inputValue(),'2500','Manual fallback changed');
+  const lazyBefore=await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('food-lookup.js')));
+  assert.equal(lazyBefore,false,'Food lookup loaded during startup');
+  await page.locator('#nutritionTargetsModal button.dark').click();
+  await page.locator('.nutrition-food-search-button').click();
+  await page.locator('#foodSearchModal').waitFor({timeout:5000});
+  await page.locator('#foodLookupQuery').fill('гречка');
+  await page.locator('.food-lookup-row').first().waitFor({timeout:5000});
+  assert.match(await page.locator('.food-lookup-row').first().innerText(),/Гречка варена/);
+  await page.locator('.food-lookup-row').first().click();
+  await page.locator('#foodLookupGrams').fill('150');
+  await page.locator('#foodLookupMacros').getByText('150',{exact:true}).waitFor({timeout:3000});
+  const portions=await page.locator('#foodLookupMacros .food-lookup-macros b').allInnerTexts();
+  assert.deepEqual(portions.map(v=>Number(v.replace(',','.'))),[150,6,1.5,30],'Incorrect macro portion');
+  await page.locator('#foodSearchClose').click();
+  assert.equal(await page.locator('#foodSearchModal').count(),0,'Food modal remains open');
   assert.deepEqual(pageErrors,[],'Unexpected JS errors during app launch/calculator');
-  console.log('BROWSER STARTUP + NUTRITION CALCULATOR: PASS');
+  console.log('BROWSER STARTUP + CALCULATOR + LAZY SEARCH: PASS');
 }finally{
   if(browser)await browser.close();
   await new Promise(resolve=>server.close(resolve));
