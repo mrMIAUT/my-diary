@@ -85,6 +85,43 @@ h2{font-size:19px;margin:0}
 .meal-recipe strong{display:block;font-size:13px;line-height:1.4;color:#193b69;font-weight:850}
 .meal-recipe p{margin:5px 0 0;color:#7085a2;font-size:11px;line-height:1.5}
 .ingredient-role{display:block;margin-top:5px;color:#43866d;font-size:10px;line-height:1.4;font-weight:750}
+
+.meal-recipe-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;margin-top:11px}
+.open-recipe-library{
+ border:1px solid #cadefa!important;border-radius:10px!important;
+ background:#fff!important;color:#2572dd!important;font-weight:850!important;
+ font-size:11px!important;padding:9px 11px!important;
+}
+.meal-recipe-actions a{font-size:10px;font-weight:700;color:#7391ad;text-decoration:none}
+.recipe-template-sheet{width:min(100%,670px);max-height:92dvh;overflow:auto;background:#fff;border-radius:20px;padding:18px;border:1px solid #dce8f7}
+.recipe-template-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.recipe-template-head h2{font-size:20px;color:#10223e;line-height:1.25}
+.recipe-template-head p{margin:7px 0 0;color:#8191aa;font-size:11px;line-height:1.45}
+#recipeTemplateClose{flex:0 0 34px;border-radius:9px;border:1px solid #dbe6f3;background:#f3f7fe;color:#7184a1;font-size:21px}
+#recipeTemplateSearch{margin-top:14px;display:block;width:100%;height:45px;border-radius:11px;border:1px solid #dae5f4;background:#f6f9fd;color:#10223e;padding:0 12px;font-size:14px}
+.recipe-template-categories{display:flex;gap:6px;overflow-x:auto;padding:12px 0 6px;scrollbar-width:none}
+.recipe-template-categories button{flex-shrink:0;border-radius:30px;border:1px solid #dce6f5;background:#f7f9fd;color:#6682a4;padding:8px 11px;font-size:11px;font-weight:800}
+.recipe-template-categories button.active{background:#eaf2ff;color:#2173e2;border-color:#bdd6fa}
+.recipe-template-categories b{font-size:10px;margin-left:4px}
+.recipe-template-count{font-size:11px;color:#8b9ab1;padding:3px 1px;margin:4px 0}
+.recipe-template-list{display:grid;gap:10px;max-height:53dvh;overflow:auto;margin-top:7px;padding-bottom:4px}
+.recipe-template-card{background:#fff;border:1px solid #dce5f2;border-radius:14px;padding:13px}
+.recipe-template-card h3{font-size:13px;color:#142743;line-height:1.38;margin:8px 0 4px}
+.recipe-template-card>p{font-size:11px;line-height:1.55;color:#7b8ba4;margin:4px 0 9px}
+.recipe-template-meta{display:flex;gap:5px;flex-wrap:wrap}
+.recipe-template-meta span{font-size:10px;background:#f0f6ff;color:#6384ac;border-radius:7px;padding:4px 6px;font-weight:750}
+.recipe-template-macros{font-size:11px;color:#42658f;font-weight:850;background:#f6f9ff;border-radius:9px;padding:8px;margin-bottom:10px}
+.recipe-template-footer{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.recipe-template-source{font-size:10px;color:#748baa;text-decoration:none}
+.recipe-template-footer button{padding:9px 12px;border:1px solid #347cf0;border-radius:10px;background:#347cf0;color:#fff;font-size:11px;font-weight:850}
+.recipe-template-credit{font-size:10px;color:#8192aa;line-height:1.5;margin:13px 0 3px}
+.recipe-template-empty{font-size:12px;color:#8292aa}
+@media(max-width:670px){
+ .recipe-template-sheet{width:100%;max-height:93dvh;border-radius:21px 21px 0 0;border-bottom:0;padding:17px 13px calc(18px + env(safe-area-inset-bottom))}
+ .recipe-template-list{max-height:49dvh}
+ .meal-recipe-actions a{font-size:9px}
+}
+
 @media(max-width:390px){.meal-recipe{padding:10px}.meal-recipe strong{font-size:12px}.meal-recipe p{font-size:10px}}
 
 .structured-meal-editor{border:1px solid #e0e7f1;border-radius:13px;background:#fff;overflow:hidden}
@@ -193,5 +230,6 @@ h2{font-size:19px;margin:0}
 </main>
 <div class="fixed-actions"><div class="fixed-inner"><button type="button" class="save-demo" id="saveDemoButton" onclick="saveDemo()">Зберегти демоверсію</button><div class="save-caption" id="saveDemoStatus">Збереження лише у цьому браузері · не призначає план клієнту</div></div></div>
 <script src="/static/js/structured-meal-editor.js?v=6"></script>
-<script src="/static/js/nutrition-constructor-demo.js?v=6"></script>
+<script src="/static/js/recipe-template-picker.js?v=1"></script>
+<script src="/static/js/nutrition-constructor-demo.js?v=7"></script>
 </body></html>
