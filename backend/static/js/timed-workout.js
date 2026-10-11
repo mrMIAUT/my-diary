@@ -283,7 +283,8 @@ async function finishTimedExerciseTimer(){
 
     // Start the common superset rest immediately after the final exercise of a
     // round. Doing this before the UI refresh avoids losing the automatic timer.
-    if(singleSet&&isLast&&hasNextRound&&sharedRest>0){
+    var autoRestStarted=singleSet&&isLast&&hasNextRound&&sharedRest>0;
+    if(autoRestStarted){
       startAutomaticRestTimer(sharedRest,false);
     }
 
