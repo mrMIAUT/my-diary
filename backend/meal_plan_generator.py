@@ -76,6 +76,9 @@ TEMPLATES={kind:[tuple(r["keys"]) for r in _RECIPE_LIBRARY if r["category"]==kin
 MEAL_RECIPES={kind:[(r["title"],r["preparation"],r["notes"])
                      for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
 MEAL_SOURCES={kind:[r for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+# The second snack uses the same 15 options, not a separate duplicate list.
+for library in (TEMPLATES,MEAL_RECIPES,MEAL_SOURCES):
+    library["evening"]=library["snack"]
 
 SCHEDULES = {
     3: (("breakfast", .30), ("lunch", .38), ("dinner", .32)),
