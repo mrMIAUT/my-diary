@@ -134,7 +134,7 @@ window.openFoodSearchLazy = async function(){
     if(!window.eplanFoodSearchLoader){
       window.eplanFoodSearchLoader=new Promise((resolve,reject)=>{
         const script=document.createElement('script');
-        script.src='/static/js/food-lookup.js?v=2';
+        script.src='/static/js/food-lookup.js?v=3';
         script.onload=()=>resolve();
         script.onerror=()=>reject(new Error('Food search module unavailable'));
         document.head.appendChild(script);
