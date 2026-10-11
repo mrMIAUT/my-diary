@@ -82,6 +82,10 @@ demo={"targets":plan["targets"],"meals":plan["meals"]}
 # Compile every researched recipe into an editable, source-linked food template,
 # rather than fetching recipe sites or recalculating in the browser.
 catalog_foods=approved_plan_catalog()
+source_foods={f["source_id"]:f for f in catalog_foods.values()}
+MACROS=("kcal","protein","fat","carbs")
+REFERENCE_KEYS=("kcal_100","protein_100","fat_100","carbs_100")
+MIN_PORTIONS={"walnuts":10,"almonds":10,"avocado":30,"chia":8,"oil":3}
 PORTIONS={"breakfast":.27,"lunch":.35,"snack":.14,"dinner":.24,"evening":.11}
 templates=[]
 for category,menu in MEAL_SOURCES.items():
@@ -95,18 +99,20 @@ for category,menu in MEAL_SOURCES.items():
             food["name"]=fresh_vegetable_display_name(original)
             key=next((k for k in keys if FOODS[k][0]==original),None)
             food["usage_note"]=recipe["notes"].get(key,"")
-            # Bound individual servings so macro targets cannot force
-            # implausible amounts of oil, dry oats or eggs.
             if key is not None:
                 _,lo,hi,step,base,_=FOODS[key]
-                lo=max(3,lo) if key=="oil" else max(1,lo)
+                lo=max(1,lo,MIN_PORTIONS.get(key,1))
+                if food["grams"]<lo:
+                    food["grams"]=lo
+                    if food["count"] is not None:
+                        food["count"]=lo//50
                 food["portion_rules"]={"min_grams":lo,"max_grams":hi,"step_grams":step}
         if "oil" in keys:
             assert "оливков" in recipe["preparation"].lower()
             assert recipe["notes"].get("oil") and "окрем" in recipe["notes"]["oil"]
         if "oats" in keys and "yogurt" in keys:
-            assert ("ніч" in recipe["title"].lower() or "замоч" in recipe["preparation"].lower()
-                    or "відвари" in recipe["preparation"].lower())
+            assert any(word in recipe["preparation"].lower() for word in
+                       ("замоч", "відвари", "обсмаж", "залиш у холодильнику"))
         # Add omitted optional recipe ingredients back as small but sensible
         # portions. A dressing named in instructions cannot disappear from
         # the ingredient list simply because macro fitting set it to 0 g.
@@ -116,7 +122,7 @@ for category,menu in MEAL_SOURCES.items():
             if source["source_id"] in present:
                 continue
             _,lo,hi,step,start,_=FOODS[key]
-            lo=max(3,lo) if key=="oil" else max(1,lo)
+            lo=max(1,lo,MIN_PORTIONS.get(key,1))
             grams=max(lo,min(hi,start if key=="oil" else lo))
             food_rows.append({
               "source_id":source["source_id"],"name":fresh_vegetable_display_name(source["name"]),
@@ -128,6 +134,17 @@ for category,menu in MEAL_SOURCES.items():
               "portion_rules":{"min_grams":lo,"max_grams":hi,"step_grams":step}
             })
             present.add(source["source_id"])
+        # Recalculate against exactly the final listed portions, including
+        # any restored dressing/nuts. Never display stale pre-adjustment macros.
+        actual_values={}
+        target_values={}
+        for nutrient,refkey in zip(MACROS,REFERENCE_KEYS):
+            actual_values[nutrient]=round(sum(source_foods[f["source_id"]][refkey]*f["grams"]/100
+                                              for f in food_rows),1)
+            target_values[nutrient]=round(sum(source_foods[f["source_id"]][refkey]*f["grams"]/100
+                                              for f in food_rows if f["count_in_targets"]),1)
+        totals=target_values
+        actual=actual_values
         templates.append({
           "id":recipe["id"],"category":category,"title":recipe["title"],
           "preparation":recipe["preparation"],"source_name":recipe["source_name"],
@@ -135,10 +152,15 @@ for category,menu in MEAL_SOURCES.items():
           "minutes":recipe["minutes"],"tags":recipe["tags"],
           "foods":food_rows,"totals":totals,"actual_totals":actual,
         })
-assert len(templates)>=40 and len({rec["id"] for rec in templates})==len(templates)
+assert len(templates)==66 and len({rec["id"] for rec in templates})==len(templates)
+assert all(len([r for r in templates if r["category"]==kind])==15
+           for kind in ("breakfast","lunch","dinner","snack"))
+assert all(r["minutes"]<=20 for r in templates)
 assert any(x["title"].startswith("Нічна вівсянка") for x in templates)
 assert any("Гаряча вівсяна каша" in x["title"] for x in templates)
 assert all(row["source_id"] in original_names for x in templates for row in x["foods"])
+assert all(row["portion_rules"]["min_grams"]<=row["grams"]<=row["portion_rules"]["max_grams"]
+           for x in templates for row in x["foods"])
 for filename,payload in (("catalog.json",catalog),("plan.json",demo),
                          ("recipe-library.json",{"version":1,"templates":templates,
                           "note":"Ідеї страв адаптовані за кулінарними джерелами; БЖВ перераховано за базою Є ПЛАН."})):
