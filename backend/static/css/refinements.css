@@ -319,3 +319,7 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 .food-lookup-macros b{font-size:17px;color:#27496e}
 .food-lookup-macros small{font-size:10px;color:#8796aa}
 @media(max-width:390px){.food-lookup-modal{padding:13px!important}.food-lookup-macros b{font-size:15px}}
+
+/* Food search: approved local matches appear without waiting for external APIs. */
+.food-lookup-more{width:100%;margin-top:12px;background:#eaf2ff!important;color:#2473ed!important;border:1px solid #d9e6fb!important;font-size:13px!important;padding:12px!important;border-radius:10px!important}
+.food-lookup-more[hidden]{display:none!important}
