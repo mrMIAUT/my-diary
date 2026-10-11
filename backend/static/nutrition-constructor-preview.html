@@ -79,6 +79,14 @@ h2{font-size:19px;margin:0}
  .variant-macros{grid-row:2;grid-column:1/-1;justify-content:flex-start;gap:5px 11px}
 }
 
+
+/* Human-readable recipe compositions above independently editable ingredients. */
+.meal-recipe{padding:10px 12px 12px;margin:0 0 10px;border-radius:11px;background:#f1f6ff;border:1px solid #e3edfa}
+.meal-recipe strong{display:block;font-size:13px;line-height:1.4;color:#193b69;font-weight:850}
+.meal-recipe p{margin:5px 0 0;color:#7085a2;font-size:11px;line-height:1.5}
+.ingredient-role{display:block;margin-top:5px;color:#43866d;font-size:10px;line-height:1.4;font-weight:750}
+@media(max-width:390px){.meal-recipe{padding:10px}.meal-recipe strong{font-size:12px}.meal-recipe p{font-size:10px}}
+
 .structured-meal-editor{border:1px solid #e0e7f1;border-radius:13px;background:#fff;overflow:hidden}
 .structured-food-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #eff2f8;padding:12px 11px;min-width:0}
 .structured-product-info{min-width:0;flex:1}
@@ -184,6 +192,6 @@ h2{font-size:19px;margin:0}
 <section id="mealCards" aria-label="Редактор раціону"></section>
 </main>
 <div class="fixed-actions"><div class="fixed-inner"><button type="button" class="save-demo" id="saveDemoButton" onclick="saveDemo()">Зберегти демоверсію</button><div class="save-caption" id="saveDemoStatus">Збереження лише у цьому браузері · не призначає план клієнту</div></div></div>
-<script src="/static/js/structured-meal-editor.js?v=5"></script>
-<script src="/static/js/nutrition-constructor-demo.js?v=5"></script>
+<script src="/static/js/structured-meal-editor.js?v=6"></script>
+<script src="/static/js/nutrition-constructor-demo.js?v=6"></script>
 </body></html>
