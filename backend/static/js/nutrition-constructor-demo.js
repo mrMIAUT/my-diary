@@ -44,8 +44,8 @@ window.rerenderNutritionPlan=function(){
    +'<span class="meal-actions"><span class="meal-kcal">'+fmtDemo(mealKcal(variants[0]))+' ккал</span><span class="meal-chevron">'+(expanded?'⌃':'⌄')+'</span></span></button>'
    +(expanded?'<div class="meal-body">'+variants.map(x=>
      '<div class="variant-card"><div class="variant-title"><strong>Варіант '+x.variant_number+'</strong>'
-     +'<div class="variant-side"><span class="variant-kcal">'+fmtDemo(mealKcal(x))+' ккал</span>'
-     +(variants.length>1?'<button type="button" class="variant-delete" onclick="removeDemoVariant('+n+','+x.variant_number+')">Видалити</button>':'')+'</div></div>'
+     +'<span class="variant-macros" aria-label="Калорії та БЖВ цього варіанта">'+window.structuredVariantHeaderHTML(x)+'</span>'
+     +(variants.length>1?'<button type="button" class="variant-delete" onclick="removeDemoVariant('+n+','+x.variant_number+')">Видалити</button>':'')+'</div>'
      +window.renderStructuredMealHTML(x)+'</div>'
     ).join('')
     +'<button type="button" class="add-variant" onclick="addDemoVariant('+n+')">＋ Додати варіант</button></div>':'')
