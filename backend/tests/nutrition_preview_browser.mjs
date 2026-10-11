@@ -48,7 +48,7 @@ try{
  await page.locator('#pickerApply').click();
  assert.match(await page.locator('.vegetable-label').first().innerText(),/Овочі поза/);
  assert.match(await page.locator('.structured-meal-summary').first().innerText(),/Фактично з овочами/);
- await page.locator('.vegetable-label').first().click();
+ await page.locator('.structured-food-row').filter({has:page.locator('.vegetable-label')}).first().locator('.structured-food-name').click();
  await page.locator('.veg-choice input').check();
  await page.locator('#pickerApply').click();
  assert.equal(await page.locator('.structured-meal-summary').first().innerText().then(x=>x.includes('Фактично з овочами')),false,'Tomato should be included in goal after toggle');
