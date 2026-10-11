@@ -19026,3 +19026,22 @@ body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
 body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-progress{
   transition:none!important;
 }
+
+/* v260 — single rest card at the top of the active workout.
+   No timer UI inside collapsed sets or superset exercise panels. */
+body.eplan-redesign.client-ui .redesign-active-workout > .workout-featured-rest{
+  width:100%;
+  box-sizing:border-box;
+  margin:14px 0 18px;
+  padding:14px 14px 12px;
+  background:linear-gradient(130deg,#f2f7ff,#f8fbff);
+  border:1px solid #bfd7ff;
+  border-radius:18px;
+  box-shadow:0 3px 13px rgba(36,99,185,.05);
+  color:#0b1d43;
+}
+@media(max-width:420px){
+  body.eplan-redesign.client-ui .redesign-active-workout > .workout-featured-rest{
+    padding:12px 11px;
+  }
+}
