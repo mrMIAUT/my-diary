@@ -50,8 +50,8 @@ function nutritionTargetSummaryHTML(c){
 function syncTrainerNutritionTargetKcal(){
  let kcal=document.getElementById('nkcal'),protein=document.getElementById('nprotein'),fat=document.getElementById('nfat'),carbs=document.getElementById('ncarbs');
  if(!kcal||!protein||!fat||!carbs)return;
- let hasMacros=[protein,fat,carbs].some(el=>String(el.value||'').trim()!=='');
- if(!hasMacros)return;
+ let allMacros=[protein,fat,carbs].every(el=>String(el.value||'').trim()!=='');
+ if(!allMacros){kcal.value='';return;}
  let p=Math.max(0,+protein.value||0),f=Math.max(0,+fat.value||0),c=Math.max(0,+carbs.value||0);
  kcal.value=Math.round(p*4+f*9+c*4);
 }
@@ -59,14 +59,15 @@ function syncTrainerNutritionTargetKcal(){
 function nutritionTargetEditorHTML(c,editing=false){
  return `<div class="card trainer-nutrition-target-card is-editing">
    <div class="trainer-nutrition-target-head">
-     <div><h2>Цільове харчування</h2><p class="muted">Вкажи БЖВ клієнта — калорійність перерахується автоматично.</p></div>
+     <div><h2>Цільове харчування</h2><p class="muted">Вкажи БЖВ або скористайся калькулятором — калорійність перерахується автоматично.</p></div>
    </div>
    <button type="button" class="nutrition-calc-button trainer-nutrition-calc-launch" onclick="openTrainerNutritionCalculator(${c.id})">${uiIcon('chart')} Розрахувати калорії та БЖВ</button>
+   ${(+c.kcal||+c.protein||+c.fat||+c.carbs)?`<p class="trainer-nutrition-current">Збережено: ${c.kcal||0} ккал · Б ${c.protein||0} · Ж ${c.fat||0} · В ${c.carbs||0}</p>`:''}
    <div class="trainer-nutrition-target-fields">
-     <label><span>Ккал</span><input id="nkcal" type="number" value="${c.kcal||0}" inputmode="numeric"></label>
-     <label><span>Білки, г</span><input id="nprotein" type="number" value="${c.protein||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
-     <label><span>Жири, г</span><input id="nfat" type="number" value="${c.fat||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
-     <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" value="${c.carbs||0}" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
+     <label><span>Ккал</span><input id="nkcal" type="number" min="0" autocomplete="off" value="" placeholder="Ккал" inputmode="numeric"></label>
+     <label><span>Білки, г</span><input id="nprotein" type="number" min="0" autocomplete="off" value="" placeholder="Білки, г" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
+     <label><span>Жири, г</span><input id="nfat" type="number" min="0" autocomplete="off" value="" placeholder="Жири, г" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
+     <label><span>Вуглеводи, г</span><input id="ncarbs" type="number" min="0" autocomplete="off" value="" placeholder="Вуглеводи, г" inputmode="numeric" oninput="syncTrainerNutritionTargetKcal()"></label>
    </div>
    <div id="nutritionActions" class="trainer-nutrition-target-actions">
      <button onclick="saveTrainerNutritionTargets(${c.id},event.currentTarget)">Зберегти харчування</button>
@@ -90,6 +91,13 @@ function editNutritionTargets(){
 }
 
 async function saveTrainerNutritionTargets(cid,button=null){
+ // Empty inputs must NEVER silently replace previously assigned goals with zero.
+ const fields=['nkcal','nprotein','nfat','ncarbs'];
+ if(fields.some(id=>!document.getElementById(id)||document.getElementById(id).value.trim()===''))
+   return alert('Заповни всі чотири поля БЖВ або скористайся калькулятором.');
+ const vals=fields.map(id=>Number(document.getElementById(id).value));
+ if(vals.some(v=>!Number.isFinite(v)||v<0)||vals[0]<=0||vals[1]<=0||vals[2]<=0||vals.some(v=>v>100000))
+   return alert('Перевір цільові калорії та БЖВ.');
  let restore=setActionLoading(button,'Зберігаємо…');
  try{let meals=(nutritionPlanDraft||[]).filter(x=>x.content.trim()).map((x,i)=>({...x,sort:i}));let body={kcal:+nkcal.value||0,protein:+nprotein.value||0,fat:+nfat.value||0,carbs:+ncarbs.value||0};let access=clientAccess(window.currentClientData?.client||{});if(access.features?.meal_plan)await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify({...body,meal_plan:'',meals})});else await api('/client/'+cid+'/nutrition-targets',{method:'PATCH',body:JSON.stringify(body)});let d=await loadClientData(cid);window.currentClientData=d;nutritionPlanDraft=null;let box=$('#nutrition');if(box)box.innerHTML=nutritionHTML(d)
  }catch(e){restore();alert(e.message||'Не вдалося зберегти харчування. Спробуй ще раз.')}
@@ -129,25 +137,36 @@ window.openTrainerNutritionCalculator = function(cid){
   if(session?.role!=='trainer'||!c.id||+c.id!==+cid)return;
   window.pendingTrainerNutritionTargets=null;
   document.body.insertAdjacentHTML('beforeend',
-    '<div class="modal" id="trainerNutritionCalcModal"><div class="card redesign-nutrition-modal nutrition-targets-modal nutrition-calculator-modal">'
-    +'<div class="between"><div><h2>Розрахунок калорій і БЖВ</h2><p class="muted">Стартовий орієнтир, який потім можна коригувати за динамікою ваги.</p></div><button class="dark" onclick="trainerNutritionCalcModal.remove()">✕</button></div>'
+    '<div class="modal trainer-nutrition-calc-overlay" id="trainerNutritionCalcModal" role="dialog" aria-modal="true" aria-labelledby="trainerNutritionCalcTitle"><div class="card redesign-nutrition-modal nutrition-targets-modal nutrition-calculator-modal trainer-nutrition-calc-card">'
+    +'<div class="trainer-nutrition-calc-head"><div><h2 id="trainerNutritionCalcTitle">Розрахунок калорій і БЖВ</h2><p>Внеси дані клієнта, щоб отримати стартові орієнтири.</p></div><button type="button" class="trainer-nutrition-calc-close" aria-label="Закрити" onclick="trainerNutritionCalcModal.remove()">✕</button></div>'
     +'<div class="nutrition-calc-grid">'
-      +'<label><span>Стать</span><select id="calcSex"><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>'
+      +'<label><span>Стать</span><select id="calcSex"><option value="" selected disabled>Обрати</option><option value="male">Чоловіча</option><option value="female">Жіноча</option></select></label>'
       +'<label><span>Вік</span><input id="calcAge" type="number" inputmode="numeric" min="18" max="100" placeholder="років"></label>'
       +'<label><span>Зріст</span><input id="calcHeight" type="number" inputmode="decimal" min="120" max="230" placeholder="см"></label>'
       +'<label><span>Вага</span><input id="calcWeight" type="number" inputmode="decimal" min="35" max="300" placeholder="кг"></label>'
       +'<label><span>Жир, % <small>(необов’язково)</small></span><input id="calcBodyFat" type="number" inputmode="decimal" min="3" max="60" placeholder="%"></label>'
-      +'<label><span>Кроки на день</span><input id="calcSteps" type="number" min="0" max="50000" value="7000"></label>'
-      +'<label><span>Силові / тиждень</span><select id="calcStrength"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
-      +'<label><span>Кардіо / тиждень</span><select id="calcCardio"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
-      +'<label><span>Хвилин кардіо</span><input id="calcCardioMin" type="number" min="0" max="240" value="30"></label>'
-      +'<label><span>Досвід</span><select id="calcExperience"><option value="novice">До 6 місяців</option><option value="intermediate" selected>6–24 місяці</option><option value="advanced">Понад 2 роки</option></select></label>'
-      +'<label><span>Ціль</span><select id="calcGoal" onchange="syncTrainerNutritionCalcAdjustment()"><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція</option><option value="maintain" selected>Підтримання</option><option value="gain">Набір м’язів</option></select></label>'
-      +'<label class="nutrition-calc-wide"><span>Корекція калорій</span><select id="calcAdjust"><option value="-25">-25%</option><option value="-20">-20%</option><option value="-15">-15%</option><option value="-10">-10%</option><option value="-5">-5%</option><option value="0" selected>0%</option><option value="5">+5%</option><option value="10">+10%</option><option value="15">+15%</option></select></label>'
+      +'<label><span>Кроки на день</span><input id="calcSteps" type="number" min="0" max="50000" inputmode="numeric" autocomplete="off" placeholder="Кроків"></label>'
+      +'<label><span>Силові / тиждень</span><select id="calcStrength"><option value="" selected disabled>Обрати</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
+      +'<label><span>Кардіо / тиждень</span><select id="calcCardio" onchange="syncTrainerNutritionCardioMinutes()"><option value="" selected disabled>Обрати</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
+      +'<label><span>Хвилин кардіо</span><input id="calcCardioMin" type="number" min="0" max="240" inputmode="numeric" autocomplete="off" placeholder="Хвилин"></label>'
+      +'<label><span>Досвід</span><select id="calcExperience"><option value="" selected disabled>Обрати</option><option value="novice">До 6 місяців</option><option value="intermediate">6–24 місяці</option><option value="advanced">Понад 2 роки</option></select></label>'
+      +'<label><span>Ціль</span><select id="calcGoal" onchange="syncTrainerNutritionCalcAdjustment()"><option value="" selected disabled>Обрати</option><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція</option><option value="maintain">Підтримання</option><option value="gain">Набір м’язів</option></select></label>'
+      +'<label class="nutrition-calc-wide"><span>Корекція калорій</span><select id="calcAdjust"><option value="" selected disabled>Обрати</option><option value="-25">-25%</option><option value="-20">-20%</option><option value="-15">-15%</option><option value="-10">-10%</option><option value="-5">-5%</option><option value="0">0%</option><option value="5">+5%</option><option value="10">+10%</option><option value="15">+15%</option></select></label>'
     +'</div>'
-    +'<button class="nutrition-calc-button" onclick="calculateTrainerNutritionTargets()">Розрахувати</button>'
+    +'<button class="nutrition-calc-button trainer-nutrition-calc-submit" type="button" onclick="calculateTrainerNutritionTargets()">Розрахувати</button>'
     +'<div id="nutritionCalcResult"></div>'
-        +'</div></div>');
+    +'</div></div>');
+  const modal=document.getElementById('trainerNutritionCalcModal');
+  const card=modal?.querySelector('.trainer-nutrition-calc-card');
+  if(card)card.scrollTop=0;
+};
+
+window.syncTrainerNutritionCardioMinutes = function(){
+ const cardio=document.getElementById('calcCardio')?.value;
+ const minutes=document.getElementById('calcCardioMin');
+ if(!minutes)return;
+ if(cardio==='0'){minutes.value='';minutes.disabled=true;}
+ else minutes.disabled=false;
 };
 
 window.syncTrainerNutritionCalcAdjustment = function(){
@@ -158,6 +177,11 @@ window.calculateTrainerNutritionTargets = function(){
   const v=id=>Number(document.getElementById(id)?.value)||0;
   const sex=document.getElementById('calcSex')?.value,age=v('calcAge'),height=v('calcHeight'),weight=v('calcWeight'),bf=v('calcBodyFat');
   const steps=v('calcSteps'),strength=v('calcStrength'),cardio=v('calcCardio'),cardioMin=v('calcCardioMin'),adjust=v('calcAdjust'),goal=document.getElementById('calcGoal')?.value;
+  // No assumed activity, sex or goal: the trainer must enter/select them explicitly.
+  const required=['calcSex','calcAge','calcHeight','calcWeight','calcSteps','calcStrength','calcCardio','calcGoal','calcAdjust'];
+  if(required.some(id=>String(document.getElementById(id)?.value??'').trim()==='')||
+     (cardio>0&&String(document.getElementById('calcCardioMin')?.value??'').trim()===''))
+    return alert('Заповни всі обов’язкові поля для розрахунку.');
   if(!age||!height||!weight||age<18||age>100||height<120||height>230||weight<35||weight>300)return alert('Перевір вік, зріст і вагу.');
   if(bf&&(bf<3||bf>60))return alert('Перевір відсоток жиру.');
   if(steps<0||steps>50000||strength<0||strength>7||cardio<0||cardio>7||cardioMin<0||cardioMin>240)return alert('Перевір активність.');
@@ -180,7 +204,7 @@ window.calculateTrainerNutritionTargets = function(){
     '<div class="nutrition-calc-result"><span class="nutrition-kicker">Стартовий орієнтир клієнта</span><strong class="nutrition-calc-kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong>'
     +'<div class="nutrition-calc-macros"><span><b>'+protein+'</b> г<small>Білки</small></span><span><b>'+fat+'</b> г<small>Жири</small></span><span><b>'+carbs+'</b> г<small>Вуглеводи</small></span></div>'
     +'<p>'+method+' · '+goalText+'. Білок '+(weightBasis)+'.</p>'
-    +'<button onclick="applyTrainerCalculatedNutritionTargets(this)">Підставити у форму</button></div>';
+    +'<button class="trainer-nutrition-calc-apply" type="button" onclick="applyTrainerCalculatedNutritionTargets(this)">Підставити у форму</button></div>';
 };
 
 // Calculation populates the trainer editor only. Nothing is saved until

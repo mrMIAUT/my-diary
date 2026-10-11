@@ -323,3 +323,127 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 /* Food search: approved local matches appear without waiting for external APIs. */
 .food-lookup-more{width:100%;margin-top:12px;background:#eaf2ff!important;color:#2473ed!important;border:1px solid #d9e6fb!important;font-size:13px!important;padding:12px!important;border-radius:10px!important}
 .food-lookup-more[hidden]{display:none!important}
+
+
+/* Trainer nutrition goals + calculator: modern light-blue EPLAN styling.
+   Scoped to this screen so legacy/global button rules cannot bleed in. */
+body.eplan-redesign.trainer-ui .trainer-nutrition-target-card .trainer-nutrition-calc-launch{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:9px!important;width:100%!important;min-height:46px!important;margin-top:14px!important;
+  padding:10px 12px!important;border:1px solid #cfe1fb!important;border-radius:13px!important;
+  background:#ecf4ff!important;color:#2477ed!important;font-size:13px!important;
+  font-weight:800!important;box-shadow:none!important;line-height:1.3!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-calc-launch .ui-icon{
+  width:18px!important;height:18px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-nutrition-current{
+  margin:12px 0 0!important;color:#8492a7!important;font-size:11.5px!important;
+  line-height:1.5!important;font-weight:600!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal{
+  position:fixed!important;inset:0!important;z-index:1400!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))!important;
+  background:rgba(10,23,48,.52)!important;overscroll-behavior:contain!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-card{
+  width:100%!important;max-width:480px!important;min-width:0!important;
+  max-height:calc(100dvh - 40px)!important;margin:0 auto!important;
+  padding:0 18px 20px!important;overflow-y:auto!important;overflow-x:hidden!important;
+  border:1px solid #dce6f3!important;border-radius:22px!important;
+  background:#fff!important;color:#101f3d!important;
+  box-shadow:0 16px 48px rgba(11,34,73,.18)!important;
+  -webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;
+  scrollbar-width:thin;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-head{
+  position:sticky!important;top:0!important;z-index:2!important;
+  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;
+  gap:12px!important;padding:20px 0 12px!important;margin:0!important;
+  background:#fff!important;border-bottom:1px solid #edf1f7!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-head h2{
+  margin:0!important;font-size:20px!important;line-height:1.2!important;
+  letter-spacing:-.02em!important;color:#0c1c3b!important;font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-head p{
+  margin:7px 0 0!important;color:#8290a6!important;font-size:12px!important;
+  font-weight:500!important;line-height:1.45!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-close{
+  flex:0 0 36px!important;width:36px!important;height:36px!important;padding:0!important;
+  display:grid!important;place-items:center!important;border-radius:11px!important;
+  background:#f0f5fc!important;color:#4c6180!important;
+  border:1px solid #dce6f3!important;box-shadow:none!important;
+  font-size:17px!important;font-weight:700!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  column-gap:12px!important;row-gap:13px!important;margin-top:16px!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid label{
+  min-width:0!important;display:flex!important;flex-direction:column!important;
+  gap:6px!important;margin:0!important;color:#667791!important;
+  font-size:12px!important;font-weight:750!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid label small{
+  color:#8e9bb0!important;font-size:10px!important;font-weight:500!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid input,
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid select{
+  display:block!important;width:100%!important;min-width:0!important;
+  height:46px!important;min-height:46px!important;margin:0!important;
+  padding:0 12px!important;border-radius:12px!important;
+  border:1px solid #dce5f1!important;background:#f7f9fd!important;
+  color:#142644!important;font-size:15px!important;font-weight:600!important;
+  box-shadow:none!important;outline-offset:2px!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid select{
+  padding-right:26px!important;appearance:none!important;
+  background-image:linear-gradient(45deg,transparent 50%,#8498b4 50%),linear-gradient(135deg,#8498b4 50%,transparent 50%)!important;
+  background-position:calc(100% - 17px) 20px,calc(100% - 12px) 20px!important;
+  background-size:5px 5px,5px 5px!important;background-repeat:no-repeat!important;
+  text-overflow:ellipsis!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid select:invalid,
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid input::placeholder{
+  color:#96a4b8!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid input:disabled{
+  background:#eff3f8!important;opacity:.65!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid .nutrition-calc-wide{
+  grid-column:1/-1!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-submit,
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-apply{
+  width:100%!important;min-height:48px!important;border-radius:13px!important;
+  border:1px solid #2e78eb!important;background:#347df0!important;color:#fff!important;
+  font-size:14px!important;font-weight:800!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-submit{
+  margin-top:17px!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-result{
+  background:#f4f8ff!important;border:1px solid #dce7f7!important;
+  border-radius:15px!important;padding:16px!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-kcal{
+  color:#0d2041!important;font-weight:900!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-macros span{
+  background:#fff!important;border:1px solid #e0e8f4!important;
+}
+body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .trainer-nutrition-calc-apply{
+  margin:8px 0 0!important;background:#e8f2ff!important;
+  color:#196be0!important;border-color:#d0e2fb!important;
+}
+@media (max-width:350px){
+ body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid{
+   grid-template-columns:1fr!important;
+ }
+ body.eplan-redesign.trainer-ui #trainerNutritionCalcModal .nutrition-calc-grid .nutrition-calc-wide{
+   grid-column:1!important;
+ }
+}
