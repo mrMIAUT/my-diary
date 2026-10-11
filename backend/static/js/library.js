@@ -20,10 +20,20 @@ function syncLibraryMuscleRoles(prefix,changed){
 }
 function bindLibraryMuscleRoleGuards(){document.querySelectorAll('.library-muscle-picker input[type="checkbox"]').forEach(x=>x.onchange=()=>syncLibraryMuscleRoles(x.dataset.prefix,x))}
 
-async function showExerciseLibrary(){
+async function showExerciseLibrary({openGroupId=0,openAddForm=false}={}){
+ // Search/filter changes and a save may fetch at the same time. An older
+ // response must not replace the newest library screen.
+ let renderId=(+window.__libraryRenderId||0)+1;
+ window.__libraryRenderId=renderId;
  currentTrainerMainView='more';selected=null;window.currentClientData=null;await loadExerciseLibrary();
+ if(renderId!==window.__libraryRenderId)return;
  let L=window.exerciseLibrary||{groups:[],muscles:[],exercises:[]};
  let groupFilter=+(window.libraryGroupFilter||0),muscleFilter=+(window.libraryMuscleFilter||0),scopeFilter=String(window.libraryScopeFilter||'all'),q=String(window.librarySearch||'').trim().toLowerCase();
+ // A deleted group/muscle or an invalid stored filter must not present
+ // "Усі" while silently filtering every exercise out.
+ if(groupFilter&&!L.groups.some(g=>+g.id===groupFilter)){groupFilter=0;window.libraryGroupFilter=0}
+ if(muscleFilter&&!L.muscles.some(m=>+m.id===muscleFilter)){muscleFilter=0;window.libraryMuscleFilter=0}
+ if(!['all','platform','trainer'].includes(scopeFilter)){scopeFilter='all';window.libraryScopeFilter='all'}
  let groups=groupFilter?L.groups.filter(g=>+g.id===groupFilter):L.groups;
  let groupLabel=groupFilter?(L.groups.find(g=>+g.id===groupFilter)?.name||'Усі'):'Усі';
  let muscleLabel=muscleFilter?(L.muscles.find(m=>+m.id===muscleFilter)?.name||'Усі'):'Усі';
@@ -34,7 +44,7 @@ async function showExerciseLibrary(){
    if(q&&!String(x.name||'').toLowerCase().includes(q))return false;
    return true;
  };
- let visibleCount=L.exercises.filter(exerciseVisible).length;
+ let visibleCount=L.exercises.filter(x=>(!groupFilter||+x.group_id===groupFilter)&&exerciseVisible(x)).length;
  let filterCard=`<div class="trainer-library-tools">
    <label class="trainer-search trainer-library-search">${uiIcon('menu')}<input value="${esc(window.librarySearch||'')}" placeholder="Пошук вправи..." oninput="window.librarySearch=this.value;showExerciseLibrary()"></label>
    <div class="trainer-library-filter-strip" aria-label="Фільтри бібліотеки" style="display:flex!important;align-items:center!important;gap:7px!important;width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;padding:0 1px 4px!important;-webkit-overflow-scrolling:touch!important;">
@@ -113,6 +123,21 @@ async function showExerciseLibrary(){
    ${session?.user_id===1?adminCard:''}
  </div>`);
  bindLibraryMuscleRoleGuards();
+ if(openGroupId){
+   // Keep the edited group and the add form open after a successful save,
+   // instead of forcing the trainer to navigate out and back.
+   let groupBody=document.getElementById('libGroup'+openGroupId),
+       addBody=document.getElementById('libAdd'+openGroupId);
+   groupBody?.classList.remove('hidden');
+   groupBody?.previousElementSibling?.classList.add('open');
+   if(openAddForm){
+     addBody?.classList.remove('hidden');
+     addBody?.previousElementSibling?.classList.add('open');
+     // No forced iPhone keyboard after save; the empty form is immediately
+     // available to tap. Ensure it is visible even in a long exercise list.
+     addBody?.scrollIntoView?.({behavior:'smooth',block:'nearest'});
+   }
+ }
 }
 
 function setLibraryFilters(){window.libraryGroupFilter=+($('#libraryGroupFilter')?.value||0);window.libraryMuscleFilter=+($('#libraryMuscleFilter')?.value||0);window.libraryScopeFilter=$('#libraryScopeFilter')?.value||'all';showExerciseLibrary()}
@@ -126,7 +151,14 @@ async function addLibraryExercise(gid){
  if(u&&!safeTechniqueUrl(u))return alert('Посилання на відео має починатися з https://');
  u=safeTechniqueUrl(u);
  let prefix='add'+gid,primary=selectedLibraryMuscles(prefix,'primary'),secondary=selectedLibraryMuscles(prefix,'secondary');
- await api('/exercise-library/exercises',{method:'POST',body:JSON.stringify({group_id:gid,name:n,technique_url:u,primary_muscle_ids:primary,secondary_muscle_ids:secondary})});showExerciseLibrary()
+ await api('/exercise-library/exercises',{method:'POST',body:JSON.stringify({group_id:gid,name:n,technique_url:u,primary_muscle_ids:primary,secondary_muscle_ids:secondary})});
+ // A search for the previous exercise or an obsolete filter is not the
+ // desired state for entering the next exercise.
+ window.librarySearch='';
+ window.libraryGroupFilter=0;
+ window.libraryMuscleFilter=0;
+ window.libraryScopeFilter='all';
+ await showExerciseLibrary({openGroupId:gid,openAddForm:true});
 }
 
 function openLibraryExerciseEdit(id){
