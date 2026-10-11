@@ -42,9 +42,9 @@ class ExtraSetRestTimerTests(unittest.TestCase):
         for src in (INDEX,SW):
             for asset in ("/static/js/workout.js?v=187",
                           "/static/js/timer.js?v=169",
-                          "/static/css/redesign.css?v=260"):
+                          "/static/css/redesign.css?v=261"):
                 self.assertIn(asset,src)
-        self.assertIn("const VERSION='eplan-v218'",SW)
+        self.assertIn("const VERSION='eplan-v219'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
     def test_real_extra_set_refresh_never_recreates_global_timer(self):
