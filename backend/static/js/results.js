@@ -126,7 +126,7 @@ function trainerReviewExerciseRowsHTML(d,session,previousDay=''){
      +(warm.length?'<div class="trainer-review-aux warmup"><small>Розминка</small>'+warm.map(a=>'<span>'+esc(String(a.weight??0))+' кг × '+esc(repeatResultText(a.reps,a.repeat_mode||cur[0]?.repeat_mode||x.repeat_mode))+'</span>').join('')+'</div>':'')
      +'<div class="trainer-review-sets">'+rowNumbers.map(n=>{
        if(skippedNums.has(n)){
-         return '<section class="trainer-review-set-block skipped"><div class="trainer-review-set-current trainer-review-set skipped"><small>Підхід '+esc(String(n))+'</small><b>Пропущено</b><span class="trainer-review-set-meta"><span class="trainer-review-rir">Клієнт не виконував цей підхід</span></span></div></section>';
+         return '<section class="trainer-review-set-block skipped"><div class="trainer-review-set-current skipped"><small>Підхід '+esc(String(n))+'</small><b class="trainer-review-skipped-badge" aria-label="Клієнт не виконував цей підхід">Пропущено</b></div></section>';
        }
        let s=curMap.get(n);if(!s)return '';
        let mode=normalizeRepeatMode(s.repeat_mode||x.repeat_mode),p=prev.find(z=>+z.set_number===+s.set_number&&normalizeRepeatMode(z.repeat_mode||x.repeat_mode)===mode),deltaHTML='';
