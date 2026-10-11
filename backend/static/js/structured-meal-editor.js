@@ -66,6 +66,7 @@ function setQuantity(item,row,food,quantity){
   row.count=null;row.grams=Math.round(quantity*10)/10;
  }
  syncContent(item);
+ if(typeof window.demoPortionChanged==='function')window.demoPortionChanged(item);
  return true;
 }
 function lineHTML(row,n,v,i){
@@ -109,7 +110,7 @@ window.structuredDailySummaryHTML=function(){
  const totals=dayMacros(),actual=dayMacros(true);
  const c=window.currentClientData?.client||{};
  const goal={kcal:c.kcal||0,protein:c.protein||0,fat:c.fat||0,carbs:c.carbs||0};
- return '<div id="structuredDailySummary" class="structured-daily-summary"><div class="day-head"><h2>Добова ціль і поточні підсумки</h2><span class="daily-pct">'+Math.round(goal.kcal?totals.kcal/goal.kcal*100:0)+'% від цілі</span></div><small>Враховано перший варіант кожного прийому</small>'
+ return '<div id="structuredDailySummary" class="structured-daily-summary"><div class="day-head"><h2>Добова ціль і поточні підсумки</h2><span class="daily-pct">'+Math.round(goal.kcal?totals.kcal/goal.kcal*100:0)+'% від цілі</span></div><small>Підсумок обраних страв цього раціону</small>'
  +'<div class="structured-daily-grid">'+keys.map(k=>{
   const pct=goal[k]>0?Math.round(totals[k]/goal[k]*100):0;
   return '<div class="nutrition-stat stat-'+k+'"><div class="nutrition-stat-head"><span>'+labels[k]+'</span></div>'
@@ -131,6 +132,7 @@ window.refreshStructuredNutrition=function(){
  });
  const day=$('dailySummary');
  if(day)day.innerHTML=window.structuredDailySummaryHTML();
+ if(typeof window.refreshRationAccuracy==='function')window.refreshRationAccuracy();
  persistChange();
 };
 function syncRow(item,i){
@@ -165,6 +167,7 @@ window.toggleStructuredVegetable=function(n,v,i,on){
  const item=mealFor(n,v),row=item?.foods?.[i],food=row&&dataFor(row.source_id);
  if(!food?.optional_vegetable)return;
  row.count_in_targets=!!on;syncContent(item);
+ if(typeof window.demoPortionChanged==='function')window.demoPortionChanged(item);
  if(typeof window.rerenderNutritionPlan==='function')window.rerenderNutritionPlan(true);
  persistChange();
 };
@@ -278,6 +281,7 @@ function applyPicker(){
  const ingredientChanged=picker.i<0||item.foods?.[picker.i]?.source_id!==food.source_id;
  if(picker.i>=0)item.foods[picker.i]=row;else(item.foods||(item.foods=[])).push(row);
  if(ingredientChanged&&typeof window.demoRecipeChanged==='function')window.demoRecipeChanged(item);
+ else if(typeof window.demoPortionChanged==='function')window.demoPortionChanged(item);
  syncContent(item);closePicker();
  if(typeof window.rerenderNutritionPlan==='function')window.rerenderNutritionPlan(true);
  persistChange();
