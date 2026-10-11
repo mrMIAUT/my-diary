@@ -40,6 +40,31 @@ h2{font-size:19px;margin:0}
 .section-header p{color:var(--secondary);font-size:11px;margin:5px 0 0}
 .meal-card{background:#fff;border:1px solid var(--line);border-radius:19px;margin-bottom:14px;overflow:hidden}
 .meal-head{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;padding:17px 15px;border:0;background:#fff;text-align:left;color:var(--navy)}
+
+/* Daily BJU snapshot in the deliberately empty center of every meal header. */
+.meal-head{
+ display:grid;grid-template-columns:minmax(140px,1fr) minmax(220px,auto) auto;
+ align-items:center;column-gap:15px;row-gap:7px;
+}
+.meal-day-totals{
+ display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+ gap:5px 8px;min-width:0;padding:8px 11px;border-radius:11px;
+ background:#f2f7ff;border:1px solid #e2ecfa;
+ color:#627b9f;font-weight:700;font-size:10px;
+ font-variant-numeric:tabular-nums;
+}
+.meal-day-caption{font-size:10px;color:#2d75e7;font-weight:850;white-space:nowrap}
+.meal-day-macro{white-space:nowrap;font-size:10px;line-height:1.35}
+.meal-day-kcal{color:#163964;font-weight:850}
+.meal-actions{justify-self:end}
+@media(max-width:670px){
+ .meal-head{grid-template-columns:minmax(0,1fr) auto;row-gap:10px}
+ .meal-day-totals{
+   grid-column:1/-1;grid-row:2;justify-content:flex-start;
+   padding:9px 10px;gap:6px 10px;
+ }
+ .meal-day-macro{font-size:10px}
+}
 .meal-title{display:flex;align-items:center;gap:11px;min-width:0}
 .meal-symbol{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#2b7be5;background:#edf5ff;font-size:19px}
 .meal-card:nth-child(2n) .meal-symbol{background:#f3f0ff;color:#9077df}
@@ -160,6 +185,6 @@ h2{font-size:19px;margin:0}
 <section id="mealCards" aria-label="Редактор раціону"></section>
 </main>
 <div class="fixed-actions"><div class="fixed-inner"><button type="button" class="save-demo" id="saveDemoButton" onclick="saveDemo()">Зберегти демоверсію</button><div class="save-caption" id="saveDemoStatus">Збереження лише у цьому браузері · не призначає план клієнту</div></div></div>
-<script src="/static/js/structured-meal-editor.js?v=2"></script>
-<script src="/static/js/nutrition-constructor-demo.js?v=2"></script>
+<script src="/static/js/structured-meal-editor.js?v=3"></script>
+<script src="/static/js/nutrition-constructor-demo.js?v=3"></script>
 </body></html>
