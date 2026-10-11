@@ -39,10 +39,10 @@ class CompletionUiContracts(unittest.TestCase):
 
     def test_cache_consistency(self):
         for source in (INDEX,SW):
-            for name in ("/static/css/redesign.css?v=259", "/static/js/workout.js?v=186",
+            for name in ("/static/css/redesign.css?v=260", "/static/js/workout.js?v=187",
                          "/static/js/program.js?v=191"):
                 self.assertIn(name,source)
-        self.assertIn("const VERSION='eplan-v216'",SW)
+        self.assertIn("const VERSION='eplan-v217'",SW)
 
     @unittest.skipUnless(shutil.which("node"), "Node is needed for JS behavior tests")
     def test_cycle_subset_and_mixed_superset_behavior(self):

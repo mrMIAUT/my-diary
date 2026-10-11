@@ -1,4 +1,4 @@
-"""Prominent in-card rest timer UI: no new countdown or changes to save logic."""
+"""Single top-level rest timer UI: countdown and workout persistence unchanged."""
 from pathlib import Path
 import shutil
 import subprocess
@@ -7,6 +7,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[2]
 TIMER=(ROOT/"backend/static/js/timer.js").read_text(encoding="utf-8")
 WORKOUT=(ROOT/"backend/static/js/workout.js").read_text(encoding="utf-8")
+TRAINING=(ROOT/"backend/static/js/training-redesign.js").read_text(encoding="utf-8")
 CSS=(ROOT/"backend/static/css/redesign.css").read_text(encoding="utf-8")
 INDEX=(ROOT/"backend/static/index.html").read_text(encoding="utf-8")
 SW=(ROOT/"backend/static/sw.js").read_text(encoding="utf-8")
@@ -14,7 +15,8 @@ SW=(ROOT/"backend/static/sw.js").read_text(encoding="utf-8")
 
 class FeaturedRestTimerTests(unittest.TestCase):
     def test_only_standard_repetition_exercises_get_timer_card(self):
-        self.assertIn("if(!timed&&!x.superset_group)content=featuredRestTimerHTML(x.id,effective.sets,false)+content",WORKOUT)
+        self.assertNotIn("featuredRestTimerHTML(",WORKOUT)
+        self.assertIn("featuredRestTimerHTML(0,1,false,true)",TRAINING)
         self.assertIn("content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid)",WORKOUT)
         self.assertIn("data-rest-featured-pid",TIMER)
         self.assertIn("workout-featured-rest-next",TIMER)
@@ -35,11 +37,11 @@ class FeaturedRestTimerTests(unittest.TestCase):
 
     def test_pwa_assets(self):
         for source in (INDEX,SW):
-            for asset in ("/static/js/timer.js?v=167",
-                          "/static/js/workout.js?v=186",
-                          "/static/css/redesign.css?v=259"):
+            for asset in ("/static/js/timer.js?v=168",
+                          "/static/js/workout.js?v=187",
+                          "/static/css/redesign.css?v=260"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v216'",SW)
+        self.assertIn("const VERSION='eplan-v217'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):
