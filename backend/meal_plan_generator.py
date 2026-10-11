@@ -59,10 +59,10 @@ FOODS = {
     "broccoli": ("Броколі (сирі)", 70, 250, 5, 140, ()),
     "tortilla": ("Тортилья пшенична", 45, 160, 5, 80, ("gluten",)),
     "cheddar": ("Сир чеддер", 20, 85, 5, 35, ("dairy",)),
-    "tahini": ("Тахіні 100%", 5, 30, 1, 12, ("nuts",)),
+    "tahini": ("Тахіні 100%", 5, 30, 1, 12, ("sesame",)),
     "carrot_raw": ("Морква (сира)", 65, 190, 5, 110, ()),
 }
-EXCLUSIONS = frozenset(("dairy", "eggs", "fish", "nuts", "gluten", "meat"))
+EXCLUSIONS = frozenset(("dairy", "eggs", "fish", "nuts", "gluten", "meat", "sesame"))
 # Culinary source references accompany every menu option. The linked recipes
 # inspire our adapted dishes; we do not duplicate third-party recipe instructions.
 _RECIPE_DATA=json.loads((Path(__file__).parent/"real_meal_templates.json").read_text(encoding="utf-8"))
