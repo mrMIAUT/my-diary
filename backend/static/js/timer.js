@@ -70,9 +70,9 @@ function featuredRestTimerIcon(name){
  // Fixed inline vector icons: no emoji glyph inconsistencies across iPhones.
  var base='<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
  var shapes={
-  settings:'<path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/>',
+  settings:'<path d="M10 2h4l.55 2.7 1.48.62 2.3-1.53 2.83 2.83-1.53 2.3.62 1.48L22 10v4l-2.75.55-.62 1.48 1.53 2.3-2.83 2.83-2.3-1.53-1.48.62L14 22h-4l-.55-2.75-1.48-.62-2.3 1.53-2.83-2.83 1.53-2.3-.62-1.48L2 14v-4l2.75-.55.62-1.48-1.53-2.3 2.83-2.83 2.3 1.53 1.48-.62L10 2Z"/><circle cx="12" cy="12" r="3"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  stopwatch:'<path d="M9 2h6M12 2v3M18.5 6.5 20 5"/><circle cx="12" cy="14" r="7.5"/><path d="M12 9v5l3 2"/>',
+  stopwatch:'<path d="M9 2h6M12 2v3M17.7 6.3l1.4-1.4"/><circle cx="12" cy="14" r="7.5"/><path d="M12 9.5V14l3 2"/><circle cx="12" cy="14" r=".7" fill="currentColor" stroke="none"/>',
   pause:'<rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/>',
   play:'<path d="m7 4 12 8-12 8V4Z"/>',
   stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',

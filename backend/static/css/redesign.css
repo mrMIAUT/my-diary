@@ -18899,3 +18899,60 @@ body.eplan-redesign.client-ui .redesign-floating-rest-timer-copy small{
   }
 }
 
+
+/* v257 — final rest controls: inline +30, blue line-art dial and toothed gear.
+   Narrow iPhone widths must never wrap +30 сек into a vertical stack. */
+body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-add{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  white-space:nowrap!important;
+  padding:7px 8px!important;
+  min-width:0!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-add svg{
+  display:block!important;
+  flex:0 0 17px!important;
+  width:17px!important;
+  height:17px!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-add>span{
+  display:inline-block!important;
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span svg{
+  width:26px!important;
+  height:26px!important;
+  stroke-width:1.7!important;
+  color:#267af3!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-settings svg{
+  width:18px!important;
+  height:18px!important;
+  stroke-width:1.75!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  color:#7385a0!important;
+}
+@media(max-width:350px){
+  body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-add{
+    gap:4px!important;
+    padding:6px 4px!important;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-actions>.workout-featured-rest-add>span{
+    font-size:11px!important;
+  }
+  body.eplan-redesign.client-ui .workout-featured-rest-ring>span svg{
+    width:22px!important;
+    height:22px!important;
+  }
+}
+
