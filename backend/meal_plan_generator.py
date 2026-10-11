@@ -4,6 +4,8 @@ No external APIs, generative hallucinations, database writes or allergy guarante
 Portions are always labeled in the catalog's food preparation state.
 """
 from functools import lru_cache
+import json
+from pathlib import Path
 from food_local_catalog import approved_reference_food_items
 from nutrition_structured import FREE_VEGETABLE_NAMES,EGG_NAMES,EGG_EDIBLE_GRAMS
 
@@ -34,127 +36,35 @@ FOODS = {
     "cucumber": ("Огірок (сирий)", 90, 230, 5, 130, ()),
     "spinach": ("Шпинат (сирий)", 60, 170, 5, 100, ()),
     "carrot": ("Морква (відварена)", 90, 210, 5, 120, ()),
-    "oil": ("Оливкова олія", 0, 27, 1, 10, ()),
+    "oil": ("Оливкова олія", 0, 16, 1, 8, ()),
+    "milk": ("Молоко коров'яче 1%", 100, 300, 10, 160, ("dairy",)),
+    "blueberries": ("Лохина (сира)", 40, 200, 5, 100, ()),
+    "strawberries": ("Полуниця (сира)", 50, 220, 5, 110, ()),
+    "chia": ("Насіння чіа (сухе)", 0, 30, 2, 12, ()),
+    "feta": ("Сир фета", 15, 70, 5, 35, ("dairy",)),
+    "white_beans": ("Квасоля біла (відварена)", 70, 260, 5, 160, ()),
+    "quinoa": ("Кіноа (відварена)", 100, 300, 5, 190, ()),
+    "chickpeas": ("Нут (відварений)", 70, 270, 5, 170, ()),
+    "mushrooms": ("Печериці (приготовані без олії)", 50, 220, 5, 120, ()),
+    "bulgur": ("Булгур (відварений)", 100, 320, 5, 190, ("gluten",)),
+    "tofu": ("Тофу твердий натуральний", 80, 300, 5, 170, ()),
+    "soy_sauce": ("Соєвий соус класичний", 5, 20, 1, 10, ()),
+    "canned_tomatoes": ("Помідори консервовані у власному соку", 70, 240, 5, 140, ()),
 }
 EXCLUSIONS = frozenset(("dairy", "eggs", "fish", "nuts", "gluten", "meat"))
-# Food combinations chosen for straightforward meals, not arbitrary nutrient sums.
-TEMPLATES = {
-    "breakfast": [
-        ("oats", "yogurt", "banana", "walnuts"),
-        ("bread", "eggs", "avocado", "tomato", "banana"),
-        ("buckwheat", "turkey", "tomato", "cucumber"),
-        ("oats_cooked", "banana", "almonds", "yogurt"),
-    ],
-    "lunch": [
-        ("chicken", "rice", "tomato", "cucumber", "oil"),
-        ("turkey", "buckwheat", "cucumber", "tomato", "oil"),
-        ("salmon", "potatoes", "cucumber", "tomato"),
-        ("tuna", "rice", "tomato", "cucumber", "oil"),
-        ("beans", "rice", "avocado", "tomato"),
-    ],
-    "snack": [
-        ("yogurt", "banana", "walnuts"),
-        ("tuna", "bread", "cucumber", "avocado"),
-        ("eggs", "apple", "almonds"),
-        ("turkey", "bread", "cucumber", "apple"),
-        ("beans", "bread", "tomato", "avocado"),
-    ],
-    "dinner": [
-        ("salmon", "potatoes", "spinach"),
-        ("chicken", "pasta", "tomato", "spinach", "oil"),
-        ("turkey", "buckwheat", "tomato", "cucumber", "oil"),
-        ("beans", "rice", "spinach", "oil"),
-    ],
-    "evening": [
-        ("yogurt", "apple", "walnuts"),
-        ("eggs", "bread", "cucumber"),
-        ("turkey", "bread", "cucumber"),
-        ("beans", "avocado", "tomato"),
-    ],
-}
-# A fixed dish name, preparation and ingredient roles accompany each approved
-# combination. Oils are always culinary ingredients (dressing or mixed in a
-# prepared dish), never presented as a separate food to consume or drink.
-MEAL_RECIPES = {
-    "breakfast": [
-        ("Вівсянка з йогуртом, бананом і горіхами",
-         "Приготуй пластівці на воді, додай грецький йогурт, банан і волоські горіхи. Вівсяні пластівці зважуй сухими.",
-         {"oats": "Суха вага до варіння", "walnuts": "Подрібнити й додати в кашу"}),
-        ("Тости з яйцем, авокадо й помідором + банан",
-         "Хліб підсмаж, виклади нарізані варені яйця, авокадо та помідор. Банан з'їж окремо як фрукт до сніданку.",
-         {"eggs": "Варені яйця, поштучно", "banana": "Фрукт до сніданку"}),
-        ("Гречка з індичкою та свіжими овочами",
-         "Подавай готову гречку з індичкою та салатом з помідора й огірка.",
-         {"buckwheat": "Вага після варіння"}),
-        ("Вівсяна каша з йогуртом, бананом і мигдалем",
-         "До готової каші на воді додай натуральний йогурт, банан та подрібнений мигдаль.",
-         {"oats_cooked": "Вага вже готової каші"}),
-    ],
-    "lunch": [
-        ("Куряче філе з рисом та овочевим салатом",
-         "Запечене куряче філе подай з відвареним рисом. Огірок і помідор наріж у салат, заправ оливковою олією.",
-         {"rice": "Вага готового рису", "oil": "Заправка для салату, не окремий продукт"}),
-        ("Індичка з гречкою та салатом",
-         "Запечене філе індички подай з гречкою. Наріж огірок і помідор, заправ овочі оливковою олією.",
-         {"buckwheat": "Вага готової гречки", "oil": "Заправка для салату, не окремий продукт"}),
-        ("Лосось із картоплею та овочевим салатом",
-         "Запечений лосось подай із відвареною картоплею, помідором та огірком.",
-         {"potatoes": "Вага готової картоплі"}),
-        ("Рисовий боул з тунцем та овочами",
-         "Змішай готовий рис, тунець без рідини, помідор та огірок. Оливкову олію додай як заправку.",
-         {"rice": "Вага готового рису", "oil": "Заправка боулу, не окремий продукт"}),
-        ("Боул із рисом, квасолею й авокадо",
-         "З'єднай відварені рис і квасолю, нарізані авокадо та помідор.",
-         {"rice": "Вага після варіння", "beans": "Вага готової квасолі"}),
-    ],
-    "snack": [
-        ("Йогурт з бананом та волоськими горіхами",
-         "Наріж банан у миску з йогуртом, посип подрібненими горіхами.",
-         {}),
-        ("Тости з тунцем, авокадо та огірком",
-         "Підсмаж хліб, виклади тунець без рідини, авокадо й огірок.",
-         {"tuna": "Тунець без рідини"}),
-        ("Варені яйця, яблуко та мигдаль",
-         "Яйця відвари, яблуко та мигдаль подай як окремий перекус.",
-         {"eggs": "Поштучно"}),
-        ("Сендвіч з індичкою та огірком + яблуко",
-         "Зроби сендвіч із хліба, готової індички та огірка. Яблуко — окремо.",
-         {"apple": "Фрукт до перекусу"}),
-        ("Тости з пастою з квасолі, авокадо й томатів",
-         "Розімни готову квасолю з авокадо, нанеси на тости, додай нарізаний помідор.",
-         {"beans": "Відварена квасоля"}),
-    ],
-    "dinner": [
-        ("Лосось з картоплею та шпинатом",
-         "Подавай запечений лосось із відвареною картоплею та шпинатом.",
-         {"potatoes": "Вага готової картоплі"}),
-        ("Паста з куркою, помідорами та шпинатом",
-         "Змішай готову пасту з нарізаною запеченою куркою, помідором і шпинатом. Оливкову олію додай до пасти під час змішування.",
-         {"pasta": "Вага готових макаронів", "oil": "Додати у пасту, не вживати окремо"}),
-        ("Індичка з гречкою та салатом",
-         "Запечену індичку подай з готовою гречкою. З помідора й огірка зроби салат та заправ оливковою олією.",
-         {"buckwheat": "Вага готової гречки", "oil": "Заправка для салату, не окремий продукт"}),
-        ("Рис із квасолею та шпинатом",
-         "Змішай готові рис і квасолю зі шпинатом. Оливкову олію додай у готову страву.",
-         {"oil": "Додати у готову страву, не окремий продукт"}),
-    ],
-    "evening": [
-        ("Йогурт з яблуком та горіхами",
-         "Наріж яблуко до йогурту та додай волоські горіхи.",
-         {}),
-        ("Сендвіч з яйцем та огірком",
-         "Підсмаж хліб, додай нарізані варені яйця й огірок.",
-         {"eggs": "Поштучно"}),
-        ("Сендвіч з індичкою та огірком",
-         "На хліб виклади запечену індичку та свіжий огірок.",
-         {}),
-        ("Салат із квасолею, авокадо та помідором",
-         "Змішай готову квасолю з нарізаними авокадо та помідором.",
-         {}),
-    ],
-}
-# Recipe and template indexes are intentionally aligned; reject accidental drift.
-assert all(len(MEAL_RECIPES[k]) == len(v) for k,v in TEMPLATES.items())
+# Culinary source references accompany every menu option. The linked recipes
+# inspire our adapted dishes; we do not duplicate third-party recipe instructions.
+_RECIPE_DATA=json.loads((Path(__file__).parent/"real_meal_templates.json").read_text(encoding="utf-8"))
+_RECIPE_LIBRARY=_RECIPE_DATA["recipes"]
+CATEGORIES=("breakfast","lunch","snack","dinner","evening")
+assert len(_RECIPE_LIBRARY)>=40 and len({r["id"] for r in _RECIPE_LIBRARY})==len(_RECIPE_LIBRARY)
+assert all(r["category"] in CATEGORIES and r["source_url"].startswith("https://")
+           and all(key in FOODS for key in r["keys"])
+           for r in _RECIPE_LIBRARY)
+TEMPLATES={kind:[tuple(r["keys"]) for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+MEAL_RECIPES={kind:[(r["title"],r["preparation"],r["notes"])
+                     for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+MEAL_SOURCES={kind:[r for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
 
 SCHEDULES = {
     3: (("breakfast", .30), ("lunch", .38), ("dinner", .32)),
@@ -278,14 +188,14 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
     result = []
     daily = [0.0] * 4
     for meal_index, (kind, portion) in enumerate(SCHEDULES[meals], start=1):
-        suitable = [(template, MEAL_RECIPES[kind][index])
+        suitable = [(template, MEAL_RECIPES[kind][index], MEAL_SOURCES[kind][index])
                     for index, template in enumerate(TEMPLATES[kind])
                     if all(not excluded.intersection(FOODS[k][-1]) for k in template)]
         if len(suitable) < variants:
             raise ValueError("За вибраних обмежень бракує перевірених продуктів для "
                              + LABELS[kind].lower() + ". Змініть обмеження або складіть план вручну.")
         target = tuple(v * portion for v in targets)
-        for variant_index, (keys, recipe) in enumerate(suitable[:variants], start=1):
+        for variant_index, (keys, recipe, meta) in enumerate(suitable[:variants], start=1):
             title, preparation, food_notes = recipe
             rows, total, gross = _fit_meal(keys, target, foods)
             for row in rows:
@@ -311,6 +221,8 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
                 "variant_number": variant_index, "sort": len(result),
                 "foods": rows, "totals": total, "actual_totals": gross,
                 "dish_title": title, "preparation": preparation, "content": content,
+                "recipe_id":meta["id"],"recipe_source_url":meta["source_url"],
+                "recipe_source_name":meta["source_name"],"recipe_minutes":meta["minutes"],
             })
     total = {key: round(value, 1) for key, value in zip(NUTRIENTS, daily)}
     target_dict = dict(zip(NUTRIENTS, targets))
