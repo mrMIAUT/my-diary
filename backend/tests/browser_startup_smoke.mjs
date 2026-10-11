@@ -95,8 +95,39 @@ try{
     window.currentClientData=d;
     app.innerHTML='<div id="nutrition">'+nutritionHTML(d,true)+'</div>';
   });
+  // Existing assigned goals remain visible as a read-only hint, not input defaults.
+  assert.equal(await page.locator('#nkcal').inputValue(),'','Trainer kcal field must start empty');
+  assert.equal(await page.locator('#nprotein').inputValue(),'','Trainer protein must start empty');
+  assert.match(await page.locator('.trainer-nutrition-current').innerText(),/2500 ккал/);
+  const dialogMessages=[];
+  page.on('dialog',async dialog=>{dialogMessages.push(dialog.message());await dialog.accept();});
+  await page.locator('#nutritionActions button').first().click();
+  assert.match(dialogMessages.join(' '),/Заповни всі чотири/,'Empty targets were accepted');
   await page.locator('#nutrition .trainer-nutrition-calc-launch').click();
   await page.locator('#trainerNutritionCalcModal').waitFor({timeout:3000});
+  for(const id of ['calcSex','calcAge','calcHeight','calcWeight','calcSteps','calcStrength','calcCardio','calcCardioMin','calcExperience','calcGoal','calcAdjust']){
+    assert.equal(await page.locator('#'+id).inputValue(),'','Unexpected prefilled field: '+id);
+  }
+  // iPhone-sized layout should open with visible header and blue controls.
+  const layout=await page.evaluate(()=>{
+    const modal=document.querySelector('#trainerNutritionCalcModal');
+    const card=modal.querySelector('.trainer-nutrition-calc-card');
+    const header=modal.querySelector('.trainer-nutrition-calc-head');
+    const launch=document.querySelector('.trainer-nutrition-calc-launch');
+    const grid=modal.querySelector('.nutrition-calc-grid');
+    const b=card.getBoundingClientRect(),h=header.getBoundingClientRect();
+    return {top:b.top,bottom:b.bottom,viewHeight:innerHeight,headTop:h.top,scrollTop:card.scrollTop,
+      columns:getComputedStyle(grid).gridTemplateColumns,
+      background:getComputedStyle(launch).backgroundColor};
+  });
+  assert.ok(layout.top>=-1&&layout.bottom<=layout.viewHeight+1,'Modal clipped on phone: '+JSON.stringify(layout));
+  assert.ok(layout.headTop>=0&&layout.scrollTop===0,'Modal does not open at heading');
+  assert.equal(layout.columns.split(' ').length,2,'Expected compact 2-column phone layout');
+  assert.notEqual(layout.background,'rgb(255, 208, 0)','Old yellow launcher styling returned');
+  await page.locator('#calcSex').selectOption('male');
+  await page.locator('#calcGoal').selectOption('maintain');
+  await page.locator('#calcCardio').selectOption('0');
+  assert.equal(await page.locator('#calcCardioMin').inputValue(),'','Cardio minutes should remain empty');
   await page.locator('#calcAge').fill('29');
   await page.locator('#calcHeight').fill('178');
   await page.locator('#calcWeight').fill('82');
