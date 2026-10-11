@@ -278,6 +278,26 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("'/static/js/timed-workout.js?v=7'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
+    def test_autoplan_generator_is_trainer_only_and_never_saves_during_preview(self):
+        self.assertIn('@app.post("/api/trainer/client/{cid}/nutrition/auto-plan")', APP)
+        block = APP.split('@app.post("/api/trainer/client/{cid}/nutrition/auto-plan")', 1)[1].split('@app.post("/api/cardio")', 1)[0]
+        self.assertIn("user:AuthUser=Depends(require_trainer)", block)
+        self.assertIn("authorize_client(user,cid)", block)
+        self.assertIn("require_active_client(cid,'meal_plan')", block)
+        self.assertIn("generate_meal_plan(", block)
+        self.assertNotIn("DELETE FROM", block)
+        self.assertNotIn("INSERT INTO", block)
+        planner = (ROOT / "backend" / "static" / "js" / "auto-meal-plan.js").read_text(encoding="utf-8")
+        self.assertIn("window.openAutoMealPlanModal", planner)
+        self.assertIn("nutritionPlanDraft=copy", planner)
+        self.assertNotIn("'/client/'+cid+'/nutrition'", planner)
+        self.assertNotIn('"/client/"+cid+"/nutrition"', planner)
+        self.assertIn("saveTrainerMealPlanDraft", NUTRITION_JS)
+        self.assertIn("clientAccess(c).features?.meal_plan", NUTRITION_JS)
+        self.assertIn("auto-meal-plan.js?v=1", NUTRITION_JS)
+        self.assertNotIn('src="/static/js/auto-meal-plan.js', INDEX)
+        self.assertNotIn("auto-meal-plan.js", SW)
+
     def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
         self.assertIn("function syncTrainerNutritionTargetKcal", NUTRITION_JS)
         self.assertIn("Math.round(p*4+f*9+c*4)", NUTRITION_JS)

@@ -21,6 +21,7 @@ from math import ceil
 from zoneinfo import ZoneInfo
 import base64
 from food_reference_catalog import reference_food_items
+from meal_plan_generator import generate_meal_plan
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -1332,6 +1333,11 @@ class CheckinReviewIn(BaseModel):
 
 class NutritionPlanItemIn(BaseModel):
     meal_number:int=Field(ge=1,le=100); variant_number:int=Field(default=1,ge=1,le=100); content:str=Field(default="",max_length=5000); sort:int=Field(default=0,ge=0,le=10_000)
+class AutoMealPlanIn(BaseModel):
+    meals:int=Field(default=4,ge=3,le=5)
+    variants:int=Field(default=2,ge=1,le=2)
+    excluded:List[str]=Field(default_factory=list,max_length=6)
+
 class NutritionTargetIn(BaseModel):
     kcal:int=Field(default=0,ge=0,le=MAX_KCAL); protein:int=Field(default=0,ge=0,le=MAX_MACRO_G); fat:int=Field(default=0,ge=0,le=MAX_MACRO_G); carbs:int=Field(default=0,ge=0,le=MAX_MACRO_G); meal_plan:str=Field(default="",max_length=50000); meals:List[NutritionPlanItemIn]=Field(default_factory=list,max_length=100)
 class WorkoutStartIn(BaseModel):
@@ -3993,6 +3999,24 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
                     c.execute("INSERT INTO nutrition_plan_items(client_id,meal_number,variant_number,content,sort) VALUES(%s,%s,%s,%s,%s)",(cid,max(1,item.meal_number),max(1,item.variant_number),item.content.strip(),item.sort))
         c.commit()
     return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
+
+# Draft-only generator; trainer reviews and explicitly saves using existing
+# /api/client/{cid}/nutrition. Never mutates a client's meal plan here.
+RATE_LIMITS["meal.generate"]=(12,60)
+@app.post("/api/trainer/client/{cid}/nutrition/auto-plan")
+def preview_auto_meal_plan(cid:int,x:AutoMealPlanIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    require_active_client(cid,'meal_plan')
+    consume_rate_limit("meal.generate",str(cid))
+    record=one("SELECT kcal,protein,fat,carbs FROM clients WHERE id=?",(cid,))
+    if not record: raise HTTPException(404,"Клієнта не знайдено")
+    try:
+        return generate_meal_plan(
+            record["kcal"] or 0,record["protein"] or 0,
+            record["fat"] or 0,record["carbs"] or 0,
+            meals=x.meals,variants=x.variants,excluded=x.excluded)
+    except ValueError as e:
+        raise HTTPException(422,str(e)) from None
 
 @app.post("/api/cardio")
 def save_cardio(x:CardioIn,user:AuthUser=Depends(require_client)):

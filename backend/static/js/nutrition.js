@@ -11,7 +11,9 @@ function planFromData(d){
 function mealPlanEditorHTML(d,editing=false){
  if(!nutritionPlanDraft)nutritionPlanDraft=planFromData(d);
  let nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))].sort((a,b)=>a-b);
- return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('nutritionPlanBody',this)"><span><strong>План харчування</strong><span class="muted" style="display:block;margin-top:5px">Прийоми їжі та альтернативні варіанти</span></span><span class="arrow">⌄</span></button><div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}<div class="meal-actions">${editing?`<button class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button>`:''}</div></div></div>`;
+ return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('nutritionPlanBody',this)"><span><strong>План харчування</strong><span class="muted" style="display:block;margin-top:5px">Прийоми їжі та альтернативні варіанти</span></span><span class="arrow">⌄</span></button>
+  <div class="meal-autoplan-toolbar"><button type="button" class="meal-autoplan-open" onclick="openAutoMealPlanBuilder(${d.client.id})">${uiIcon('plus')} Створити план автоматично</button></div>
+  <div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
 }
 
 function mealEditorBlock(n,editing){
@@ -31,6 +33,48 @@ function removeMealBlock(n){nutritionPlanDraft=nutritionPlanDraft.filter(x=>x.me
 function addMealVariant(n){let xs=nutritionPlanDraft.filter(x=>x.meal_number===n),v=Math.max(0,...xs.map(x=>x.variant_number))+1;nutritionPlanDraft.push({meal_number:n,variant_number:v,content:'',sort:0});rerenderNutritionPlan(true)}
 
 function removeMealVariant(n,v){nutritionPlanDraft=nutritionPlanDraft.filter(x=>!(x.meal_number===n&&x.variant_number===v));let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);xs.forEach((x,i)=>x.variant_number=i+1);rerenderNutritionPlan(true)}
+
+// Optional generator UI is loaded only on trainer request. It cannot delay app startup.
+window.openAutoMealPlanBuilder = async function(cid){
+ const c=window.currentClientData?.client;
+ if(session?.role!=='trainer'||!c||+c.id!==+cid||!clientAccess(c).features?.meal_plan)return;
+ try {
+   if(!window.eplanAutoPlanLoader){
+     window.eplanAutoPlanLoader=new Promise((resolve,reject)=>{
+       const script=document.createElement('script');
+       script.src='/static/js/auto-meal-plan.js?v=1';
+       script.onload=resolve;
+       script.onerror=()=>reject(new Error('Meal planner module unavailable'));
+       document.head.appendChild(script);
+     }).catch(e=>{window.eplanAutoPlanLoader=null;throw e;});
+   }
+   await window.eplanAutoPlanLoader;
+   if(typeof window.openAutoMealPlanModal!=='function')throw Error('Meal planner unavailable');
+   window.openAutoMealPlanModal(cid);
+ }catch(e){console.warn('Meal planner error',e);alert('Не вдалося відкрити генератор плану. Спробуй ще раз.');}
+};
+
+// Save generated or manually edited meals without changing assigned kcal/macros.
+// The nutrition-target editor has deliberately blank fields, so it must NOT
+// be reused for saving the meal plan alone.
+window.saveTrainerMealPlanDraft = async function(cid,button){
+ const data=window.currentClientData||{},c=data.client||{};
+ if(session?.role!=='trainer'||+c.id!==+cid||!clientAccess(c).features?.meal_plan)return;
+ const items=(nutritionPlanDraft||[]).filter(x=>String(x.content||'').trim()).map((x,i)=>({
+   meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i
+ }));
+ if(!items.length)return alert('Спочатку додай хоча б один прийом їжі.');
+ if(!confirm('Призначити цей план харчування клієнту? Перевір грамовки та БЖВ.'))return;
+ let restore=setActionLoading(button,'Зберігаємо…');
+ try{
+   await api('/client/'+cid+'/nutrition',{method:'PATCH',
+     body:JSON.stringify({kcal:+c.kcal||0,protein:+c.protein||0,fat:+c.fat||0,carbs:+c.carbs||0,meal_plan:'',meals:items})});
+   window.currentClientData=await loadClientData(cid);
+   nutritionPlanDraft=null;
+   const host=document.querySelector('#nutrition');
+   if(host)host.innerHTML=nutritionHTML(window.currentClientData);
+ }catch(e){restore();alert(e.message||'Не вдалося зберегти план.');}
+};
 
 function nutritionTargetSummaryHTML(c){
  return `<div class="card trainer-nutrition-target-card is-saved">
