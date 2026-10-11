@@ -30,6 +30,16 @@ try{
  assert.equal(await page.locator('img').count(),0,'Food pictures should be absent');
  assert.match(await page.locator('#dailySummary').innerText(),/Добова ціль/);
  assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
+ // Primary and alternative variants must each show full kcal/protein/fat/carbs.
+ const primaryVariant=page.locator('.variant-card').nth(0).locator('.variant-macros');
+ const secondVariant=page.locator('.variant-card').nth(1).locator('.variant-macros');
+ for(const text of [await primaryVariant.innerText(),await secondVariant.innerText()]){
+  for(const key of ['ккал','Б ','Ж ','В '])assert.ok(text.includes(key),'Missing variant-header nutrient: '+key);
+ }
+ assert.notEqual(await primaryVariant.innerText(),await secondVariant.innerText(),
+  'Alternatives must have independently calculated nutrients');
+ const baselineFirstVariant=await primaryVariant.innerText();
+ const baselineSecondVariant=await secondVariant.innerText();
  // Every meal header shows daily totals, distinct from its own kcal badge.
  const firstDay=page.locator('.meal-day-totals').first();
  await firstDay.waitFor({timeout:3000});
@@ -43,6 +53,10 @@ try{
  await page.locator('.structured-food-row').first().locator('.stepper-plus').click();
  const adjusted=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
  assert.notEqual(original,adjusted,'Plus did not recalculate macros');
+ assert.notEqual(await primaryVariant.innerText(),baselineFirstVariant,
+   'Primary variant header did not update after portion change');
+ assert.equal(await secondVariant.innerText(),baselineSecondVariant,
+   'Other variant header changed after editing primary');
  const changedHeader=await page.locator('.meal-day-totals').first().innerText();
  assert.notEqual(baselineHeader,changedHeader,'Meal header totals did not update after portion change');
  const allHeaders=await page.locator('.meal-day-totals').allInnerTexts();
@@ -76,10 +90,14 @@ try{
  assert.equal(await page.locator('.structured-meal-summary').first().innerText().then(x=>x.includes('Фактично з овочами')),false,'Tomato should be included in goal after toggle');
  // Editing a nonprimary alternative changes that variant only, not the day.
  const dayPrimaryBefore=await page.locator('.meal-day-totals').first().innerText();
+ const primaryBeforeAltEdit=await primaryVariant.innerText();
+ const secondBeforeAltEdit=await secondVariant.innerText();
  const otherVariant=page.locator('.variant-card').nth(1);
  await otherVariant.locator('.stepper-plus').first().click();
  const dayPrimaryAfter=await page.locator('.meal-day-totals').first().innerText();
  assert.equal(dayPrimaryAfter,dayPrimaryBefore,'Alternative variants were incorrectly added to day totals');
+ assert.notEqual(await secondVariant.innerText(),secondBeforeAltEdit,'Second variant BJU did not refresh');
+ assert.equal(await primaryVariant.innerText(),primaryBeforeAltEdit,'First variant BJU changed after editing the second');
  // Keep the demo editable in the same browser; never post customer data.
  await page.locator('#saveDemoButton').click();
  assert.match(await page.locator('#saveDemoStatus').innerText(),/Збережено/);
@@ -89,12 +107,13 @@ try{
  assert.equal(await page.locator('.structured-food-row').first().locator('input.structured-grams').inputValue(),'2');
  assert.equal(await page.locator('img').count(),0);
  assert.match(await page.locator('.meal-day-totals').first().innerText(),/За день/);
+ assert.match(await page.locator('.variant-card').nth(1).locator('.variant-macros').innerText(),/Б /);
  const viewport=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth}));
  assert.ok(viewport.w<=viewport.v+2,'Unexpected horizontal overflow: '+JSON.stringify(viewport));
  await page.locator('.reset').click();
  assert.match(await page.locator('.structured-food-row').first().innerText(),/Вівсяні пластівці/);
  assert.deepEqual(errors,[],'Unexpected JS exceptions');
- console.log('NUTRITION PREVIEW MOBILE: PASS (macros, pieces, vegetable toggle, save, reset, no photos)');
+ console.log('NUTRITION PREVIEW MOBILE: PASS (independent variant BJU headers, instant changes, vegetable toggle, save, no photos)');
 }finally{
  if(browser)await browser.close();
  server.kill('SIGTERM');
