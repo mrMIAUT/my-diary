@@ -22,7 +22,7 @@ function mealPlanEditorHTML(d,editing=false){
    <button type="button" class="meal-autoplan-open" onclick="openAutoMealPlanBuilder(${d.client.id})">${uiIcon('plus')} Створити план автоматично</button>
    ${!editing?'<button class="meal-plan-edit-open" type="button" onclick="openTrainerStructuredMealPlan()">Редагувати план</button>':''}
   </div>
-  <div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
+  <div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}${typeof window.structuredDailySummaryHTML==='function'?window.structuredDailySummaryHTML():''}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
 }
 
 function mealEditorBlock(n,editing){
