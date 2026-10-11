@@ -37,6 +37,8 @@ try{
   page.on('pageerror',err=>pageErrors.push(err.message));
   await page.goto(base,{waitUntil:'load',timeout:30000});
   await page.locator('form.auth-card').waitFor({timeout:20000});
+  // Navigation must settle before simulating a signed-in client.
+  await page.locator('#eplanSplash').waitFor({state:'detached',timeout:20000});
   assert.equal(await page.locator('#app').evaluate(el=>el.textContent.includes('Увійти')),true,'Login screen not rendered');
   await page.evaluate(async()=>{
     // Exercise the *real* client navigation and nutrition rendering,
