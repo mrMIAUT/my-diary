@@ -207,7 +207,7 @@ window.showClientTraining = async function(cid){
     let cancelSeconds=Math.max(0,120-(+active.duration_seconds||0));
     let canCancel=!hasSavedSets&&cancelSeconds>0;
     let cancelHTML=canCancel?'<button type="button" class="workout-cancel-early" data-workout-cancel-button="1" onclick="cancelWorkout('+cid+','+active.id+',this)">Скасувати тренування</button>':'';
-    let activeBody='<div class="card redesign-active-workout"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><h2>'+esc(active.day_name)+'</h2>'+cancelHTML+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
+    let activeBody='<div class="card redesign-active-workout"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><h2>'+esc(active.day_name)+'</h2>'+cancelHTML+featuredRestTimerHTML(0,1,false,true)+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
     app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+activeBody+'</div>');
     if(canCancel)setTimeout(()=>document.querySelector('[data-workout-cancel-button="1"]')?.remove(),cancelSeconds*1000+250);
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
