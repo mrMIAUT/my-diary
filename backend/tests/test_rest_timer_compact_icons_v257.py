@@ -28,9 +28,19 @@ class RestTimerCompactControlsTests(unittest.TestCase):
 
     def test_app_cache_references_match(self):
         for source in (INDEX,SW):
-            self.assertIn("/static/css/redesign.css?v=257",source)
+            self.assertIn("/static/css/redesign.css?v=258",source)
             self.assertIn("/static/js/timer.js?v=166",source)
-        self.assertIn("const VERSION='eplan-v214'",SW)
+        self.assertIn("const VERSION='eplan-v215'",SW)
+
+    def test_clean_single_face_dial(self):
+        c=CSS.split("/* v258 — single-face rest dial:",1)[1]
+        self.assertIn("stroke-width:5!important",c)
+        self.assertIn(".workout-featured-rest-ring>span svg{",c)
+        self.assertIn("display:none!important",c)
+        self.assertIn(".workout-featured-rest-ring>span::before",c)
+        self.assertIn(".workout-featured-rest-ring>span::after",c)
+        self.assertIn("background:transparent!important",c)
+        self.assertIn("transform:rotate(120deg)",c)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
     def test_real_svg_icons_and_unchanged_timer_controls(self):
