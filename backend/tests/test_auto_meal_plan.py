@@ -18,6 +18,7 @@ class AutomaticMealPlanTests(unittest.TestCase):
     def test_daily_totals_count_only_primary_variants_and_include_source_foods(self):
         result=generate_meal_plan(2380,160,60,300,meals=4,variants=2)
         self.assertEqual(len(result['meals']),8)
+        self.assertTrue(result['within_tolerance'],str(result['deviations_pct']))
         self.assertEqual({x['meal_number'] for x in result['meals']},{1,2,3,4})
         self.assertTrue(result['review_required'])
         for meal in result['meals']:
