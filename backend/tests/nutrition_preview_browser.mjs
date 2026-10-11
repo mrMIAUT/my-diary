@@ -28,6 +28,21 @@ try{
  await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'load'});
  await page.locator('.structured-food-row').first().waitFor({timeout:15000});
  assert.equal(await page.locator('img').count(),0,'Food pictures should be absent');
+ // "Raw" is a source preparation state; on-screen vegetables use "fresh".
+ // Food identities/nutrition are still the exact approved local records.
+ const labels=await page.evaluate(()=>Object.fromEntries(
+  window.structuredCatalog.filter(f=>[
+   'Помідор (свіжий)','Огірок (свіжий)','Морква (свіжа)',
+   'Броколі (свіжі)','Картопля (відварена без шкірки)'
+  ].includes(f.name)).map(f=>[f.name,{id:f.source_id,kcal:f.kcal_100,protein:f.protein_100}])
+ ));
+ for(const name of ['Помідор (свіжий)','Огірок (свіжий)',
+                     'Морква (свіжа)','Броколі (свіжі)']){
+  assert.ok(labels[name]?.id,'Missing fresh vegetable label: '+name);
+  assert.ok(Number.isFinite(Number(labels[name].kcal)),'Nutrition missing: '+name);
+ }
+ assert.ok(labels['Картопля (відварена без шкірки)'],'Cooked foods must retain original preparation labels');
+ assert.match(await page.locator('.structured-food-row').filter({hasText:'Помідор'}).first().innerText(),/Помідор \(свіжий\)/);
  assert.match(await page.locator('#dailySummary').innerText(),/Добова ціль/);
  assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
  // Sample dishes must be coherent, named, and make oil a culinary ingredient.
