@@ -219,17 +219,51 @@ h2{font-size:19px;margin:0}
  .structured-grams{width:31px;font-size:11px}.stepper label{font-size:10px}
  .nutrition-stat em{display:block}.nutrition-stat{padding:2px 5px}
 }
+
+/* Each tab is an independent whole-day ration; not vertically stacked meal alternatives. */
+.ration-section-head{margin-bottom:8px}
+.ration-tabs{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:9px 0 14px}
+.ration-tabs-scroll{display:flex;gap:8px;max-width:100%;overflow-x:auto;scrollbar-width:none;padding:3px 1px 6px}
+.ration-tabs-scroll::-webkit-scrollbar{display:none}
+.ration-tab{border:1px solid #dce6f4;border-radius:12px;padding:11px 15px;white-space:nowrap;font-size:12px;font-weight:850;background:#fff;color:#657c9a}
+.ration-tab.active{background:#307bf1;color:#fff;border-color:#307bf1;box-shadow:0 3px 8px #327cf021}
+.ration-tab-add{background:#edf4ff;color:#2873df;border-color:#ccddf6}
+.ration-tab:disabled{opacity:.45}
+.ration-delete{background:transparent;border:0;padding:5px 4px;font-size:10px;color:#8f9fb3}
+.ration-accuracy{border:1px solid #dbe7f5;background:#eef6ff;border-radius:12px;padding:12px 13px;margin:-5px 0 17px}
+.ration-accuracy.notice{background:#fff8ed;border-color:#f3dfb8}
+.ration-accuracy span{display:block;font-size:11px;font-weight:850;color:#496a8f}
+.ration-accuracy strong{display:block;margin:6px 0;color:#1b3558;font-size:12px;font-variant-numeric:tabular-nums}
+.ration-accuracy small{display:block;font-size:10px;line-height:1.5;color:#8296ae;margin-top:5px}
+.ration-accuracy button{margin:5px 0;border:1px solid #f0d5a7;border-radius:9px;background:#fff;color:#875b20;font-weight:850;font-size:11px;padding:9px 11px}
+.auto-fit-notice{border-radius:11px;border:1px solid #d6e9f8;background:#ebf7ff;padding:11px;margin:0 0 10px;display:flex;flex-direction:column;gap:5px;font-size:11px;line-height:1.4}
+.auto-fit-notice.warn{background:#fff8ec;border-color:#efd9b1}
+.auto-fit-notice strong{color:#356388;font-size:11px}
+.auto-fit-notice.warn strong{color:#8f641c}
+.auto-fit-notice span{color:#6e859f}
+.auto-fit-notice small{color:#947a56;font-size:10px}
+.meal-title small{max-width:390px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:390px){
+ .ration-tab{padding:10px 12px;font-size:11px}
+ .meal-title small{max-width:212px}
+ .ration-accuracy strong{font-size:11px}
+}
+
 </style></head>
 <body>
 <main class="page">
 <header class="page-header"><div><div class="eyebrow">Є ПЛАН · тестова версія</div><h1>План харчування</h1><p class="subtitle">Створюй і налаштовуй раціон клієнта</p></div><button type="button" class="reset" onclick="resetDemo()">Скинути</button></header>
 <div class="demo-banner">Безпечний інтерактивний тест. Продукти без фотографій. Жодних змін у клієнтських планах.</div>
+<div class="section-header ration-section-head"><div><h2>Раціони на день</h2><p>Кожен раціон має власні страви та розрахунок БЖВ</p></div></div>
+<div id="rationTabs" class="ration-tabs" aria-label="Перемикання раціонів"></div>
 <div id="dailySummary"><p class="demo-banner">Завантаження харчових значень…</p></div>
-<div class="section-header"><div><h2>Прийоми їжі</h2><p>Редагуй варіанти, продукти та кількість</p></div></div>
+<div id="rationAccuracy" aria-live="polite"></div>
+<div class="section-header"><div><h2>Прийоми їжі</h2><p>По одній обраній страві на прийом. Порції перераховуються при заміні рецепта.</p></div></div>
 <section id="mealCards" aria-label="Редактор раціону"></section>
 </main>
 <div class="fixed-actions"><div class="fixed-inner"><button type="button" class="save-demo" id="saveDemoButton" onclick="saveDemo()">Зберегти демоверсію</button><div class="save-caption" id="saveDemoStatus">Збереження лише у цьому браузері · не призначає план клієнту</div></div></div>
 <script src="/static/js/structured-meal-editor.js?v=6"></script>
-<script src="/static/js/recipe-template-picker.js?v=1"></script>
-<script src="/static/js/nutrition-constructor-demo.js?v=7"></script>
+<script src="/static/js/nutrition-portion-fitter.js?v=1"></script>
+<script src="/static/js/recipe-template-picker.js?v=2"></script>
+<script src="/static/js/nutrition-constructor-demo.js?v=8"></script>
 </body></html>
