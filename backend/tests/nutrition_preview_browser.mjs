@@ -47,9 +47,12 @@ try{
  assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
  // Sample dishes must be coherent, named, and make oil a culinary ingredient.
  const breakfast=page.locator('.meal-card[data-meal="1"] .variant-card').first();
- assert.match(await breakfast.locator('.meal-recipe').innerText(),/Вівсянка з йогуртом/);
+ assert.match(await breakfast.locator('.meal-recipe').innerText(),/Нічна вівсянка з йогуртом/);
+ assert.match(await breakfast.locator('.meal-recipe').innerText(),/холодильнику на ніч/);
+ assert.match(await breakfast.locator('.meal-recipe-actions a').getAttribute('href'),/^https:\/\//);
+ assert.ok(await breakfast.locator('.open-recipe-library').count(),'Missing template library button');
  const lunch=page.locator('.meal-card[data-meal="2"] .variant-card').first();
- assert.match(await lunch.locator('.meal-recipe').innerText(),/Куряче філе з рисом та овочевим салатом/);
+ assert.match(await lunch.locator('.meal-recipe').innerText(),/Курка з рисом і салатом/);
  const oilRow=lunch.locator('.structured-food-row').filter({hasText:'Оливкова олія'});
  assert.equal(await oilRow.count(),1,'Oil is missing as salad dressing ingredient');
  assert.match(await oilRow.locator('.ingredient-role').innerText(),/Заправка.*не окремий продукт/);
@@ -117,6 +120,20 @@ try{
  assert.equal(dayPrimaryAfter,dayPrimaryBefore,'Alternative variants were incorrectly added to day totals');
  assert.notEqual(await secondVariant.innerText(),secondBeforeAltEdit,'Second variant BJU did not refresh');
  assert.equal(await primaryVariant.innerText(),primaryBeforeAltEdit,'First variant BJU changed after editing the second');
+ // Researched recipes remain accessible as reusable source-linked templates.
+ await page.locator('.meal-card[data-meal="1"] .variant-card').nth(1).locator('.open-recipe-library').click();
+ await page.locator('#recipeTemplatePicker').waitFor({timeout:6000});
+ const recipes=await page.evaluate(async()=>fetch('/recipe-library.json').then(r=>r.json()));
+ assert.equal(recipes.templates.length,43,'Expected 43 curated recipe templates');
+ assert.equal(new Set(recipes.templates.map(r=>r.id)).size,43);
+ assert.ok(recipes.templates.every(r=>r.source_url?.startsWith('https://')));
+ assert.ok(recipes.templates.every(r=>r.foods?.length),'Template has no audited ingredients');
+ await page.locator('#recipeTemplateSearch').fill('яблуком');
+ await page.locator('[data-recipe="bf_apple_overnight"]').click();
+ await page.locator('#recipeTemplatePicker').waitFor({state:'detached'});
+ assert.match(await page.locator('.meal-card[data-meal="1"] .variant-card').nth(1).locator('.meal-recipe').innerText(),/Нічна вівсянка з яблуком/);
+ assert.equal(await page.locator('#dailySummary').innerText(),dayPrimaryAfter,'Choosing alternate template changed primary day sum');
+
  // Keep the demo editable in the same browser; never post customer data.
  await page.locator('#saveDemoButton').click();
  assert.match(await page.locator('#saveDemoStatus').innerText(),/Збережено/);
