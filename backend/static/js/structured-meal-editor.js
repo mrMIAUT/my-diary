@@ -94,24 +94,6 @@ window.renderStructuredMealHTML=function(item){
  +(keys.some(k=>Math.abs(actual[k]-tracked[k])>.05)?'<small>Фактично з овочами: '+macroText(actual)+'</small>':'')
  +'</div></div>';
 };
-// Compact, always-visible daily totals in each meal header. We count only
-// the primary variant of each meal (alternatives must not be added together).
-// Each alternative has its own nutrition totals. Never combine alternatives.
-window.structuredVariantHeaderHTML=function(item){
- const totals=mealMacros(item);
- return '<span class="variant-macro-kcal">'+fmt(totals.kcal)+' ккал</span>'
-  +'<span class="variant-macro-part">Б '+fmt(totals.protein)+'</span>'
-  +'<span class="variant-macro-part">Ж '+fmt(totals.fat)+'</span>'
-  +'<span class="variant-macro-part">В '+fmt(totals.carbs)+'</span>';
-};
-window.structuredDayHeaderHTML=function(){
- const totals=dayMacros();
- return '<span class="meal-day-caption">За день</span>'
-  +'<span class="meal-day-macro meal-day-kcal">'+fmt(totals.kcal)+' ккал</span>'
-  +'<span class="meal-day-macro">Б '+fmt(totals.protein)+'</span>'
-  +'<span class="meal-day-macro">Ж '+fmt(totals.fat)+'</span>'
-  +'<span class="meal-day-macro">В '+fmt(totals.carbs)+'</span>';
-};
 window.structuredDailySummaryHTML=function(){
  const totals=dayMacros(),actual=dayMacros(true);
  const c=window.currentClientData?.client||{};
@@ -138,13 +120,6 @@ window.refreshStructuredNutrition=function(){
  });
  const day=$('dailySummary');
  if(day)day.innerHTML=window.structuredDailySummaryHTML();
- const headerTotals=window.structuredDayHeaderHTML();
- document.querySelectorAll('.meal-day-totals').forEach(node=>{node.innerHTML=headerTotals});
- document.querySelectorAll('.meal-card').forEach(card=>{
-  const n=+card.dataset.meal,primary=(nutritionPlanDraft||[]).filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number)[0];
-  const label=card.querySelector('.meal-kcal');
-  if(label&&primary)label.textContent=fmt(mealMacros(primary).kcal)+' ккал';
- });
  persistChange();
 };
 function syncRow(item,i){
