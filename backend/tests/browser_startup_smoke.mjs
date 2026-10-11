@@ -205,7 +205,7 @@ try{
   assert.equal(mealPlanWriteCalls,0,'Generator wrote meal plan without approval');
   assert.match(await page.locator('#autoMealPreview').innerText(),/Гречка/);
   await page.locator('#autoMealApply').click();
-  assert.equal(await page.locator('#autoMealPlanModal').count(),0,'Preview did not close');
+  await page.locator('#autoMealPlanModal').waitFor({state:'detached',timeout:6000});
   assert.equal(mealPlanWriteCalls,0,'Applying draft directly wrote nutrition');
   assert.equal(structuredCatalogCalls,1,'Trainer structured food catalog did not load');
   assert.match(await page.locator('.structured-food-row').first().innerText(),/Вівсяні пластівці/);
