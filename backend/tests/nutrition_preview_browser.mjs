@@ -30,6 +30,15 @@ try{
  assert.equal(await page.locator('img').count(),0,'Food pictures should be absent');
  assert.match(await page.locator('#dailySummary').innerText(),/Добова ціль/);
  assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
+ // Sample dishes must be coherent, named, and make oil a culinary ingredient.
+ const breakfast=page.locator('.meal-card[data-meal="1"] .variant-card').first();
+ assert.match(await breakfast.locator('.meal-recipe').innerText(),/Вівсянка з йогуртом/);
+ const lunch=page.locator('.meal-card[data-meal="2"] .variant-card').first();
+ assert.match(await lunch.locator('.meal-recipe').innerText(),/Куряче філе з рисом та овочевим салатом/);
+ const oilRow=lunch.locator('.structured-food-row').filter({hasText:'Оливкова олія'});
+ assert.equal(await oilRow.count(),1,'Oil is missing as salad dressing ingredient');
+ assert.match(await oilRow.locator('.ingredient-role').innerText(),/Заправка.*не окремий продукт/);
+ assert.match(await lunch.locator('.meal-recipe').innerText(),/заправ оливковою олією/);
  // Primary and alternative variants must each show full kcal/protein/fat/carbs.
  const primaryVariant=page.locator('.variant-card').nth(0).locator('.variant-macros');
  const secondVariant=page.locator('.variant-card').nth(1).locator('.variant-macros');
@@ -67,6 +76,7 @@ try{
  await page.locator('#structuredFoodPicker').waitFor({state:'detached'});
  const first=page.locator('.structured-food-row').first();
  assert.match(await first.innerText(),/Яйце куряче/);
+ assert.match(await page.locator('.meal-card[data-meal="1"] .variant-card').first().locator('.meal-recipe strong').innerText(),/Власна комбінація/,'Outdated oatmeal recipe remained after replacing its ingredient');
  assert.equal(await first.locator('input.structured-grams').inputValue(),'2');
  const changedDay=await page.locator('#dailySummary .stat-kcal b').innerText();
  assert.notEqual(previousDay,changedDay,'Replacing oats with eggs did not change day totals');
