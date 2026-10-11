@@ -37,7 +37,7 @@ class RestTimerCompactControlsTests(unittest.TestCase):
         js=r"""
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const src=fs.readFileSync('backend/static/js/timer.js','utf8');
-const ctx={console,Math,window:{}};
+const ctx={console,Math,window:{},setTimeout:()=>0};
 vm.createContext(ctx);vm.runInContext(src,ctx);
 const gear=ctx.featuredRestTimerIcon('settings');
 const watch=ctx.featuredRestTimerIcon('stopwatch');
