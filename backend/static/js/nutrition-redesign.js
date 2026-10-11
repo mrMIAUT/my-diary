@@ -138,8 +138,13 @@ window.openNutritionTargetsModal = function(cid){
       +'<label><span>Зріст</span><input id="calcHeight" type="number" inputmode="decimal" min="120" max="230" placeholder="см"></label>'
       +'<label><span>Вага</span><input id="calcWeight" type="number" inputmode="decimal" min="35" max="300" placeholder="кг"></label>'
       +'<label><span>Жир, % <small>(необов’язково)</small></span><input id="calcBodyFat" type="number" inputmode="decimal" min="3" max="60" placeholder="%"></label>'
-      +'<label><span>Активність</span><select id="calcActivity"><option value="1.2">Мінімальна</option><option value="1.375">Легка · 1–3 тренування/тиж.</option><option value="1.55" selected>Середня · 3–5 тренувань/тиж.</option><option value="1.725">Висока · 6–7 тренувань/тиж.</option><option value="1.9">Дуже висока</option></select></label>'
-      +'<label class="nutrition-calc-wide"><span>Ціль</span><select id="calcGoal"><option value="loss">Зниження ваги</option><option value="maintain" selected>Підтримання</option><option value="gain">Набір м’язової маси</option></select></label>'
+      +'<label><span>Кроки на день</span><input id="calcSteps" type="number" min="0" max="50000" value="7000"></label>'
+      +'<label><span>Силові / тиждень</span><select id="calcStrength"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
+      +'<label><span>Кардіо / тиждень</span><select id="calcCardio"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>'
+      +'<label><span>Хвилин кардіо</span><input id="calcCardioMin" type="number" min="0" max="240" value="30"></label>'
+      +'<label><span>Досвід</span><select id="calcExperience"><option value="novice">До 6 місяців</option><option value="intermediate" selected>6–24 місяці</option><option value="advanced">Понад 2 роки</option></select></label>'
+      +'<label><span>Ціль</span><select id="calcGoal" onchange="syncNutritionCalcAdjustment()"><option value="loss">Зменшення жиру</option><option value="recomp">Рекомпозиція</option><option value="maintain" selected>Підтримання</option><option value="gain">Набір м’язів</option></select></label>'
+      +'<label class="nutrition-calc-wide"><span>Корекція калорій</span><select id="calcAdjust"><option value="-25">-25%</option><option value="-20">-20%</option><option value="-15">-15%</option><option value="-10">-10%</option><option value="-5">-5%</option><option value="0" selected>0%</option><option value="5">+5%</option><option value="10">+10%</option><option value="15">+15%</option></select></label>'
     +'</div>'
     +'<button class="nutrition-calc-button" onclick="calculateNutritionTargets()">Розрахувати</button>'
     +'<div id="nutritionCalcResult"></div>'
@@ -147,32 +152,36 @@ window.openNutritionTargetsModal = function(cid){
     +'</div></div>');
 };
 
+window.syncNutritionCalcAdjustment = function(){
+ let g=document.getElementById('calcGoal')?.value;document.getElementById('calcAdjust').value=g==='loss'?'-15':g==='recomp'?'-5':g==='gain'?'5':'0';
+};
+
 window.calculateNutritionTargets = function(){
-  let sex=document.getElementById('calcSex')?.value,
-      age=+document.getElementById('calcAge')?.value,
-      height=+document.getElementById('calcHeight')?.value,
-      weight=+document.getElementById('calcWeight')?.value,
-      bodyFat=+document.getElementById('calcBodyFat')?.value||0,
-      activity=+document.getElementById('calcActivity')?.value,
-      goal=document.getElementById('calcGoal')?.value;
+  const v=id=>Number(document.getElementById(id)?.value)||0;
+  const sex=document.getElementById('calcSex')?.value,age=v('calcAge'),height=v('calcHeight'),weight=v('calcWeight'),bf=v('calcBodyFat');
+  const steps=v('calcSteps'),strength=v('calcStrength'),cardio=v('calcCardio'),cardioMin=v('calcCardioMin'),adjust=v('calcAdjust'),goal=document.getElementById('calcGoal')?.value;
   if(!age||!height||!weight||age<18||age>100||height<120||height>230||weight<35||weight>300)return alert('Перевір вік, зріст і вагу.');
-  if(bodyFat&&(bodyFat<3||bodyFat>60))return alert('Перевір відсоток жиру.');
-  let leanMass=bodyFat?weight*(1-bodyFat/100):null;
-  let bmr=leanMass ? 370+21.6*leanMass : (10*weight+6.25*height-5*age+(sex==='male'?5:-161));
-  let maintenance=bmr*activity;
-  let factor=goal==='loss'?0.85:goal==='gain'?1.08:1;
-  let kcal=Math.round(maintenance*factor/10)*10;
-  let proteinBase=leanMass||weight;
-  let protein=Math.round(proteinBase*(goal==='loss'?2.2:goal==='gain'?1.8:1.8));
-  let fat=Math.round(weight*(goal==='loss'?0.8:0.9));
-  let carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
+  if(bf&&(bf<3||bf>60))return alert('Перевір відсоток жиру.');
+  if(steps<0||steps>50000||strength<0||strength>7||cardio<0||cardio>7||cardioMin<0||cardioMin>240)return alert('Перевір активність.');
+  const rmr=10*weight+6.25*height-5*age+(sex==='male'?5:-161);
+  const maintenance=rmr*1.2+steps*weight*.0005+strength*5*weight/7+cardio*cardioMin*.07*weight/7;
+  const kcal=Math.round(maintenance*(1+adjust/100)/10)*10;
+  if(kcal<800||kcal>7000)return alert('Калорійність поза звичайним діапазоном. Перевір дані.');
+  const bmi=weight/Math.pow(height/100,2),bmi30=30*Math.pow(height/100,2),ffm=bf?weight*(1-bf/100):0;
+  let macroWeight=weight,weightBasis='фактичної маси тіла';
+  if(bmi>=30){macroWeight=Math.min(weight,bmi30);weightBasis='скоригованої маси тіла (BMI 30)';
+    if(ffm>0){macroWeight=Math.min(macroWeight,Math.max(ffm,Math.min(weight,Math.max(ffm,bmi30*.8))));weightBasis='скоригованої маси з урахуванням складу тіла';}
+  }
+  const protein=Math.round(macroWeight*(goal==='loss'||goal==='recomp'?2:1.8));
+  const fat=Math.max(50,Math.round((bmi>=30?macroWeight:weight)*.8));
+  const carbs=Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
   window.pendingNutritionTargets={kcal,protein,fat,carbs};
-  let method=leanMass?'Katch–McArdle · з урахуванням сухої маси':'Mifflin–St Jeor · за загальною масою';
-  let goalText=goal==='loss'?'дефіцит 15%':goal==='gain'?'профіцит 8%':'підтримання';
+  let method='Mifflin–St Jeor + кроки, силові та кардіо';
+  let goalText=(adjust>0?'+':'')+adjust+'% до підтримання';
   document.getElementById('nutritionCalcResult').innerHTML=
     '<div class="nutrition-calc-result"><span class="nutrition-kicker">Твій стартовий орієнтир</span><strong class="nutrition-calc-kcal">'+kcal.toLocaleString('uk-UA')+' <small>ккал/день</small></strong>'
     +'<div class="nutrition-calc-macros"><span><b>'+protein+'</b> г<small>Білки</small></span><span><b>'+fat+'</b> г<small>Жири</small></span><span><b>'+carbs+'</b> г<small>Вуглеводи</small></span></div>'
-    +'<p>'+method+' · '+goalText+'. Білок '+(leanMass?'розраховано від сухої маси':'тимчасово розраховано від маси тіла')+'.</p>'
+    +'<p>'+method+' · '+goalText+'. Білок '+(weightBasis)+'.</p>'
     +'<button onclick="applyCalculatedNutritionTargets(this)">Застосувати ці цілі</button></div>';
 };
 
