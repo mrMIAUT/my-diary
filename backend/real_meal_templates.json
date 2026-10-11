@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_relation_note": "Творчі адаптації ідей джерел під перевірені продукти Є ПЛАН. Це не точне відтворення оригінальних рецептів. Швидкі рецепти здебільшого потребують уже готових круп, запеченого м'яса або риби — це прямо зазначено у приготуванні.",
+  "source_relation_note": "Творчі адаптації ідей джерел під перевірені продукти Є ПЛАН. Це не точне відтворення оригінальних рецептів. Швидкі рецепти здебільшого потребують уже готових круп, запеченого м'яса або риби — це прямо зазначено у приготуванні. Для другого перекусу використовується та сама бібліотека 15 перекусів; окремих дублікатів немає.",
   "recipes": [
     {
       "id": "bf_overnight_banana_walnut",
@@ -833,126 +833,6 @@
       "tags": [
         "hot",
         "meal_prep"
-      ]
-    },
-    {
-      "id": "ev_yogurt_apple_walnut",
-      "category": "evening",
-      "title": "Йогурт з яблуком і горіхами",
-      "keys": [
-        "yogurt",
-        "apple",
-        "walnuts"
-      ],
-      "preparation": "Наріж яблуко до йогурту, додай волоські горіхи.",
-      "source_url": "https://tollbit.bbcgoodfood.com/recipes/fruit-nut-breakfast-bowl",
-      "source_name": "BBC Good Food",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 5,
-      "notes": {},
-      "tags": [
-        "quick"
-      ]
-    },
-    {
-      "id": "ev_egg_cucumber_toast",
-      "category": "evening",
-      "title": "Тости з вареним яйцем та огірком",
-      "keys": [
-        "eggs",
-        "bread",
-        "cucumber"
-      ],
-      "preparation": "Відвари яйця і подай на цільнозернових тостах із свіжим огірком.",
-      "source_url": "https://tollbit.bbcgoodfood.com/howto/guide/easy-avocado-toast-recipes",
-      "source_name": "BBC Good Food",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 12,
-      "notes": {
-        "eggs": "Поштучно"
-      },
-      "tags": [
-        "quick"
-      ]
-    },
-    {
-      "id": "ev_turkey_tomato_sandwich",
-      "category": "evening",
-      "title": "Сендвіч з індичкою, помідором та огірком",
-      "keys": [
-        "bread",
-        "turkey",
-        "tomato",
-        "cucumber"
-      ],
-      "preparation": "Склади сендвіч із хліба, запеченої індички та свіжих овочів.",
-      "source_url": "https://www.budgetbytes.com/mediterranean-turkey-bowls/",
-      "source_name": "Budget Bytes",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 10,
-      "notes": {},
-      "tags": [
-        "quick"
-      ]
-    },
-    {
-      "id": "ev_chickpea_avocado_salad",
-      "category": "evening",
-      "title": "Салат із нутом, авокадо та помідором",
-      "keys": [
-        "chickpeas",
-        "avocado",
-        "tomato"
-      ],
-      "preparation": "Змішай готовий нут, нарізані авокадо та помідор. Додай спеції за бажанням.",
-      "source_url": "https://www.budgetbytes.com/tomato-herb-rice-with-white-beans-and-spinach/",
-      "source_name": "Budget Bytes",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 10,
-      "notes": {},
-      "tags": [
-        "vegetarian"
-      ]
-    },
-    {
-      "id": "ev_yogurt_berry_chia",
-      "category": "evening",
-      "title": "Йогурт з лохиною та насінням чіа",
-      "keys": [
-        "yogurt",
-        "blueberries",
-        "chia"
-      ],
-      "preparation": "Змішай йогурт із лохиною та чіа, почекай 10–15 хвилин.",
-      "source_url": "https://tollbit.bbcgoodfood.com/recipes/protein-overnight-oats",
-      "source_name": "BBC Good Food",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 15,
-      "notes": {
-        "chia": "Дати насінню набухнути"
-      },
-      "tags": [
-        "cold"
-      ]
-    },
-    {
-      "id": "ev_bean_feta_salad",
-      "category": "evening",
-      "title": "Квасоля з фетою та томатами",
-      "keys": [
-        "white_beans",
-        "feta",
-        "tomato",
-        "spinach"
-      ],
-      "preparation": "Змішай готову квасолю з фетою, нарізаним помідором та листям шпинату.",
-      "source_url": "https://www.budgetbytes.com/tuscan-white-bean-pasta/",
-      "source_name": "Budget Bytes",
-      "source_relation": "adapted_culinary_idea",
-      "minutes": 10,
-      "notes": {},
-      "tags": [
-        "vegetarian"
       ]
     },
     {
