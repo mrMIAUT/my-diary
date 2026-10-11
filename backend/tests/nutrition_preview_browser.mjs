@@ -21,10 +21,23 @@ try{
  assert.equal(await page.locator('img').count(),0,'Food pictures should be absent');
  assert.match(await page.locator('#dailySummary').innerText(),/Добова ціль/);
  assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
+ // Every meal header shows daily totals, distinct from its own kcal badge.
+ const firstDay=page.locator('.meal-day-totals').first();
+ await firstDay.waitFor({timeout:3000});
+ assert.equal(await page.locator('.meal-day-totals').count(),4,'Expected daily summary in every meal header');
+ const baselineHeader=await firstDay.innerText();
+ assert.match(baselineHeader,/За день/);
+ for(const segment of ['ккал','Б ','Ж ','В '])assert.ok(baselineHeader.includes(segment),'Missing header total '+segment);
+ assert.notEqual((await page.locator('.meal-kcal').first().innerText()).trim(),baselineHeader.trim(),
+   'Meal calories and day totals should be separate');
  const original=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
  await page.locator('.structured-food-row').first().locator('.stepper-plus').click();
  const adjusted=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
  assert.notEqual(original,adjusted,'Plus did not recalculate macros');
+ const changedHeader=await page.locator('.meal-day-totals').first().innerText();
+ assert.notEqual(baselineHeader,changedHeader,'Meal header totals did not update after portion change');
+ const allHeaders=await page.locator('.meal-day-totals').allInnerTexts();
+ assert.ok(allHeaders.every(x=>x===changedHeader),'Meal headers disagree on full-day totals');
  const previousDay=await page.locator('#dailySummary .stat-kcal b').innerText();
  await page.locator('.structured-food-name').first().click();
  await page.locator('#structuredFoodPicker').waitFor();
@@ -52,6 +65,12 @@ try{
  await page.locator('.veg-choice input').check();
  await page.locator('#pickerApply').click();
  assert.equal(await page.locator('.structured-meal-summary').first().innerText().then(x=>x.includes('Фактично з овочами')),false,'Tomato should be included in goal after toggle');
+ // Editing a nonprimary alternative changes that variant only, not the day.
+ const dayPrimaryBefore=await page.locator('.meal-day-totals').first().innerText();
+ const otherVariant=page.locator('.variant-card').nth(1);
+ await otherVariant.locator('.stepper-plus').first().click();
+ const dayPrimaryAfter=await page.locator('.meal-day-totals').first().innerText();
+ assert.equal(dayPrimaryAfter,dayPrimaryBefore,'Alternative variants were incorrectly added to day totals');
  // Keep the demo editable in the same browser; never post customer data.
  await page.locator('#saveDemoButton').click();
  assert.match(await page.locator('#saveDemoStatus').innerText(),/Збережено/);
@@ -60,6 +79,7 @@ try{
  assert.match(await page.locator('.structured-food-row').first().innerText(),/Яйце куряче/);
  assert.equal(await page.locator('.structured-food-row').first().locator('input.structured-grams').inputValue(),'2');
  assert.equal(await page.locator('img').count(),0);
+ assert.match(await page.locator('.meal-day-totals').first().innerText(),/За день/);
  const viewport=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth}));
  assert.ok(viewport.w<=viewport.v+2,'Unexpected horizontal overflow: '+JSON.stringify(viewport));
  await page.locator('.reset').click();
