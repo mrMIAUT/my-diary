@@ -298,9 +298,14 @@ async function finishTimedExerciseTimer(){
       var fresh=await loadClientData(cid);
       window.currentClientData=fresh;
       await showClientTraining(cid);
+      // The rest card only exists in the rebuilt workout screen. Scroll after
+      // it is mounted and synced, rather than towards a covered exercise.
+      if(autoRestStarted){
+        setTimeout(function(){scrollToActiveWorkoutRestTimer()},80);
+      }
       if(singleSet){
         if(isLast){
-          if(hasNextRound)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
+          if(hasNextRound&&!autoRestStarted)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
         }else{
           setTimeout(function(){focusSupersetNextExercise(pid,round)},80);
         }
