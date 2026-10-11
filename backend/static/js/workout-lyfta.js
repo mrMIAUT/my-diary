@@ -84,7 +84,9 @@ async function lyftaCompleteSet(pid,n,total,restSeconds,btn){
     // Rest in a superset starts only after the final exercise of the round.
     let tracking={sid,pid,set_number:n};
     await startRestTimer(restSeconds,null,tracking);
-    if(inSuperset&&isLast&&n<total)setTimeout(()=>focusSupersetRoundStart(pid,n+1),80);
+    // Do not fight the new smooth scroll to the workout-level rest timer.
+  }else if(inSuperset&&isLast&&n<total){
+    setTimeout(()=>focusSupersetRoundStart(pid,n+1),80);
   }
 }
 
