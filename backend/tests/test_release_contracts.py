@@ -363,7 +363,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("workout-live-grouped-exercise-head", WORKOUT)
         self.assertIn("workout-live-grouped-body", WORKOUT)
         self.assertIn("focusWorkoutExerciseCard(nextPid)", WORKOUT)
-        self.assertIn("if(singleSet&&isLast&&hasNextRound&&sharedRest>0)", TIMED_WORKOUT)
+        self.assertIn("var autoRestStarted=singleSet&&isLast&&hasNextRound&&sharedRest>0", TIMED_WORKOUT)
+        self.assertIn("if(autoRestStarted)", TIMED_WORKOUT)
         finish_block = TIMED_WORKOUT.split("async function finishTimedExerciseTimer()",1)[1].split("function renderTimedExerciseTimer",1)[0]
         self.assertLess(finish_block.index("startAutomaticRestTimer(sharedRest,false)"), finish_block.index("loadClientData(cid)"))
 
