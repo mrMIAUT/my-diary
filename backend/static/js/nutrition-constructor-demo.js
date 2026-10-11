@@ -81,6 +81,11 @@ window.toggleMeal=function(n){
  if(openMeals.has(n))openMeals.delete(n);else openMeals.add(n);
  window.rerenderNutritionPlan();
 };
+window.demoPortionChanged=function(item){
+ if(!item)return;
+ item.auto_fit=null;
+ document.querySelector('.meal-card[data-meal="'+item.meal_number+'"] .auto-fit-notice')?.remove();
+};
 window.demoRecipeChanged=function(item){
  if(!item)return;
  item.edited=true;item.auto_fit=null;
@@ -135,6 +140,10 @@ window.rerenderNutritionPlan=function(){
  }).join('');
  const day=document.getElementById('dailySummary');
  if(day)day.innerHTML=window.structuredDailySummaryHTML();
+ window.refreshRationAccuracy();
+};
+window.refreshRationAccuracy=function(){
+ if(!currentPlan())return;
  const summary=macroDiff(nutritionPlanDraft);
  const state=document.getElementById('rationAccuracy');
  if(state)state.innerHTML='<div class="ration-accuracy '+(summary.within_tolerance?'good':'notice')+'">'
