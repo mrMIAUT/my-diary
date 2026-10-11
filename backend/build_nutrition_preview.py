@@ -94,12 +94,40 @@ for category,menu in MEAL_SOURCES.items():
             food["name"]=fresh_vegetable_display_name(original)
             key=next((k for k in keys if FOODS[k][0]==original),None)
             food["usage_note"]=recipe["notes"].get(key,"")
+        # Bounded editable grams are part of the published template data.
+        # A serving is not allowed to become e.g. 700 g of dry oats, 11 eggs,
+        # or 90 g oil merely to force an exact macro match.
+        if key is not None:
+            _,lo,hi,step,base,_=FOODS[key]
+            lo=max(3,lo) if key=="oil" else max(1,lo)
+            food["portion_rules"]={"min_grams":lo,"max_grams":hi,"step_grams":step}
         if "oil" in keys:
             assert "оливков" in recipe["preparation"].lower()
             assert recipe["notes"].get("oil") and "окрем" in recipe["notes"]["oil"]
         if "oats" in keys and "yogurt" in keys:
             assert ("ніч" in recipe["title"].lower() or "замоч" in recipe["preparation"].lower()
                     or "відвари" in recipe["preparation"].lower())
+        # Add omitted optional recipe ingredients back as small but sensible
+        # portions. A dressing named in instructions cannot disappear from
+        # the ingredient list simply because macro fitting set it to 0 g.
+        present={row["source_id"] for row in food_rows}
+        for key in keys:
+            source=catalog_foods[key]
+            if source["source_id"] in present:
+                continue
+            _,lo,hi,step,start,_=FOODS[key]
+            lo=max(3,lo) if key=="oil" else max(1,lo)
+            grams=max(lo,min(hi,start if key=="oil" else lo))
+            food_rows.append({
+              "source_id":source["source_id"],"name":fresh_vegetable_display_name(source["name"]),
+              "grams":grams,"count":int(grams/50) if key=="eggs" else None,
+              "count_in_targets":source["name"] not in (
+                "Огірок (сирий)","Помідор (сирий)","Шпинат (сирий)"
+              ),
+              "usage_note":recipe["notes"].get(key,""),
+              "portion_rules":{"min_grams":lo,"max_grams":hi,"step_grams":step}
+            })
+            present.add(source["source_id"])
         templates.append({
           "id":recipe["id"],"category":category,"title":recipe["title"],
           "preparation":recipe["preparation"],"source_name":recipe["source_name"],
