@@ -44,10 +44,12 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertIn("window.calculateTrainerNutritionTargets = function()", trainer_nutrition)
         self.assertIn("window.pendingTrainerNutritionTargets={kcal,protein,fat,carbs}", trainer_nutrition)
         self.assertNotIn('src="/static/js/food-lookup.js', index)
-        self.assertIn("/static/js/food-lookup.js?v=2", nutrition)
+        self.assertIn("/static/js/food-lookup.js?v=3", nutrition)
+        self.assertIn("lookupLocal(", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
+        self.assertIn("/foods/preview", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertNotIn("/static/js/food-lookup.js", shell)
-        self.assertIn("nutrition-redesign.js?v=293", index)
-        self.assertIn("nutrition-redesign.js?v=293", shell)
+        self.assertIn("nutrition-redesign.js?v=294", index)
+        self.assertIn("nutrition-redesign.js?v=294", shell)
 
 
 if __name__ == "__main__":

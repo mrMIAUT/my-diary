@@ -9,12 +9,20 @@ import {chromium} from 'playwright';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../static');
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.webp':'image/webp'};
+let remoteSearchCalls=0,previewCalls=0;
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/api/session'){
     res.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});res.end('{"detail":"Unauthorized"}');return;
   }
+  if(pathname==='/api/foods/preview'){
+    previewCalls++;
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({items:[{name:'Гречка варена',source:'USDA',source_label:'ЄПЛАН · джерело USDA',approximate:false,kcal_100:100,protein_100:4,fat_100:1,carbs_100:20}]}));
+    return;
+  }
   if(pathname==='/api/foods/search'){
+    remoteSearchCalls++;
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
     res.end(JSON.stringify({items:[{name:'Гречка варена',source:'USDA',source_label:'Перевірений довідник',approximate:false,kcal_100:100,protein_100:4,fat_100:1,carbs_100:20}],has_more:false}));
     return;
@@ -66,6 +74,11 @@ try{
   await page.locator('#foodLookupQuery').fill('гречка');
   await page.locator('.food-lookup-row').first().waitFor({timeout:5000});
   assert.match(await page.locator('.food-lookup-row').first().innerText(),/Гречка варена/);
+  assert.ok(previewCalls>=1,'Local preview endpoint was not called');
+  assert.equal(remoteSearchCalls,0,'Full external search ran before user requested it');
+  await page.locator('#foodLookupMore').click();
+  await page.waitForFunction(()=>document.querySelector('#foodLookupStatus')?.textContent?.includes('Розширена база'),null,{timeout:5000});
+  assert.equal(remoteSearchCalls,1,'Expanded search did not run exactly once');
   await page.locator('.food-lookup-row').first().click();
   await page.locator('#foodLookupGrams').fill('150');
   await page.locator('#foodLookupMacros').getByText('150',{exact:true}).waitFor({timeout:3000});
