@@ -41,11 +41,11 @@ class ExtraSetRestTimerTests(unittest.TestCase):
 
     def test_pwa_asset_refresh(self):
         for src in (INDEX,SW):
-            for asset in ("/static/js/workout.js?v=185",
-                          "/static/js/timer.js?v=166",
-                          "/static/css/redesign.css?v=258"):
+            for asset in ("/static/js/workout.js?v=186",
+                          "/static/js/timer.js?v=167",
+                          "/static/css/redesign.css?v=259"):
                 self.assertIn(asset,src)
-        self.assertIn("const VERSION='eplan-v215'",SW)
+        self.assertIn("const VERSION='eplan-v216'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
     def test_real_extra_set_refresh_preserves_live_panel_and_dynamic_total(self):

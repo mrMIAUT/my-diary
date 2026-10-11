@@ -14,7 +14,7 @@ SW=(ROOT/"backend/static/sw.js").read_text(encoding="utf-8")
 
 class FeaturedRestTimerTests(unittest.TestCase):
     def test_only_standard_repetition_exercises_get_timer_card(self):
-        self.assertIn("if(!timed)content=featuredRestTimerHTML(x.id,effective.sets,!!x.superset_group)+content",WORKOUT)
+        self.assertIn("if(!timed&&!x.superset_group)content=featuredRestTimerHTML(x.id,effective.sets,false)+content",WORKOUT)
         self.assertIn("content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid)",WORKOUT)
         self.assertIn("data-rest-featured-pid",TIMER)
         self.assertIn("workout-featured-rest-next",TIMER)
@@ -35,11 +35,11 @@ class FeaturedRestTimerTests(unittest.TestCase):
 
     def test_pwa_assets(self):
         for source in (INDEX,SW):
-            for asset in ("/static/js/timer.js?v=166",
-                          "/static/js/workout.js?v=185",
-                          "/static/css/redesign.css?v=258"):
+            for asset in ("/static/js/timer.js?v=167",
+                          "/static/js/workout.js?v=186",
+                          "/static/css/redesign.css?v=259"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v215'",SW)
+        self.assertIn("const VERSION='eplan-v216'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):

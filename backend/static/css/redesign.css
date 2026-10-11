@@ -19004,3 +19004,25 @@ body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
   height:9px;
   transform:rotate(120deg);
 }
+
+/* v259 — centered rest clock hands + continuously animated SVG progress.
+   Keep both hands anchored to precisely the same center at every card size. */
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::before,
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
+  left:50%!important;
+  top:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform-origin:50% 100%!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::before{
+  height:12px!important;
+  transform:translate(-50%,-100%)!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
+  height:9px!important;
+  transform:translate(-50%,-100%) rotate(120deg)!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-progress{
+  transition:none!important;
+}

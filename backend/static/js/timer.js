@@ -111,8 +111,15 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
  var track=readTrackedRest(),remaining=Math.max(0,+seconds||0),paused=Math.max(0,+pausedSeconds||0),
      shown=remaining||paused,active=(window.currentClientData?.workout_sessions||[]).find(function(x){return x.status==='training'});
  var tracked=!!shown&&!!track?.pid&&!!track?.sid&&!!active&&+active.id===+track.sid;
+ // Track the actual completed set on its original exercise for history, while
+ // displaying shared superset rest above the FIRST exercise in the group.
+ var program=(window.currentClientData?.program||[]),
+     completed=tracked?program.find(function(x){return +x.id===+track.pid}):null,
+     peers=completed?.superset_group&&typeof workoutSupersetPeers==='function'
+       ?workoutSupersetPeers(completed,window.currentClientData):[],
+     displayPid=peers.length?+peers[0].id:+track?.pid||0;
  panels.forEach(function(panel){
-   var visible=tracked&&+panel.dataset.restFeaturedPid===+track.pid;
+   var visible=tracked&&+panel.dataset.restFeaturedPid===displayPid;
    panel.hidden=!visible;
    panel.classList.toggle('is-visible',visible);
    if(!visible)return;
@@ -139,12 +146,41 @@ function syncFeaturedRestTimer(seconds,pausedSeconds){
      }
      var circumference=2*Math.PI*44,baseline=Math.max(1,+panel.dataset.restFeaturedDuration||0);
      if(shown>baseline){baseline=shown;panel.dataset.restFeaturedDuration=String(baseline);}
-     // SVG is rotated -90deg: draw the remaining arc clockwise from 12 o'clock.
-     // Shorten the arc as the rest counts down, including after +30 sec.
-     circle.style.strokeDasharray=String(circumference*Math.min(1,shown/baseline))+' '+String(circumference);
+     // Use the exact remaining milliseconds for the arc, not Math.ceil(...)
+     // used by the clock digits. RAF below keeps movement uninterrupted.
+     var exact=remaining?Math.max(0,(restTimerEnd()-Date.now())/1000):paused;
+     circle.style.strokeDasharray=String(circumference*Math.min(1,exact/baseline))+' '+String(circumference);
      circle.style.strokeDashoffset='0';
    }
  });
+ scheduleFeaturedRestRingAnimation();
+}
+
+// The text display stays at full seconds; only the SVG arc animates at the
+// browser frame rate. Recompute against the absolute end time so inactive tabs
+// and iOS PWA backgrounding never accumulate drift or duplicate rest timers.
+function scheduleFeaturedRestRingAnimation(){
+ if(window.eplanRestRingFrameActive||typeof window.requestAnimationFrame!=='function'||!restTimerEnd())return;
+ if(!document.querySelector('.workout-featured-rest.is-visible'))return;
+ window.eplanRestRingFrameActive=true;
+ window.requestAnimationFrame(animateFeaturedRestRing);
+}
+function animateFeaturedRestRing(){
+ var end=restTimerEnd();
+ if(!end){window.eplanRestRingFrameActive=false;return}
+ var panels=document.querySelectorAll('.workout-featured-rest.is-visible');
+ if(!panels.length){window.eplanRestRingFrameActive=false;return}
+ var exact=Math.max(0,(end-Date.now())/1000),circumference=2*Math.PI*44;
+ panels.forEach(function(panel){
+   var circle=panel.querySelector('.workout-featured-rest-progress');
+   if(!circle)return;
+   var baseline=Math.max(1,+panel.dataset.restFeaturedDuration||1);
+   if(exact>baseline){baseline=exact;panel.dataset.restFeaturedDuration=String(baseline)}
+   circle.style.strokeDasharray=String(circumference*Math.min(1,exact/baseline))+' '+String(circumference);
+   circle.style.strokeDashoffset='0';
+ });
+ if(exact>0){window.requestAnimationFrame(animateFeaturedRestRing);}
+ else{window.eplanRestRingFrameActive=false;}
 }
 
 function restTimerPanelHTML(){

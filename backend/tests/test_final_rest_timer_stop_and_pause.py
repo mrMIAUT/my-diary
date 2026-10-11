@@ -26,7 +26,7 @@ class RestTimerFinalMobileTests(unittest.TestCase):
         self.assertNotIn('Пропустити',start)
         self.assertIn("saveWorkoutDraft(+track.sid,+track.pid,+track.set_number,'rest_seconds',seconds)",TIMER)
         self.assertIn("finalizeTrackedRest(track?.end_at&&Date.now()>=+track.end_at?'finish':'cancel')",TIMER)
-        self.assertIn("if(!timed)content=featuredRestTimerHTML",WORKOUT)
+        self.assertIn("if(!timed&&!x.superset_group)content=featuredRestTimerHTML",WORKOUT)
 
     def test_mobile_grid_and_countdown_direction(self):
         css=CSS.split("/* v255 — final iPhone rest card:",1)[1]
@@ -37,13 +37,13 @@ class RestTimerFinalMobileTests(unittest.TestCase):
         self.assertIn('@media(max-width:350px)',css)
         self.assertIn("transform:rotate(-90deg)",CSS)
         self.assertIn("circle.style.strokeDashoffset='0'",TIMER)
-        self.assertIn("circle.style.strokeDasharray=String(circumference*Math.min(1,shown/baseline))",TIMER)
+        self.assertIn("circle.style.strokeDasharray=String(circumference*Math.min(1,exact/baseline))",TIMER)
 
     def test_current_cache_refs(self):
         for src in (INDEX,SW):
-            self.assertIn("/static/js/timer.js?v=166",src)
-            self.assertIn("/static/css/redesign.css?v=258",src)
-        self.assertIn("const VERSION='eplan-v215'",SW)
+            self.assertIn("/static/js/timer.js?v=167",src)
+            self.assertIn("/static/css/redesign.css?v=259",src)
+        self.assertIn("const VERSION='eplan-v216'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Requires node")
     def test_stop_saves_elapsed_only_not_pause_and_keeps_same_finished_set(self):
