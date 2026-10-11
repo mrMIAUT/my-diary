@@ -505,7 +505,7 @@ async function deleteProgramTemplate(templateId){
 
 async function showTrainerNutrition(){
  currentTrainerMainView='nutrition';selected=null;window.currentClientData=null;
- let cs=(await loadClients()).filter(c=>c.status!=='Видалений'&&clientAccess(c).features?.meal_plan);
+ let cs=(await loadClients()).filter(c=>c.status!=='Видалений'&&clientAccess(c).features?.nutrition);
  let q=String(window.trainerNutritionSearch||'').trim().toLowerCase(),filter=window.trainerNutritionFilter||'all';
  let tracked=cs.filter(c=>(+c.kcal||0)>0),needs=cs.filter(c=>(+c.kcal||0)>0&&(+c.nutrition_days_7d||0)<3);
  let base=filter==='tracked'?tracked:filter==='attention'?needs:cs;
