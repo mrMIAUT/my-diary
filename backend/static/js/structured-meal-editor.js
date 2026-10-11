@@ -13,7 +13,7 @@ let picker=null;
 window.structuredCatalog=null;
 
 const dataFor=id=>(window.structuredCatalog||[]).find(x=>x.source_id===id);
-const mealFor=(n,v)=>(window.nutritionPlanDraft||[]).find(x=>x.meal_number===+n&&x.variant_number===+v);
+const mealFor=(n,v)=>(nutritionPlanDraft||[]).find(x=>x.meal_number===+n&&x.variant_number===+v);
 function quantityFor(food,row){
  return food?.unit==='pcs'?(Number.isFinite(Number(row?.count))&&Number(row.count)>0?Number(row.count):Math.max(1,Math.round(Number(row?.grams||50)/50))):Number(row?.grams||0);
 }
@@ -35,7 +35,7 @@ function mealMacros(item,actual=false){
 }
 function dayMacros(actual=false,override=null){
  const total=zeros();
- const all=window.nutritionPlanDraft||[];
+ const all=nutritionPlanDraft||[];
  const mealNos=[...new Set(all.map(x=>x.meal_number))];
  for(const n of mealNos){
   const variant=all.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number)[0];
@@ -121,7 +121,7 @@ window.refreshStructuredNutrition=function(){
  const day=$('dailySummary');
  if(day)day.innerHTML=window.structuredDailySummaryHTML();
  document.querySelectorAll('.meal-card').forEach(card=>{
-  const n=+card.dataset.meal,primary=(window.nutritionPlanDraft||[]).filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number)[0];
+  const n=+card.dataset.meal,primary=(nutritionPlanDraft||[]).filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number)[0];
   const label=card.querySelector('.meal-kcal');
   if(label&&primary)label.textContent=fmt(mealMacros(primary).kcal)+' ккал';
  });
