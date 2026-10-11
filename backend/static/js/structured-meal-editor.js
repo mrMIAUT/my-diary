@@ -73,9 +73,12 @@ function lineHTML(row,n,v,i){
  if(!food)return '<p class="missing-product">Продукт недоступний — вибери заміну</p>';
  const amount=quantityFor(food,row),value=macros(food,gramsFor(food,row));
  const veg=!row.count_in_targets&&food.optional_vegetable;
+ const usage=String(row.usage_note||
+   (food.name==='Оливкова олія'?'Для заправки або додавання у готову страву':'')).trim();
  return '<div class="structured-food-row" data-index="'+i+'">'
  +'<div class="structured-product-info">'
  +'<button type="button" class="structured-food-name" onclick="pickStructuredFood('+n+','+v+','+i+')" aria-label="Редагувати '+escapeHtml(food.name)+'">'+escapeHtml(food.name)+'</button>'
+ +(usage?'<span class="ingredient-role">'+escapeHtml(usage)+'</span>':'')
  +(veg?'<span class="vegetable-label">Овочі поза цільовими БЖВ</span>':'')
  +'<span class="structured-food-macro">'+macroText(value)+'</span></div>'
  +'<div class="stepper"><button type="button" class="stepper-minus" aria-label="Зменшити порцію" onclick="stepStructuredQty('+n+','+v+','+i+',-1)">−</button>'
@@ -154,6 +157,7 @@ window.editStructuredQty=function(n,v,i,input){
 window.deleteStructuredFood=function(n,v,i){
  const item=mealFor(n,v);if(!item?.foods)return;
  item.foods.splice(i,1);syncContent(item);
+ if(typeof window.demoRecipeChanged==='function')window.demoRecipeChanged(item);
  if(typeof window.rerenderNutritionPlan==='function')window.rerenderNutritionPlan(true);
  persistChange();
 };
@@ -271,7 +275,9 @@ function applyPicker(){
  if(!Number.isFinite(picker.qty)||picker.qty<1||picker.qty>(food.unit==='pcs'?8:2000)||(food.unit==='pcs'&&!Number.isInteger(picker.qty)))return;
  const row={source_id:food.source_id,grams:picker.qty*(food.unit==='pcs'?(food.grams_per_piece||50):1),
   count:food.unit==='pcs'?picker.qty:null,count_in_targets:!food.optional_vegetable||picker.includeVeg};
+ const ingredientChanged=picker.i<0||item.foods?.[picker.i]?.source_id!==food.source_id;
  if(picker.i>=0)item.foods[picker.i]=row;else(item.foods||(item.foods=[])).push(row);
+ if(ingredientChanged&&typeof window.demoRecipeChanged==='function')window.demoRecipeChanged(item);
  syncContent(item);closePicker();
  if(typeof window.rerenderNutritionPlan==='function')window.rerenderNutritionPlan(true);
  persistChange();
