@@ -13,14 +13,13 @@ SW=(ROOT/"backend/static/sw.js").read_text(encoding="utf-8")
 
 
 class ExtraSetRestTimerTests(unittest.TestCase):
-    def test_add_remove_and_skip_all_preserve_same_timer_panel(self):
+    def test_extra_set_edit_only_rebuilds_its_own_exercise(self):
         self.assertIn("function refreshWorkoutRepSetBody(",WORKOUT)
-        self.assertIn("body.prepend(panel);",WORKOUT)
-        self.assertIn("panel.dataset.restFeaturedTotal=String(workoutExerciseSetCount(x,d))",WORKOUT)
-        self.assertIn("syncFeaturedRestTimer(restTimerRemaining(),restTimerPausedSeconds())",WORKOUT)
-        self.assertIn("body.insertAdjacentHTML('afterbegin',featuredRestTimerHTML(",WORKOUT)
+        self.assertIn("body.innerHTML=completedExerciseHTML(x,d,cid)",WORKOUT)
+        self.assertIn("body.classList.remove('hidden')",WORKOUT)
+        self.assertNotIn("featuredRestTimerHTML(",WORKOUT)
+        self.assertNotIn("body.prepend(panel)",WORKOUT)
         self.assertGreaterEqual(WORKOUT.count("refreshWorkoutRepSetBody(cid,pid,x,d);"),3)
-        # Completing a newly added set still invokes existing tracked rest.
         self.assertIn("await startRestTimer(restSeconds,null,tracking);",
                       (ROOT/"backend/static/js/workout-lyfta.js").read_text(encoding="utf-8"))
         self.assertIn("let tracking={sid,pid,set_number:n};",
@@ -48,57 +47,43 @@ class ExtraSetRestTimerTests(unittest.TestCase):
         self.assertIn("const VERSION='eplan-v217'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
-    def test_real_extra_set_refresh_preserves_live_panel_and_dynamic_total(self):
+    def test_real_extra_set_refresh_never_recreates_global_timer(self):
         js=r"""
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
-let w=fs.readFileSync('backend/static/js/workout.js','utf8');
-let start=w.indexOf('function refreshWorkoutRepSetBody(');
-let end=w.indexOf('function removeWorkoutExtraSet(',start);
+const w=fs.readFileSync('backend/static/js/workout.js','utf8');
+const start=w.indexOf('function refreshWorkoutRepSetBody(');
+const end=w.indexOf('function removeWorkoutExtraSet(',start);
 assert(start>=0&&end>start);
-let code=w.slice(start,end);
-let panel={dataset:{restFeaturedPid:'25',restFeaturedTotal:'3'},trackKey:'unchanged'};
-let completeCount=3,rerenders=0,created=0,synced=[],saved=[];
-let body={
+const code=w.slice(start,end);
+let count=3,rerenders=0,saved=[],globalTimer={alive:true};
+const body={
  classList:{remove(v){this.removed=v}},
- _panel:panel,_html:'',
- querySelector(selector){assert.equal(selector,'.workout-featured-rest');return this._panel},
- set innerHTML(v){this._html=v;this._panel=null;rerenders++},
- get innerHTML(){return this._html},
- prepend(p){this._panel=p},
- insertAdjacentHTML(where,text){assert.equal(where,'afterbegin');assert(text.includes('workout-featured-rest'));created++;this._panel={dataset:{}}}
+ set innerHTML(v){assert(v.includes('SETS'));rerenders++},
+ get innerHTML(){return 'SETS'}
 };
-let d={program:[{id:25,sets:3,exercise:'Жим гантелей'}]};
+const d={program:[{id:25,sets:3,exercise:'Жим гантелей'}]};
 const ctx={window:{currentClientData:d},console,
  document:{getElementById(id){assert.equal(id,'exerciseBody25');return body}},
- workoutDraftSessionId:()=>7,
- workoutEffectiveExercise:x=>x,
- workoutExerciseSetCount:()=>completeCount,
- saveWorkoutDraftSetCount:(sid,pid,count)=>{saved.push([sid,pid,count]);completeCount=count},
+ workoutDraftSessionId:()=>7,workoutEffectiveExercise:x=>x,
+ workoutExerciseSetCount:()=>count,
+ saveWorkoutDraftSetCount:(sid,pid,total)=>{saved.push([sid,pid,total]);count=total},
  completedExerciseHTML:()=>'<div>SETS</div>',
- featuredRestTimerHTML:(pid,total)=>'<section class="workout-featured-rest" data-total="'+total+'"></section>',
- syncFeaturedRestTimer:(remaining,paused)=>synced.push([remaining,paused]),
- restTimerRemaining:()=>90,restTimerPausedSeconds:()=>0,
- alert:()=>{throw new Error('unexpected alert')}
+ featuredRestTimerHTML:()=>{throw Error('per exercise timer must never be added')},
+ syncFeaturedRestTimer:()=>{throw Error('must not reset global timer')},
+ alert:()=>{throw Error('unexpected alert')}
 };
 vm.createContext(ctx);vm.runInContext(code,ctx);
 ctx.addWorkoutExtraSet(11,25);
-assert.deepStrictEqual(saved[0],[7,25,4]);assert.strictEqual(body._panel,panel);
-assert.equal(panel.dataset.restFeaturedTotal,'4');
-assert.deepStrictEqual(synced[0],[90,0]);
-assert.equal(rerenders,1);assert.equal(created,0);
 ctx.addWorkoutExtraSet(11,25);
-assert.deepStrictEqual(saved[1],[7,25,5]);assert.strictEqual(body._panel,panel);
-assert.equal(panel.dataset.restFeaturedTotal,'5');assert.equal(created,0);
 ctx.refreshWorkoutRepSetBody(11,25,d.program[0],d);
-assert.strictEqual(body._panel,panel);assert.equal(synced.length,3);
-// A legacy DOM already missing the card is repaired on its next set edit.
-body._panel=null;
-ctx.refreshWorkoutRepSetBody(11,25,d.program[0],d);
-assert.equal(created,1);assert.equal(body._panel.dataset.restFeaturedTotal,'5');
-console.log('Extra set keeps original panel, tracks total 3->4->5, repairs missing card PASS');
+assert.deepStrictEqual(saved,[[7,25,4],[7,25,5]]);
+assert.equal(rerenders,3);
+assert.equal(globalTimer.alive,true);
+assert.equal(body.classList.removed,'hidden');
+console.log('Additional sets repaint locally; single global rest timer untouched PASS');
 """
         p=subprocess.run(["node","-e",js],cwd=ROOT,text=True,capture_output=True)
-        self.assertEqual(p.returncode,0,p.stdout+"\n"+p.stderr)
+        self.assertEqual(p.returncode,0,p.stdout+"\\n"+p.stderr)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
     def test_floating_timer_uses_outline_icon_with_same_running_countdown(self):
