@@ -233,7 +233,22 @@ async function ensureTimerNotifications(){
  try{return (await Notification.requestPermission())==='granted'}catch(e){return false}
 }
 
+// Scroll once per newly started rest, never on ticker updates, +30s or
+// pause/resume. Works with the single card above all workout exercises.
+function scrollToActiveWorkoutRestTimer(){
+ var card=document.querySelector('.redesign-active-workout > .workout-featured-rest');
+ if(!card||typeof card.scrollIntoView!=='function')return false;
+ if(card.hidden)syncFeaturedRestTimer(restTimerRemaining(),restTimerPausedSeconds());
+ if(card.hidden||!(restTimerRemaining()||restTimerPausedSeconds()))return false;
+ var reduceMotion=typeof window.matchMedia==='function'
+   &&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ card.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'center',inline:'nearest'});
+ return true;
+}
+
 function startRestTimerCore(seconds,sourceBtn=null,tracking=null){
+ // An ordinary resume should not unexpectedly pull the user's page upwards.
+ var resuming=restTimerPausedSeconds()>0;
  document.querySelectorAll('.rest-timer-choices button').forEach(b=>b.classList.remove('selected'));
  if(sourceBtn)sourceBtn.classList.add('selected');
  clearRestTimerPaused();
@@ -244,6 +259,10 @@ function startRestTimerCore(seconds,sourceBtn=null,tracking=null){
  }else if(tracking)beginTrackedRest(tracking,end);else updateTrackedRestEnd(end);
  $('#restTimerChoices')?.classList.remove('hidden');$('#restTimerActions')?.classList.remove('hidden');
  startRestTimerTicker();syncRestTimerWorker(end);renderFloatingRestTimer();
+ // Timed supersets refresh the exercise screen after their modal closes;
+ // that path scrolls explicitly after the refreshed card exists.
+ if(!resuming&&tracking!==false&&seconds>0)
+   setTimeout(scrollToActiveWorkoutRestTimer,50);
  return end;
 }
 
