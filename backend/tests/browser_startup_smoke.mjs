@@ -38,10 +38,20 @@ try{
   await page.goto(base,{waitUntil:'load',timeout:30000});
   await page.locator('form.auth-card').waitFor({timeout:20000});
   assert.equal(await page.locator('#app').evaluate(el=>el.textContent.includes('Увійти')),true,'Login screen not rendered');
-  await page.evaluate(()=>{
-    window.currentClientData={client:{id:999,kcal:2500,protein:160,fat:70,carbs:300}};
+  await page.evaluate(async()=>{
+    // Exercise the *real* client navigation and nutrition rendering,
+    // not only an isolated modal on the login screen.
+    session={role:'client',client_id:999};
+    window.currentClientData={
+      client:{id:999,name:'Test client',kcal:2500,protein:160,fat:70,carbs:300,
+        access:{features:{nutrition:true,workouts:true,meal_plan:false}}},
+      nutrition:[]
+    };
+    await showClientNutrition(999);
     window.openNutritionTargetsModal(999);
   });
+  await page.locator('.redesign-nutrition-today').waitFor({timeout:3000});
+  await page.locator('#nutritionTargetsModal').waitFor({timeout:3000});
   await page.locator('#nutritionTargetsModal #calcAge').fill('29');
   await page.locator('#calcHeight').fill('178');
   await page.locator('#calcWeight').fill('82');
