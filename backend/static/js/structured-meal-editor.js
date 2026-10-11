@@ -96,6 +96,14 @@ window.renderStructuredMealHTML=function(item){
 };
 // Compact, always-visible daily totals in each meal header. We count only
 // the primary variant of each meal (alternatives must not be added together).
+// Each alternative has its own nutrition totals. Never combine alternatives.
+window.structuredVariantHeaderHTML=function(item){
+ const totals=mealMacros(item);
+ return '<span class="variant-macro-kcal">'+fmt(totals.kcal)+' ккал</span>'
+  +'<span class="variant-macro-part">Б '+fmt(totals.protein)+'</span>'
+  +'<span class="variant-macro-part">Ж '+fmt(totals.fat)+'</span>'
+  +'<span class="variant-macro-part">В '+fmt(totals.carbs)+'</span>';
+};
 window.structuredDayHeaderHTML=function(){
  const totals=dayMacros();
  return '<span class="meal-day-caption">За день</span>'
@@ -125,8 +133,8 @@ window.refreshStructuredNutrition=function(){
   const goal=node.querySelector('.structured-meal-summary');
   if(goal)goal.innerHTML='<span class="structured-goal">Разом: '+macroText(a)+'</span>'
    +(keys.some(k=>Math.abs(a[k]-b[k])>.05)?'<small>Фактично з овочами: '+macroText(b)+'</small>':'');
-  const variant=node.closest('.variant-card')?.querySelector('.variant-kcal');
-  if(variant)variant.textContent=fmt(a.kcal)+' ккал';
+  const variant=node.closest('.variant-card')?.querySelector('.variant-macros');
+  if(variant)variant.innerHTML=window.structuredVariantHeaderHTML(item);
  });
  const day=$('dailySummary');
  if(day)day.innerHTML=window.structuredDailySummaryHTML();
