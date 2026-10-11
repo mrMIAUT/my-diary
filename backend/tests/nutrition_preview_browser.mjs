@@ -108,8 +108,12 @@ try{
  // Manual change still updates macros live and does not change another ration.
  const firstRow=page.locator('.meal-card[data-meal="1"] .structured-food-row').first();
  const macroBefore=await firstRow.locator('.structured-food-macro').innerText();
+ const accuracyBefore=await page.locator('#rationAccuracy').innerText();
+ assert.equal(await page.locator('.meal-card[data-meal="1"] .auto-fit-notice').count(),1);
  await firstRow.locator('.stepper-plus').click();
  assert.notEqual(await firstRow.locator('.structured-food-macro').innerText(),macroBefore);
+ assert.equal(await page.locator('.meal-card[data-meal="1"] .auto-fit-notice').count(),0,'Manual portion change left stale auto-fit badge');
+ assert.notEqual(await page.locator('#rationAccuracy').innerText(),accuracyBefore,'Day target deviations not refreshed on manual change');
  assert.equal(await page.evaluate(()=>JSON.stringify(rationPlans.find(x=>x.id===2).meals)),secondRationBefore);
 
  // Add independent third ration, change one dish, restore saved state.
