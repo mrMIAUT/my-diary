@@ -94,13 +94,12 @@ for category,menu in MEAL_SOURCES.items():
             food["name"]=fresh_vegetable_display_name(original)
             key=next((k for k in keys if FOODS[k][0]==original),None)
             food["usage_note"]=recipe["notes"].get(key,"")
-        # Bounded editable grams are part of the published template data.
-        # A serving is not allowed to become e.g. 700 g of dry oats, 11 eggs,
-        # or 90 g oil merely to force an exact macro match.
-        if key is not None:
-            _,lo,hi,step,base,_=FOODS[key]
-            lo=max(3,lo) if key=="oil" else max(1,lo)
-            food["portion_rules"]={"min_grams":lo,"max_grams":hi,"step_grams":step}
+            # Bound individual servings so macro targets cannot force
+            # implausible amounts of oil, dry oats or eggs.
+            if key is not None:
+                _,lo,hi,step,base,_=FOODS[key]
+                lo=max(3,lo) if key=="oil" else max(1,lo)
+                food["portion_rules"]={"min_grams":lo,"max_grams":hi,"step_grams":step}
         if "oil" in keys:
             assert "оливков" in recipe["preparation"].lower()
             assert recipe["notes"].get("oil") and "окрем" in recipe["notes"]["oil"]
