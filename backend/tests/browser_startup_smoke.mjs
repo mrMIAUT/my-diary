@@ -187,7 +187,7 @@ try{
   await page.locator('#autoMealApply').click();
   assert.equal(await page.locator('#autoMealPlanModal').count(),0,'Preview did not close');
   assert.equal(mealPlanWriteCalls,0,'Applying draft directly wrote nutrition');
-  assert.match(await page.locator('#nutritionPlanBody').innerText(),/Вівсяні пластівці/);
+  assert.match(await page.locator('#nutritionPlanBody textarea').first().inputValue(),/Вівсяні пластівці/);
   assert.equal(await page.locator('#nutritionPlanBody').evaluate(x=>x.classList.contains('hidden')),false,
     'Plan editor was not expanded');
 
