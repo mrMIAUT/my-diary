@@ -63,25 +63,22 @@ function choose(id){
  if(r.foods.some(food=>!menu.some(x=>x.source_id===food.source_id))){
   alert('Деякі продукти відсутні у локальній базі Є ПЛАН.');return;
  }
- // Explicit click chooses a recipe. It changes only the selected meal variant.
- item.foods=r.foods.map(f=>({
-  source_id:f.source_id,grams:Number(f.grams),count:f.count??null,
-  count_in_targets:f.count_in_targets!==false,usage_note:String(f.usage_note||'')
- }));
- item.dish_title=r.title;
- item.preparation=r.preparation;
- item.recipe_source_name=r.source_name;
- item.recipe_source_url=r.source_url;
- item.recipe_id=r.id;
- item.edited=false;
- item.content=item.foods.map(f=>{
-  const base=menu.find(x=>x.source_id===f.source_id);
-  return base.name+' — '+(f.count??fmt(f.grams))+(f.count!==null?' шт.':' г');
- }).join('\n');
+ // Fit only the newly inserted dish to the *remaining* daily calorie
+ // and BJU targets. All previously configured meals stay unchanged.
+ let fitted;
+ try{
+  if(typeof window.applyRecipeToRation!=='function')throw Error('Auto-fit module unavailable');
+  fitted=window.applyRecipeToRation(item,r);
+ }catch(e){
+  console.warn('Recipe auto-fit',e);
+  alert('Не вдалося підібрати порції. Спробуй інший рецепт.');
+  return;
+ }
  close();
- window.rerenderNutritionPlan();
- window.demoDraftChanged?.();
- window.scrollTo?.({top:Math.max(0,(document.querySelector('.variant-card')?.getBoundingClientRect().top||0)+window.scrollY-80),behavior:'smooth'});
+ const info=fitted.within_tolerance?
+  'Порції підібрано під денну ціль. Перевір перед призначенням.':
+  'Порції підібрано в допустимих межах. Денна ціль ще має відхилення; переглянь підсумки.';
+ const status=$('saveDemoStatus');if(status)status.textContent=info;
 }
 window.openRecipeTemplatePicker=async function(n,v){
  const item=(nutritionPlanDraft||[]).find(x=>x.meal_number===+n&&x.variant_number===+v);
