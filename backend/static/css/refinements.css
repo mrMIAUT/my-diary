@@ -273,3 +273,47 @@ button.password-eye-btn[data-eye-state="visible"]{background:transparent!importa
 @media (prefers-reduced-motion:reduce){
  .eplan-splash-app-icon{animation:none!important}
 }
+
+
+/* Integrated 1.2 calculator in main Nutrition */
+.nutrition-calculator-modal{max-width:560px}
+.nutrition-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.nutrition-calc-grid label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700;color:#536174}
+.nutrition-calc-grid label small{font-weight:500;color:#8a96a6}
+.nutrition-calc-grid input,.nutrition-calc-grid select{width:100%;box-sizing:border-box;min-height:46px;border:1px solid #dce3ec;background:#fff;color:#172033;padding:0 12px;font:inherit;border-radius:10px}
+.nutrition-calc-wide{grid-column:1/-1}
+.nutrition-calc-button{width:100%;margin-top:16px;min-height:48px}
+.nutrition-calc-result{margin-top:16px;padding:18px;border:1px solid #dce5f1;border-radius:14px;background:#f8fbff}
+.nutrition-calc-kcal{display:block;margin-top:5px;font-size:28px;line-height:1.1;color:#172033}
+.nutrition-calc-kcal small{font-size:13px;font-weight:600;color:#7b8797}
+.nutrition-calc-macros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.nutrition-calc-macros span{padding:10px 8px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+.nutrition-calc-macros b{font-size:19px;color:#172033}
+.nutrition-calc-macros small{display:block;margin-top:3px;color:#7d8998}
+.nutrition-calc-result p{margin:14px 0;color:#667487;font-size:12px;line-height:1.45}
+.nutrition-calc-result button{width:100%}
+.nutrition-calc-manual{margin-top:14px;border-top:1px solid #e4e9f0;padding-top:12px}
+.nutrition-calc-manual summary{cursor:pointer;color:#647286;font-size:13px;font-weight:700}
+.nutrition-calc-manual .grid{margin-top:12px}
+@media(max-width:520px){.nutrition-calc-grid{grid-template-columns:1fr}.nutrition-calc-wide{grid-column:auto}.nutrition-calc-macros{gap:6px}.nutrition-calc-macros b{font-size:17px}}
+
+
+/* Production food lookup (no overrides outside Nutrition). */
+.food-lookup-modal{max-width:540px!important;width:min(540px,calc(100vw - 20px))!important;max-height:90dvh;overflow:auto;background:#fff!important;color:#23344c!important;border-radius:16px!important;padding:18px!important}
+.food-lookup-modal h2{font-size:19px;margin:0;color:#23344c}
+.food-lookup-modal .muted{font-size:12px}
+.food-lookup-modal input{width:100%;min-height:44px;padding:9px 11px;background:#f8fbff!important;color:#23344c!important;border:1px solid #dce6f3!important;border-radius:9px!important}
+.food-lookup-status,.food-lookup-note{font-size:12px;color:#7d8b9f;line-height:1.45;margin:11px 0}
+.food-lookup-results{display:grid;gap:7px;max-height:40vh;overflow-y:auto}
+.food-lookup-row{display:flex;flex-direction:column;gap:3px;min-height:0;width:100%;padding:10px 12px!important;text-align:left;color:#23344c!important;background:#f8fbff!important;border:1px solid #e1eaf5!important;border-radius:11px!important}
+.food-lookup-row strong{font-size:13px;line-height:1.3}
+.food-lookup-row small,.food-lookup-row span{font-size:11px;color:#79889c}
+.food-lookup-row em{font-style:normal;font-size:11px;color:#336cae}
+.food-lookup-portion{margin-top:14px;padding:12px;border:1px solid #dce8f6;border-radius:12px;background:#f5f9ff}
+.food-lookup-portion>strong{font-size:14px}
+.food-lookup-portion label{display:block;font-size:12px;margin:10px 0;color:#65748d}
+.food-lookup-macros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.food-lookup-macros span{display:flex;flex-direction:column;text-align:center;gap:3px;background:#fff;padding:7px 2px;border-radius:8px}
+.food-lookup-macros b{font-size:17px;color:#27496e}
+.food-lookup-macros small{font-size:10px;color:#8796aa}
+@media(max-width:390px){.food-lookup-modal{padding:13px!important}.food-lookup-macros b{font-size:15px}}
