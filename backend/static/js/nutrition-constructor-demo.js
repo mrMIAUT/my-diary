@@ -6,6 +6,7 @@ let openMeals=new Set([1,2,3,4]);
 const DEMO_STORAGE_KEY='eplan-nutrition-preview-v2';
 window.currentClientData={client:{id:999,kcal:2380,protein:160,fat:60,carbs:300}};
 const fmtDemo=v=>Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1});
+const escapeDish=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function demoCatalog(id){return (window.structuredCatalog||[]).find(x=>x.source_id===id)}
 function rowKcal(row){
  const f=demoCatalog(row.source_id);if(!f)return 0;
@@ -21,13 +22,20 @@ window.toggleMeal=function(n){
 window.addDemoVariant=function(n){
  const current=nutritionPlanDraft.filter(x=>x.meal_number===n);
  const v=Math.max(0,...current.map(x=>x.variant_number))+1;
- nutritionPlanDraft.push({meal_number:n,variant_number:v,sort:n*10+v,foods:[],content:''});
+ nutritionPlanDraft.push({meal_number:n,variant_number:v,sort:n*10+v,foods:[],content:'',dish_title:'Власна страва',preparation:'Додай продукти та уточни спосіб приготування.',edited:true});
  openMeals.add(n);window.rerenderNutritionPlan();window.demoDraftChanged();
 };
 window.removeDemoVariant=function(n,v){
  if(nutritionPlanDraft.filter(x=>x.meal_number===n).length<=1)return;
  nutritionPlanDraft=nutritionPlanDraft.filter(x=>!(x.meal_number===n&&x.variant_number===v));
  window.rerenderNutritionPlan();window.demoDraftChanged();
+};
+// Replacing or removing an ingredient invalidates a curated preparation.
+window.demoRecipeChanged=function(item){
+ if(!item)return;
+ item.edited=true;
+ item.dish_title='Власна комбінація продуктів';
+ item.preparation='Склад змінено. Перевір, як поєднати та приготувати продукти.';
 };
 window.rerenderNutritionPlan=function(){
  if(typeof window.renderStructuredMealHTML!=='function')return;
@@ -45,6 +53,8 @@ window.rerenderNutritionPlan=function(){
      '<div class="variant-card"><div class="variant-title"><strong>Варіант '+x.variant_number+'</strong>'
      +'<span class="variant-macros" aria-label="Калорії та БЖВ цього варіанта">'+window.structuredVariantHeaderHTML(x)+'</span>'
      +(variants.length>1?'<button type="button" class="variant-delete" onclick="removeDemoVariant('+n+','+x.variant_number+')">Видалити</button>':'')+'</div>'
+     +'<div class="meal-recipe"><strong>'+escapeDish(x.dish_title||'Власний варіант')+'</strong>'
+     +'<p>'+escapeDish(x.preparation||'Обери продукти та склади готову страву.')+'</p></div>'
      +window.renderStructuredMealHTML(x)+'</div>'
     ).join('')
     +'<button type="button" class="add-variant" onclick="addDemoVariant('+n+')">＋ Додати варіант</button></div>':'')
@@ -58,9 +68,11 @@ function resetDraftData(){
  nutritionPlanDraft=demoSource.meals.map(x=>({
   meal_number:+x.meal_number,variant_number:+x.variant_number,sort:+x.sort,
   content:String(x.content||''),
+  dish_title:String(x.dish_title||''),preparation:String(x.preparation||''),
+  edited:false,
   foods:(x.foods||[]).map(f=>({
    source_id:f.source_id,grams:Number(f.grams),count:f.count??null,
-   count_in_targets:f.count_in_targets!==false
+   count_in_targets:f.count_in_targets!==false,usage_note:String(f.usage_note||'')
   }))
  }));
  openMeals=new Set([1,2,3,4,5]);
