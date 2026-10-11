@@ -24,8 +24,8 @@ function assess(actual,goal){
  const diff=actual.map((v,i)=>v-goal[i]);
  const percent=diff.map((v,i)=>goal[i]>0?100*v/goal[i]:0);
  const limits=[10,15,20,15];
- return {diff:Object.fromEntries(MACROS.map((key,i)=>[key:+diff[i].toFixed(1)])),
-  pct:Object.fromEntries(MACROS.map((key,i)=>[key:+percent[i].toFixed(1)])),
+ return {diff:Object.fromEntries(MACROS.map((key,i)=>[key,+diff[i].toFixed(1)])),
+  pct:Object.fromEntries(MACROS.map((key,i)=>[key,+percent[i].toFixed(1)])),
   within_tolerance:percent.every((p,i)=>Math.abs(p)<=limits[i]),
   limits_pct:Object.fromEntries(MACROS.map((key,i)=>[key,limits[i]]))};
 }
@@ -96,9 +96,9 @@ function fit(recipe,remaining,goal,catalog){
  }));
  const meal=sumRows(foods,catalog);
  const daily=meal.map((x,i)=>x+(goal[i]-remaining[i]));
- return {foods,meal:Object.fromEntries(MACROS.map((k,i)=>[k:+meal[i].toFixed(1)])),
-  day:Object.fromEntries(MACROS.map((k,i)=>[k:+daily[i].toFixed(1)])),
-  remaining:Object.fromEntries(MACROS.map((k,i)=>[k:+remaining[i].toFixed(1)])),
+ return {foods,meal:Object.fromEntries(MACROS.map((k,i)=>[k,+meal[i].toFixed(1)])),
+  day:Object.fromEntries(MACROS.map((k,i)=>[k,+daily[i].toFixed(1)])),
+  remaining:Object.fromEntries(MACROS.map((k,i)=>[k,+remaining[i].toFixed(1)])),
   ...assess(daily,goal),score:error(current)};
 }
 window.NutritionPortionFitter={fit,sumRows,assess,goalVector,macroKeys:MACROS};
