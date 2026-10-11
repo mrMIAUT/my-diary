@@ -17,6 +17,18 @@ const server=http.createServer(async(req,res)=>{
   if(pathname==='/api/session'){
     res.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});res.end('{"detail":"Unauthorized"}');return;
   }
+  if(pathname==='/api/client/999'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({
+      client:{id:999,name:'Test client',kcal:2500,protein:160,fat:70,carbs:300,
+        access:{features:{nutrition:true,meal_plan:true,workouts:true}}},
+      nutrition_plan:(mealPlanSavedPayload?.meals||[]).map(item=>({
+        meal_number:item.meal_number,variant_number:item.variant_number,
+        content:item.content,sort:item.sort,foods_json:JSON.stringify(item.foods)
+      }))
+    }));
+    return;
+  }
   if(pathname==='/api/trainer/foods/catalog'){
     structuredCatalogCalls++;
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
@@ -147,7 +159,7 @@ try{
   assert.equal(await page.locator('#nprotein').inputValue(),'','Trainer protein must start empty');
   assert.match(await page.locator('.trainer-nutrition-current').innerText(),/2500 ккал/);
   const dialogMessages=[];
-  page.on('dialog',async dialog=>{dialogMessages.push(dialog.message());await dialog.accept();});
+  page.on('dialog',async dialog=>{dialogMessages.push(dialog.message());await dialog.accept().catch(()=>{});});
   await page.locator('#nutritionActions button').first().click();
   assert.match(dialogMessages.join(' '),/Заповни всі чотири/,'Empty targets were accepted');
   await page.locator('#nutrition .trainer-nutrition-calc-launch').click();
@@ -256,6 +268,13 @@ try{
   assert.equal(mealPlanSavedPayload.meals[0].foods[0].count,2);
   assert.equal(mealPlanSavedPayload.meals[0].foods[0].grams,100);
   assert.equal(mealPlanSavedPayload.meals[0].foods[1].count_in_targets,true);
+  await page.locator('.meal-plan-edit-open').click();
+  await page.locator('.structured-food-row').first().waitFor({timeout:4000});
+  assert.equal(await page.locator('.structured-food-row').first().locator('.structured-grams').inputValue(),'2',
+     'Saved whole-egg quantity was not restored in trainer editor');
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[0].source_id),'eplan12-fdc-104',
+     'Saved source ID was not restored');
+
   assert.deepEqual(pageErrors,[],'Unexpected JS errors during app launch/calculator');
   console.log('BROWSER STARTUP + CALCULATOR + LAZY SEARCH: PASS');
 }finally{
