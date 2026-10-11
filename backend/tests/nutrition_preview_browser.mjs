@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {connect} from 'node:net';
 import {chromium} from 'playwright';
 const port=17838;
 const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1','--directory','nutrition-preview-dist'],{stdio:'ignore'});
 let browser;
 try{
  let ready=false;
+ // Check the local server's TCP port rather than node:undici's fetch parser,
+ // which can throw an unrelated stream assertion on the CI runner.
  for(let t=0;t<80;t++){
-  try{const r=await fetch('http://127.0.0.1:'+port+'/catalog.json');if(r.ok){ready=true;break}}catch{}
+  ready=await new Promise(resolve=>{
+   const socket=connect({host:'127.0.0.1',port});
+   socket.once('connect',()=>{socket.end();resolve(true)});
+   socket.once('error',()=>{socket.destroy();resolve(false)});
+   socket.setTimeout(100,()=>{socket.destroy();resolve(false)});
+  });
+  if(ready)break;
   await new Promise(resolve=>setTimeout(resolve,200));
  }
  assert.ok(ready,'Static nutrition preview server not ready');
