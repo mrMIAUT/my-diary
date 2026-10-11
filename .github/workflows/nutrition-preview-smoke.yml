@@ -1,0 +1,25 @@
+name: Nutrition constructor preview smoke
+on:
+  push:
+    branches:
+      - preview/nutrition-structured-editor-v1
+  workflow_dispatch:
+jobs:
+  mobile-preview-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated nutrition preview
+        run: python3 backend/build_nutrition_preview.py
+      - name: Install Chromium test runner
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test mobile food UI and local saving
+        run: node backend/tests/nutrition_preview_browser.mjs
