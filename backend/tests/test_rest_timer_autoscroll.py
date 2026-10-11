@@ -30,7 +30,7 @@ class RestAutoScrollTests(unittest.TestCase):
                         "/static/js/workout-lyfta.js?v=172",
                         "/static/js/timed-workout.js?v=7"):
                 self.assertIn(ref,shell)
-        self.assertIn("const VERSION='eplan-v218'",SW)
+        self.assertIn("const VERSION='eplan-v219'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Requires Node.js")
     def test_real_start_scroll_once_with_no_automatic_jumps(self):
