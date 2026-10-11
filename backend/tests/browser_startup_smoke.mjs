@@ -10,10 +10,35 @@ import {chromium} from 'playwright';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../static');
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.webp':'image/webp'};
 let remoteSearchCalls=0,previewCalls=0;
+let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/api/session'){
     res.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});res.end('{"detail":"Unauthorized"}');return;
+  }
+  if(pathname==='/api/trainer/client/999/nutrition/auto-plan'){
+    mealPlanPreviewCalls++;
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({
+      targets:{kcal:2500,protein:160,fat:70,carbs:300},
+      totals:{kcal:2470,protein:159,fat:71,carbs:296},
+      deviations_pct:{kcal:-1.2,protein:-0.6,fat:1.4,carbs:-1.3},
+      within_tolerance:true,review_required:true,
+      warnings:['Потрібна перевірка тренером','Не гарантує відсутності алергенів'],
+      meals:[
+       {meal_number:1,meal_name:'Сніданок',variant_number:1,sort:0,totals:{kcal:600,protein:30,fat:20,carbs:70},
+        foods:[{name:'Вівсяні пластівці (сухі)',grams:65}],content:'Вівсяні пластівці (сухі) — 65 г'},
+       {meal_number:2,meal_name:'Обід',variant_number:1,sort:1,totals:{kcal:920,protein:65,fat:20,carbs:115},
+        foods:[{name:'Куряче філе (запечене)',grams:170}],content:'Куряче філе (запечене) — 170 г'},
+       {meal_number:3,meal_name:'Вечеря',variant_number:1,sort:2,totals:{kcal:950,protein:64,fat:31,carbs:111},
+        foods:[{name:'Гречка (відварена)',grams:230}],content:'Гречка (відварена) — 230 г'}
+      ]
+    }));
+    return;
+  }
+  if(pathname==='/api/client/999/nutrition'&&req.method==='PATCH'){
+    mealPlanWriteCalls++;
+    res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
   }
   if(pathname==='/api/foods/preview'){
     previewCalls++;
@@ -144,6 +169,27 @@ try{
   assert.equal(await page.locator('#nkcal').inputValue(),String(values.kcal),'Trainer targets not populated');
   assert.equal(await page.locator('#nprotein').inputValue(),String(values.protein),'Trainer protein not populated');
   assert.equal(await page.locator('#trainerNutritionCalcModal').count(),0,'Calculator remained open');
+
+  // Stage-only automatic meal plan: optional module, source-linked preview,
+  // no data writes before explicit trainer approval.
+  const autoLazyBefore=await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('auto-meal-plan.js')));
+  assert.equal(autoLazyBefore,false,'Automatic planner eagerly loaded at startup');
+  await page.locator('.meal-autoplan-open').click();
+  await page.locator('#autoMealPlanModal').waitFor({timeout:4000});
+  assert.equal(await page.locator('#autoMealCount').inputValue(),'','Meal count unexpectedly preset');
+  await page.locator('#autoMealCount').selectOption('3');
+  await page.locator('#autoMealVariants').selectOption('1');
+  await page.locator('#autoMealGenerate').click();
+  await page.locator('#autoMealApply').waitFor({timeout:5000});
+  assert.equal(mealPlanPreviewCalls,1,'Draft request did not call trainer API');
+  assert.equal(mealPlanWriteCalls,0,'Generator wrote meal plan without approval');
+  assert.match(await page.locator('#autoMealPreview').innerText(),/Гречка/);
+  await page.locator('#autoMealApply').click();
+  assert.equal(await page.locator('#autoMealPlanModal').count(),0,'Preview did not close');
+  assert.equal(mealPlanWriteCalls,0,'Applying draft directly wrote nutrition');
+  assert.match(await page.locator('#nutritionPlanBody').innerText(),/Вівсяні пластівці/);
+  assert.equal(await page.locator('#nutritionPlanBody').evaluate(x=>x.classList.contains('hidden')),false,
+    'Plan editor was not expanded');
 
   assert.deepEqual(pageErrors,[],'Unexpected JS errors during app launch/calculator');
   console.log('BROWSER STARTUP + CALCULATOR + LAZY SEARCH: PASS');
