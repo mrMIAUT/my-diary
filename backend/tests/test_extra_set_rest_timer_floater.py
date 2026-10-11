@@ -43,9 +43,9 @@ class ExtraSetRestTimerTests(unittest.TestCase):
         for src in (INDEX,SW):
             for asset in ("/static/js/workout.js?v=185",
                           "/static/js/timer.js?v=166",
-                          "/static/css/redesign.css?v=257"):
+                          "/static/css/redesign.css?v=258"):
                 self.assertIn(asset,src)
-        self.assertIn("const VERSION='eplan-v214'",SW)
+        self.assertIn("const VERSION='eplan-v215'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
     def test_real_extra_set_refresh_preserves_live_panel_and_dynamic_total(self):
