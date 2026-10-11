@@ -71,6 +71,7 @@ vm.createContext(ctx);
 vm.runInContext(fs.readFileSync('backend/static/js/timer.js','utf8'),ctx);
 ctx.renderFloatingRestTimer=()=>{};
 ctx.syncRestTimerWorker=()=>{};
+timeouts.length=0; // timer.js schedules a one-time recovery on script import.
 ctx.startRestTimerCore(90,null,{sid:7,pid:25,set_number:1});
 assert.equal(timeouts.length,1,'new tracked rest queues precisely one scroll');
 assert.equal(timeouts[0].delay,50);
