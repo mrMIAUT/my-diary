@@ -49,6 +49,7 @@ shutil.copyfile(backend/"static/nutrition-constructor-preview.html",out/"index.h
 shutil.copyfile(backend/"static/js/structured-meal-editor.js",out/"static/js/structured-meal-editor.js")
 shutil.copyfile(backend/"static/js/nutrition-constructor-demo.js",out/"static/js/nutrition-constructor-demo.js")
 shutil.copyfile(backend/"static/js/recipe-template-picker.js",out/"static/js/recipe-template-picker.js")
+shutil.copyfile(backend/"static/js/nutrition-portion-fitter.js",out/"static/js/nutrition-portion-fitter.js")
 catalog={"items":foods_for_trainer()}
 original_names={item["source_id"]:item["name"] for item in catalog["items"]}
 assert FRESH_VEGETABLES <= set(original_names.values()),"Unknown vegetable in name mapping"
