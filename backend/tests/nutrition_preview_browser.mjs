@@ -40,15 +40,11 @@ try{
   'Alternatives must have independently calculated nutrients');
  const baselineFirstVariant=await primaryVariant.innerText();
  const baselineSecondVariant=await secondVariant.innerText();
- // Every meal header shows daily totals, distinct from its own kcal badge.
- const firstDay=page.locator('.meal-day-totals').first();
- await firstDay.waitFor({timeout:3000});
- assert.equal(await page.locator('.meal-day-totals').count(),4,'Expected daily summary in every meal header');
- const baselineHeader=await firstDay.innerText();
- assert.match(baselineHeader,/За день/);
- for(const segment of ['ккал','Б ','Ж ','В '])assert.ok(baselineHeader.includes(segment),'Missing header total '+segment);
- assert.notEqual((await page.locator('.meal-kcal').first().innerText()).trim(),baselineHeader.trim(),
-   'Meal calories and day totals should be separate');
+ // Only individual variant headers show calories/BJU; no combined badge
+ // should appear in the parent meal heading.
+ assert.equal(await page.locator('.meal-day-totals').count(),0,'Combined daily total still appears in meal header');
+ assert.equal(await page.locator('.meal-kcal').count(),0,'Duplicated first-variant kcal still appears in meal header');
+ assert.equal(await page.locator('.variant-card').nth(0).locator('.variant-macros').count(),1);
  const original=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
  await page.locator('.structured-food-row').first().locator('.stepper-plus').click();
  const adjusted=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
@@ -57,11 +53,9 @@ try{
    'Primary variant header did not update after portion change');
  assert.equal(await secondVariant.innerText(),baselineSecondVariant,
    'Other variant header changed after editing primary');
- const changedHeader=await page.locator('.meal-day-totals').first().innerText();
- assert.notEqual(baselineHeader,changedHeader,'Meal header totals did not update after portion change');
- const allHeaders=await page.locator('.meal-day-totals').allInnerTexts();
- assert.ok(allHeaders.every(x=>x===changedHeader),'Meal headers disagree on full-day totals');
- const previousDay=await page.locator('#dailySummary .stat-kcal b').innerText();
+ const firstDayAfter=await page.locator('#dailySummary .stat-kcal b').innerText();
+ assert.ok(firstDayAfter,'Standalone daily overview disappeared');
+ const previousDay=firstDayAfter;
  await page.locator('.structured-food-name').first().click();
  await page.locator('#structuredFoodPicker').waitFor();
  await page.locator('#structuredFoodSearch').fill('яйце');
@@ -89,12 +83,12 @@ try{
  await page.locator('#pickerApply').click();
  assert.equal(await page.locator('.structured-meal-summary').first().innerText().then(x=>x.includes('Фактично з овочами')),false,'Tomato should be included in goal after toggle');
  // Editing a nonprimary alternative changes that variant only, not the day.
- const dayPrimaryBefore=await page.locator('.meal-day-totals').first().innerText();
+ const dayPrimaryBefore=await page.locator('#dailySummary').innerText();
  const primaryBeforeAltEdit=await primaryVariant.innerText();
  const secondBeforeAltEdit=await secondVariant.innerText();
  const otherVariant=page.locator('.variant-card').nth(1);
  await otherVariant.locator('.stepper-plus').first().click();
- const dayPrimaryAfter=await page.locator('.meal-day-totals').first().innerText();
+ const dayPrimaryAfter=await page.locator('#dailySummary').innerText();
  assert.equal(dayPrimaryAfter,dayPrimaryBefore,'Alternative variants were incorrectly added to day totals');
  assert.notEqual(await secondVariant.innerText(),secondBeforeAltEdit,'Second variant BJU did not refresh');
  assert.equal(await primaryVariant.innerText(),primaryBeforeAltEdit,'First variant BJU changed after editing the second');
@@ -106,7 +100,7 @@ try{
  assert.match(await page.locator('.structured-food-row').first().innerText(),/Яйце куряче/);
  assert.equal(await page.locator('.structured-food-row').first().locator('input.structured-grams').inputValue(),'2');
  assert.equal(await page.locator('img').count(),0);
- assert.match(await page.locator('.meal-day-totals').first().innerText(),/За день/);
+ assert.equal(await page.locator('.meal-day-totals').count(),0);
  assert.match(await page.locator('.variant-card').nth(1).locator('.variant-macros').innerText(),/Б /);
  const viewport=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth}));
  assert.ok(viewport.w<=viewport.v+2,'Unexpected horizontal overflow: '+JSON.stringify(viewport));
