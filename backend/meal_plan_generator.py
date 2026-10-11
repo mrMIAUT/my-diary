@@ -288,8 +288,9 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
         for variant_index, (keys, recipe) in enumerate(suitable[:variants], start=1):
             title, preparation, food_notes = recipe
             rows, total, gross = _fit_meal(keys, target, foods)
-            for key, row in zip(keys, rows):
-                row["usage_note"] = food_notes.get(key, "")
+            for row in rows:
+                matching_key = next((key for key in keys if FOODS[key][0] == row["name"]), None)
+                row["usage_note"] = food_notes.get(matching_key, "")
             # Olive oil is always a recipe ingredient, with an explicit use
             # description. It is still counted in the nutrient calculation.
             if any(key == "oil" for key in keys):
@@ -300,7 +301,8 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
                     daily[i] += total[n]
             lines = [f'{row["name"]} — {row["count"]} шт.' if row["count"] is not None
                      else f'{row["name"]} — {row["grams"]} г' for row in rows]
-            content = "\n".join(lines)
+            content = title + "\n" + "\n".join(lines)
+            content += "\n\nСпосіб приготування: " + preparation
             content += ("\n\nОрієнтовно на прийом: "
                         + f'{total["kcal"]:.0f} ккал · Б {total["protein"]:.0f} г'
                         + f' · Ж {total["fat"]:.0f} г · В {total["carbs"]:.0f} г')
