@@ -39,7 +39,7 @@ class WorkoutPhaseCheckmarkVisualTests(unittest.TestCase):
         for source in (INDEX,SW):
             self.assertIn("/static/js/workout.js?v=187",source)
             self.assertIn("/static/css/redesign.css?v=261",source)
-        self.assertIn("const VERSION='eplan-v219'",SW)
+        self.assertIn("const VERSION='eplan-v220'",SW)
         self.assertIn("day_name:day,load_phase:loadPhase",WORKOUT)
 
 
