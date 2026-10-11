@@ -125,7 +125,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("checkinEnabled=!!features.checkin", HOME)
         self.assertIn("nutritionEnabled=!!features.nutrition", HOME)
         self.assertIn("features?.meal_plan", NUTRITION)
-        self.assertIn("openNutritionTargetsModal", NUTRITION)
+        self.assertNotIn("openNutritionTargetsModal", NUTRITION)
+        self.assertIn("window.openTrainerNutritionCalculator", NUTRITION_JS)
         self.assertIn("ЄПЛАН Самостійно", TRAINER)
         self.assertIn("redesignHomeTrainersHTML", HOME)
         self.assertIn("trainer-card-v3", HOME)
@@ -165,7 +166,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("active_clients", APP)
         self.assertIn("rating_avg", APP)
         self.assertIn('@app.patch("/api/client/{cid}/nutrition-targets")', APP)
-        self.assertIn('if access["features"].get("meal_plan",False):', APP)
+        self.assertIn('def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_trainer)):', APP)
         self.assertIn("showClientTrainers", MORE)
         self.assertIn("showClientTrainerProfile", MORE)
         self.assertIn("openTrainerReviewModal", MORE)
@@ -288,7 +289,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("saveTrainerNutritionTargets(", NUTRITION_JS)
         self.assertIn("await api('/client/'+cid+'/nutrition'", NUTRITION_JS)
         self.assertNotIn("function saveNutritionTargets", NUTRITION_JS)
-        self.assertIn("window.saveNutritionTargets", NUTRITION)
+        self.assertNotIn("window.saveNutritionTargets", NUTRITION)
+        self.assertIn("window.applyTrainerCalculatedNutritionTargets", NUTRITION_JS)
 
     def test_training_day_title_modal_uses_redesign_ui(self):
         self.assertIn("trainer-day-title-modal", PROGRAM)
