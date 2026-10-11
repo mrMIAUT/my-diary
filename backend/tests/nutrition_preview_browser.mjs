@@ -53,7 +53,7 @@ try{
  // Each template must have trusted USDA food records, culinary attribution and
  // bounded individual portions. Sample overnight oats must be refrigerated.
  const library=await page.evaluate(()=>fetch('/recipe-library.json').then(r=>r.json()));
- assert.equal(library.templates.length,43);
+ assert.equal(library.templates.length,60);
  assert.ok(library.templates.every(r=>r.source_url.startsWith('https://')&&r.foods.length));
  assert.ok(library.templates.every(r=>r.foods.every(f=>f.portion_rules&&Number(f.portion_rules.max_grams)>0)),
    'Template missing bounded portion limits');
