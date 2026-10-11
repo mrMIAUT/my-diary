@@ -13,7 +13,7 @@ async function switchClientTrainingTab(key){
 }
 
 function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
-  let timed=isTimedWorkoutExercise(x),rest=showRest?(timed?timedRestLabel(x):restLabel(x)):'',rir=timed?'':rirPlan(x).join(' / '),
+  let showRir=programRirEnabled(),timed=isTimedWorkoutExercise(x),rest=showRest?(timed?timedRestLabel(x):restLabel(x)):'',rir=timed?'':rirPlan(x).join(' / '),
       alts=timed?[]:exerciseAlternativeConfigs(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url),
       plan=timed?timedWorkoutPlanText(x):repeatPlanText(x);
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
@@ -24,10 +24,10 @@ function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
       +'<small>'+x.sets+' × '+esc(plan)+(rest?' · '+esc(rest):'')+'</small>'
       +(alts.length?'<div class="redesign-training-alternatives"><em>Альтернативи:</em>'+alts.map(function(v){
         let tech=exerciseTechniqueUrl(v.exercise),altRest=restLabel(v),altRir=rirPlan(v).join(' / ');
-        return '<span class="redesign-training-alt-chip detailed"><i>'+esc(v.exercise)+'</i><small>'+v.sets+' × '+esc(v.reps)+' · RIR '+esc(altRir)+(altRest?' · '+esc(altRest):'')+'</small>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'redesign-training-alt-tech'):'')+'</span>';
+        return '<span class="redesign-training-alt-chip detailed"><i>'+esc(v.exercise)+'</i><small>'+v.sets+' × '+esc(v.reps)+(showRir?' · RIR '+esc(altRir):'')+(altRest?' · '+esc(altRest):'')+'</small>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'redesign-training-alt-tech'):'')+'</span>';
       }).join('')+'</div>':'')
     +'</div>'
-    +'<b>'+(timed?'Час':'RIR '+esc(rir))+'</b>'
+    +(timed?'<b>Час</b>':(showRir?'<b>RIR '+esc(rir)+'</b>':''))
   +'</div>';
 }
 

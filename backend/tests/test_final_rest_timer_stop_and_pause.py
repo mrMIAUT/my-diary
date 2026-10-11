@@ -42,8 +42,8 @@ class RestTimerFinalMobileTests(unittest.TestCase):
     def test_current_cache_refs(self):
         for src in (INDEX,SW):
             self.assertIn("/static/js/timer.js?v=169",src)
-            self.assertIn("/static/css/redesign.css?v=261",src)
-        self.assertIn("const VERSION='eplan-v219'",SW)
+            self.assertIn("/static/css/redesign.css?v=262",src)
+        self.assertIn("const VERSION='eplan-v220'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Requires node")
     def test_stop_saves_elapsed_only_not_pause_and_keeps_same_finished_set(self):
