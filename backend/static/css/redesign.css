@@ -18956,3 +18956,51 @@ body.eplan-redesign.client-ui .workout-featured-rest-settings svg{
   }
 }
 
+
+/* v258 — single-face rest dial: thin progress arc, two quiet clock hands.
+   No nested filled stopwatch inside the circular progress indicator. */
+body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-track,
+body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-progress{
+  stroke-width:5!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-track{
+  stroke:#dbe6f5!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring .workout-featured-rest-progress{
+  stroke:#2879ec!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  pointer-events:none!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span svg{
+  display:none!important;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::before,
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
+  content:"";
+  position:absolute;
+  display:block;
+  left:calc(50% - 1px);
+  width:2px;
+  background:#6883a7;
+  border-radius:2px;
+  transform-origin:50% calc(100% - 1px);
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::before{
+  top:calc(50% - 12px);
+  height:12px;
+}
+body.eplan-redesign.client-ui .workout-featured-rest-ring>span::after{
+  top:calc(50% - 9px);
+  height:9px;
+  transform:rotate(120deg);
+}
