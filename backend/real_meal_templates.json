@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_relation_note": "Творчі адаптації ідей джерел під перевірені продукти Є ПЛАН. Це не точне відтворення оригінальних рецептів.",
+  "source_relation_note": "Творчі адаптації ідей джерел під перевірені продукти Є ПЛАН. Це не точне відтворення оригінальних рецептів. Швидкі рецепти здебільшого потребують уже готових круп, запеченого м'яса або риби — це прямо зазначено у приготуванні.",
   "recipes": [
     {
       "id": "bf_overnight_banana_walnut",
@@ -946,6 +946,531 @@
       "notes": {},
       "tags": [
         "vegetarian"
+      ]
+    },
+    {
+      "id": "bf_spinach_scramble_toast",
+      "category": "breakfast",
+      "title": "Яєчня-бовтанка зі шпинатом і тостами",
+      "keys": [
+        "eggs_raw",
+        "spinach",
+        "tomato",
+        "bread"
+      ],
+      "preparation": "Збий яйця й готуй на антипригарній пательні 3–5 хв, постійно помішуючи. Додай шпинат і помідор, подай із підсмаженим хлібом. Яйця повністю приготуй.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 10,
+      "notes": {
+        "eggs_raw": "Яйця для бовтанки, поштучно"
+      },
+      "tags": [
+        "hot",
+        "quick"
+      ]
+    },
+    {
+      "id": "bf_feta_omelette",
+      "category": "breakfast",
+      "title": "Омлет із фетою, помідором та цільнозерновим тостом",
+      "keys": [
+        "eggs_raw",
+        "feta",
+        "tomato",
+        "bread"
+      ],
+      "preparation": "Збий сирі яйця, вилий на розігріту антипригарну пательню. Додай кришену фету й нарізаний помідор, доведи до готовності та подай з тостом.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/cheese-omelette",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 12,
+      "notes": {
+        "eggs_raw": "Для омлету; рахувати цілими штуками"
+      },
+      "tags": [
+        "hot",
+        "quick"
+      ]
+    },
+    {
+      "id": "bf_banana_oat_pancakes",
+      "category": "breakfast",
+      "title": "Бананово-вівсяні оладки з йогуртом",
+      "keys": [
+        "banana",
+        "oats",
+        "eggs_raw",
+        "yogurt"
+      ],
+      "preparation": "Розімни банан, змішай із сухими подрібненими пластівцями та яйцем. Обсмаж невеликі оладки на антипригарній пательні з обох боків до готовності. Подавай з йогуртом.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 20,
+      "notes": {
+        "oats": "Вага сухих пластівців, подрібнити",
+        "eggs_raw": "Яйця в тісті, поштучно"
+      },
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "bf_ricotta_berry_toasts",
+      "category": "breakfast",
+      "title": "Тости з рикотою, полуницею та мигдалем",
+      "keys": [
+        "bread",
+        "ricotta",
+        "strawberries",
+        "almonds"
+      ],
+      "preparation": "Підсмаж хліб, намасти рикотою, додай нарізану полуницю і трохи подрібненого мигдалю. Подавай одразу.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 7,
+      "notes": {
+        "ricotta": "Намазати на тости"
+      },
+      "tags": [
+        "quick",
+        "cold"
+      ]
+    },
+    {
+      "id": "bf_chia_banana_milk",
+      "category": "breakfast",
+      "title": "Нічний чіа-пудинг з бананом та йогуртом",
+      "keys": [
+        "chia",
+        "milk",
+        "yogurt",
+        "banana"
+      ],
+      "preparation": "З вечора змішай насіння чіа з молоком і йогуртом. Накрий та постав у холодильник на 6–8 год. Вранці додай банан; не подавай сухе чіа.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 7,
+      "notes": {
+        "chia": "Замочити на ніч; суха вага"
+      },
+      "tags": [
+        "make_ahead",
+        "cold"
+      ]
+    },
+    {
+      "id": "bf_pita_egg_spinach",
+      "category": "breakfast",
+      "title": "Піта з яйцем, шпинатом і моцарелою",
+      "keys": [
+        "pita",
+        "eggs_raw",
+        "spinach",
+        "mozzarella"
+      ],
+      "preparation": "Збий яйця, приготуй яєчню зі шпинатом на антипригарній пательні. Додай моцарелу і виклади все в піту, прогрій 1–2 хв.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 15,
+      "notes": {
+        "eggs_raw": "Яйця для яєчні, поштучно"
+      },
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "lu_couscous_feta_salad",
+      "category": "lunch",
+      "title": "Салат із кускусом, фетою, огірком та перцем",
+      "keys": [
+        "couscous",
+        "feta",
+        "cucumber",
+        "pepper",
+        "oil"
+      ],
+      "preparation": "Кускус залий окропом за інструкцією та залиш під кришкою приблизно на 5 хв. Наріж огірок і перець, змішай із кускусом, фетою та оливковою олією як заправкою.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/11690/10minute-couscous-salad",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 12,
+      "notes": {
+        "couscous": "Вага готового кускусу",
+        "oil": "Заправка для салату, не окремий продукт"
+      },
+      "tags": [
+        "quick",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "lu_chicken_chickpea_yogurt",
+      "category": "lunch",
+      "title": "Швидкий боул з куркою, нутом та йогуртовим соусом",
+      "keys": [
+        "chicken",
+        "chickpeas",
+        "spinach",
+        "cucumber",
+        "yogurt"
+      ],
+      "preparation": "Візьми вже запечене філе і готовий нут. Подай зі шпинатом та огірком, йогурт змішай зі спеціями як соус. Час вказано для готових курки й нуту.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/quick-chicken-hummus-bowl",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 10,
+      "notes": {
+        "chicken": "Потрібне готове філе",
+        "yogurt": "Соус до страви"
+      },
+      "tags": [
+        "quick",
+        "meal_prep"
+      ]
+    },
+    {
+      "id": "lu_tuna_pita_feta",
+      "category": "lunch",
+      "title": "Піта з тунцем, фетою та свіжими овочами",
+      "keys": [
+        "pita",
+        "tuna",
+        "feta",
+        "tomato",
+        "cucumber"
+      ],
+      "preparation": "Злий рідину з тунця, наріж овочі й змішай з фетою. Наповни піту та подай одразу.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-lunch-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 8,
+      "notes": {
+        "tuna": "Консервований, без рідини"
+      },
+      "tags": [
+        "quick"
+      ]
+    },
+    {
+      "id": "lu_bean_tomato_toasts",
+      "category": "lunch",
+      "title": "Тости з білою квасолею, томатами й моцарелою",
+      "keys": [
+        "bread",
+        "white_beans",
+        "tomato",
+        "mozzarella",
+        "spinach"
+      ],
+      "preparation": "Розімни відварену або готову консервовану без рідини квасолю. Намаж на підсмажений хліб, додай томат, шпинат і моцарелу.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-lunch-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 10,
+      "notes": {
+        "white_beans": "Вага вже готової квасолі"
+      },
+      "tags": [
+        "quick",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "lu_turkey_couscous_avo",
+      "category": "lunch",
+      "title": "Кускус-боул з індичкою, авокадо й огірком",
+      "keys": [
+        "couscous",
+        "turkey",
+        "avocado",
+        "cucumber",
+        "tomato"
+      ],
+      "preparation": "Залий кускус окропом і дай настоятися, змішай із заздалегідь запеченою індичкою, авокадо та свіжими овочами. Час для готового філе.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/11690/10minute-couscous-salad",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 12,
+      "notes": {
+        "turkey": "Потрібна готова індичка",
+        "couscous": "Готовий кускус"
+      },
+      "tags": [
+        "quick",
+        "meal_prep"
+      ]
+    },
+    {
+      "id": "di_chicken_broccoli_pasta",
+      "category": "dinner",
+      "title": "Швидка паста з куркою та броколі",
+      "keys": [
+        "pasta",
+        "chicken",
+        "broccoli",
+        "oil"
+      ],
+      "preparation": "Відвари макарони; броколі відвари окремо до м'якості. Додай заздалегідь запечене куряче філе й оливкову олію до пасти. Час за умови готової курки.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/15-minute-chicken-pasta/",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 18,
+      "notes": {
+        "chicken": "Заздалегідь приготоване філе",
+        "oil": "Заправка для пасти, не окремий продукт"
+      },
+      "tags": [
+        "hot",
+        "meal_prep"
+      ]
+    },
+    {
+      "id": "di_salmon_couscous_pepper",
+      "category": "dinner",
+      "title": "Лосось із кускусом та солодким перцем",
+      "keys": [
+        "salmon",
+        "couscous",
+        "pepper",
+        "cucumber"
+      ],
+      "preparation": "Готовий запечений лосось прогрій. Кускус залий окропом на 5 хв, додай нарізаний перець і свіжий огірок. Час для вже приготовленої риби.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-dinner-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 12,
+      "notes": {
+        "salmon": "Готовий запечений лосось",
+        "couscous": "Вага готового кускусу"
+      },
+      "tags": [
+        "meal_prep"
+      ]
+    },
+    {
+      "id": "di_tuna_spinach_pasta",
+      "category": "dinner",
+      "title": "Макарони з тунцем, томатами та шпинатом",
+      "keys": [
+        "pasta",
+        "tuna",
+        "canned_tomatoes",
+        "spinach",
+        "oil"
+      ],
+      "preparation": "Відвари пасту. На пательні прогрій консервовані томати зі шпинатом і тунцем без рідини; додай макарони та оливкову олію в готову страву.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/15-minute-meal-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 18,
+      "notes": {
+        "tuna": "Без консервної рідини",
+        "oil": "Додати до пасти, не окремий продукт"
+      },
+      "tags": [
+        "hot"
+      ]
+    },
+    {
+      "id": "di_tofo_couscous_salad",
+      "category": "dinner",
+      "title": "Боул із тофу, кускусом та огірком",
+      "keys": [
+        "tofu",
+        "couscous",
+        "cucumber",
+        "tomato",
+        "soy_sauce"
+      ],
+      "preparation": "Наріж тофу, прогрій на антипригарній пательні без доданої олії. Кускус залий окропом, додай свіжі овочі та трохи соєвого соусу.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/15-minute-meal-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 15,
+      "notes": {
+        "soy_sauce": "Соус, а не окремий напій"
+      },
+      "tags": [
+        "hot",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "di_bean_cheese_tortilla",
+      "category": "dinner",
+      "title": "Тортилья з квасолею, сиром і томатами",
+      "keys": [
+        "tortilla",
+        "white_beans",
+        "cheddar",
+        "tomato",
+        "spinach"
+      ],
+      "preparation": "Розімни готову квасолю, виклади на тортилью разом із сиром, шпинатом і помідором. Склади навпіл і прогрій на сухій пательні до розплавлення сиру.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/15-minute-meal-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 12,
+      "notes": {
+        "white_beans": "Готова квасоля"
+      },
+      "tags": [
+        "hot",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "sn_hummus_veg_pita",
+      "category": "snack",
+      "title": "Піта з нутовою пастою та хрумкими овочами",
+      "keys": [
+        "pita",
+        "chickpeas",
+        "tahini",
+        "carrot_raw",
+        "cucumber"
+      ],
+      "preparation": "Розімни готовий нут із тахіні та водою до пасти. Намасти на піту, подай з нарізаною морквою й огірком.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 10,
+      "notes": {
+        "chickpeas": "Готовий нут",
+        "tahini": "У пасту з нуту"
+      },
+      "tags": [
+        "quick",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "sn_apple_cheddar_toast",
+      "category": "snack",
+      "title": "Цільнозерновий тост з чеддером та яблуком",
+      "keys": [
+        "bread",
+        "cheddar",
+        "apple"
+      ],
+      "preparation": "Підсмаж хліб, виклади скибки чеддера та яблука. Можна прогріти ще хвилину для м'якого сиру.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 7,
+      "notes": {},
+      "tags": [
+        "quick"
+      ]
+    },
+    {
+      "id": "sn_mozzarella_tomato_bread",
+      "category": "snack",
+      "title": "Тости з моцарелою та помідором",
+      "keys": [
+        "bread",
+        "mozzarella",
+        "tomato",
+        "spinach"
+      ],
+      "preparation": "Виклади моцарелу, помідор і шпинат на підсмажений хліб, подай одразу.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 7,
+      "notes": {},
+      "tags": [
+        "quick",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "sn_banana_milk_yogurt_smoothie",
+      "category": "snack",
+      "title": "Смузі з бананом, полуницею та йогуртом",
+      "keys": [
+        "banana",
+        "strawberries",
+        "milk",
+        "yogurt"
+      ],
+      "preparation": "Збий нарізаний банан, полуницю, молоко та йогурт у блендері. Всі продукти враховано у БЖВ.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 5,
+      "notes": {},
+      "tags": [
+        "quick",
+        "cold"
+      ]
+    },
+    {
+      "id": "sn_ricotta_strawberry_toast",
+      "category": "snack",
+      "title": "Тост з рикотою та полуницею",
+      "keys": [
+        "bread",
+        "ricotta",
+        "strawberries"
+      ],
+      "preparation": "Підсмаж хліб, намасти рикотою та додай скибки полуниці.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 5,
+      "notes": {},
+      "tags": [
+        "quick"
+      ]
+    },
+    {
+      "id": "sn_feta_cucumber_tomato",
+      "category": "snack",
+      "title": "Салат із фетою, огірком та помідором",
+      "keys": [
+        "feta",
+        "cucumber",
+        "tomato",
+        "oil"
+      ],
+      "preparation": "Наріж огірок і помідор, додай фету. Оливкова олія — тільки заправка салату.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/feta-salad-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 7,
+      "notes": {
+        "oil": "Заправка салату, не окремий продукт"
+      },
+      "tags": [
+        "quick",
+        "vegetarian"
+      ]
+    },
+    {
+      "id": "sn_ricotta_apple_walnuts",
+      "category": "snack",
+      "title": "Рикота з яблуком та волоськими горіхами",
+      "keys": [
+        "ricotta",
+        "apple",
+        "walnuts"
+      ],
+      "preparation": "Виклади рикоту в миску, додай нарізане яблуко та подрібнені горіхи.",
+      "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
+      "source_name": "BBC Good Food",
+      "source_relation": "adapted_culinary_idea",
+      "minutes": 5,
+      "notes": {},
+      "tags": [
+        "quick"
       ]
     }
   ]
