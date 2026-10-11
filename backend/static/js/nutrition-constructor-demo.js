@@ -3,7 +3,7 @@
 let nutritionPlanDraft=[];
 let demoSource=null;
 let openMeals=new Set([1,2,3,4]);
-const DEMO_STORAGE_KEY='eplan-nutrition-preview-v3';
+const DEMO_STORAGE_KEY='eplan-nutrition-preview-v4';
 window.currentClientData={client:{id:999,kcal:2380,protein:160,fat:60,carbs:300}};
 const fmtDemo=v=>Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1});
 const escapeDish=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,6 +34,7 @@ window.removeDemoVariant=function(n,v){
 window.demoRecipeChanged=function(item){
  if(!item)return;
  item.edited=true;
+ item.recipe_id=null;item.recipe_source_url=null;item.recipe_source_name=null;
  item.dish_title='Власна комбінація продуктів';
  item.preparation='Склад змінено. Перевір, як поєднати та приготувати продукти.';
 };
@@ -54,7 +55,10 @@ window.rerenderNutritionPlan=function(){
      +'<span class="variant-macros" aria-label="Калорії та БЖВ цього варіанта">'+window.structuredVariantHeaderHTML(x)+'</span>'
      +(variants.length>1?'<button type="button" class="variant-delete" onclick="removeDemoVariant('+n+','+x.variant_number+')">Видалити</button>':'')+'</div>'
      +'<div class="meal-recipe"><strong>'+escapeDish(x.dish_title||'Власний варіант')+'</strong>'
-     +'<p>'+escapeDish(x.preparation||'Обери продукти та склади готову страву.')+'</p></div>'
+     +'<p>'+escapeDish(x.preparation||'Обери продукти та склади готову страву.')+'</p>'
+     +'<div class="meal-recipe-actions"><button type="button" class="open-recipe-library" onclick="openRecipeTemplatePicker('+n+','+x.variant_number+')">≡ Обрати з бібліотеки страв</button>'
+     +(x.recipe_source_url?'<a href="'+escapeDish(x.recipe_source_url)+'" target="_blank" rel="noopener noreferrer">Ідея: '+escapeDish(x.recipe_source_name||'кулінарне джерело')+' ↗</a>':'')
+     +'</div></div>'
      +window.renderStructuredMealHTML(x)+'</div>'
     ).join('')
     +'<button type="button" class="add-variant" onclick="addDemoVariant('+n+')">＋ Додати варіант</button></div>':'')
@@ -69,6 +73,8 @@ function resetDraftData(){
   meal_number:+x.meal_number,variant_number:+x.variant_number,sort:+x.sort,
   content:String(x.content||''),
   dish_title:String(x.dish_title||''),preparation:String(x.preparation||''),
+  recipe_id:x.recipe_id||null,recipe_source_url:x.recipe_source_url||null,
+  recipe_source_name:x.recipe_source_name||null,
   edited:false,
   foods:(x.foods||[]).map(f=>({
    source_id:f.source_id,grams:Number(f.grams),count:f.count??null,
