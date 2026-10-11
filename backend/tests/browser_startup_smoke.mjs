@@ -55,25 +55,12 @@ try{
       nutrition:[]
     };
     await showClientNutrition(999);
-    window.openNutritionTargetsModal(999);
   });
   await page.locator('.redesign-nutrition-today').waitFor({timeout:3000});
-  await page.locator('#nutritionTargetsModal').waitFor({timeout:3000});
-  await page.locator('#nutritionTargetsModal #calcAge').fill('29');
-  await page.locator('#calcHeight').fill('178');
-  await page.locator('#calcWeight').fill('82');
-  await page.locator('#calcSteps').fill('5000');
-  await page.locator('#calcStrength').selectOption('5');
-  await page.locator('.nutrition-calc-button').click();
-  await page.locator('.nutrition-calc-result').waitFor({timeout:3000});
-  const values=await page.evaluate(()=>window.pendingNutritionTargets);
-  assert.ok(values.kcal>2000&&values.kcal<4200,'Invalid calorie result: '+values.kcal);
-  assert.ok(values.protein>100&&values.fat>40&&values.carbs>0,'Invalid macros');
-  await page.locator('.nutrition-calc-manual summary').click();
-  assert.equal(await page.locator('#targetKcal').inputValue(),'2500','Manual fallback changed');
+  assert.equal(await page.locator('.nutrition-targets-button').count(),0,'Client should not edit targets');
+  assert.equal(await page.evaluate(()=>typeof window.openNutritionTargetsModal),'undefined','Client target calculator still exposed');
   const lazyBefore=await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('food-lookup.js')));
   assert.equal(lazyBefore,false,'Food lookup loaded during startup');
-  await page.locator('#nutritionTargetsModal button.dark').click();
   await page.locator('.nutrition-food-search-button').click();
   await page.locator('#foodSearchModal').waitFor({timeout:5000});
   await page.locator('#foodLookupQuery').fill('гречка');
@@ -86,6 +73,32 @@ try{
   assert.deepEqual(portions.map(v=>Number(v.replace(',','.'))),[150,6,1.5,30],'Incorrect macro portion');
   await page.locator('#foodSearchClose').click();
   assert.equal(await page.locator('#foodSearchModal').count(),0,'Food modal remains open');
+  await page.evaluate(()=>{
+    session={role:'trainer',user_id:1};
+    const d={
+      client:{id:999,name:'Test client',kcal:2500,protein:160,fat:70,carbs:300,
+        access:{features:{nutrition:true,meal_plan:true}}},nutrition_plan:[]
+    };
+    window.currentClientData=d;
+    app.innerHTML='<div id="nutrition">'+nutritionHTML(d,true)+'</div>';
+  });
+  await page.locator('#nutrition .trainer-nutrition-calc-launch').click();
+  await page.locator('#trainerNutritionCalcModal').waitFor({timeout:3000});
+  await page.locator('#calcAge').fill('29');
+  await page.locator('#calcHeight').fill('178');
+  await page.locator('#calcWeight').fill('82');
+  await page.locator('#calcSteps').fill('5000');
+  await page.locator('#calcStrength').selectOption('5');
+  await page.locator('#trainerNutritionCalcModal .nutrition-calc-button').click();
+  await page.locator('.nutrition-calc-result').waitFor({timeout:3000});
+  const values=await page.evaluate(()=>window.pendingTrainerNutritionTargets);
+  assert.ok(values.kcal>2000&&values.kcal<4200,'Invalid calorie result: '+values.kcal);
+  assert.ok(values.protein>100&&values.fat>40&&values.carbs>0,'Invalid macros');
+  await page.locator('.nutrition-calc-result button').click();
+  assert.equal(await page.locator('#nkcal').inputValue(),String(values.kcal),'Trainer targets not populated');
+  assert.equal(await page.locator('#nprotein').inputValue(),String(values.protein),'Trainer protein not populated');
+  assert.equal(await page.locator('#trainerNutritionCalcModal').count(),0,'Calculator remained open');
+
   assert.deepEqual(pageErrors,[],'Unexpected JS errors during app launch/calculator');
   console.log('BROWSER STARTUP + CALCULATOR + LAZY SEARCH: PASS');
 }finally{
