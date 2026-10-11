@@ -6,8 +6,8 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1});
 const tags={make_ahead:'З вечора',cold:'Холодна страва',hot:'Гаряча страва',quick:'Швидко',vegetarian:'Без м’яса',meal_prep:'Заготовка'};
-const cats={breakfast:'Сніданки',lunch:'Обіди',snack:'Перекуси',dinner:'Вечері',evening:'Другий перекус'};
-const defaultCategory={1:'breakfast',2:'lunch',3:'snack',4:'dinner',5:'evening'};
+const cats={breakfast:'Сніданки',lunch:'Обіди',snack:'Перекуси',dinner:'Вечері'};
+const defaultCategory={1:'breakfast',2:'lunch',3:'snack',4:'dinner',5:'snack'};
 let state=null;
 let loading=null;
 function currentDraft(){return (nutritionPlanDraft||[]).find(x=>x.meal_number===state?.n&&x.variant_number===state?.v)}
@@ -16,7 +16,7 @@ async function getLibrary(){
   if(!r.ok)throw Error('Template catalog unavailable');
   return r.json();
  }).then(result=>{
-  if(!Array.isArray(result.templates)||result.templates.length<35)
+  if(!Array.isArray(result.templates)||result.templates.length!==60)
    throw Error('Template catalog incomplete');
   return result.templates;
  }).catch(err=>{loading=null;throw err});
@@ -33,7 +33,7 @@ function render(){
   recipe.category===state.category&&
   (recipe.title.toLocaleLowerCase('uk-UA').includes(q)||
    recipe.preparation.toLocaleLowerCase('uk-UA').includes(q))).slice(0,60);
- $('recipeTemplateCount').textContent=matches.length+' з '+state.recipes.length+' перевірених шаблонів';
+ $('recipeTemplateCount').textContent=matches.length+' з 15 варіантів у категорії · 60 перевірених шаблонів';
  $('recipeTemplateFilters').innerHTML=Object.entries(cats).map(([category,label])=>{
   const count=state.recipes.filter(r=>r.category===category).length;
   return '<button type="button" data-cat="'+category+'" class="'+(category===state.category?'active':'')+'">'+label+' <b>'+count+'</b></button>';
