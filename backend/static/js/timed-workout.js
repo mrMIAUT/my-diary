@@ -283,7 +283,8 @@ async function finishTimedExerciseTimer(){
 
     // Start the common superset rest immediately after the final exercise of a
     // round. Doing this before the UI refresh avoids losing the automatic timer.
-    if(singleSet&&isLast&&hasNextRound&&sharedRest>0){
+    var autoRestStarted=singleSet&&isLast&&hasNextRound&&sharedRest>0;
+    if(autoRestStarted){
       startAutomaticRestTimer(sharedRest,false);
     }
 
@@ -297,9 +298,14 @@ async function finishTimedExerciseTimer(){
       var fresh=await loadClientData(cid);
       window.currentClientData=fresh;
       await showClientTraining(cid);
+      // The rest card only exists in the rebuilt workout screen. Scroll after
+      // it is mounted and synced, rather than towards a covered exercise.
+      if(autoRestStarted){
+        setTimeout(function(){scrollToActiveWorkoutRestTimer()},80);
+      }
       if(singleSet){
         if(isLast){
-          if(hasNextRound)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
+          if(hasNextRound&&!autoRestStarted)setTimeout(function(){focusSupersetRoundStart(pid,round+1)},80);
         }else{
           setTimeout(function(){focusSupersetNextExercise(pid,round)},80);
         }

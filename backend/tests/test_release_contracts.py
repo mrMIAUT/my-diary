@@ -273,8 +273,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("trainer-review-timed-exercise", RESULTS)
         self.assertIn("path==='/timed-result-sets'&&m==='POST'", CORE)
         self.assertIn("timed_result_sets", CORE)
-        self.assertIn('/static/js/timed-workout.js?v=6', INDEX)
-        self.assertIn("'/static/js/timed-workout.js?v=6'", SW)
+        self.assertIn('/static/js/timed-workout.js?v=7', INDEX)
+        self.assertIn("'/static/js/timed-workout.js?v=7'", SW)
         self.assertIn("data-timed-readonly", PROGRESS_REDESIGN)
 
     def test_trainer_nutrition_targets_auto_calculate_kcal_from_macros(self):
@@ -363,7 +363,8 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn("workout-live-grouped-exercise-head", WORKOUT)
         self.assertIn("workout-live-grouped-body", WORKOUT)
         self.assertIn("focusWorkoutExerciseCard(nextPid)", WORKOUT)
-        self.assertIn("if(singleSet&&isLast&&hasNextRound&&sharedRest>0)", TIMED_WORKOUT)
+        self.assertIn("var autoRestStarted=singleSet&&isLast&&hasNextRound&&sharedRest>0", TIMED_WORKOUT)
+        self.assertIn("if(autoRestStarted)", TIMED_WORKOUT)
         finish_block = TIMED_WORKOUT.split("async function finishTimedExerciseTimer()",1)[1].split("function renderTimedExerciseTimer",1)[0]
         self.assertLess(finish_block.index("startAutomaticRestTimer(sharedRest,false)"), finish_block.index("loadClientData(cid)"))
 
