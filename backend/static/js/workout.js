@@ -296,35 +296,15 @@ function workoutExerciseSetCount(x,d){
 }
 // Keep the live rest panel (including its progress baseline) while editing sets.
 // Re-rendering only completedExerciseHTML used to remove the new timer card.
+// Only repaint the modified sets. Rest controls are rendered once at workout
+// level, outside all exercise cards, so this cannot remove the running timer.
 function refreshWorkoutRepSetBody(cid,pid,x,d){
  let body=document.getElementById('exerciseBody'+pid);
  if(!body)return;
- let panel=body.querySelector('.workout-featured-rest');
  body.innerHTML=completedExerciseHTML(x,d,cid);
- // A superset owns one rest card above its first exercise, not a separate
- // card in whichever exercise the client most recently edited.
- if(x.superset_group&&typeof body.closest==='function'){
-   let shared=body.closest('.workout-live-superset')?.querySelector('.workout-featured-rest');
-   if(shared){
-     let peers=workoutSupersetPeers(x,d),first=peers[0]||x;
-     shared.dataset.restFeaturedTotal=String(workoutExerciseSetCount(first,d));
-     syncFeaturedRestTimer(restTimerRemaining(),restTimerPausedSeconds());
-     body.classList.remove('hidden');
-     return;
-   }
- }
- if(!panel){
-   body.insertAdjacentHTML('afterbegin',featuredRestTimerHTML(pid,workoutExerciseSetCount(x,d),!!x.superset_group));
-   panel=body.querySelector('.workout-featured-rest');
- }else{
-   body.prepend(panel);
- }
- if(panel){
-   panel.dataset.restFeaturedTotal=String(workoutExerciseSetCount(x,d));
-   syncFeaturedRestTimer(restTimerRemaining(),restTimerPausedSeconds());
- }
  body.classList.remove('hidden');
 }
+
 function addWorkoutExtraSet(cid,pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>+v.id===+pid),sid=workoutDraftSessionId(d);
  if(!x||!sid)return;
@@ -768,7 +748,6 @@ function activeExercisesHTML(items,d,cid){
         +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span>',
       side='<span class="workout-live-toggle-side">'+(grouped?'':'<span class="arrow">⌄</span>')+(doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':'')+'</span>';
   // The large rest display is presentation-only; never attached to timed exercises.
-  if(!timed&&!x.superset_group)content=featuredRestTimerHTML(x.id,effective.sets,false)+content;
   if(grouped){
     return '<div class="workout-live-exercise workout-live-exercise-inner'+(doneToday?' is-exercise-complete':'')+'">'
       +'<div class="workout-live-toggle workout-live-grouped-exercise-head">'+title+side+'</div>'
@@ -786,7 +765,7 @@ function activeExercisesHTML(items,d,cid){
        hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1),
        groupBodyId='workoutSupersetBody'+pair[0].id,
        groupDone=workoutSupersetAllExercisesDone(pair,d,activeDay);
-   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${featuredRestTimerHTML(pair[0].id,rounds,true)}${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true,false)}
  }
  return html;
