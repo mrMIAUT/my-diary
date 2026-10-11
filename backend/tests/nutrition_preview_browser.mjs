@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {chromium} from 'playwright';
+const port=17838;
+const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1','--directory','nutrition-preview-dist'],{stdio:'ignore'});
+let browser;
+try{
+ let ready=false;
+ for(let t=0;t<80;t++){
+  try{const r=await fetch('http://127.0.0.1:'+port+'/catalog.json');if(r.ok){ready=true;break}}catch{}
+  await new Promise(resolve=>setTimeout(resolve,200));
+ }
+ assert.ok(ready,'Static nutrition preview server not ready');
+ browser=await chromium.launch({headless:true});
+ const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ const page=await context.newPage();
+ const errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'load'});
+ await page.locator('.structured-food-row').first().waitFor({timeout:15000});
+ assert.equal(await page.locator('img').count(),0,'Food pictures should be absent');
+ assert.match(await page.locator('#dailySummary').innerText(),/Добова ціль/);
+ assert.ok(await page.locator('.variant-card').count()>=2,'Alternatives missing');
+ const original=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
+ await page.locator('.structured-food-row').first().locator('.stepper-plus').click();
+ const adjusted=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
+ assert.notEqual(original,adjusted,'Plus did not recalculate macros');
+ const previousDay=await page.locator('#dailySummary .stat-kcal b').innerText();
+ await page.locator('.structured-food-name').first().click();
+ await page.locator('#structuredFoodPicker').waitFor();
+ await page.locator('#structuredFoodSearch').fill('яйце');
+ await page.locator('.picker-food').first().click();
+ assert.match(await page.locator('.detail-title strong').innerText(),/Яйце куряче/);
+ assert.match(await page.locator('.quantity-section').innerText(),/шт/);
+ await page.locator('#pickerQty').fill('2');
+ await page.locator('#pickerApply').click();
+ await page.locator('#structuredFoodPicker').waitFor({state:'detached'});
+ const first=page.locator('.structured-food-row').first();
+ assert.match(await first.innerText(),/Яйце куряче/);
+ assert.equal(await first.locator('input.structured-grams').inputValue(),'2');
+ const changedDay=await page.locator('#dailySummary .stat-kcal b').innerText();
+ assert.notEqual(previousDay,changedDay,'Replacing oats with eggs did not change day totals');
+ await page.locator('.structured-meal-editor').first().locator('.structured-add').click();
+ await page.locator('#structuredFoodSearch').fill('помідор');
+ await page.locator('.picker-food').first().click();
+ assert.equal(await page.locator('.veg-choice input').isChecked(),false,'Tomato defaults to excluded target');
+ await page.locator('#pickerQty').fill('125');
+ await page.locator('#pickerApply').click();
+ assert.match(await page.locator('.vegetable-label').first().innerText(),/Овочі поза/);
+ assert.match(await page.locator('.structured-meal-summary').first().innerText(),/Фактично з овочами/);
+ await page.locator('.vegetable-label').first().click();
+ await page.locator('.veg-choice input').check();
+ await page.locator('#pickerApply').click();
+ assert.equal(await page.locator('.structured-meal-summary').first().innerText().then(x=>x.includes('Фактично з овочами')),false,'Tomato should be included in goal after toggle');
+ // Keep the demo editable in the same browser; never post customer data.
+ await page.locator('#saveDemoButton').click();
+ assert.match(await page.locator('#saveDemoStatus').innerText(),/Збережено/);
+ await page.reload({waitUntil:'load'});
+ await page.locator('.structured-food-row').first().waitFor({timeout:15000});
+ assert.match(await page.locator('.structured-food-row').first().innerText(),/Яйце куряче/);
+ assert.equal(await page.locator('.structured-food-row').first().locator('input.structured-grams').inputValue(),'2');
+ assert.equal(await page.locator('img').count(),0);
+ const viewport=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth}));
+ assert.ok(viewport.w<=viewport.v+2,'Unexpected horizontal overflow: '+JSON.stringify(viewport));
+ await page.locator('.reset').click();
+ assert.match(await page.locator('.structured-food-row').first().innerText(),/Вівсяні пластівці/);
+ assert.deepEqual(errors,[],'Unexpected JS exceptions');
+ console.log('NUTRITION PREVIEW MOBILE: PASS (macros, pieces, vegetable toggle, save, reset, no photos)');
+}finally{
+ if(browser)await browser.close();
+ server.kill('SIGTERM');
+}
