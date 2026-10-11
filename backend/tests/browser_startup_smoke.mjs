@@ -88,6 +88,8 @@ try{
   assert.equal(await page.locator('#foodSearchModal').count(),0,'Food modal remains open');
   await page.evaluate(()=>{
     session={role:'trainer',user_id:1};
+    document.body.classList.remove('client-ui');
+    document.body.classList.add('eplan-redesign','trainer-ui');
     const d={
       client:{id:999,name:'Test client',kcal:2500,protein:160,fat:70,carbs:300,
         access:{features:{nutrition:true,meal_plan:true}}},nutrition_plan:[]
