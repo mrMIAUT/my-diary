@@ -37,7 +37,7 @@ class RestTimerFinalMobileTests(unittest.TestCase):
         self.assertIn('@media(max-width:350px)',css)
         self.assertIn("transform:rotate(-90deg)",CSS)
         self.assertIn("circle.style.strokeDashoffset='0'",TIMER)
-        self.assertIn("circle.style.strokeDasharray=String(circumference*Math.min(1,shown/baseline))",TIMER)
+        self.assertIn("circle.style.strokeDasharray=String(circumference*Math.min(1,exact/baseline))",TIMER)
 
     def test_current_cache_refs(self):
         for src in (INDEX,SW):
