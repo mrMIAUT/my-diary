@@ -4,7 +4,9 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-os.environ.setdefault('DATABASE_URL','postgresql://test:test@127.0.0.1:1/test')
+os.environ.setdefault('DATABASE_URL','postgresql://postgres:postgres@127.0.0.1:5432/eplan_test')
+os.environ.setdefault('TRAINER_EMAIL','ci@example.com')
+os.environ.setdefault('TRAINER_PASSWORD','Test-Only-Not-For-Production-2026')
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import app as e
 from fastapi.testclient import TestClient
