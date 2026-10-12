@@ -114,6 +114,31 @@ try{
  assert.equal(saved.meals.length,12,'Rations must persist as meal/variant combinations');
  assert.ok(saved.meals.some(x=>x.dish_title==='Страва lunch 3'&&x.preparation.includes('Змішай')));
  assert.ok(saved.meals.every(x=>x.foods.length>0));
+ // Real client view: select one complete ration, never stack incompatible
+ // daily choices. Legacy incomplete per-meal alternatives remain readable.
+ await page.evaluate(meals=>{
+  const host=document.createElement('section');host.id='clientRationSmoke';document.body.appendChild(host);
+  host.innerHTML=clientMealPlanHTML({client:{meal_plan:''},nutrition_plan:meals});
+ },saved.meals);
+ assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),3,
+   'Client cannot choose complete rations');
+ assert.equal(await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').count(),1,
+   'Client sees several daily rations stacked together');
+ const clientRationOne=await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').innerText();
+ await page.locator('#clientRationSmoke .client-ration-tab').nth(1).click();
+ const clientRationTwo=await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').innerText();
+ assert.notEqual(clientRationOne,clientRationTwo,'Client ration selector did not switch dishes');
+ assert.equal(await page.locator('#clientRationSmoke .client-ration-tab[aria-selected="true"]').count(),1,
+   'Client selection aria state is incorrect');
+ await page.evaluate(meals=>{
+  const old=meals.filter(x=>!(x.meal_number===4&&x.variant_number===2));
+  document.querySelector('#clientRationSmoke').innerHTML=
+   clientMealPlanHTML({client:{meal_plan:''},nutrition_plan:old});
+ },saved.meals);
+ assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),0,
+   'Incomplete legacy alternatives were converted to invalid complete rations');
+ assert.ok((await page.locator('#clientRationSmoke').innerText()).includes('Варіант 2'),
+   'Legacy incomplete variants no longer visible');
  assert.equal(errors.length,0,'JS runtime failures '+errors.join(','));
  console.log('TRAINER NUTRITION UI PASS: ration tabs, real edit, recipe library, autosize, isolated state and explicit client save');
 }finally{
