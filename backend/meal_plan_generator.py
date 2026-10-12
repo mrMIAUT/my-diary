@@ -5,6 +5,7 @@ Portions are always labeled in the catalog's food preparation state.
 """
 from functools import lru_cache
 from food_local_catalog import approved_reference_food_items
+from nutrition_structured import FREE_VEGETABLE_NAMES,EGG_NAMES,EGG_EDIBLE_GRAMS
 
 # Food names must match audited food_local_nutrition.json exactly.
 # Bounds are edible grams in the precisely specified state (raw/dry/cooked/as_sold).
@@ -19,7 +20,7 @@ FOODS = {
     "almonds": ("Мигдаль (сирий)", 0, 40, 5, 15, ("nuts",)),
     "avocado": ("Авокадо (сире, м'якоть)", 0, 160, 5, 60, ()),
     "bread": ("Хліб пшеничний цільнозерновий", 50, 180, 5, 85, ("gluten",)),
-    "eggs": ("Яйце куряче (варене круто)", 50, 240, 5, 110, ("eggs",)),
+    "eggs": ("Яйце куряче (варене круто)", 50, 250, 50, 100, ("eggs",)),
     "buckwheat": ("Гречка (відварена)", 120, 380, 5, 200, ()),
     "rice": ("Рис білий (відварений)", 100, 350, 5, 200, ()),
     "potatoes": ("Картопля (відварена без шкірки)", 140, 420, 5, 250, ()),
@@ -102,8 +103,9 @@ def _values(food, grams):
     return [float(food[f]) * grams / 100 for f in FOOD_NUTRIENTS]
 
 
-def _nutrition(food_keys, grams, foods):
-    return [sum(_values(foods[key], g)[i] for key, g in zip(food_keys, grams))
+def _nutrition(food_keys, grams, foods, include_vegetables=False):
+    return [sum(_values(foods[key], g)[i] for key, g in zip(food_keys, grams)
+                if include_vegetables or foods[key]["name"] not in FREE_VEGETABLE_NAMES)
             for i in range(4)]
 
 
@@ -142,17 +144,30 @@ def _fit_meal(keys, target, foods):
         if not changed:
             break
     vals = _nutrition(keys, grams, foods)
-    rows = [{
-        "source_id": foods[k]["source_id"],
-        "name": foods[k]["name"], "state": foods[k]["preparation_state"],
-        "grams": grams[i], "kcal": round(_values(foods[k], grams[i])[0], 1),
-        "protein": round(_values(foods[k], grams[i])[1], 1),
-        "fat": round(_values(foods[k], grams[i])[2], 1),
-        "carbs": round(_values(foods[k], grams[i])[3], 1),
-    } for i, k in enumerate(keys) if grams[i] > 0]
-    total = {n: round(v, 1) for n, v in zip(NUTRIENTS, vals)}
-    return rows, total
-
+    actual = _nutrition(keys, grams, foods,include_vegetables=True)
+    rows=[]
+    for i,k in enumerate(keys):
+        if grams[i] <= 0: continue
+        food=foods[k]
+        name=food["name"]
+        egg=name in EGG_NAMES
+        vegetables=name in FREE_VEGETABLE_NAMES
+        detail={
+            "source_id":food["source_id"],
+            "name":name,"state":food["preparation_state"],
+            "grams":grams[i], "count":grams[i]//EGG_EDIBLE_GRAMS if egg else None,
+            "unit":"pcs" if egg else "g",
+            "count_in_targets":not vegetables,
+            "optional_vegetable":vegetables,
+            "kcal":round(_values(food,grams[i])[0],1),
+            "protein":round(_values(food,grams[i])[1],1),
+            "fat":round(_values(food,grams[i])[2],1),
+            "carbs":round(_values(food,grams[i])[3],1)
+        }
+        rows.append(detail)
+    total={n:round(v,1) for n,v in zip(NUTRIENTS,vals)}
+    gross={n:round(v,1) for n,v in zip(NUTRIENTS,actual)}
+    return rows,total,gross
 
 def _percent_diff(actual, target):
     return round(100 * (actual - target) / target, 1) if target else 0.0
@@ -186,11 +201,12 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
                              + LABELS[kind].lower() + ". Змініть обмеження або складіть план вручну.")
         target = tuple(v * portion for v in targets)
         for variant_index, keys in enumerate(suitable[:variants], start=1):
-            rows, total = _fit_meal(keys, target, foods)
+            rows, total, gross = _fit_meal(keys, target, foods)
             if variant_index == 1:
                 for i, n in enumerate(NUTRIENTS):
                     daily[i] += total[n]
-            lines = [f'{row["name"]} — {row["grams"]} г' for row in rows]
+            lines = [f'{row["name"]} — {row["count"]} шт.' if row["count"] is not None
+                     else f'{row["name"]} — {row["grams"]} г' for row in rows]
             content = "\n".join(lines)
             content += ("\n\nОрієнтовно на прийом: "
                         + f'{total["kcal"]:.0f} ккал · Б {total["protein"]:.0f} г'
@@ -198,7 +214,7 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
             result.append({
                 "meal_number": meal_index, "meal_name": LABELS[kind],
                 "variant_number": variant_index, "sort": len(result),
-                "foods": rows, "totals": total, "content": content,
+                "foods": rows, "totals": total, "actual_totals": gross, "content": content,
             })
     total = {key: round(value, 1) for key, value in zip(NUTRIENTS, daily)}
     target_dict = dict(zip(NUTRIENTS, targets))
@@ -215,5 +231,7 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
             "Вага кожного продукту відповідає стану в назві (сухий, варений, запечений тощо).",
             "Виключення продуктів за категоріями не гарантує відсутності алергенів або перехресного контакту.",
             "У добовому підсумку враховано тільки варіант 1 кожного прийому; альтернативи не додаються разом.",
+            "Некрохмалисті овочі за замовчуванням не включені до цільових БЖВ, але враховуються у фактичній енергії.",
+            "Яйця враховуються цілими штуками за 50 г їстівної частини; точна маса відрізняється.",
         ],
     }
