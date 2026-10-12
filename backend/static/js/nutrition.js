@@ -227,7 +227,7 @@ window.openAutoMealPlanBuilder = async function(cid){
    if(!window.eplanAutoPlanLoader){
      window.eplanAutoPlanLoader=new Promise((resolve,reject)=>{
        const script=document.createElement('script');
-       script.src='/static/js/auto-meal-plan.js?v=1';
+       script.src='/static/js/auto-meal-plan.js?v=2';
        script.onload=resolve;
        script.onerror=()=>reject(new Error('Meal planner module unavailable'));
        document.head.appendChild(script);
