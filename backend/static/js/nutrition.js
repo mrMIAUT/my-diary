@@ -213,7 +213,7 @@ function nutritionMealThumbnail(item,n){
 // suppress known catalog boilerplate in the view; never rewrite the client's
 // persisted plan or remove real cooking / soaking directions.
 function nutritionCookingSteps(input){
- let text=String(input||'');
+ let text=String(input||'').replaceAll('; не подавай сухе чіа.','.');
  const obsolete=[
   "Олію не п'ють окремо.",
   "Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі.",
