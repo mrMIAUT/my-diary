@@ -3237,7 +3237,9 @@ def prototype_food_search(
     if off_items or usda_items:
         _food_cache_set(FOOD_RESULT_CACHE,FOOD_RESULT_CACHE_LOCK,
                         cache_key,candidates,FOOD_RESULT_CACHE_MAX_ENTRIES)
-    return _food_result_page(raw,normalized,variants,candidates,limit,page,food_type)
+    result=_food_result_page(raw,normalized,variants,candidates,limit,page,food_type)
+    if reviewed:result["items"]=(reviewed+result["items"])[:limit]
+    return result
 
 @app.get("/")
 def home(request:Request): return _canonical_entry(request,"/")
@@ -5556,8 +5558,8 @@ def create_saved_recipe(x:SavedRecipeCreateIn,user:AuthUser=Depends(require_clie
         if not ingredients:raise HTTPException(400,"Спочатку додай продукти до цього прийому їжі.")
         if len(ingredients)>=30:raise HTTPException(400,"Забагато складників у рецепті.")
         grams=sum(float(t["grams"]) for t in ingredients)
-        if grams<=0 or grams>10000:
-            raise HTTPException(400,"Вага рецепта перевищує 10 кг.")
+        if grams<=0 or grams>2000:
+            raise HTTPException(400,"Вага збереженої порції рецепта має бути до 2 кг.")
         nutrients={k:round(sum(float(t["grams"])*float(t[k+"_100"])/100 for t in ingredients)
                        /grams*100,2) for k in ("kcal","protein","fat","carbs")}
         recipe=[{k:(float(t[k]) if k in ("grams","kcal_100","protein_100","fat_100","carbs_100") else t[k])
