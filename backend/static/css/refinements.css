@@ -1362,3 +1362,133 @@ body.eplan-redesign.client-ui .redesign-nutrition-page .meal-plan-card > .meal-p
   padding:12px 12px 16px!important;
  }
 }
+
+
+/* v310 — sixth concept: clean kcal header and three soft-colored B/J/V chips.
+   Kept inside saved ration summaries only, shared between trainer and client. */
+body.eplan-redesign .nutrition-menu-total-v6{
+ display:grid!important;
+ gap:12px!important;
+ margin:3px 0 12px!important;
+ padding:15px 13px 13px!important;
+ border:1px solid #dfe7f2!important;
+ border-radius:17px!important;
+ background:#fff!important;
+ color:#142b4d!important;
+ box-shadow:0 4px 14px rgba(31,61,102,.035)!important;
+ min-width:0!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:space-between!important;
+ flex-wrap:wrap!important;
+ gap:6px 12px!important;
+ padding:0!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>span{
+ color:#788aa5!important;
+ font-size:12px!important;
+ font-weight:750!important;
+ line-height:1.35!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong{
+ color:#172c4d!important;
+ font-size:22px!important;
+ font-weight:900!important;
+ letter-spacing:-.035em;
+ line-height:1.12!important;
+ white-space:nowrap!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong small{
+ color:#172c4d!important;
+ font-size:13px!important;
+ letter-spacing:0;
+ font-weight:750!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-grid{
+ display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:8px!important;
+ padding:0!important;
+ margin:0!important;
+ min-width:0!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ justify-content:center!important;
+ gap:6px!important;
+ min-width:0!important;
+ padding:11px 5px 10px!important;
+ border:0!important;
+ border-radius:12px!important;
+ box-sizing:border-box!important;
+ text-align:center!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip.protein{
+ background:#ecf3ff!important;color:#397dec!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip.fat{
+ background:#fff3df!important;color:#b97918!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip.carbs{
+ background:#eaf8ef!important;color:#23895f!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip-main{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ gap:4px!important;
+ min-width:0!important;
+ max-width:100%!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-icon{
+ display:block!important;
+ width:17px!important;
+ height:17px!important;
+ flex:0 0 17px!important;
+ fill:none!important;stroke:currentColor!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-value{
+ display:block!important;
+ margin:0!important;
+ padding:0!important;
+ color:inherit!important;
+ font-weight:850!important;
+ font-size:15px!important;
+ letter-spacing:-.02em!important;
+ line-height:1.2!important;
+ white-space:nowrap!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-value small{
+ color:inherit!important;
+ font-size:10px!important;
+ font-weight:650!important;
+ letter-spacing:0!important;
+}
+body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-name{
+ display:block!important;
+ color:inherit!important;
+ font-size:11px!important;
+ font-weight:700!important;
+ line-height:1.2!important;
+ white-space:normal!important;
+}
+@media(max-width:390px){
+ body.eplan-redesign .nutrition-menu-total-v6{padding:13px 10px 11px!important}
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-grid{gap:6px!important}
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip{padding:10px 3px 9px!important}
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-value{font-size:13px!important}
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-icon{
+  width:15px!important;height:15px!important;flex-basis:15px!important
+ }
+}
+@media(max-width:350px){
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip-main{
+  flex-direction:column!important;gap:3px!important;
+ }
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-total-chip{gap:4px!important}
+ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong{
+  font-size:20px!important;
+ }
+}
