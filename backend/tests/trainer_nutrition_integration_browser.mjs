@@ -331,6 +331,43 @@ try{
     +'\n\nПриготування: '+item.preparation
   }))});
  },saved.meals);
+ // Recreate production cascade: redesign.css comes AFTER refinements.css.
+ // This catches the global client button style that previously turned the
+ // collapsible plan heading into a giant bright-blue rectangle on iPhones.
+ await page.evaluate(()=>{
+  document.body.classList.remove('trainer-ui');
+  document.body.classList.add('client-ui');
+  document.querySelector('#clientRationSmoke').classList.add('client-section-page','redesign-nutrition-page');
+ });
+ await page.addStyleTag({path:'backend/static/css/redesign.css'});
+ const clientHeader=page.locator('#clientRationSmoke .meal-plan-card > button.meal-plan-head');
+ async function assertClientHeaderAt(width){
+  await page.setViewportSize({width,height:844});
+  const result=await clientHeader.evaluate(el=>{
+   const box=el.getBoundingClientRect(),card=el.closest('.meal-plan-card').getBoundingClientRect();
+   const text=el.querySelector('.muted').getBoundingClientRect(),arrow=el.querySelector('.arrow').getBoundingClientRect();
+   return {
+    background:getComputedStyle(el).backgroundColor,
+    title:getComputedStyle(el.querySelector('strong')).color,
+    subtitle:getComputedStyle(el.querySelector('.muted')).color,
+    cardBackground:getComputedStyle(el.closest('.meal-plan-card')).backgroundColor,
+    fitsCard:Math.abs(box.width-(card.width-2))<3,
+    textDoesNotOverlapArrow:text.right<=arrow.left+1,
+    width:box.width,
+    padding:getComputedStyle(el).paddingLeft
+   };
+  });
+  assert.equal(result.background,'rgb(255, 255, 255)',
+   'Client meal-plan title inherited bright blue generic button styling at '+width+'px');
+  assert.equal(result.cardBackground,'rgb(255, 255, 255)');
+  assert.equal(result.title,'rgb(10, 23, 56)','Meal-plan title lost contrast');
+  assert.equal(result.subtitle,'rgb(129, 145, 168)','Meal-plan description should be muted');
+  assert.ok(result.fitsCard,'Plan header no longer fills white card at '+width+'px');
+  assert.ok(result.textDoesNotOverlapArrow,'Plan header copy overlaps collapse arrow at '+width+'px');
+ }
+ await assertClientHeaderAt(390);
+ await assertClientHeaderAt(320);
+ await page.setViewportSize({width:390,height:844});
  assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),3,
    'Client cannot choose complete rations');
  assert.equal(await page.locator('#clientRationSmoke #clientMealPlanBody.hidden').count(),0,
