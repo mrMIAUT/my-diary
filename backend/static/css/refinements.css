@@ -1690,3 +1690,18 @@ body.eplan-redesign.client-ui .redesign-nutrition-tabs{
  }
  body.eplan-redesign .nutrition-diary-meal-head{padding:10px}
 }
+
+/* Preserve the exact approved coffee/utensils/apple/moon colors in diary mode
+   too (the original plan selectors only applied inside .nutrition-menu-meal-v2). */
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-breakfast{
+ background:#ecf3ff!important;color:#397dec!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-lunch{
+ background:#e8f7ef!important;color:#23895f!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-snack{
+ background:#f3edff!important;color:#7855c4!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-dinner{
+ background:#fff0e5!important;color:#b76e2e!important;
+}
