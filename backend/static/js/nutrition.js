@@ -205,7 +205,7 @@ function trainerSavedRationPage(items,nums,variant){
    :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>');
 }
 window.selectTrainerSavedRation=function(ration){
- const body=document.getElementById('nutritionPlanBody');
+ const body=document.querySelector('#nutrition #nutritionPlanBody')||document.getElementById('nutritionPlanBody');
  if(!body)return;
  for(const button of body.querySelectorAll('.trainer-saved-ration-tab')){
   const current=Number(button.dataset.ration)===Number(ration);
