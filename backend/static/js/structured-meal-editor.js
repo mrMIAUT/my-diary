@@ -13,8 +13,12 @@ window.loadStructuredMealCatalog=async function(){
  if(window.structuredCatalog?.length)return window.structuredCatalog;
  const res=await api('/trainer/foods/catalog');
  if(!Array.isArray(res?.items)||!res.items.length)throw Error('Catalog empty');
- window.structuredCatalog=res.items;
- return res.items;
+ window.structuredCatalog=res.items.map(item=>{
+   const name=String(item.name||'');
+   const veg=/^(Огірок|Помідор|Морква|Броколі|Шпинат|Капуста|Перець солодкий|Салат |Рукола|Редиска|Буряк|Кабачок|Цибуля|Часник|Гарбуз|Селера|Спаржа)/.test(name);
+   return {...item,name:veg?name.replace(/ \(сирий\)$/,' (свіжий)').replace(/ \(сира\)$/,' (свіжа)').replace(/ \(сирі\)$/,' (свіжі)'):name};
+ });
+ return window.structuredCatalog;
 };
 function byId(source_id){
  return (window.structuredCatalog||[]).find(x=>x.source_id===source_id);
@@ -44,8 +48,11 @@ function dailyTotals(actual=false){
  const sum={kcal:0,protein:0,fat:0,carbs:0};
  const mealNums=[...new Set((nutritionPlanDraft||[]).map(x=>x.meal_number))];
  for(const n of mealNums){
-   const variant=(nutritionPlanDraft||[]).filter(x=>x.meal_number===n)
-        .sort((a,b)=>a.variant_number-b.variant_number)[0];
+   const options=(nutritionPlanDraft||[]).filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
+   const selected=typeof trainerNutritionRation!=='undefined'&&
+      typeof trainerCompleteRations==='function'&&trainerCompleteRations()?
+      trainerNutritionRation:(options[0]?.variant_number||1);
+   const variant=options.find(x=>x.variant_number===selected)||options[0];
    if(!variant?.foods?.length)continue;
    const totals=mealTotal(variant,actual);
    for(const k of macroKeys)sum[k]+=totals[k];
@@ -74,6 +81,7 @@ window.renderStructuredMealHTML=function(item){
    return '<div class="structured-food-row" data-index="'+i+'">'
     +'<div class="structured-food-title"><button type="button" class="structured-food-name" onclick="pickStructuredFood('+n+','+v+','+i+')">'+esc(food.name)+' <span>Замінити</span></button>'
     +'<button class="structured-remove" type="button" aria-label="Прибрати продукт" onclick="deleteStructuredFood('+n+','+v+','+i+')">×</button></div>'
+    +(row.usage_note?'<div class="structured-food-use">'+esc(row.usage_note)+'</div>':'')
     +'<div class="structured-food-details"><label><input class="structured-grams" type="number" min="'+(egg?'1':'1')+'" max="'+(egg?'8':'2000')+'" step="'+(egg?'1':'1')+'" inputmode="decimal" value="'+quantity+'" oninput="editStructuredQty('+n+','+v+','+i+',this)"><span>'+unit+'</span></label>'
     +'<span class="structured-food-macro">'+macroLine(val)+'</span></div>'
     +(food.optional_vegetable?'<label class="structured-veg-opt"><input type="checkbox" '+(row.count_in_targets===false?'':'checked')+' onchange="toggleStructuredVegetable('+n+','+v+','+i+',this.checked)"> Враховувати овочі в цільових БЖВ</label>':'')
@@ -96,10 +104,10 @@ window.structuredDailySummaryHTML=function(){
  const differ=macroKeys.map(k=>'<span><small>'+({kcal:'Ккал',protein:'Білки',fat:'Жири',carbs:'Вуглеводи'}[k])+'</small>'
     +'<b>'+fmt(totals[k])+'</b><small>з '+fmt(goal[k])+'</small></span>').join('');
  const actual=dailyTotals(true);
- return '<div id="structuredDailySummary" class="structured-daily-summary"><strong>Денний підсумок · основні варіанти</strong>'
+ return '<div id="structuredDailySummary" class="structured-daily-summary"><strong>Денний підсумок · обраний раціон</strong>'
    +'<div class="structured-daily-grid">'+differ+'</div>'
    +'<p>З усіма овочами фактично: '+macroLine(actual)+'</p>'
-   +'<small>Альтернативи не додаються до денного підсумку. Це оцінка на основі записів каталогу.</small></div>';
+   +'<small>Показано один обраний раціон. Перевір порції та рецепти перед призначенням.</small></div>';
 };
 window.refreshStructuredNutrition=function(){
  document.querySelectorAll('.structured-meal-editor').forEach(box=>{
@@ -112,6 +120,7 @@ window.refreshStructuredNutrition=function(){
  });
  const day=$('structuredDailySummary');
  if(day)day.outerHTML=window.structuredDailySummaryHTML();
+ if(typeof window.refreshTrainerRationAccuracy==='function')window.refreshTrainerRationAccuracy();
 };
 window.editStructuredQty=function(n,v,i,input){
  const item=draft(n,v),row=item?.foods?.[i],food=row&&byId(row.source_id);
@@ -124,6 +133,7 @@ window.editStructuredQty=function(n,v,i,input){
  row.grams=food.unit==='pcs'?value*50:value;
  row.count=food.unit==='pcs'?value:null;
  syncText(item);
+ if(typeof window.trainerPortionChanged==='function')window.trainerPortionChanged(item);
  const metric=input.closest('.structured-food-row')?.querySelector('.structured-food-macro');
  if(metric)metric.textContent=macroLine(perFood(row));
  window.refreshStructuredNutrition();
@@ -133,11 +143,14 @@ window.toggleStructuredVegetable=function(n,v,i,on){
  if(!food?.optional_vegetable)return;
  row.count_in_targets=!!on;
  syncText(item);
+ if(typeof window.trainerPortionChanged==='function')window.trainerPortionChanged(item);
  window.refreshStructuredNutrition();
 };
 window.deleteStructuredFood=function(n,v,i){
  const item=draft(n,v);if(!item?.foods)return;
- item.foods.splice(i,1);syncText(item);rerenderNutritionPlan(true);
+ item.foods.splice(i,1);syncText(item);
+ if(typeof window.trainerRecipeChanged==='function')window.trainerRecipeChanged(item);
+ rerenderNutritionPlan(true);
 };
 window.pickStructuredFood=function(n,v,i){
  if(!draft(n,v)||!window.structuredCatalog?.length)return;
@@ -172,7 +185,10 @@ window.selectStructuredFood=function(sid){
  const count=food.unit==='pcs'?Math.max(1,Math.min(8,Math.round((prev?.grams||100)/50))):null;
  const fresh={source_id:sid,count,grams:count?count*50:(prev?.grams||100),
     count_in_targets:!food.optional_vegetable};
+ const ingredientChanged=i<0||item.foods?.[i]?.source_id!==sid;
  if(i>=0)item.foods[i]=fresh;else (item.foods||(item.foods=[])).push(fresh);
+ if(ingredientChanged&&typeof window.trainerRecipeChanged==='function')window.trainerRecipeChanged(item);
+ else if(typeof window.trainerPortionChanged==='function')window.trainerPortionChanged(item);
  syncText(item);$('structuredFoodPicker')?.remove();picker=null;
  rerenderNutritionPlan(true);
 };
