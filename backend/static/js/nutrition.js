@@ -209,10 +209,39 @@ function nutritionMealThumbnail(item,n){
   +icons[category]+'</svg></div>';
 }
 
+// Old assigned plans may contain obsolete catalog explanatory text. Only
+// suppress known catalog boilerplate in the view; never rewrite the client's
+// persisted plan or remove real cooking / soaking directions.
+function nutritionCookingSteps(input){
+ let text=String(input||'');
+ const obsolete=[
+  "Олію не п'ють окремо.",
+  "Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі.",
+  "Час підготовки вказано без первинного приготування цих заготовок.",
+  "Час вказано для готових курки й нуту.",
+  "Час для готового філе.",
+  "Час за умови готової курки.",
+  "Час для вже приготовленої риби.",
+  "Не подавай сухі пластівці без замочування.",
+  "Кашу зважуй уже готовою.",
+  "На відміну від нічної вівсянки, це гарячий сніданок.",
+  "Це адаптована версія тосту з яйцем та фетою.",
+  "Пластівців немає, тому не потрібно замочувати.",
+  "не подавай сухе чіа.",
+  "Всі продукти враховано у БЖВ."
+ ];
+ for(const sentence of obsolete)text=text.replaceAll(sentence,'');
+ text=text.replaceAll('Подавай одразу — замочування не потрібне.','Подавай одразу.')
+  .replaceAll('Оливкова олія — заправка боулу.','Заправ боул оливковою олією.')
+  .replaceAll('Оливкова олія — заправка салату.','Заправ салат оливковою олією.')
+  .replaceAll('Оливкова олія — тільки заправка салату.','Заправ салат оливковою олією.')
+  .replaceAll('Оливкова олія використовується лише як заправка.','Заправ салат оливковою олією.');
+ return text.replace(/\s+([.,!?])/g,'$1').replace(/ {2,}/g,' ').trim();
+}
 function trainerSavedMealCard(item,n){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
- const preparation=item.preparation||(/(?:^|\n)Приготування:\s*([\s\S]*)$/.exec(raw)||[])[1]||'';
+ const preparation=nutritionCookingSteps(item.preparation||(/(?:^|\n)Приготування:\s*([\s\S]*)$/.exec(raw)||[])[1]||'');
  const macros=trainerSavedMealMacros(item);
  const isStructured=!!((item.foods||[]).length||macros);
  let ingredients=isStructured?raw
@@ -512,7 +541,7 @@ function mealEditorBlock(n,editing){
       +'</small></div>':'';
   const recipe= rationMode?
      '<div class="trainer-meal-recipe"><strong>'+esc(x.dish_title||'Власна страва')+'</strong>'
-     +(x.preparation?'<p>'+esc(x.preparation)+'</p>':'')
+     +(nutritionCookingSteps(x.preparation)?'<p>'+esc(nutritionCookingSteps(x.preparation))+'</p>':'')
      +'<button type="button" onclick="openRecipeTemplatePicker('+n+','+x.variant_number+')">≡ Обрати з бібліотеки страв</button>'
      +(x.recipe_source_url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.recipe_source_url)+'">Джерело ідеї ↗</a>':'')
      +'</div>':'';
