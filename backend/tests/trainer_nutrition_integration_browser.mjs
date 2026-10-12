@@ -222,6 +222,12 @@ try{
  // Approved concept six: one large kcal number + three actual colored
  // protein/fat/carbs mini cards, not the old three bordered text columns.
  for(const ration of await page.locator('#nutrition .trainer-saved-ration-page').all()){
+  const summaryStyle=await ration.locator('.nutrition-menu-total-v6').evaluate(el=>({
+   background:getComputedStyle(el).backgroundImage,
+   rail:getComputedStyle(el).borderLeftColor
+  }));
+  assert.ok(summaryStyle.background.includes('linear-gradient('),'Trainer total should be distinguished from meal cards');
+  assert.equal(summaryStyle.rail,'rgb(98, 156, 242)','Trainer should have the same blue accent');
   assert.equal(await ration.locator('.nutrition-menu-total-v6 .nutrition-total-chip').count(),3);
   assert.deepEqual(
    await ration.locator('.nutrition-total-chip').evaluateAll(nodes=>nodes.map(n=>n.classList[1])),
@@ -402,7 +408,10 @@ try{
    const chips=[...el.querySelectorAll('.nutrition-total-chip')];
    const rect=el.getBoundingClientRect();
    return {
-    bg:getComputedStyle(el).backgroundColor,
+    gradient:getComputedStyle(el).backgroundImage,
+    rail:getComputedStyle(el).borderLeftColor,
+    railWidth:getComputedStyle(el).borderLeftWidth,
+    shadow:getComputedStyle(el).boxShadow,
     values:chips.map(ch=>({
      color:getComputedStyle(ch).color,
      bg:getComputedStyle(ch).backgroundColor,
@@ -412,7 +421,11 @@ try{
     icons:chips.every(ch=>!!ch.querySelector('svg path'))
    };
   });
-  assert.equal(values.bg,'rgb(255, 255, 255)','Concept 6 summary background must be white');
+  assert.ok(values.gradient.includes('linear-gradient('),'Day summary should have a soft blue gradient');
+  assert.ok(values.gradient.includes('rgb(240, 246, 255)'),'Day summary gradient lost its soft blue shade');
+  assert.equal(values.rail,'rgb(98, 156, 242)','Whole-day summary must have a subtle blue accent rail');
+  assert.equal(values.railWidth,'3px','Accent rail should remain slim, not a heavy banner');
+  assert.notEqual(values.shadow,'none','Whole-day summary should feel distinct from individual meal cards');
   assert.deepEqual(values.headings,['Білки','Жири','Вуглеводи']);
   assert.deepEqual(values.values.map(x=>x.bg),[
    'rgb(236, 243, 255)','rgb(255, 243, 223)','rgb(234, 248, 239)'
