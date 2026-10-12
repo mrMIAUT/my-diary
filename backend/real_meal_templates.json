@@ -13,7 +13,7 @@
         "banana",
         "walnuts"
       ],
-      "preparation": "З вечора змішай сухі вівсяні пластівці, молоко та йогурт. Накрий і залиш у холодильнику на ніч (щонайменше 6–8 год). Вранці додай нарізаний банан і подрібнені волоські горіхи. Не подавай сухі пластівці без замочування.",
+      "preparation": "З вечора змішай сухі вівсяні пластівці, молоко та йогурт. Накрий і залиш у холодильнику на ніч (щонайменше 6–8 год). Вранці додай нарізаний банан і подрібнені волоські горіхи.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/overnight-oats",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -59,7 +59,7 @@
         "apple",
         "walnuts"
       ],
-      "preparation": "Звари вівсянку на воді до м'якості. Подавай гарячою з дрібно нарізаним яблуком і горіхами. Кашу зважуй уже готовою.",
+      "preparation": "Звари вівсянку на воді до м'якості. Подавай гарячою з дрібно нарізаним яблуком і горіхами.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/fruit-nut-breakfast-bowl",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -81,7 +81,7 @@
         "banana",
         "almonds"
       ],
-      "preparation": "У миску з грецьким йогуртом додай лохину, нарізаний банан і подрібнений мигдаль. Подавай одразу — замочування не потрібне.",
+      "preparation": "У миску з грецьким йогуртом додай лохину, нарізаний банан і подрібнений мигдаль. Подавай одразу.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/fruit-nut-breakfast-bowl",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -126,7 +126,7 @@
         "yogurt",
         "almonds"
       ],
-      "preparation": "Звари кашу на воді. Дай їй трохи охолонути, додай йогурт, банан та мигдаль. На відміну від нічної вівсянки, це гарячий сніданок.",
+      "preparation": "Звари кашу на воді. Дай їй трохи охолонути, додай йогурт, банан та мигдаль.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/fruit-nut-breakfast-bowl",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -148,7 +148,7 @@
         "feta",
         "tomato"
       ],
-      "preparation": "Підсмаж хліб. Додай подрібнене варене яйце, трохи фети і свіжий помідор. Це адаптована версія тосту з яйцем та фетою.",
+      "preparation": "Підсмаж хліб. Додай подрібнене варене яйце, трохи фети і свіжий помідор.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/poached-eggs-avocado-feta-toast",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -169,7 +169,7 @@
         "blueberries",
         "walnuts"
       ],
-      "preparation": "Подавай йогурт у мисці з лохиною й волоськими горіхами. Пластівців немає, тому не потрібно замочувати.",
+      "preparation": "Подавай йогурт у мисці з лохиною й волоськими горіхами.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/fruit-nut-breakfast-bowl",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -214,7 +214,7 @@
         "cucumber",
         "oil"
       ],
-      "preparation": "Запечену курку подавай із готовим рисом. Огірок і помідор наріж у салат і заправ оливковою олією. Олію не п'ють окремо. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Запечену курку подавай із готовим рисом. Огірок і помідор наріж у салат і заправ оливковою олією.",
       "source_url": "https://www.budgetbytes.com/greek-chicken-pasta-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -238,7 +238,7 @@
         "cucumber",
         "oil"
       ],
-      "preparation": "Запечену індичку подай з відвареною гречкою. Змішай помідор і огірок, заправ салат оливковою олією. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Запечену індичку подай з відвареною гречкою. Змішай помідор і огірок, заправ салат оливковою олією.",
       "source_url": "https://www.budgetbytes.com/cucumber-tomato-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -286,7 +286,7 @@
         "cucumber",
         "tomato"
       ],
-      "preparation": "Запечений лосось подай з відвареною картоплею та салатом із свіжих помідора й огірка. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Запечений лосось подай з відвареною картоплею та салатом із свіжих помідора й огірка.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/creamy-salmon-leek-potato-traybake",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -311,7 +311,7 @@
         "feta",
         "oil"
       ],
-      "preparation": "У миску виклади відварену кіноа, нарізану запечену курку, помідор, огірок і фету. Оливкова олія — заправка боулу. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "У миску виклади відварену кіноа, нарізану запечену курку, помідор, огірок і фету. Заправ боул оливковою олією.",
       "source_url": "https://www.budgetbytes.com/greek-chicken-pasta-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -428,7 +428,7 @@
         "cucumber",
         "oil"
       ],
-      "preparation": "Охолоди готові макарони, з'єднай із тунцем та свіжими овочами. Оливкова олія використовується лише як заправка.",
+      "preparation": "Охолоди готові макарони, з'єднай із тунцем та свіжими овочами. Заправ салат оливковою олією.",
       "source_url": "https://www.budgetbytes.com/greek-chicken-pasta-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -611,7 +611,7 @@
         "potatoes",
         "spinach"
       ],
-      "preparation": "Подай запечений лосось із відвареною картоплею та шпинатом. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Подай запечений лосось із відвареною картоплею та шпинатом.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/creamy-salmon-leek-potato-traybake",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -633,7 +633,7 @@
         "spinach",
         "oil"
       ],
-      "preparation": "Перемішай готову пасту з нарізаною запеченою куркою, томатами та шпинатом. Оливкову олію додай у страву як заправку. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Перемішай готову пасту з нарізаною запеченою куркою, томатами та шпинатом. Оливкову олію додай у страву як заправку.",
       "source_url": "https://www.budgetbytes.com/greek-chicken-pasta-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -681,7 +681,7 @@
         "cucumber",
         "tomato"
       ],
-      "preparation": "Подавай запечений лосось із відвареною кіноа, авокадо та свіжими огірком і помідором. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Подавай запечений лосось із відвареною кіноа, авокадо та свіжими огірком і помідором.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/creamy-salmon-leek-potato-traybake",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -701,7 +701,7 @@
         "carrot",
         "cucumber"
       ],
-      "preparation": "Запечену курку подай з відвареною картоплею, готовою морквою і свіжим огірком. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Запечену курку подай з відвареною картоплею, готовою морквою і свіжим огірком.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/honey-mustard-salmon-potato-and-tenderstem-traybake",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -723,7 +723,7 @@
         "cucumber",
         "oil"
       ],
-      "preparation": "Запечену індичку подай з вареним булгуром; огірок і помідор наріж у салат та заправ оливковою олією. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Запечену індичку подай з вареним булгуром; огірок і помідор наріж у салат та заправ оливковою олією.",
       "source_url": "https://www.budgetbytes.com/mediterranean-turkey-bowls/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -747,7 +747,7 @@
         "spinach",
         "soy_sauce"
       ],
-      "preparation": "Підсмаж тофу на антипригарній пательні без доданої олії, додай готові гриби й шпинат. Змішай із рисом, приправ соєвим соусом. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Підсмаж тофу на антипригарній пательні без доданої олії, додай готові гриби й шпинат. Змішай із рисом, приправ соєвим соусом.",
       "source_url": "https://www.budgetbytes.com/gochujang-mushroom-bowls/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -772,7 +772,7 @@
         "spinach",
         "oil"
       ],
-      "preparation": "У готовий рис додай білу квасолю, консервовані томати та шпинат. Коротко прогрій, оливкову олію використай для заправки страви. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "У готовий рис додай білу квасолю, консервовані томати та шпинат. Коротко прогрій, оливкову олію використай для заправки страви.",
       "source_url": "https://www.budgetbytes.com/tomato-herb-rice-with-white-beans-and-spinach/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -798,7 +798,7 @@
         "tomato",
         "oil"
       ],
-      "preparation": "Відварену картоплю наріж кубиками; додай тунця, варене яйце та овочі. Оливкова олія — заправка салату.",
+      "preparation": "Відварену картоплю наріж кубиками; додай тунця, варене яйце та овочі. Заправ салат оливковою олією.",
       "source_url": "https://www.budgetbytes.com/mediterranean-tuna-salad/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -822,7 +822,7 @@
         "spinach",
         "oil"
       ],
-      "preparation": "Відварений рис перемішай із нарізаною готовою куркою, грибами та шпинатом. Оливкову олію додай до рису. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.",
+      "preparation": "Відварений рис перемішай із нарізаною готовою куркою, грибами та шпинатом. Оливкову олію додай до рису.",
       "source_url": "https://www.budgetbytes.com/yogurt-marinated-chicken/",
       "source_name": "Budget Bytes",
       "source_relation": "adapted_culinary_idea",
@@ -937,7 +937,7 @@
         "yogurt",
         "banana"
       ],
-      "preparation": "З вечора змішай насіння чіа з молоком і йогуртом. Накрий та постав у холодильник на 6–8 год. Вранці додай банан; не подавай сухе чіа.",
+      "preparation": "З вечора змішай насіння чіа з молоком і йогуртом. Накрий та постав у холодильник на 6–8 год. Вранці додай банан.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-breakfast-recipes",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1008,7 +1008,7 @@
         "cucumber",
         "yogurt"
       ],
-      "preparation": "Візьми вже запечене філе і готовий нут. Подай зі шпинатом та огірком, йогурт змішай зі спеціями як соус. Час вказано для готових курки й нуту.",
+      "preparation": "Візьми вже запечене філе і готовий нут. Подай зі шпинатом та огірком, йогурт змішай зі спеціями як соус.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/quick-chicken-hummus-bowl",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1080,7 +1080,7 @@
         "cucumber",
         "tomato"
       ],
-      "preparation": "Залий кускус окропом і дай настоятися, змішай із заздалегідь запеченою індичкою, авокадо та свіжими овочами. Час для готового філе.",
+      "preparation": "Залий кускус окропом і дай настоятися, змішай із заздалегідь запеченою індичкою, авокадо та свіжими овочами.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/11690/10minute-couscous-salad",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1104,7 +1104,7 @@
         "broccoli",
         "oil"
       ],
-      "preparation": "Відвари макарони; броколі відвари окремо до м'якості. Додай заздалегідь запечене куряче філе й оливкову олію до пасти. Час за умови готової курки.",
+      "preparation": "Відвари макарони; броколі відвари окремо до м'якості. Додай заздалегідь запечене куряче філе й оливкову олію до пасти.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/15-minute-chicken-pasta/",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1128,7 +1128,7 @@
         "pepper",
         "cucumber"
       ],
-      "preparation": "Готовий запечений лосось прогрій. Кускус залий окропом на 5 хв, додай нарізаний перець і свіжий огірок. Час для вже приготовленої риби.",
+      "preparation": "Готовий запечений лосось прогрій. Кускус залий окропом на 5 хв, додай нарізаний перець і свіжий огірок.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/quick-dinner-recipes",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1288,7 +1288,7 @@
         "milk",
         "yogurt"
       ],
-      "preparation": "Збий нарізаний банан, полуницю, молоко та йогурт у блендері. Всі продукти враховано у БЖВ.",
+      "preparation": "Збий нарізаний банан, полуницю, молоко та йогурт у блендері.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/5-minute-recipes",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",
@@ -1328,7 +1328,7 @@
         "tomato",
         "oil"
       ],
-      "preparation": "Наріж огірок і помідор, додай фету. Оливкова олія — тільки заправка салату.",
+      "preparation": "Наріж огірок і помідор, додай фету. Заправ салат оливковою олією.",
       "source_url": "https://tollbit.bbcgoodfood.com/recipes/collection/feta-salad-recipes",
       "source_name": "BBC Good Food",
       "source_relation": "adapted_culinary_idea",

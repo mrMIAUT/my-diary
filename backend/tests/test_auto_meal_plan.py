@@ -38,6 +38,28 @@ class AutomaticMealPlanTests(unittest.TestCase):
             self.assertAlmostEqual(expected,result['totals'][nutrient],places=1)
         self.assertEqual(result['targets'],{'kcal':2380.0,'protein':160.0,'fat':60.0,'carbs':300.0})
 
+    def test_recipe_preparation_is_cooking_only(self):
+        import json
+        recipes=json.loads((Path(__file__).resolve().parents[1]/'real_meal_templates.json').read_text(encoding='utf-8'))['recipes']
+        self.assertEqual(len(recipes),60)
+        boilerplate=(
+            'Швидкий варіант:', 'Час підготовки вказано',
+            'Час вказано для', 'Час для готового', 'Час за умови',
+            'Олію не п', 'Всі продукти враховано у БЖВ',
+            'Це адаптована версія', 'Кашу зважуй'
+        )
+        for recipe in recipes:
+            with self.subTest(title=recipe['title']):
+                steps=recipe['preparation']
+                self.assertTrue(steps.strip())
+                for hint in boilerplate:
+                    self.assertNotIn(hint,steps)
+        chicken=next(x for x in recipes if x['title']=='Курка з рисом і салатом із помідора та огірка')
+        self.assertIn('заправ оливковою олією',chicken['preparation'])
+        self.assertIn('наріж у салат',chicken['preparation'])
+        overnight=next(x for x in recipes if x['title']=='Нічна вівсянка з йогуртом, бананом і горіхами')
+        self.assertIn('6–8 год',overnight['preparation'])
+
     def test_three_and_five_meal_variants_are_bounded(self):
         for count in (3,5):
             r=generate_meal_plan(2380,160,60,300,meals=count,variants=1)
