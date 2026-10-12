@@ -188,20 +188,24 @@ function trainerSavedIngredientRows(text){
  });
  return '<ul class="nutrition-menu-ingredients" aria-label="Склад страви">'+rows.join('')+'</ul>';
 }
+// Uniform, local SVG categories. These are meal-type icons rather than
+// unreliable dish-matching emoji, so the same meal always looks consistent.
 function nutritionMealThumbnail(item,n){
- // The meal library currently has no licensed food photos; an offline-safe
- // ingredient-inspired illustration occupies the photo slot until such media
- // is available. Never display a stock photo as if it were this exact recipe.
- const title=String(item.dish_title||item.content||'').toLocaleLowerCase('uk-UA');
- const group=/вівсян|каша|йогурт|ягод|сир кисломолочн/.test(title)?'bowl':
-  /лосос|тунц|риб/.test(title)?'fish':
-  /тост|хліб|яйц|лаваш|піта|тортиль/.test(title)?'toast':
-  /кур|індич|м’яс|ялович|рис|греч|булгур/.test(title)?'plate':
-  /салат|овоч|нут|квасол/.test(title)?'greens':'meal';
- const icons={bowl:'🥣',fish:'🐟',toast:'🥑',plate:'🍗',greens:'🥗',meal:'🍽️'};
- return '<div class="nutrition-menu-photo nutrition-menu-photo-'+group+'" role="img" aria-label="Ілюстрація страви">'
-   +'<span aria-hidden="true">'+icons[group]+'</span></div>';
+ const category=Number(n)===1?'breakfast':Number(n)===2?'lunch':
+  Number(n)===3||Number(n)===5?'snack':Number(n)===4?'dinner':'lunch';
+ const symbols={
+  breakfast:'<path d="M4 11h16v3a8 8 0 0 1-16 0v-3Z"/><path d="M2.5 20h19"/><path d="M8 4v3m4-5v5m4-3v3"/>',
+  lunch:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4.5"/><path d="M2.5 3v7m-2-7v5m4-5v5m-2 2v11M22 3v18m-3.5-18v6c0 2 1.4 3 3.5 3"/>',
+  snack:'<path d="M12 9c-1.3-3.2-5.5-4-7.6-1.4-4.6 5.5 0 14.4 4.7 14.4 1.8 0 2.3-.8 2.9-.8s1.1.8 2.9.8c4.7 0 9.3-8.9 4.7-14.4C16.5 5 13.4 6.5 12 9Z"/><path d="M12 8c.2-3 .9-4.3 3-5.5M12 7c-2.4-3-4.1-3.2-6-2.5"/>',
+  dinner:'<path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/><path d="m17.5 3.5.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5.5-1.2Z"/>'
+ };
+ return '<div class="nutrition-menu-photo nutrition-meal-icon nutrition-meal-icon-'+category
+  +'" role="img" aria-label="'+esc(trainerSavedMealName(n))+'">'
+  +'<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"'
+  +' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  +symbols[category]+'</svg></div>';
 }
+
 function trainerSavedMealCard(item,n){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
