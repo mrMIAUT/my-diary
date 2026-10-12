@@ -145,11 +145,11 @@ try{
   'Saved, structured full-day totals are missing');
  const seenOne=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(seenOne.includes('Вихідне блюдо 1 1'));
- assert.ok(seenOne.includes('2300 ккал'));
+ assert.ok(seenOne.replace(/\s/g,'').includes('2300ккал'));
  await page.locator('#nutrition .trainer-saved-ration-tab').nth(1).click();
  const seenTwo=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(seenTwo.includes('Страва lunch 3'));
- assert.ok(seenTwo.includes('2450 ккал'));
+ assert.ok(seenTwo.replace(/\s/g,'').includes('2450ккал'));
  assert.notEqual(seenOne,seenTwo);
  assert.equal(await page.locator('#nutrition .trainer-saved-ration-tab[aria-selected="true"]').count(),1);
  assert.equal(await page.locator('#nutrition .trainer-saved-plan-actions button').count(),1);
