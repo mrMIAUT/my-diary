@@ -907,6 +907,53 @@ def init():
         )""")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_nutrition_diary_client_day
                      ON nutrition_diary_items(client_id,day,meal,id)""")
+        # ЄПЛАН 1.2: private user foods and recipes are NOT shared by default.
+        # Reviewed community foods live in a distinct publish-only table.
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_private_foods(
+            id BIGSERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+            name TEXT NOT NULL, brand TEXT NOT NULL DEFAULT '',
+            kcal_100 NUMERIC(8,2) NOT NULL CHECK(kcal_100 BETWEEN 0 AND 1000),
+            protein_100 NUMERIC(7,2) NOT NULL CHECK(protein_100 BETWEEN 0 AND 100),
+            fat_100 NUMERIC(7,2) NOT NULL CHECK(fat_100 BETWEEN 0 AND 100),
+            carbs_100 NUMERIC(7,2) NOT NULL CHECK(carbs_100 BETWEEN 0 AND 100),
+            review_status TEXT NOT NULL DEFAULT 'private'
+                CHECK(review_status IN ('private','pending','approved','rejected')),
+            review_note TEXT NOT NULL DEFAULT '',
+            reviewed_at TIMESTAMPTZ,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_private_foods_client
+                     ON nutrition_private_foods(client_id,id DESC)""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_private_foods_queue
+                     ON nutrition_private_foods(review_status,id)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_public_foods(
+            id BIGSERIAL PRIMARY KEY,
+            private_food_id BIGINT NOT NULL UNIQUE REFERENCES nutrition_private_foods(id),
+            name TEXT NOT NULL, brand TEXT NOT NULL DEFAULT '',
+            source_note TEXT NOT NULL,
+            kcal_100 NUMERIC(8,2) NOT NULL CHECK(kcal_100 BETWEEN 0 AND 1000),
+            protein_100 NUMERIC(7,2) NOT NULL CHECK(protein_100 BETWEEN 0 AND 100),
+            fat_100 NUMERIC(7,2) NOT NULL CHECK(fat_100 BETWEEN 0 AND 100),
+            carbs_100 NUMERIC(7,2) NOT NULL CHECK(carbs_100 BETWEEN 0 AND 100),
+            reviewed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_saved_recipes(
+            id BIGSERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            ingredients_json TEXT NOT NULL,
+            grams NUMERIC(8,1) NOT NULL CHECK(grams > 0 AND grams <= 10000),
+            kcal_100 NUMERIC(8,2) NOT NULL,
+            protein_100 NUMERIC(7,2) NOT NULL,
+            fat_100 NUMERIC(7,2) NOT NULL,
+            carbs_100 NUMERIC(7,2) NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_saved_recipes_client
+                     ON nutrition_saved_recipes(client_id,id DESC)""")
+
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition_plan_items(
             id SERIAL PRIMARY KEY, client_id INTEGER, meal_number INTEGER, variant_number INTEGER,
@@ -1414,6 +1461,35 @@ class FoodDiaryAddIn(BaseModel):
 class FoodDiaryEditIn(BaseModel):
     meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
     grams:float=Field(gt=0,le=2000,allow_inf_nan=False)
+
+class PrivateFoodIn(BaseModel):
+    name:str=Field(min_length=2,max_length=150)
+    brand:str=Field(default="",max_length=120)
+    kcal_100:float=Field(ge=0,le=1000,allow_inf_nan=False)
+    protein_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    fat_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    carbs_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    submit_for_review:bool=False
+
+class PrivateFoodReviewIn(BaseModel):
+    decision:str=Field(pattern="^(approve|reject)$")
+    name:str=Field(default="",max_length=150)
+    brand:str=Field(default="",max_length=120)
+    kcal_100:float=Field(default=0,ge=0,le=1000,allow_inf_nan=False)
+    protein_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
+    fat_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
+    carbs_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
+    note:str=Field(min_length=4,max_length=500)
+
+class SavedRecipeCreateIn(BaseModel):
+    name:str=Field(min_length=2,max_length=120)
+    day:date
+    meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
+
+class SavedRecipeLogIn(BaseModel):
+    day:date
+    meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
+    grams:float|None=Field(default=None,gt=0,le=2000,allow_inf_nan=False)
 
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:date; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
@@ -5331,6 +5407,199 @@ def diary_day_payload(client_id:int,day:date):
     totals={key:round(sum(float(x[key]) for x in rows_out),1)
             for key in ("kcal","protein","fat","carbs")}
     return {"day":str(day),"active":active,"items":rows_out,"totals":totals}
+
+# Custom foods are client-private. Only trainer-approved snapshots may
+# enter global searches, and review status cannot be set by client input.
+def _private_food_payload(row):
+    d=dict(row)
+    for key in ("kcal_100","protein_100","fat_100","carbs_100"):
+        d[key]=float(d[key])
+    for key in ("created_at","updated_at","reviewed_at"):
+        if d.get(key) is not None:d[key]=str(d[key])
+    return d
+
+def _valid_custom_food(x):
+    if not x.name.strip() or not (x.kcal_100 or x.protein_100 or x.fat_100 or x.carbs_100):
+        raise HTTPException(400,"Вкажи назву та КБЖУ з етикетки або іншого джерела.")
+    if x.protein_100+x.fat_100+x.carbs_100>110:
+        raise HTTPException(400,"Сума БЖВ перевищує можливі 100 г продукту.")
+    return x.name.strip(),x.brand.strip()
+
+@app.get("/api/nutrition/my-foods")
+def my_private_foods(user:AuthUser=Depends(require_client)):
+    diary_view_client(user.client_id)
+    items=rows("""SELECT * FROM nutrition_private_foods WHERE client_id=?
+                   ORDER BY id DESC LIMIT 200""",(user.client_id,))
+    return {"items":[_private_food_payload(x) for x in items]}
+
+@app.post("/api/nutrition/my-foods")
+def create_private_food(x:PrivateFoodIn,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    name,brand=_valid_custom_food(x)
+    with con() as db:
+        # Lock client row so concurrent requests respect the 200-product cap.
+        db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(user.client_id,))
+        count=db.execute("""SELECT count(*) AS n FROM nutrition_private_foods
+                             WHERE client_id=%s""",(user.client_id,)).fetchone()["n"]
+        if count>=200:raise HTTPException(409,"Максимум 200 власних продуктів.")
+        item=db.execute("""INSERT INTO nutrition_private_foods
+            (client_id,name,brand,kcal_100,protein_100,fat_100,carbs_100,review_status)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+            (user.client_id,name,brand,x.kcal_100,x.protein_100,x.fat_100,x.carbs_100,
+             "pending" if x.submit_for_review else "private")).fetchone()
+        db.commit()
+    return {"item":_private_food_payload(item)}
+
+@app.patch("/api/nutrition/my-foods/{food_id}")
+def edit_private_food(food_id:int,x:PrivateFoodIn,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    name,brand=_valid_custom_food(x)
+    with con() as db:
+        item=db.execute("""UPDATE nutrition_private_foods SET
+            name=%s,brand=%s,kcal_100=%s,protein_100=%s,fat_100=%s,carbs_100=%s,
+            review_status=%s,review_note='',reviewed_at=NULL,updated_at=CURRENT_TIMESTAMP
+            WHERE id=%s AND client_id=%s RETURNING *""",
+            (name,brand,x.kcal_100,x.protein_100,x.fat_100,x.carbs_100,
+             "pending" if x.submit_for_review else "private",food_id,user.client_id)).fetchone()
+        if not item:raise HTTPException(404,"Продукт не знайдено")
+        db.commit()
+    return {"item":_private_food_payload(item)}
+
+@app.delete("/api/nutrition/my-foods/{food_id}")
+def delete_private_food(food_id:int,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    with con() as db:
+        # Once published, reviewed data stays as a stable global entry.
+        item=db.execute("""DELETE FROM nutrition_private_foods
+                WHERE id=%s AND client_id=%s AND review_status NOT IN ('approved','pending')
+                RETURNING id""",(food_id,user.client_id)).fetchone()
+        if not item:raise HTTPException(409,"Опублікований або надісланий на перевірку продукт не можна видалити.")
+        db.commit()
+    return {"ok":True}
+
+@app.get("/api/trainer/foods/submissions")
+def trainer_food_submissions(user:AuthUser=Depends(require_trainer)):
+    items=rows("""SELECT p.*,c.name AS author
+                   FROM nutrition_private_foods p JOIN clients c ON c.id=p.client_id
+                   WHERE p.review_status='pending' ORDER BY p.created_at,id LIMIT 100""")
+    return {"items":[_private_food_payload(x) for x in items]}
+
+@app.post("/api/trainer/foods/submissions/{food_id}/review")
+def trainer_food_review(food_id:int,x:PrivateFoodReviewIn,user:AuthUser=Depends(require_trainer)):
+    if x.decision=="approve":
+        name,brand=_valid_custom_food(x)
+    else:
+        name,brand="", ""
+    with con() as db:
+        item=db.execute("""SELECT * FROM nutrition_private_foods
+                      WHERE id=%s FOR UPDATE""",(food_id,)).fetchone()
+        if not item or item["review_status"]!="pending":
+            raise HTTPException(409,"Заявку вже розглянуто або змінено.")
+        if x.decision=="approve":
+            db.execute("""INSERT INTO nutrition_public_foods(
+                      private_food_id,name,brand,source_note,kcal_100,
+                      protein_100,fat_100,carbs_100)
+                      VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
+                      (food_id,name,brand,x.note.strip(),x.kcal_100,
+                       x.protein_100,x.fat_100,x.carbs_100))
+        status="approved" if x.decision=="approve" else "rejected"
+        db.execute("""UPDATE nutrition_private_foods SET review_status=%s,
+             review_note=%s,reviewed_at=CURRENT_TIMESTAMP
+             WHERE id=%s""",(status,x.note.strip(),food_id))
+        db.commit()
+    return {"status":status}
+
+def _public_food_matches(q,limit):
+    pattern="%"+q.strip().replace("\\","\\\\").replace("%","\\%").replace("_","\\_")+"%"
+    found=rows("""SELECT * FROM nutrition_public_foods
+                  WHERE name ILIKE %s ESCAPE '\\' OR brand ILIKE %s ESCAPE '\\'
+                  ORDER BY reviewed_at DESC LIMIT %s""",(pattern,pattern,limit))
+    return [dict(name=x["name"],brand=x["brand"],
+         source_id="eplan-reviewed:"+str(x["id"]),source_label="ЄПЛАН · перевірено тренером",
+         source="ЄПЛАН",approximate=False,food_type="branded" if x["brand"] else "generic",
+         kcal_100=float(x["kcal_100"]),protein_100=float(x["protein_100"]),
+         fat_100=float(x["fat_100"]),carbs_100=float(x["carbs_100"])) for x in found]
+
+@app.get("/api/nutrition/recipes")
+def my_saved_recipes(user:AuthUser=Depends(require_client)):
+    diary_view_client(user.client_id)
+    items=rows("""SELECT id,name,grams,kcal_100,protein_100,fat_100,carbs_100,
+                    ingredients_json FROM nutrition_saved_recipes
+                    WHERE client_id=? ORDER BY id DESC LIMIT 100""",(user.client_id,))
+    return {"items":[dict(id=x["id"],name=x["name"],grams=float(x["grams"]),
+         ingredients=json.loads(x["ingredients_json"]),
+         **{key:float(x[key]) for key in ("kcal_100","protein_100","fat_100","carbs_100")}) for x in items]}
+
+@app.post("/api/nutrition/recipes")
+def create_saved_recipe(x:SavedRecipeCreateIn,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    diary_day_checked(x.day)
+    title=x.name.strip()
+    if not title:raise HTTPException(400,"Вкажи назву рецепта")
+    with con() as db:
+        db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(user.client_id,))
+        count=db.execute("SELECT count(*) AS n FROM nutrition_saved_recipes WHERE client_id=%s",
+                         (user.client_id,)).fetchone()["n"]
+        if count>=100:raise HTTPException(409,"Максимум 100 власних рецептів.")
+        ingredients=db.execute("""SELECT name,brand,grams,kcal_100,protein_100,
+                           fat_100,carbs_100 FROM nutrition_diary_items
+                           WHERE client_id=%s AND day=%s AND meal=%s
+                           ORDER BY id LIMIT 30""",
+                           (user.client_id,x.day,x.meal)).fetchall()
+        if not ingredients:raise HTTPException(400,"Спочатку додай продукти до цього прийому їжі.")
+        if len(ingredients)>=30:raise HTTPException(400,"Забагато складників у рецепті.")
+        grams=sum(float(t["grams"]) for t in ingredients)
+        if grams<=0 or grams>10000:
+            raise HTTPException(400,"Вага рецепта перевищує 10 кг.")
+        nutrients={k:round(sum(float(t["grams"])*float(t[k+"_100"])/100 for t in ingredients)
+                       /grams*100,2) for k in ("kcal","protein","fat","carbs")}
+        recipe=[{k:(float(t[k]) if k in ("grams","kcal_100","protein_100","fat_100","carbs_100") else t[k])
+                 for k in ("name","brand","grams","kcal_100","protein_100","fat_100","carbs_100")}
+                for t in ingredients]
+        result=db.execute("""INSERT INTO nutrition_saved_recipes(
+              client_id,name,ingredients_json,grams,kcal_100,protein_100,fat_100,carbs_100)
+              VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+              (user.client_id,title,json.dumps(recipe,ensure_ascii=False),round(grams,1),
+               nutrients["kcal"],nutrients["protein"],nutrients["fat"],nutrients["carbs"])).fetchone()
+        db.commit()
+    return {"id":result["id"]}
+
+@app.post("/api/nutrition/recipes/{recipe_id}/log")
+def log_saved_recipe(recipe_id:int,x:SavedRecipeLogIn,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    diary_day_checked(x.day)
+    with con() as db:
+        db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(user.client_id,))
+        recipe=db.execute("""SELECT * FROM nutrition_saved_recipes
+                             WHERE id=%s AND client_id=%s""",
+                             (recipe_id,user.client_id)).fetchone()
+        if not recipe:raise HTTPException(404,"Рецепт не знайдено")
+        grams=round(x.grams if x.grams is not None else float(recipe["grams"]),1)
+        if grams<=0 or grams>2000:raise HTTPException(400,"Вкажи порцію до 2000 г.")
+        count=db.execute("""SELECT count(*) AS n FROM nutrition_diary_items
+                             WHERE client_id=%s AND day=%s""",(user.client_id,x.day)).fetchone()["n"]
+        if count>=100:raise HTTPException(409,"Максимум 100 продуктів за день.")
+        db.execute("""INSERT INTO nutrition_diary_days(client_id,day)
+                     VALUES(%s,%s) ON CONFLICT(client_id,day) DO NOTHING""",(user.client_id,x.day))
+        item=db.execute("""INSERT INTO nutrition_diary_items
+               (client_id,day,meal,name,brand,source_label,source_id,approximate,
+                grams,kcal_100,protein_100,fat_100,carbs_100)
+               VALUES(%s,%s,%s,%s,'','Мій рецепт',%s,TRUE,%s,%s,%s,%s,%s)
+               RETURNING *""",(user.client_id,x.day,x.meal,recipe["name"],
+                   "recipe:"+str(recipe_id),grams,recipe["kcal_100"],recipe["protein_100"],
+                   recipe["fat_100"],recipe["carbs_100"])).fetchone()
+        db.commit()
+    return {"item":diary_item_response(item)}
+
+@app.delete("/api/nutrition/recipes/{recipe_id}")
+def delete_saved_recipe(recipe_id:int,user:AuthUser=Depends(require_client)):
+    require_active_client(user.client_id,"nutrition")
+    with con() as db:
+        row=db.execute("""DELETE FROM nutrition_saved_recipes WHERE id=%s AND client_id=%s RETURNING id""",
+                       (recipe_id,user.client_id)).fetchone()
+        if not row:raise HTTPException(404,"Рецепт не знайдено")
+        db.commit()
+    return {"ok":True}
 
 @app.get("/api/nutrition/diary")
 def food_diary_get(day:date,user:AuthUser=Depends(require_client)):
