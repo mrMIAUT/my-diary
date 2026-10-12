@@ -41,7 +41,7 @@ class FeaturedRestTimerTests(unittest.TestCase):
                           "/static/js/workout.js?v=188",
                           "/static/css/redesign.css?v=262"):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v221'",SW)
+        self.assertIn("const VERSION='eplan-v222'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for rest timer behavior regression")
     def test_real_timer_ui_tracks_only_current_session_and_existing_controls(self):
