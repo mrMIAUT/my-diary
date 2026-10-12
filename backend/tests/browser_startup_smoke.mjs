@@ -365,6 +365,79 @@ try{
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).active,true,
     'Deleting last product must keep diary mode instead of restoring old manual totals');
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
+  // Custom foods remain private unless deliberately submitted for review.
+  await page.locator('.nutrition-food-search-button').click();
+  await page.locator('#foodSearchModal').waitFor();
+  assert.equal(await page.locator('.food-custom-actions button').count(),3);
+  await page.getByRole('button',{name:'+ Свій продукт',exact:true}).click();
+  await page.locator('#customFoodName').fill('Домашній сир CI');
+  await page.locator('#customFoodBrand').fill('Особистий');
+  await page.locator('#customFood_kcal_100').fill('142');
+  await page.locator('#customFood_protein_100').fill('18');
+  await page.locator('#customFood_fat_100').fill('7');
+  await page.locator('#customFood_carbs_100').fill('2');
+  await page.locator('#saveCustomFoodButton').click();
+  await page.locator('#myProductModal').waitFor({state:'detached',timeout:4000});
+  assert.equal(personalFoods.length,1);
+  assert.equal(personalFoods[0].review_status,'private');
+  assert.equal(publicFoods.length,0,'Personal food appeared in public catalogue without approval');
+  assert.equal(await page.locator('#foodLookupPortion strong').first().innerText(),'Домашній сир CI');
+  await page.locator('#foodLookupGrams').fill('120');
+  await page.locator('#foodLookupMeal').selectOption('breakfast');
+  await page.locator('#foodLookupAddToDiary').click();
+  await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item').waitFor({timeout:4000});
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).items[0].kcal,170.4);
+  const onRecipeDialog=async dialog=>{
+   if(dialog.type()==='prompt')await dialog.accept('Мій сирний сніданок');
+   else await dialog.accept();
+  };
+  page.on('dialog',onRecipeDialog);
+  await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-save-recipe').click();
+  await page.waitForFunction(()=>!!document.querySelector('.nutrition-diary-save-recipe'));
+  page.off('dialog',onRecipeDialog);
+  assert.equal(personalRecipes.length,1,'Saving a logged meal did not create a reusable recipe');
+  await page.locator('.nutrition-food-search-button').click();
+  await page.getByRole('button',{name:'Мої рецепти'}).click();
+  await page.locator('.my-food-row').waitFor({timeout:4000});
+  page.once('dialog',dialog=>dialog.accept('120'));
+  await page.locator('#myRecipesList .my-food-row-actions button').first().click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===2);
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,340.8,
+   'Logging a saved recipe did not update totals');
+  page.on('dialog',dialog=>dialog.accept());
+  for(let i=0;i<2;i++){
+   await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item-actions button[aria-label="Видалити продукт"]').first().click();
+   await page.waitForFunction(n=>window.nutritionDiaryState?.items?.length===n,1-i);
+  }
+  // Client submitted an unrelated private product, which must stay out of
+  // shared search until trainer explicitly approves it.
+  await page.locator('.nutrition-food-search-button').click();
+  await page.getByRole('button',{name:'+ Свій продукт',exact:true}).click();
+  await page.locator('#customFoodName').fill('Йогурт CI на перевірку');
+  await page.locator('#customFood_kcal_100').fill('88');
+  await page.locator('#customFood_protein_100').fill('6');
+  await page.locator('#customFood_fat_100').fill('3');
+  await page.locator('#customFood_carbs_100').fill('10');
+  await page.locator('#customFoodSubmitReview').check();
+  await page.locator('#saveCustomFoodButton').click();
+  await page.waitForFunction(()=>document.querySelector('#myProductModal')===null);
+  assert.equal(personalFoods.filter(x=>x.review_status==='pending').length,1);
+  assert.equal(publicFoods.length,0);
+  await page.locator('#foodSearchClose').click();
+  await page.evaluate(()=>window.openTrainerFoodReview());
+  await page.locator('.trainer-food-review-row').waitFor({timeout:4000});
+  assert.equal(await page.locator('.trainer-food-review-row').count(),1);
+  await page.locator('.trainer-food-review-row .food-review-kcal_100').fill('81');
+  await page.locator('.trainer-food-review-row .food-review-note').fill('Verified CI test label');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('.trainer-food-review-actions button.primary').click();
+  await page.waitForFunction(()=>document.querySelector('.trainer-food-review-row')===null);
+  assert.equal(publicFoods.length,1,'Trainer approval did not publish the reviewed product');
+  assert.equal(publicFoods[0].kcal_100,81,
+   'The shared catalogue ignored trainer-corrected nutrition values');
+  await page.locator('#trainerFoodReviewModal button.dark').click();
+  assert.equal(await page.locator('#foodSearchModal').count(),0);
+
   // Picking another day must keep the existing native control, then restore
   // today's diary data without losing the selected tab or saved records.
   const today=await diaryDate.inputValue();
