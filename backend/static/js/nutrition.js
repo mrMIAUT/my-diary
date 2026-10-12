@@ -632,7 +632,7 @@ function clientMealPlanHTML(d){
  return '<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar(\'clientMealPlanBody\',this)">'
   +'<span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">'+
   (complete?'Готове меню на день із грамовками та БЖВ':'Натисни, щоб переглянути прийоми їжі')+
-  '</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">'+
+  '</span></span><span class="arrow">'+(complete?'⌃':'⌄')+'</span></button><div id="clientMealPlanBody" class="meal-plan-body'+(complete?'':' hidden')+'">'+
   tabs+pages+'</div></div>';
 }
 
