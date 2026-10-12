@@ -111,10 +111,15 @@ window.addChosenFoodToDiary=async function(button){
   if(feedback)feedback.textContent='Вкажи коректну вагу від 1 до 2000 г.';
   return;
  }
+ const targetDate=window.nutritionDiaryDay||isoToday();
+ const manual=(window.currentClientData?.nutrition||[]).find(x=>x.day===targetDate);
+ if(manual&&!window.nutritionDiaryState?.active){
+  if(!confirm('За цю дату вже є ручний підсумок БЖВ. Після додавання продукту на екрані показуватиметься підсумок щоденника, а старий ручний запис залишиться збереженим. Продовжити?'))return;
+ }
  button.disabled=true;button.textContent='Зберігаємо…';
  try{
   await api('/nutrition/diary',{method:'POST',body:JSON.stringify({
-   day:window.nutritionDiaryDay||isoToday(),meal,grams,
+   day:targetDate,meal,grams,
    name:String(chosen.name||'').slice(0,200),
    brand:String(chosen.brand||'').slice(0,120),
    source_label:String(chosen.source_label||chosen.source||'').slice(0,120),
