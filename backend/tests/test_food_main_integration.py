@@ -48,8 +48,8 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertIn("lookupLocal(", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertIn("/foods/preview", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertNotIn("/static/js/food-lookup.js", shell)
-        self.assertIn("nutrition-redesign.js?v=312", index)
-        self.assertIn("nutrition-redesign.js?v=312", shell)
+        self.assertIn("nutrition-redesign.js?v=313", index)
+        self.assertIn("nutrition-redesign.js?v=313", shell)
 
 
 if __name__ == "__main__":

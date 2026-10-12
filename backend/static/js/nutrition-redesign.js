@@ -124,6 +124,13 @@ const nutritionDiaryMeals=[
  ['breakfast','Сніданок'],['lunch','Обід'],['snack','Перекус'],['dinner','Вечеря']
 ];
 function nutritionDiaryNumber(v){return Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1})}
+function nutritionDiaryDateLabel(value){
+ const [year,month,day]=String(value||'').split('-').map(Number);
+ if(!year||!month||!day)return '';
+ const showYear=String(year)!==isoToday().slice(0,4);
+ return new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'short',...(showYear?{year:'numeric'}:{})})
+  .format(new Date(year,month-1,day));
+}
 function nutritionDiaryDayHTML(d,cid){
  if(d.diaryUnavailable)return '<section class="card nutrition-diary-card"><h2>Щоденник харчування</h2>'
   +'<p class="nutrition-diary-note">Щоденник тимчасово недоступний. Спробуй оновити сторінку, коли з’явиться інтернет.</p></section>';
@@ -134,8 +141,17 @@ function nutritionDiaryDayHTML(d,cid){
  const day=window.nutritionDiaryDay||isoToday();
  return '<section class="card nutrition-diary-card" id="nutritionDiaryCard">'
   +'<div class="nutrition-diary-heading"><div><span class="nutrition-kicker">ФАКТИЧНЕ ХАРЧУВАННЯ</span>'
-  +'<h2>Щоденник харчування</h2><p>'+display+'</p></div>'
-  +'<label>Дата<input type="date" id="nutritionDiaryDate" aria-label="Дата щоденника"'
+  +'<h2>Щоденник харчування</h2><p>'+display+'</p></div></div>'
+  +'<div class="nutrition-diary-date-row"><span>Обраний день</span>'
+  +'<label class="nutrition-diary-date-pill">'
+  +'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+  +' stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/>'
+  +'<path d="M16 3v4M8 3v4M3 10h18"/></svg>'
+  +'<strong>'+esc(nutritionDiaryDateLabel(day))+'</strong>'
+  +'<svg aria-hidden="true" class="nutrition-diary-date-chevron" viewBox="0 0 24 24" fill="none"'
+  +' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+  +'<path d="m6 9 6 6 6-6"/></svg>'
+  +'<input type="date" id="nutritionDiaryDate" aria-label="Обрати дату щоденника"'
   +' max="'+isoToday()+'" value="'+esc(day)+'" onchange="changeNutritionDiaryDay(this.value)"></label></div>'
   +'<div class="nutrition-diary-day-total"><strong>'+amount('kcal')+' <small>ккал</small></strong>'
   +'<span>Б '+amount('protein')+' · Ж '+amount('fat')+' · В '+amount('carbs')+' г</span></div>'
@@ -232,8 +248,7 @@ function redesignNutritionTodayHTML(d,c,cid){
       +nutritionRing('Вуглеводи',carbs,c.carbs,'г','green')
     +'</div>'
     +'<div class="redesign-nutrition-actions">'
-      +(x?.__diary
-        ?'<button type="button" onclick="document.getElementById(\'nutritionDiaryCard\')?.scrollIntoView({block:\'start\'})">'+uiIcon('edit')+' Мій щоденник</button>'
+      +(x?.__diary?''
         :(x?'<button onclick="openRedesignNutritionEntry('+cid+','+x.id+')">'+uiIcon('edit')+' Редагувати БЖВ</button>':'<button onclick="openRedesignNutritionEntry('+cid+')">'+uiIcon('plus')+' Додати БЖВ</button>'))
       +'<button type="button" class="nutrition-food-search-button" onclick="openFoodSearchLazy()">'+uiIcon('search')+' Додати продукт</button>'
     +'</div>'
