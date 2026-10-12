@@ -57,6 +57,8 @@ jobs:
           npx playwright install chromium
       - name: Launch and calculator smoke in Chromium
         run: node backend/tests/browser_startup_smoke.mjs
+      - name: Test integrated nutrition UI
+        run: node backend/tests/trainer_nutrition_integration_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
