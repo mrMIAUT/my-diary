@@ -214,10 +214,24 @@ try{
   assert.equal(await ration.locator(':scope > .nutrition-menu-total').count(),1,
    'Each trainer ration must have exactly one daily kcal/BJU summary');
   assert.equal(await ration.locator(':scope > :first-child').getAttribute('class'),
-   'trainer-assigned-day-total nutrition-menu-total',
+   'trainer-assigned-day-total nutrition-menu-total nutrition-menu-total-v6',
    'Trainer daily nutrition summary must appear before the meal list');
   assert.equal(await ration.locator(':scope > :nth-child(2)').getAttribute('class'),
    'nutrition-menu-day-intro','Daily menu label must follow its summary');
+ }
+ // Approved concept six: one large kcal number + three actual colored
+ // protein/fat/carbs mini cards, not the old three bordered text columns.
+ for(const ration of await page.locator('#nutrition .trainer-saved-ration-page').all()){
+  assert.equal(await ration.locator('.nutrition-menu-total-v6 .nutrition-total-chip').count(),3);
+  assert.deepEqual(
+   await ration.locator('.nutrition-total-chip').evaluateAll(nodes=>nodes.map(n=>n.classList[1])),
+   ['protein','fat','carbs']);
+  assert.equal(await ration.locator('.nutrition-total-icon').count(),3);
+  for(const chip of await ration.locator('.nutrition-total-chip').all()){
+   assert.ok((await chip.locator('.nutrition-total-value').innerText()).includes('г'),
+    'A BJU value must show grams');
+   assert.ok((await chip.locator('.nutrition-total-name').innerText()).length>0);
+  }
  }
  const seenOne=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(seenOne.includes('Вихідне блюдо 1 1'));
@@ -381,6 +395,32 @@ try{
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),3,
    'Client cannot choose complete rations');
+ for(const width of [390,320]){
+  await page.setViewportSize({width,height:844});
+  const summary=page.locator('#clientRationSmoke .client-ration-page:not([hidden]) .nutrition-menu-total-v6');
+  const values=await summary.evaluate(el=>{
+   const chips=[...el.querySelectorAll('.nutrition-total-chip')];
+   const rect=el.getBoundingClientRect();
+   return {
+    bg:getComputedStyle(el).backgroundColor,
+    values:chips.map(ch=>({
+     color:getComputedStyle(ch).color,
+     bg:getComputedStyle(ch).backgroundColor,
+     inside:ch.getBoundingClientRect().left>=rect.left-1&&ch.getBoundingClientRect().right<=rect.right+1
+    })),
+    headings:chips.map(ch=>ch.querySelector('.nutrition-total-name').textContent),
+    icons:chips.every(ch=>!!ch.querySelector('svg path'))
+   };
+  });
+  assert.equal(values.bg,'rgb(255, 255, 255)','Concept 6 summary background must be white');
+  assert.deepEqual(values.headings,['Білки','Жири','Вуглеводи']);
+  assert.deepEqual(values.values.map(x=>x.bg),[
+   'rgb(236, 243, 255)','rgb(255, 243, 223)','rgb(234, 248, 239)'
+  ],'Pastel card palette does not match approved sixth concept');
+  assert.ok(values.values.every(v=>v.inside),'Summary chips overflow on '+width+'px screen');
+  assert.ok(values.icons,'BJU cards must keep the decorative SVG icon set');
+ }
+ await page.setViewportSize({width:390,height:844});
  assert.equal(await page.locator('#clientRationSmoke #clientMealPlanBody.hidden').count(),0,
    'Client assigned ration should be open upon entering nutrition');
  assert.ok(await page.locator('#clientRationSmoke .nutrition-meal-icon svg').count()>0,
@@ -393,7 +433,7 @@ try{
   assert.equal(await ration.locator(':scope > .nutrition-menu-total').count(),1,
    'The client must see a single full daily kcal/BJU summary per ration');
   assert.equal(await ration.locator(':scope > :first-child').getAttribute('class'),
-   'trainer-assigned-day-total nutrition-menu-total',
+   'trainer-assigned-day-total nutrition-menu-total nutrition-menu-total-v6',
    'Client daily nutrition summary must be first, above breakfast');
   assert.equal(await ration.locator(':scope > :nth-child(2)').getAttribute('class'),
    'nutrition-menu-day-intro');
