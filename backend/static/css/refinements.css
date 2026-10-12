@@ -1614,3 +1614,79 @@ body.eplan-redesign .food-lookup-feedback{color:#b24a55;font-size:11px;margin:0}
  body.eplan-redesign .nutrition-diary-heading label{flex-basis:106px}
  body.eplan-redesign .nutrition-diary-day-total>span{font-size:10px}
 }
+
+
+/* EPLAN 1.2 — separate assigned plan and food diary (client view only). */
+body.eplan-redesign.client-ui .client-nutrition-view-tabs{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:5px;background:#eaf0f8;padding:5px;border-radius:14px;
+ margin:2px 0 13px;min-width:0;
+}
+body.eplan-redesign.client-ui .client-nutrition-view-tabs button{
+ margin:0!important;padding:12px 6px!important;
+ min-height:44px!important;border:0!important;border-radius:11px!important;
+ box-shadow:none!important;background:transparent!important;color:#74849e!important;
+ font-weight:850!important;font-size:14px!important;
+}
+body.eplan-redesign.client-ui .client-nutrition-view-tabs button.active{
+ background:#fff!important;color:#397dec!important;
+ box-shadow:0 2px 7px rgba(23,56,96,.07)!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-card{
+ margin-top:18px!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal{
+ gap:0!important;padding:0!important;overflow:hidden;background:#fff!important;
+ border-radius:13px!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-head{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:11px 13px;gap:7px;
+}
+body.eplan-redesign .nutrition-diary-meal-title{
+ display:flex;align-items:center;gap:11px;min-width:0;
+}
+body.eplan-redesign .nutrition-diary-meal-title>div:last-child{
+ display:grid;gap:4px;min-width:0;
+}
+body.eplan-redesign .nutrition-diary-meal-title .nutrition-meal-icon{
+ flex:0 0 44px;width:44px!important;height:44px!important;
+ min-height:44px!important;max-height:44px!important;
+ border-radius:12px!important;padding:0!important;
+ display:grid;place-items:center;
+}
+body.eplan-redesign .nutrition-diary-meal-title .nutrition-meal-icon svg{
+ width:24px!important;height:24px!important;
+}
+body.eplan-redesign .nutrition-diary-meal-title strong{
+ font-size:13px!important;color:#213a60!important;font-weight:850!important;
+}
+body.eplan-redesign .nutrition-diary-meal-title small{
+ font-size:10px!important;color:#8295ad!important;
+}
+body.eplan-redesign .nutrition-diary-meal-calories{
+ font-size:12px;white-space:nowrap;font-weight:850;color:#4e6c94;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-body{
+ padding:0 13px 12px;
+}
+body.eplan-redesign.client-ui .nutrition-diary-add{
+ box-sizing:border-box;display:block;width:100%!important;
+ margin:9px 0 0!important;padding:10px 8px!important;
+ min-height:37px!important;border:0!important;
+ background:#edf4ff!important;color:#397dec!important;
+ font-size:12px!important;font-weight:850!important;border-radius:9px!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal:not(:has(.nutrition-diary-item)) .nutrition-diary-add{
+ margin-top:0!important;
+}
+body.eplan-redesign.client-ui .redesign-nutrition-tabs{
+ margin-top:0;margin-bottom:14px;
+}
+@media(max-width:350px){
+ body.eplan-redesign .nutrition-diary-meal-title{gap:7px}
+ body.eplan-redesign .nutrition-diary-meal-title .nutrition-meal-icon{
+  width:39px!important;height:39px!important;min-height:39px!important;flex-basis:39px
+ }
+ body.eplan-redesign .nutrition-diary-meal-head{padding:10px}
+}
