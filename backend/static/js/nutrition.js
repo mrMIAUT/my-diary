@@ -226,12 +226,12 @@ function trainerSavedRationPage(items,nums,variant){
   +meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('')
   +(sums?'<div class="trainer-assigned-day-total nutrition-menu-total">'
     +'<div class="nutrition-menu-total-heading"><span>Разом за раціон '+variant+'</span>'
-    +'<strong>'+trainerSavedMacroLine(sums)+'</strong></div>'
+    +'<strong>'+Number(sums[0]).toLocaleString('uk-UA',{maximumFractionDigits:1})+' ккал</strong></div>'
     +'<div class="nutrition-menu-total-grid">'
-    +[['Ккал',sums[0]],['Білки',sums[1]],['Жири',sums[2]],['Вуглеводи',sums[3]]]
-      .map(([label,value],i)=>'<span><small>'+label+'</small><strong>'
+    +[['Білки',sums[1]],['Жири',sums[2]],['Вуглеводи',sums[3]]]
+      .map(([label,value])=>'<span><small>'+label+'</small><strong>'
         +Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1})
-        +(i?' <small>г</small>':'')+'</strong></span>').join('')
+        +' <small>г</small></strong></span>').join('')
     +'</div></div>'
    :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>');
 }
