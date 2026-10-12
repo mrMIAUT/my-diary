@@ -113,7 +113,7 @@ entry=app.FoodDiaryAddIn(
 )
 saved=app.food_diary_add(entry,client_user)["item"]
 assert saved["grams"]==150 and saved["kcal"]==547.5,saved
-assert saved["protein"]==10.6 and saved["carbs"]==120,saved
+assert saved["protein"]==10.7 and saved["fat"]==1.1 and saved["carbs"]==120,saved
 snapshot=app.rows("SELECT content,foods_json,variant_number FROM nutrition_plan_items WHERE client_id=? ORDER BY variant_number",(client,))
 overview=app.food_diary_overview(30,client_user)
 assert len(overview["days"])==1 and overview["days"][0]["kcal"]==547.5,overview
