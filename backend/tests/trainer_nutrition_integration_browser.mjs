@@ -265,7 +265,7 @@ try{
    ))
   }));
   const adjusted=legacy.find(x=>x.meal_number===1&&x.variant_number===1);
-  adjusted.content='Страва: Тестова страва з рисом\nРис білий (відварений) — 155 г\nЯйце куряче — 2 шт.\n\nДо цільових БЖВ: 500 ккал · Б 25 · Ж 15 · В 65\n\nПриготування: Приготуй рис.';
+  adjusted.content='Страва: Тестова страва з рисом\nРис білий (відварений) — 155 г\nЯйце куряче — 2 шт.\n\nДо цільових БЖВ: 500 ккал · Б 25 · Ж 15 · В 65\n\nПриготування: Приготуй рис. Олію не п\'ють окремо. Швидкий варіант: використовуй заздалегідь готові крупи, запечене м’ясо або рибу та овочі. Час підготовки вказано без первинного приготування цих заготовок.';
   window.currentClientData={client:window.currentClientData.client,nutrition_plan:legacy};
   document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData);
  },saved.meals);
@@ -273,6 +273,16 @@ try{
    'Trainer should be able to rebalance assigned nutrition to daily goals');
  const unchanged=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(unchanged.includes('155 г'),'Old nutrition quantities were silently changed in the saved view');
+ const oldRecipeSteps=page.locator('#nutrition .trainer-saved-ration-page:not([hidden]) .nutrition-menu-method').first();
+ await oldRecipeSteps.locator('summary').click();
+ const shownSteps=await oldRecipeSteps.innerText();
+ assert.ok(shownSteps.includes('Приготуй рис.'),'Actual preparation instructions should remain');
+ assert.ok(!shownSteps.includes('Олію не п')&&!shownSteps.includes('Швидкий варіант:')&&
+  !shownSteps.includes('Час підготовки вказано'),
+  'Previously saved nutrition must not show obsolete recipe commentary');
+ const unchangedRaw=await page.evaluate(()=>window.currentClientData.nutrition_plan[0].content);
+ assert.ok(unchangedRaw.includes('Швидкий варіант:'),
+  'Client nutrition source must remain unchanged by presentation-only cleanup');
  await page.locator('#nutrition .nutrition-menu-round-prompt button').click();
  const rounded=await page.evaluate(()=>{
   const requests=window.__requests.filter(x=>x.path==='/client/123/nutrition');
