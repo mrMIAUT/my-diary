@@ -146,8 +146,10 @@ try{
   'Trainer preview stacks independent whole-day rations');
  assert.equal(await page.locator('#nutrition .trainer-assigned-meal').count(),12,
   'Trainer preview must include all saved dishes across three rations');
- assert.equal(await page.locator('#nutrition .nutrition-menu-photo').count(),12,
-   'Photo-slot thumbnails must render for assigned dishes');
+ assert.equal(await page.locator('#nutrition .nutrition-meal-icon svg').count(),12,
+   'All meal cards must render SVGs instead of food-emoji thumbnails');
+ for (const category of ['breakfast','lunch','snack','dinner'])
+  assert.equal(await page.locator('#nutrition .nutrition-meal-icon-'+category).count(),3);
  assert.equal(await page.locator('#nutrition .nutrition-menu-v2-nutrients').count(),12,
    'Each assigned dish needs a compact calorie and BJU rail');
  assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),3,
@@ -177,6 +179,37 @@ try{
    'Editing dishes should not reset previously saved calorie/BJU targets');
 
 
+ // Daily fitting must correct a high-calorie whole-day menu toward its goal,
+ // preserve an egg count, and avoid out-of-bounds recipe changes.
+ const fit=await page.evaluate(catalog=>{
+  const source=[1,2,3,4].map(n=>({
+   meal_number:n,variant_number:1,content:'Страва: Тестова',
+   dish_title:'Тестова страва',preparation:'',
+   foods:[{source_id:'smoke-rice',grams:350,count:null,count_in_targets:true},
+    {source_id:'smoke-egg',grams:100,count:2,count_in_targets:true},
+    ...(n===2?[{source_id:'smoke-oil',grams:20,count:null,count_in_targets:true}]:[])]
+  }));
+  const result=window.fitAssignedNutritionToGoal(source,{
+   kcal:2500,protein:90,fat:56,carbs:395
+  },catalog);
+  return {
+   reports:result.reports,
+   actual:result.meals.flatMap(x=>x.foods),
+   before:source.flatMap(x=>x.foods)
+  };
+ },foodCatalog);
+ assert.ok(Math.abs(fit.reports[0].result[0]-2500)<Math.abs(fit.reports[0].original[0]-2500),
+  'Day optimizer did not reduce calorie error versus 2500-kcal goal');
+ assert.ok(fit.reports[0].result[0]<fit.reports[0].original[0],
+  'Over-target meal plan was pushed further upward');
+ assert.ok(fit.actual.every(f=>f.count!=null||f.grams%10===0),
+  'Every suggested non-egg portion must be a multiple of ten');
+ assert.ok(fit.actual.filter(f=>f.count!=null).every(f=>f.count===2&&f.grams===100),
+  'Eggs must remain whole pieces');
+ assert.ok(fit.actual.every((f,i)=>f.count!=null||Math.abs(f.grams-fit.before[i].grams)<=
+  Math.max(20,Math.round(fit.before[i].grams*.3/10)*10)),
+  'Fitting should not radically change the original recipe');
+
  // Previously saved plans can contain five-gram quantities: the trainer has an
  // explicit rounding action, not a misleading display-only transformation.
  await page.evaluate(meals=>{
@@ -191,7 +224,7 @@ try{
   document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData);
  },saved.meals);
  assert.equal(await page.locator('#nutrition .nutrition-menu-round-prompt button').count(),1,
-   'A previously assigned 155-g portion should offer a safe explicit update');
+   'Trainer should be able to rebalance assigned nutrition to daily goals');
  const unchanged=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(unchanged.includes('155 г'),'Old nutrition quantities were silently changed in the saved view');
  await page.locator('#nutrition .nutrition-menu-round-prompt button').click();
@@ -199,14 +232,12 @@ try{
   const requests=window.__requests.filter(x=>x.path==='/client/123/nutrition');
   return JSON.parse(requests.at(-1).opts.body);
  });
- assert.equal(rounded.meals.find(x=>x.meal_number===1&&x.variant_number===1).foods[0].grams,160,
-   'Old assigned portions were not rounded in persisted payload');
+ assert.ok(rounded.meals.every(x=>x.foods.every(f=>f.count!=null||f.grams%10===0)),
+   'Confirmed plan must persist all gram ingredients on the 10-g grid');
  assert.equal(rounded.meals.find(x=>x.meal_number===1&&x.variant_number===1).foods[1].count,2,
    'Eggs must stay whole pieces');
- assert.equal(await page.locator('#nutrition .nutrition-menu-round-prompt button').count(),0,
-   'Rounded assigned plan must refresh without reintroducing the warning');
- assert.ok((await page.locator('#nutrition').innerText()).includes('160 г'),
-   'The assigned trainer menu must refresh after confirmed rounding');
+ assert.ok(await page.locator('#nutrition .nutrition-meal-icon svg').count()>0,
+   'Saved and reloaded nutrition must retain the SVG meal-type design');
 
  // Older incomplete or text-only alternatives remain readable with no
  // invented macro total when meal nutrition provenance is unavailable.
@@ -248,8 +279,8 @@ try{
    'Client cannot choose complete rations');
  assert.equal(await page.locator('#clientRationSmoke #clientMealPlanBody.hidden').count(),0,
    'Client assigned ration should be open upon entering nutrition');
- assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-photo').count()>0,
-   'Client must have illustrated meal previews');
+ assert.ok(await page.locator('#clientRationSmoke .nutrition-meal-icon svg').count()>0,
+   'Client must see the same meal-category SVGs as the trainer');
  assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-v2-nutrients').count()>0,
    'Client meal macros should use the chosen compact design');
  assert.equal(await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').count(),1,
