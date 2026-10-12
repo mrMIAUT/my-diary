@@ -392,8 +392,9 @@ try{
    else await dialog.accept();
   };
   page.on('dialog',onRecipeDialog);
+  const recipeSave=page.waitForResponse(r=>r.url().includes('/api/nutrition/recipes')&&r.request().method()==='POST');
   await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-save-recipe').click();
-  await page.waitForFunction(()=>!!document.querySelector('.nutrition-diary-save-recipe'));
+  await recipeSave;
   page.off('dialog',onRecipeDialog);
   assert.equal(personalRecipes.length,1,'Saving a logged meal did not create a reusable recipe');
   await page.locator('.nutrition-food-search-button').click();
@@ -404,11 +405,13 @@ try{
   await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===2);
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,340.8,
    'Logging a saved recipe did not update totals');
-  page.on('dialog',dialog=>dialog.accept());
+  const onDeleteConfirm=dialog=>dialog.accept();
+  page.on('dialog',onDeleteConfirm);
   for(let i=0;i<2;i++){
    await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item-actions button[aria-label="Видалити продукт"]').first().click();
    await page.waitForFunction(n=>window.nutritionDiaryState?.items?.length===n,1-i);
   }
+  page.off('dialog',onDeleteConfirm);
   // Client submitted an unrelated private product, which must stay out of
   // shared search until trainer explicitly approves it.
   await page.locator('.nutrition-food-search-button').click();
