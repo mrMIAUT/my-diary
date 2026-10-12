@@ -1,13 +1,157 @@
 // V89 global function declarations. Shared state is initialized by app.js.
 // Keep this file declaration-only so all functions exist before startup runs.
 
+// A ration is a complete set of one chosen dish per meal (variant_number).
+// Keep the legacy per-meal alternatives editor when data is incomplete.
+let trainerNutritionRation=1;
+function trainerRationIds(){
+ return [...new Set((nutritionPlanDraft||[]).map(x=>+x.variant_number||1))].sort((a,b)=>a-b);
+}
+function trainerCompleteRations(){
+ const items=nutritionPlanDraft||[];
+ const nums=[...new Set(items.map(x=>x.meal_number))];
+ const variants=trainerRationIds();
+ return !!nums.length&&variants.length<=7&&variants.every(v=>
+  nums.every(n=>items.some(x=>x.meal_number===n&&x.variant_number===v)));
+}
+function trainerRationTabsHTML(){
+ const ids=trainerRationIds();
+ if(!ids.includes(trainerNutritionRation))trainerNutritionRation=ids[0]||1;
+ return '<div class="trainer-ration-tabs" aria-label="Раціони на день">'
+  +ids.map(v=>'<button type="button" class="trainer-ration-tab '+
+      (v===trainerNutritionRation?'active':'')+'" aria-pressed="'+(v===trainerNutritionRation)+
+      '" onclick="selectTrainerRation('+v+')">Раціон '+v+'</button>').join('')
+  +(ids.length<7?'<button class="trainer-ration-add" type="button" onclick="addTrainerRation()">＋ Раціон</button>':'')
+  +(ids.length>1?'<button class="trainer-ration-remove" type="button" onclick="removeTrainerRation()">Видалити поточний</button>':'')
+  +'</div>';
+}
+window.selectTrainerRation=function(v){
+ if(!trainerRationIds().includes(+v))return;
+ trainerNutritionRation=+v;
+ rerenderNutritionPlan(true);
+};
+window.addTrainerRation=function(){
+ if(!trainerCompleteRations()||trainerRationIds().length>=7)return;
+ const from=trainerNutritionRation,nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))];
+ const next=Math.max(...trainerRationIds())+1;
+ for(const n of nums){
+  const item=nutritionPlanDraft.find(x=>x.meal_number===n&&x.variant_number===from);
+  if(!item)continue;
+  nutritionPlanDraft.push({...item,variant_number:next,foods:(item.foods||[]).map(f=>({...f})),auto_fit:null});
+ }
+ trainerNutritionRation=next;
+ rerenderNutritionPlan(true);
+};
+window.removeTrainerRation=function(){
+ if(!trainerCompleteRations()||trainerRationIds().length<=1)return;
+ if(!confirm('Видалити обраний раціон із чернетки? Поки не збережеш план, клієнтські дані не зміняться.'))return;
+ nutritionPlanDraft=nutritionPlanDraft.filter(x=>x.variant_number!==trainerNutritionRation);
+ trainerNutritionRation=trainerRationIds()[0]||1;
+ rerenderNutritionPlan(true);
+};
+function trainerFoodTotals(item){
+ const values=[0,0,0,0],catalog=window.structuredCatalog||[];
+ for(const row of item?.foods||[]){
+  if(row.count_in_targets===false)continue;
+  const food=catalog.find(x=>x.source_id===row.source_id);
+  if(!food)continue;
+  const src=['kcal_100','protein_100','fat_100','carbs_100'];
+  src.forEach((key,i)=>{values[i]+=Number(food[key]||0)*Number(row.grams||0)/100});
+ }
+ return values;
+}
+window.trainerRationAccuracyHTML=function(){
+ if(!trainerCompleteRations()||!window.structuredCatalog?.length)return '';
+ const items=nutritionPlanDraft.filter(x=>x.variant_number===trainerNutritionRation);
+ const incomplete=items.some(x=>String(x.content||'').trim()&&!x.foods?.length);
+ if(incomplete)return '<div class="trainer-ration-accuracy">Є текстові страви без структурованих продуктів. Для точних БЖВ додай продукти з каталогу.</div>';
+ const sums=[0,0,0,0];
+ for(const meal of items)trainerFoodTotals(meal).forEach((v,i)=>{sums[i]+=v});
+ const client=window.currentClientData?.client||{};
+ const goal=['kcal','protein','fat','carbs'].map(k=>Number(client[k]||0));
+ const diff=sums.map((x,i)=>x-goal[i]);
+ const labels=['Ккал','Б','Ж','В'];
+ const fmt=x=>(x>0?'+':'')+Number(x.toFixed(1)).toLocaleString('uk-UA');
+ const matched=diff.every((x,i)=>Math.abs(x)<=Math.max([100,12,10,15][i],goal[i]*.1));
+ return '<div class="trainer-ration-accuracy '+(matched?'close':'offset')+'"><strong>'
+   +(matched?'БЖВ близькі до цілі':'Відхилення від добової цілі')+'</strong>'
+   +'<span>'+diff.map((x,i)=>labels[i]+' '+fmt(x)).join(' · ')+'</span>'
+   +(!matched?'<button type="button" onclick="rebalanceTrainerRation()">Підлаштувати всі прийоми</button>':'')
+   +'</div>';
+};
+window.refreshTrainerRationAccuracy=function(){
+ const node=document.querySelector('#trainerRationAccuracy');
+ if(node)node.innerHTML=window.trainerRationAccuracyHTML();
+};
+window.trainerPortionChanged=function(item){
+ if(!item)return;
+ item.auto_fit=null;
+ document.querySelector('.meal-variant[data-meal="'+item.meal_number+'"] .trainer-auto-fit')?.remove();
+ window.refreshTrainerRationAccuracy();
+};
+window.trainerRecipeChanged=function(item){
+ if(!item)return;
+ window.trainerPortionChanged(item);
+ item.dish_title='';item.preparation='';item.recipe_source_name='';item.recipe_source_url='';
+ item.recipe_id=null;
+};
+function remainingTrainerTargets(meal){
+ const client=window.currentClientData?.client||{};
+ const goal=['kcal','protein','fat','carbs'].map(k=>Number(client[k]||0));
+ if(goal.some(x=>x<=0))throw Error('Спочатку признач цільову калорійність і БЖВ.');
+ const others=nutritionPlanDraft.filter(x=>x.variant_number===meal.variant_number&&x!==meal);
+ if(others.some(x=>String(x.content||'').trim()&&!x.foods?.length))
+  throw Error('Для автопідбору спочатку заповни решту прийомів продуктами з каталогу.');
+ const rest=[0,0,0,0];
+ for(const item of others)trainerFoodTotals(item).forEach((n,i)=>{rest[i]+=n});
+ return {goal,remaining:goal.map((n,i)=>n-rest[i])};
+}
+window.applyRecipeToRation=function(item,recipe){
+ if(!trainerCompleteRations()||item.variant_number!==trainerNutritionRation)
+   throw Error('Обери повний раціон перед заміною страви.');
+ const {goal,remaining}=remainingTrainerTargets(item);
+ const fit=window.NutritionPortionFitter.fit(recipe,remaining,goal,window.structuredCatalog);
+ item.foods=fit.foods;
+ item.dish_title=recipe.title;
+ item.preparation=recipe.preparation;
+ item.recipe_id=recipe.id;
+ item.recipe_source_name=recipe.source_name;
+ item.recipe_source_url=recipe.source_url;
+ item.auto_fit={within_tolerance:fit.within_tolerance,diff:fit.diff};
+ item.content=item.foods.map(row=>{
+  const f=(window.structuredCatalog||[]).find(x=>x.source_id===row.source_id);
+  return f?f.name+' — '+(row.count!=null?row.count+' шт.':row.grams+' г'):'';
+ }).filter(Boolean).join('\n');
+ rerenderNutritionPlan(true);
+ return fit;
+};
+window.rebalanceTrainerRation=function(){
+ if(!trainerCompleteRations()||!window.NutritionPortionFitter)return;
+ const meals=nutritionPlanDraft.filter(x=>x.variant_number===trainerNutritionRation);
+ try{
+  for(let pass=0;pass<3;pass++){
+   for(const meal of meals){
+    if(!meal.foods?.length)continue;
+    const {goal,remaining}=remainingTrainerTargets(meal);
+    const result=window.NutritionPortionFitter.fit({foods:meal.foods},remaining,goal,window.structuredCatalog);
+    meal.foods=result.foods;meal.auto_fit=null;
+   }
+  }
+  rerenderNutritionPlan(true);
+ }catch(e){alert(e.message||'Не вдалося підлаштувати порції.')}
+};
+
 function planFromData(d){
  let items=(d.nutrition_plan||[]).map(x=>{
   let foods=[];
   try{const raw=x.foods_json||x.foods||'[]';foods=Array.isArray(raw)?raw:JSON.parse(raw);}
   catch(e){console.warn('Invalid structured meal draft',e)}
+  const content=String(x.content||'');
+  const title=/^Страва: ([^\n]+)/.exec(content);
+  const prep=/\nПриготування: ([^\n]+)/.exec(content);
   return {meal_number:+x.meal_number||1,variant_number:+x.variant_number||1,
-          content:x.content||'',sort:+x.sort||0,foods:Array.isArray(foods)?foods:[]};
+          content,sort:+x.sort||0,foods:Array.isArray(foods)?foods:[],
+          dish_title:title?title[1]:'',preparation:prep?prep[1]:'',auto_fit:null};
  });
  if(!items.length&&d.client.meal_plan)items=[{meal_number:1,variant_number:1,content:d.client.meal_plan,sort:0}];
  if(!items.length)items=[{meal_number:1,variant_number:1,content:'',sort:0},{meal_number:2,variant_number:1,content:'',sort:0},{meal_number:3,variant_number:1,content:'',sort:0}];
@@ -17,34 +161,61 @@ function planFromData(d){
 function mealPlanEditorHTML(d,editing=false){
  if(!nutritionPlanDraft)nutritionPlanDraft=planFromData(d);
  let nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))].sort((a,b)=>a-b);
- return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('nutritionPlanBody',this)"><span><strong>План харчування</strong><span class="muted" style="display:block;margin-top:5px">Прийоми їжі та альтернативні варіанти</span></span><span class="arrow">⌄</span></button>
+ return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('nutritionPlanBody',this)"><span><strong>План харчування</strong><span class="muted" style="display:block;margin-top:5px">Раціони на день та редаговані страви</span></span><span class="arrow">⌄</span></button>
   <div class="meal-autoplan-toolbar">
    <button type="button" class="meal-autoplan-open" onclick="openAutoMealPlanBuilder(${d.client.id})">${uiIcon('plus')} Створити план автоматично</button>
    ${!editing?'<button class="meal-plan-edit-open" type="button" onclick="openTrainerStructuredMealPlan()">Редагувати план</button>':''}
   </div>
-  <div id="nutritionPlanBody" class="hidden meal-plan-body">${nums.map(n=>mealEditorBlock(n,editing)).join('')}${typeof window.structuredDailySummaryHTML==='function'?window.structuredDailySummaryHTML():''}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
+  <div id="nutritionPlanBody" class="hidden meal-plan-body">${editing&&trainerCompleteRations()?trainerRationTabsHTML():''}${nums.map(n=>mealEditorBlock(n,editing)).join('')}${typeof window.structuredDailySummaryHTML==='function'?window.structuredDailySummaryHTML():''}${editing?'<div id="trainerRationAccuracy">'+window.trainerRationAccuracyHTML()+'</div>':''}<div class="meal-actions">${editing?`<button type="button" class="dark icon-btn" onclick="addMealBlock()">${uiIcon('plus')} Додати прийом їжі</button><button type="button" class="meal-autoplan-save" onclick="saveTrainerMealPlanDraft(${d.client.id},this)">Зберегти план клієнту</button>`:''}</div></div></div>`;
 }
 
 function mealEditorBlock(n,editing){
  let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
- if(!editing)return `<div class="meal-view"><strong>Прийом їжі ${n}</strong>${xs.filter(x=>x.content.trim()).map(x=>`<div class="meal-option"><span class="variant-pill">Варіант ${x.variant_number}</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">${esc(x.content)}</div></div>`).join('')||'<div class="muted" style="margin-top:8px">Ще не заповнено.</div>'}</div>`;
- return `<div class="meal-editor"><div class="meal-editor-head"><strong>Прийом їжі ${n}</strong>${nutritionPlanDraft.some(x=>x.meal_number!==n)?`<button class="dark icon-btn" onclick="removeMealBlock(${n})">${uiIcon('trash')} Видалити</button>`:''}</div>${xs.map(x=>`<div class="meal-variant"><div class="between"><span class="muted">Варіант ${x.variant_number}</span>${xs.length>1?`<button class="dark icon-btn" onclick="removeMealVariant(${n},${x.variant_number})">${uiIcon('trash')}</button>`:''}</div>${Array.isArray(x.foods)&&x.foods.length
- ? (typeof window.renderStructuredMealHTML==='function'
-    ? window.renderStructuredMealHTML(x)
-    : `<div class="structured-meal-loader"><p>Продукти збережено зі своїми БЖВ</p><button type="button" onclick="openTrainerStructuredMealPlan()">Редагувати продукти</button></div>`)
- : `<textarea data-meal="${n}" data-variant="${x.variant_number}" oninput="updateMealDraft(this)" placeholder="Продукти, кількість, примітки...">${esc(x.content)}</textarea>
-   <button type="button" class="structured-start" onclick="addStructuredMealFood(${n},${x.variant_number})">+ Додати продукт з бази</button>`}</div>`).join('')}<div class="meal-actions"><button class="dark icon-btn" onclick="addMealVariant(${n})">${uiIcon('plus')} Додати варіант</button></div></div>`;
+ if(!editing)return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'
+  +(xs.filter(x=>x.content.trim()).map(x=>'<div class="meal-option"><span class="variant-pill">Раціон '+x.variant_number+'</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+esc(x.content)+'</div></div>').join('')
+   ||'<div class="muted" style="margin-top:8px">Ще не заповнено.</div>')+'</div>';
+ const rationMode=trainerCompleteRations();
+ if(rationMode)xs=xs.filter(x=>x.variant_number===trainerNutritionRation);
+ let html='<div class="meal-editor"><div class="meal-editor-head"><strong>Прийом їжі '+n+'</strong>'
+  +(nutritionPlanDraft.some(x=>x.meal_number!==n)?'<button class="dark icon-btn" onclick="removeMealBlock('+n+')">'+uiIcon('trash')+' Видалити</button>':'')+'</div>';
+ html+=xs.map(x=>{
+  const hasFoods=Array.isArray(x.foods)&&x.foods.length>0;
+  const auto=x.auto_fit;
+  const note=auto?'<div class="trainer-auto-fit '+(auto.within_tolerance?'close':'warn')+'"><strong>'
+      +(auto.within_tolerance?'Порції підібрано':'Порції підібрано, денна ціль має відхилення')
+      +'</strong><small>Ккал '+Number(auto.diff.kcal||0).toFixed(1)+' · Б '+Number(auto.diff.protein||0).toFixed(1)
+      +' · Ж '+Number(auto.diff.fat||0).toFixed(1)+' · В '+Number(auto.diff.carbs||0).toFixed(1)
+      +'</small></div>':'';
+  const recipe= rationMode?
+     '<div class="trainer-meal-recipe"><strong>'+esc(x.dish_title||'Власна страва')+'</strong>'
+     +(x.preparation?'<p>'+esc(x.preparation)+'</p>':'')
+     +'<button type="button" onclick="openRecipeTemplatePicker('+n+','+x.variant_number+')">≡ Обрати з бібліотеки страв</button>'
+     +(x.recipe_source_url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.recipe_source_url)+'">Джерело ідеї ↗</a>':'')
+     +'</div>':'';
+  return '<div class="meal-variant" data-meal="'+n+'"><div class="between"><span class="muted">'
+       +(rationMode?'Обрана страва':'Варіант '+x.variant_number)+'</span>'
+       +(!rationMode&&xs.length>1?'<button class="dark icon-btn" onclick="removeMealVariant('+n+','+x.variant_number+')">'+uiIcon('trash')+'</button>':'')
+       +'</div>'+recipe+note
+       +(hasFoods?
+         (typeof window.renderStructuredMealHTML==='function'?window.renderStructuredMealHTML(x):
+          '<div class="structured-meal-loader"><button type="button" onclick="openTrainerStructuredMealPlan()">Редагувати продукти</button></div>')
+         :'<textarea data-meal="'+n+'" data-variant="'+x.variant_number+'" oninput="updateMealDraft(this)" placeholder="Продукти, кількість, примітки...">'+esc(x.content||'')+'</textarea>'
+          +'<button type="button" class="structured-start" onclick="addStructuredMealFood('+n+','+x.variant_number+')">+ Додати продукт з бази</button>')
+       +'</div>';
+ }).join('');
+ if(!rationMode)html+='<div class="meal-actions"><button class="dark icon-btn" onclick="addMealVariant('+n+')">'+uiIcon('plus')+' Додати варіант</button></div>';
+ return html+'</div>';
 }
 
-function updateMealDraft(el){let x=nutritionPlanDraft.find(v=>v.meal_number===+el.dataset.meal&&v.variant_number===+el.dataset.variant);if(x)x.content=el.value}
+function updateMealDraft(el){let x=nutritionPlanDraft.find(v=>v.meal_number===+el.dataset.meal&&v.variant_number===+el.dataset.variant);if(x){x.content=el.value;if(x.foods?.length)x.foods=[];window.trainerRecipeChanged(x);window.refreshTrainerRationAccuracy()}}
 
 function rerenderNutritionPlan(editing=true){let old=$('#nutritionPlanBody'),wasOpen=old&&!old.classList.contains('hidden');let host=$('#nutritionPlanHost');if(host)host.innerHTML=mealPlanEditorHTML(window.currentClientData,editing);if(wasOpen){let b=$('#nutritionPlanBody');if(b)b.classList.remove('hidden')}}
 
-function addMealBlock(){let n=Math.max(0,...nutritionPlanDraft.map(x=>x.meal_number))+1;nutritionPlanDraft.push({meal_number:n,variant_number:1,content:'',sort:0});rerenderNutritionPlan(true)}
+function addMealBlock(){let n=Math.max(0,...nutritionPlanDraft.map(x=>x.meal_number))+1;let ids=trainerCompleteRations()?trainerRationIds():[1];for(const v of ids)nutritionPlanDraft.push({meal_number:n,variant_number:v,content:'',foods:[],sort:0});rerenderNutritionPlan(true)}
 
 function removeMealBlock(n){nutritionPlanDraft=nutritionPlanDraft.filter(x=>x.meal_number!==n);let nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))].sort((a,b)=>a-b);nutritionPlanDraft=nutritionPlanDraft.map(x=>({...x,meal_number:nums.indexOf(x.meal_number)+1}));rerenderNutritionPlan(true)}
 
-function addMealVariant(n){let xs=nutritionPlanDraft.filter(x=>x.meal_number===n),v=Math.max(0,...xs.map(x=>x.variant_number))+1;nutritionPlanDraft.push({meal_number:n,variant_number:v,content:'',sort:0});rerenderNutritionPlan(true)}
+function addMealVariant(n){if(trainerCompleteRations())return window.addTrainerRation();let xs=nutritionPlanDraft.filter(x=>x.meal_number===n),v=Math.max(0,...xs.map(x=>x.variant_number))+1;nutritionPlanDraft.push({meal_number:n,variant_number:v,content:'',sort:0});rerenderNutritionPlan(true)}
 
 function removeMealVariant(n,v){nutritionPlanDraft=nutritionPlanDraft.filter(x=>!(x.meal_number===n&&x.variant_number===v));let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);xs.forEach((x,i)=>x.variant_number=i+1);rerenderNutritionPlan(true)}
 
@@ -76,6 +247,7 @@ window.saveTrainerMealPlanDraft = async function(cid,button){
  if(session?.role!=='trainer'||+c.id!==+cid||!clientAccess(c).features?.meal_plan)return;
  const items=(nutritionPlanDraft||[]).filter(x=>String(x.content||'').trim()).map((x,i)=>({
    meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i,
+   dish_title:String(x.dish_title||'').slice(0,140),preparation:String(x.preparation||'').slice(0,1500),
    foods:Array.isArray(x.foods)?x.foods.map(food=>({
      source_id:food.source_id,grams:food.grams,count:food.count,
      count_in_targets:food.count_in_targets!==false
@@ -104,11 +276,22 @@ window.ensureStructuredMealEditor=async function(){
    window.eplanStructuredMealPromise=(async()=>{
      await new Promise((resolve,reject)=>{
        const script=document.createElement('script');
-       script.src='/static/js/structured-meal-editor.js?v=1';
+       script.src='/static/js/structured-meal-editor.js?v=2';
        script.onload=resolve;script.onerror=()=>reject(Error('Editor JS unavailable'));
        document.head.appendChild(script);
      });
      await window.loadStructuredMealCatalog();
+     for(const [url,test] of [
+       ['/static/js/nutrition-portion-fitter.js?v=1',()=>!!window.NutritionPortionFitter],
+       ['/static/js/recipe-template-picker.js?v=3',()=>!!window.openRecipeTemplatePicker]
+     ]){
+       if(test())continue;
+       await new Promise((resolve,reject)=>{
+         const tag=document.createElement('script');
+         tag.src=url;tag.onload=resolve;tag.onerror=()=>reject(Error('Recipe module unavailable'));
+         document.head.appendChild(tag);
+       });
+     }
    })().catch(e=>{window.eplanStructuredMealPromise=null;throw e;});
  }
  return window.eplanStructuredMealPromise;
