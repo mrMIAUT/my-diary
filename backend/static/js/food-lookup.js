@@ -166,7 +166,7 @@ window.openMyFoodLibrary=async function(){
   +'<small>'+fmt(x.kcal_100)+' ккал · Б '+fmt(x.protein_100)+' · Ж '+fmt(x.fat_100)+' · В '+fmt(x.carbs_100)+'</small>'
   +'<small>'+(x.review_status==='pending'?'На перевірці':x.review_status==='approved'?'Перевірено':x.review_status==='rejected'?'Не схвалено':'Особистий')+'</small></div>'
   +'<div class="my-food-row-actions"><button type="button" onclick="choosePrivateFood('+Number(x.id)+')">Додати</button>'
-  +'<button type="button" onclick="openPrivateFoodForm('+Number(x.id)+')">Змінити</button>'
+  +(x.review_status==='approved'?'':'<button type="button" onclick="openPrivateFoodForm('+Number(x.id)+')">Змінити</button>')
   +(x.review_status==='private'||x.review_status==='rejected'
    ?'<button type="button" aria-label="Видалити власний продукт" onclick="deletePrivateFood('+Number(x.id)+')">×</button>':'')
   +'</div></div>'
@@ -205,7 +205,10 @@ window.openPrivateFoodForm=function(id=null){
   +'<button type="button" id="saveCustomFoodButton" class="my-food-primary" onclick="savePrivateFood(this)">Зберегти</button></div></div>');
 };
 window.savePrivateFood=async function(button){
- const read=id=>Number(String($(id)?.value||'').replace(',','.'));
+ const read=id=>{
+  const raw=String($(id)?.value??'').trim();
+  return raw===''?NaN:Number(raw.replace(',','.'));
+ };
  const vals={name:String($('customFoodName')?.value||'').trim(),brand:String($('customFoodBrand')?.value||'').trim(),
   kcal_100:read('customFood_kcal_100'),protein_100:read('customFood_protein_100'),
   fat_100:read('customFood_fat_100'),carbs_100:read('customFood_carbs_100'),
