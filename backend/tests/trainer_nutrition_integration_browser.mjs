@@ -180,9 +180,21 @@ try{
   }));
   assert.equal(style.width,28,'The '+category+' icon size has drifted');
  }
- const iconBackgrounds=await page.locator('#nutrition .nutrition-meal-icon').evaluateAll(
-  nodes=>[...new Set(nodes.map(x=>getComputedStyle(x).backgroundColor))]);
- assert.equal(iconBackgrounds.length,1,'All meal-category icons should use the same neutral background');
+ // Only the category colors change. Exact original Lucide SVG paths are
+ // asserted above; each category has a distinct pastel background + stroke.
+ const categoryColors={
+  breakfast:{background:'rgb(236, 243, 255)',stroke:'rgb(57, 125, 236)'},
+  lunch:{background:'rgb(232, 247, 239)',stroke:'rgb(35, 137, 95)'},
+  snack:{background:'rgb(243, 237, 255)',stroke:'rgb(120, 85, 196)'},
+  dinner:{background:'rgb(255, 240, 229)',stroke:'rgb(183, 110, 46)'}
+ };
+ for(const [category,expected] of Object.entries(categoryColors)){
+  const actual=await page.locator('#nutrition .nutrition-meal-icon-'+category).first().evaluate(el=>({
+   background:getComputedStyle(el).backgroundColor,
+   stroke:getComputedStyle(el.querySelector('svg')).stroke
+  }));
+  assert.deepEqual(actual,expected,'Meal icon color drift for '+category);
+ }
 
  assert.equal(await page.locator('#nutrition .nutrition-menu-v2-nutrients').count(),12,
    'Each assigned dish needs a compact calorie and BJU rail');
