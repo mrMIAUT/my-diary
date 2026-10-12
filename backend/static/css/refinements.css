@@ -841,3 +841,21 @@ body.eplan-redesign.trainer-ui .recipe-template-footer button{
  body.eplan-redesign.trainer-ui .trainer-ration-tabs{flex-wrap:nowrap;overflow-x:auto}
  body.eplan-redesign.trainer-ui .trainer-ration-tabs button{flex-shrink:0}
 }
+
+
+/* Complete day rations in the client read-only meal plan.
+   Incomplete legacy per-meal alternatives deliberately keep the old view. */
+body.eplan-redesign .client-ration-tabs{
+ display:flex;align-items:center;gap:8px;max-width:100%;
+ overflow-x:auto;scrollbar-width:none;padding:6px 0 12px
+}
+body.eplan-redesign .client-ration-tabs button{
+ flex:0 0 auto!important;min-height:40px!important;padding:9px 14px!important;
+ border:1px solid #d8e5f4!important;border-radius:11px!important;
+ background:#f5f9ff!important;color:#5d7697!important;
+ font-size:12px!important;font-weight:800!important;box-shadow:none!important
+}
+body.eplan-redesign .client-ration-tabs button.active{
+ color:#fff!important;background:#317ef0!important;border-color:#317ef0!important
+}
+body.eplan-redesign .client-ration-page[hidden]{display:none!important}
