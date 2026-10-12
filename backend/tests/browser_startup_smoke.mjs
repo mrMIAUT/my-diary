@@ -13,6 +13,7 @@ let remoteSearchCalls=0,previewCalls=0;
 let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 let structuredCatalogCalls=0,mealPlanSavedPayload=null;
 let diarySeq=0;const diaryRows=[];const diaryDays=new Set();
+let customFoodSeq=0;const customFoods=[];let savedRecipeSeq=0;const savedRecipes=[];
 const calculated=(row)=>({...row,...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
 const diaryPayload=(day)=>{const items=diaryRows.filter(x=>x.day===day).map(calculated);
  return {day,active:diaryDays.has(day),items,totals:Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(items.reduce((sum,x)=>sum+x[k],0)).toFixed(1)]))};};
@@ -75,6 +76,33 @@ const server=http.createServer(async(req,res)=>{
     for await(const part of req)raw+=part;
     try{mealPlanSavedPayload=JSON.parse(raw)}catch{mealPlanSavedPayload=null}
     res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
+  }
+  if(pathname==='/api/nutrition/my-foods'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({items:customFoods}));return;
+  }
+  if(pathname==='/api/nutrition/my-foods'&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const form=JSON.parse(raw);
+    const row={...form,id:++customFoodSeq,
+      review_status:form.submit_for_review?'pending':'private'};
+    customFoods.unshift(row);
+    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({item:row}));return;
+  }
+  if(pathname==='/api/nutrition/recipes'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({items:savedRecipes}));return;
+  }
+  if(pathname==='/api/nutrition/recipes'&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;const form=JSON.parse(raw);
+    const items=diaryRows.filter(x=>x.day===form.day&&x.meal===form.meal);
+    if(!items.length){res.writeHead(400,{'content-type':'application/json'});res.end('{"detail":"No food logged"}');return;}
+    const grams=items.reduce((sum,x)=>sum+Number(x.grams),0);
+    const total=diaryPayload(form.day).totals;
+    const recipe={id:++savedRecipeSeq,name:form.name,grams,
+      ingredients:items.map(x=>({...x})),
+      kcal_100:total.kcal/grams*100,protein_100:total.protein/grams*100,
+      fat_100:total.fat/grams*100,carbs_100:total.carbs/grams*100};
+    savedRecipes.unshift(recipe);
+    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({id:recipe.id}));return;
   }
   if(pathname==='/api/nutrition/diary/overview'){
     const days=[...diaryDays].map(day=>({
@@ -215,6 +243,37 @@ try{
   assert.equal(afterAdd.items[0].grams,150);
   assert.equal(afterAdd.items[0].protein,6);
   assert.equal(afterAdd.totals.carbs,30);
+  // A filled meal can be saved as a private recipe without publishing
+  // anything or changing the currently logged product.
+  page.once('dialog',dialog=>dialog.accept('Моя гречка CI'));
+  await page.locator('.nutrition-diary-meal[data-meal="lunch"] .nutrition-diary-save-recipe').click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===1);
+  assert.equal(savedRecipes.length,1,'Filled meal was not saved as reusable recipe');
+  assert.equal(savedRecipes[0].name,'Моя гречка CI');
+  await page.locator('.nutrition-food-search-button').click();
+  await page.locator('#foodSearchModal').waitFor();
+  assert.equal(await page.locator('.food-custom-actions button').count(),3,
+    'Own food, create food and personal recipe entrypoints missing');
+  await page.getByRole('button',{name:'Мої рецепти'}).click();
+  await page.locator('#myRecipesList').getByText('Моя гречка CI').waitFor();
+  await page.locator('#myRecipesModal .dark').click();
+  await page.getByRole('button',{name:'+ Свій продукт'}).click();
+  await page.locator('#customFoodName').fill('Мій сир CI');
+  await page.locator('#customFood_kcal_100').fill('142');
+  await page.locator('#customFood_protein_100').fill('18');
+  await page.locator('#customFood_fat_100').fill('7');
+  await page.locator('#customFood_carbs_100').fill('2');
+  assert.equal(await page.locator('#customFoodSubmitReview').isChecked(),false,
+    'Custom food should remain private by default');
+  await page.locator('#saveCustomFoodButton').click();
+  await page.locator('#myProductModal').waitFor({state:'detached',timeout:5000});
+  assert.equal(customFoods.length,1);
+  assert.equal(customFoods[0].review_status,'private');
+  assert.equal(await page.locator('#foodLookupPortion').getByText('Мій сир CI').count(),1);
+  await page.locator('#foodSearchClose').click();
+  assert.equal(await page.locator('.nutrition-diary-item').count(),1,
+    'Creating a private food must not silently log it');
+
   assert.equal(await page.getByRole('button',{name:/Мій щоденник/}).count(),0,
     'Redundant diary navigation should disappear once food is logged');
   assert.equal(await page.locator('.redesign-nutrition-actions button').count(),1,
