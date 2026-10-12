@@ -4,8 +4,9 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>(Math.round((Number(n)||0)*10)/10).toLocaleString('uk-UA',{maximumFractionDigits:1});
-let timer=null,serial=0,chosen=null;
-window.openFoodSearchModal=function(){
+let timer=null,serial=0,chosen=null,defaultMeal='breakfast';
+window.openFoodSearchModal=function(meal=''){
+ defaultMeal=['breakfast','lunch','snack','dinner'].includes(meal)?meal:'breakfast';
  $('foodSearchModal')?.remove();serial++;chosen=null;
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="foodSearchModal"><div class="card food-lookup-modal">'
   +'<div class="between"><div><h2>Пошук продуктів</h2><p class="muted">Калорії та БЖВ на 100 г продукту</p></div><button type="button" class="dark" id="foodSearchClose">✕</button></div>'
@@ -13,7 +14,7 @@ window.openFoodSearchModal=function(){
   +'<p class="food-lookup-status" id="foodLookupStatus">Введи щонайменше 2 символи.</p>'
   +'<div class="food-lookup-results" id="foodLookupResults"></div>'
   +'<button type="button" id="foodLookupMore" class="food-lookup-more" hidden>Пошук у розширеній базі</button><div id="foodLookupPortion"></div>'
-  +'<p class="food-lookup-note">Дані залежать від виробника та способу приготування. Це довідковий пошук — записи до щоденника БЖВ не додаються автоматично.</p></div></div>');
+  +'<p class="food-lookup-note">Дані залежать від виробника та способу приготування. Обери порцію та прийом їжі, щоб додати продукт у щоденник.</p></div></div>');
  $('foodSearchClose').onclick=()=>{$('foodSearchModal')?.remove();serial++};
  $('foodLookupQuery').oninput=function(){
   const q=this.value.trim(),requestId=++serial;clearTimeout(timer);
@@ -81,7 +82,13 @@ function choose(x){
  chosen=x;
  $('foodLookupPortion').innerHTML='<div class="food-lookup-portion"><strong>'+esc(x.name||'Продукт')+'</strong>'
   +'<label>Вага порції, г <input id="foodLookupGrams" type="number" min="1" max="2000" step="1" value="100"></label>'
-  +'<div id="foodLookupMacros"></div></div>';
+  +'<label>Прийом їжі <select id="foodLookupMeal">'
+  +[['breakfast','Сніданок'],['lunch','Обід'],['snack','Перекус'],['dinner','Вечеря']]
+    .map(([k,t])=>'<option value="'+k+'"'+(defaultMeal===k?' selected':'')+'>'+t+'</option>').join('')
+  +'</select></label>'
+  +'<div id="foodLookupMacros"></div>'
+  +'<button type="button" id="foodLookupAddToDiary" onclick="addChosenFoodToDiary(this)">+ Додати у щоденник</button>'
+  +'<p id="foodLookupFeedback" class="food-lookup-feedback" role="status"></p></div>';
  $('foodLookupGrams').oninput=portion;portion();
 }
 function portion(){
@@ -95,4 +102,33 @@ function portion(){
   +'<span><b>'+amount('fat_100')+'</b><small>Жири</small></span>'
   +'<span><b>'+amount('carbs_100')+'</b><small>Вуглеводи</small></span></div>';
 }
+
+window.addChosenFoodToDiary=async function(button){
+ const grams=Number($('foodLookupGrams')?.value),meal=$('foodLookupMeal')?.value;
+ const feedback=$('foodLookupFeedback');
+ if(!chosen||!['breakfast','lunch','snack','dinner'].includes(meal))return;
+ if(!Number.isFinite(grams)||grams<=0||grams>2000){
+  if(feedback)feedback.textContent='Вкажи коректну вагу від 1 до 2000 г.';
+  return;
+ }
+ button.disabled=true;button.textContent='Зберігаємо…';
+ try{
+  await api('/nutrition/diary',{method:'POST',body:JSON.stringify({
+   day:window.nutritionDiaryDay||isoToday(),meal,grams,
+   name:String(chosen.name||'').slice(0,200),
+   brand:String(chosen.brand||'').slice(0,120),
+   source_label:String(chosen.source_label||chosen.source||'').slice(0,120),
+   source_id:String(chosen.source_id||'').slice(0,200),
+   approximate:chosen.approximate!==false,
+   kcal_100:Number(chosen.kcal_100),protein_100:Number(chosen.protein_100),
+   fat_100:Number(chosen.fat_100),carbs_100:Number(chosen.carbs_100)
+  })});
+  $('foodSearchModal')?.remove();serial++;chosen=null;
+  await showClientNutrition(session.client_id);
+  document.getElementById('nutritionDiaryCard')?.scrollIntoView({block:'start'});
+ }catch(e){
+  button.disabled=false;button.textContent='+ Додати у щоденник';
+  if(feedback)feedback.textContent=e.message||'Не вдалося додати продукт. Перевір підключення.';
+ }
+};
 })();
