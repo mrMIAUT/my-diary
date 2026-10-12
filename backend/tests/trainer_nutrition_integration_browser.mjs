@@ -208,6 +208,17 @@ try{
  assert.equal(await preparation.getAttribute('open'),null,'Preparation should start collapsed');
  await preparation.locator('summary').click();
  assert.ok((await preparation.innerText()).includes('Змішай'),'Recipe steps should expand on demand');
+ // The complete ration total must be the FIRST content block, never repeated
+ // after the meal cards; this is shared by trainer and client.
+ for(const ration of await page.locator('#nutrition .trainer-saved-ration-page').all()){
+  assert.equal(await ration.locator(':scope > .nutrition-menu-total').count(),1,
+   'Each trainer ration must have exactly one daily kcal/BJU summary');
+  assert.equal(await ration.locator(':scope > :first-child').getAttribute('class'),
+   'trainer-assigned-day-total nutrition-menu-total',
+   'Trainer daily nutrition summary must appear before the meal list');
+  assert.equal(await ration.locator(':scope > :nth-child(2)').getAttribute('class'),
+   'nutrition-menu-day-intro','Daily menu label must follow its summary');
+ }
  const seenOne=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(seenOne.includes('Вихідне блюдо 1 1'));
  assert.ok(seenOne.replace(/\s/g,'').includes('2300ккал'));
@@ -378,6 +389,15 @@ try{
    'Client meal macros should use the chosen compact design');
  assert.equal(await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').count(),1,
    'Client sees several daily rations stacked together');
+ for(const ration of await page.locator('#clientRationSmoke .client-ration-page').all()){
+  assert.equal(await ration.locator(':scope > .nutrition-menu-total').count(),1,
+   'The client must see a single full daily kcal/BJU summary per ration');
+  assert.equal(await ration.locator(':scope > :first-child').getAttribute('class'),
+   'trainer-assigned-day-total nutrition-menu-total',
+   'Client daily nutrition summary must be first, above breakfast');
+  assert.equal(await ration.locator(':scope > :nth-child(2)').getAttribute('class'),
+   'nutrition-menu-day-intro');
+ }
  assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-ingredient').count()>0,
   'Client menu must show the same readable ingredient rows');
  const clientRationOne=await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').innerText();

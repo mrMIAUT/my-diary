@@ -437,10 +437,9 @@ function trainerSavedRationPage(items,nums,variant){
  const complete=meals.length===nums.length&&totals.every(Boolean);
  const sums=complete?[0,0,0,0]:null;
  if(sums)totals.forEach(t=>t.forEach((x,i)=>{sums[i]+=x}));
- return '<div class="nutrition-menu-day-intro"><span>Меню на день</span><small>'
-  +meals.length+' '+(meals.length===1?'прийом їжі':meals.length<5?'прийоми їжі':'прийомів їжі')+'</small></div>'
-  +meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('')
-  +(sums?'<div class="trainer-assigned-day-total nutrition-menu-total">'
+ // The selected ration's full kcal and B/J/V summary belongs at the TOP,
+ // just under the ration tabs. Client and trainer reuse this renderer.
+ return (sums?'<div class="trainer-assigned-day-total nutrition-menu-total">'
     +'<div class="nutrition-menu-total-heading"><span>Разом за раціон '+variant+'</span>'
     +'<strong>'+Number(sums[0]).toLocaleString('uk-UA',{maximumFractionDigits:1})+' ккал</strong></div>'
     +'<div class="nutrition-menu-total-grid">'
@@ -449,7 +448,10 @@ function trainerSavedRationPage(items,nums,variant){
         +Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1})
         +' <small>г</small></strong></span>').join('')
     +'</div></div>'
-   :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>');
+   :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>')
+  +'<div class="nutrition-menu-day-intro"><span>Меню на день</span><small>'
+  +meals.length+' '+(meals.length===1?'прийом їжі':meals.length<5?'прийоми їжі':'прийомів їжі')+'</small></div>'
+  +meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('');
 }
 
 window.selectTrainerSavedRation=function(ration){
