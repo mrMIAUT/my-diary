@@ -204,6 +204,35 @@ try{
     'Deleting last product must keep diary mode instead of restoring old manual totals');
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
   assert.equal(await page.locator('#foodSearchModal').count(),0,'Search modal remained open');
+  // The two modes must remain separate: plan = assigned, diary = consumed.
+  assert.equal(await page.locator('.client-nutrition-view-tabs [role=tab]').count(),2);
+  assert.equal(await page.locator('.client-nutrition-view-tabs [aria-selected=true]').innerText(),'Щоденник');
+  assert.equal(await page.locator('.redesign-nutrition-tabs button').count(),3,
+   'Today/week/month tabs missing from Diary mode');
+  assert.equal(await page.locator('.nutrition-diary-meal').count(),4);
+  assert.equal(await page.locator('.nutrition-diary-meal .nutrition-meal-icon svg').count(),4,
+   'The approved category SVGs are missing from the diary');
+  assert.deepEqual(
+   await page.locator('.nutrition-diary-meal .nutrition-meal-icon').evaluateAll(nodes=>
+    nodes.map(el=>getComputedStyle(el).color)),
+   ['rgb(57, 125, 236)','rgb(35, 137, 95)','rgb(120, 85, 196)','rgb(183, 110, 46)'],
+   'Diary SVG category palette differs from the approved plan icons');
+  await page.locator('.client-nutrition-view-tabs button').first().click();
+  await page.locator('.nutrition-coaching-upsell').waitFor({timeout:3500});
+  assert.equal(await page.locator('.nutrition-diary-card').count(),0,
+   'Assigned ration mode must not show the diary list');
+  assert.equal(await page.locator('.redesign-nutrition-tabs').count(),0,
+   'Today/week/month must belong only to diary mode');
+  await page.locator('.client-nutrition-view-tabs button').nth(1).click();
+  await page.locator('.nutrition-diary-card').waitFor({timeout:3500});
+  assert.equal(await page.locator('.nutrition-coaching-upsell').count(),0,
+   'Diary view must not mix the trainer-assigned ration card');
+  await page.locator('.redesign-nutrition-tabs button').nth(1).click();
+  await page.locator('.redesign-nutrition-history').waitFor({timeout:3500});
+  await page.locator('.redesign-nutrition-tabs button').nth(2).click();
+  await page.locator('.redesign-nutrition-history').waitFor({timeout:3500});
+  await page.locator('.redesign-nutrition-tabs button').first().click();
+  await page.locator('.nutrition-diary-card').waitFor({timeout:3500});
   await page.evaluate(()=>{
     session={role:'trainer',user_id:1};
     document.body.classList.remove('client-ui');
