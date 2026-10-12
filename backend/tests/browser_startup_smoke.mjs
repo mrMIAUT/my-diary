@@ -179,8 +179,10 @@ try{
     });
     assert.ok(rects.within,'Diary date chip spills outside '+width+'px viewport');
     assert.ok(rects.width<240&&rects.height<=48,'Date control became oversized on '+width+'px screen');
-    assert.equal(rects.pickerWidth,rects.width,'Native date hit-target does not cover its visual pill');
-    assert.equal(rects.pickerHeight,rects.height,'Native picker has a clipped tap target');
+    assert.ok(Math.abs(rects.pickerWidth-rects.width)<=2.1,
+      'Native date hit-target does not cover its visual pill beyond the 1px border');
+    assert.ok(Math.abs(rects.pickerHeight-rects.height)<=2.1,
+      'Native picker tap target differs from pill beyond the 1px border');
     assert.equal(rects.opacity,'0','Browser-native date content should not overlap the custom label');
   }
   await page.setViewportSize({width:390,height:844});
