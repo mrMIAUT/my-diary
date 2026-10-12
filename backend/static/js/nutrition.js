@@ -193,17 +193,20 @@ function trainerSavedIngredientRows(text){
 function nutritionMealThumbnail(item,n){
  const category=Number(n)===1?'breakfast':Number(n)===2?'lunch':
   Number(n)===3||Number(n)===5?'snack':Number(n)===4?'dinner':'lunch';
- const symbols={
-  breakfast:'<path d="M4 11h16v3a8 8 0 0 1-16 0v-3Z"/><path d="M2.5 20h19"/><path d="M8 4v3m4-5v5m4-3v3"/>',
-  lunch:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4.5"/><path d="M2.5 3v7m-2-7v5m4-5v5m-2 2v11M22 3v18m-3.5-18v6c0 2 1.4 3 3.5 3"/>',
-  snack:'<path d="M12 9c-1.3-3.2-5.5-4-7.6-1.4-4.6 5.5 0 14.4 4.7 14.4 1.8 0 2.3-.8 2.9-.8s1.1.8 2.9.8c4.7 0 9.3-8.9 4.7-14.4C16.5 5 13.4 6.5 12 9Z"/><path d="M12 8c.2-3 .9-4.3 3-5.5M12 7c-2.4-3-4.1-3.2-6-2.5"/>',
-  dinner:'<path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/><path d="m17.5 3.5.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5.5-1.2Z"/>'
+ // Exact Lucide v0.456.0 paths used in the approved in-chat preview:
+ // breakfast: coffee, lunch: utensils, snack: apple, dinner: moon.
+ // Keep these unchanged; do not replace with approximations or illustrations.
+ const icons={
+  breakfast:'<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',
+  lunch:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+  snack:'<path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/>',
+  dinner:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'
  };
  return '<div class="nutrition-menu-photo nutrition-meal-icon nutrition-meal-icon-'+category
   +'" role="img" aria-label="'+esc(trainerSavedMealName(n))+'">'
-  +'<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"'
-  +' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-  +symbols[category]+'</svg></div>';
+  +'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none"'
+  +' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  +icons[category]+'</svg></div>';
 }
 
 function trainerSavedMealCard(item,n){
