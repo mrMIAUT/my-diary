@@ -109,6 +109,8 @@ const nutritionDiaryMeals=[
 ];
 function nutritionDiaryNumber(v){return Number(v||0).toLocaleString('uk-UA',{maximumFractionDigits:1})}
 function nutritionDiaryDayHTML(d,cid){
+ if(d.diaryUnavailable)return '<section class="card nutrition-diary-card"><h2>Щоденник харчування</h2>'
+  +'<p class="nutrition-diary-note">Щоденник тимчасово недоступний. Спробуй оновити сторінку, коли з’явиться інтернет.</p></section>';
  const state=d.diarySelected||{items:[],totals:{kcal:0,protein:0,fat:0,carbs:0},active:false};
  const meals=nutritionDiaryMeals;
  const display=state.active?'Записано за день':'Додай перший продукт, щоб почати щоденник.';
@@ -291,7 +293,7 @@ window.showClientNutrition = async function(cid){
   }catch(e){
    console.warn('Є ПЛАН: diary unavailable',e);
    if(window.clientNutritionPeriod==='today'){
-     display={...d,diarySelected:{items:[],totals:{},active:false},diaryToday:null};
+     display={...d,diaryUnavailable:true,diarySelected:{items:[],totals:{},active:false},diaryToday:null};
      window.nutritionDiaryState=null;
    }
   }
