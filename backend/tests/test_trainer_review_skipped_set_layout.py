@@ -29,7 +29,7 @@ class TrainerReviewSkippedSetLayoutTests(unittest.TestCase):
         for shell in (INDEX,SW):
             self.assertIn("/static/js/results.js?v=181",shell)
             self.assertIn("/static/css/redesign.css?v=262",shell)
-        self.assertIn("const VERSION='eplan-v221'",SW)
+        self.assertIn("const VERSION='eplan-v222'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
     def test_render_skips_cleanly_without_changing_completed_set(self):
