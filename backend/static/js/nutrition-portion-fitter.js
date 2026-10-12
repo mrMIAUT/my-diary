@@ -38,13 +38,16 @@ function fit(recipe,remaining,goal,catalog){
   const cfg=r.portion_rules||{};
   const egg=f.unit==='pcs';
   const size=egg?Number(f.grams_per_piece||50):1;
+  // For convenient measuring, automatically fitted gram portions always end
+  // in zero. Eggs remain discrete pieces (50 g edible per egg).
+  const step=egg?size:10;
   const min=egg?Math.max(1,Math.ceil(Number(cfg.min_grams??50)/size))*size:
-   Math.max(1,Number(cfg.min_grams??(f.name.includes('Оливкова олія')?3:30)));
+   Math.max(10,Math.ceil(Math.max(1,Number(cfg.min_grams??10))/10)*10);
   const max=egg?Math.min(8,Math.floor(Number(cfg.max_grams??400)/size))*size:
-   Math.max(min,Number(cfg.max_grams??2000));
-  const step=egg?size:Math.max(1,Number(cfg.step_grams??5));
+   Math.floor(Number(cfg.max_grams??2000)/10)*10;
+  if(max<min)throw Error('Для продукту немає допустимої порції з кроком 10 г.');
   const start=Number(r.grams)||min;
-  const clamp=g=>Math.max(min,Math.min(max,min+Math.round((g-min)/step)*step));
+  const clamp=g=>Math.max(min,Math.min(max,Math.round(g/step)*step));
   return {row:r,f,min,max,step,original:clamp(start),egg,clamp,index:i};
  });
  const current=entries.map(e=>e.original);

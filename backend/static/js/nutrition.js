@@ -175,6 +175,19 @@ function trainerSavedMacroLine(values){
 function trainerSavedMealName(n){
  return ({1:'Сніданок',2:'Обід',3:'Перекус',4:'Вечеря',5:'Другий перекус'})[n]||'Прийом їжі '+n;
 }
+function trainerSavedIngredientRows(text){
+ const lines=String(text||'').split('\n').map(line=>line.trim()).filter(Boolean);
+ if(!lines.length)return '';
+ const rows=lines.map(line=>{
+  const clean=line.replace(/\s*·\s*овочі поза цільовими БЖВ\s*$/,'')
+    .replace(/\s*\(не входить у цільові БЖВ\)\s*$/,'');
+  const parts=/^(.+?)\s+[—–]\s+(.+)$/.exec(clean);
+  if(!parts)return '<li class="nutrition-menu-ingredient full"><span>'+esc(clean)+'</span></li>';
+  return '<li class="nutrition-menu-ingredient"><span>'+esc(parts[1])+'</span>'
+   +'<b>'+esc(parts[2])+'</b></li>';
+ });
+ return '<ul class="nutrition-menu-ingredients" aria-label="Склад страви">'+rows.join('')+'</ul>';
+}
 function trainerSavedMealCard(item,n){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
@@ -185,12 +198,21 @@ function trainerSavedMealCard(item,n){
    .replace(/^Страва:\s*[^\n]*\n?/,'')
    .split(/\n\s*(?:До цільових БЖВ:|Фактично разом з овочами:|Приготування:)/)[0].trim():raw.trim();
  if(!isStructured&&title)ingredients=ingredients.replace(/^Страва:\s*[^\n]*\n?/,'');
- return '<article class="trainer-assigned-meal">'
-  +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n))+'</span>'
-  +(title?'<strong class="trainer-assigned-dish">'+esc(title)+'</strong>':'')
-  +(ingredients?'<div class="trainer-assigned-ingredients">'+esc(ingredients)+'</div>':'')
-  +(preparation?'<p class="trainer-assigned-preparation">'+esc(preparation)+'</p>':'')
-  +(macros?'<div class="trainer-assigned-meal-macros">'+trainerSavedMacroLine(macros)+'</div>':'')
+ const fmt=value=>Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1});
+ return '<article class="trainer-assigned-meal nutrition-menu-meal">'
+  +'<div class="nutrition-menu-meal-head">'
+   +'<span class="nutrition-menu-category"><span class="nutrition-menu-number">'+String(n).padStart(2,'0')+'</span>'
+   +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n))+'</span></span>'
+   +(macros?'<span class="nutrition-menu-energy">'+fmt(macros[0])+' <small>ккал</small></span>':'')
+  +'</div>'
+  +(title?'<h3 class="trainer-assigned-dish">'+esc(title)+'</h3>':'')
+  +(ingredients?trainerSavedIngredientRows(ingredients):'')
+  +(preparation?'<details class="nutrition-menu-method"><summary>Як приготувати <span aria-hidden="true">⌄</span></summary>'
+    +'<p class="trainer-assigned-preparation">'+esc(preparation)+'</p></details>':'')
+  +(macros?'<div class="trainer-assigned-meal-macros nutrition-menu-macros">'
+   +[['Б',macros[1]],['Ж',macros[2]],['В',macros[3]]].map(([label,value])=>
+     '<span><small>'+label+'</small><strong>'+fmt(value)+' <small>г</small></strong></span>').join('')
+   +'</div>':'')
   +'</article>';
 }
 function trainerSavedRationPage(items,nums,variant){
@@ -199,11 +221,21 @@ function trainerSavedRationPage(items,nums,variant){
  const complete=meals.length===nums.length&&totals.every(Boolean);
  const sums=complete?[0,0,0,0]:null;
  if(sums)totals.forEach(t=>t.forEach((x,i)=>{sums[i]+=x}));
- return meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('')
-  +(sums?'<div class="trainer-assigned-day-total"><span>Разом за раціон · фактично</span><strong>'
-    +trainerSavedMacroLine(sums)+'</strong></div>'
+ return '<div class="nutrition-menu-day-intro"><span>Меню на день</span><small>'
+  +meals.length+' '+(meals.length===1?'прийом їжі':meals.length<5?'прийоми їжі':'прийомів їжі')+'</small></div>'
+  +meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('')
+  +(sums?'<div class="trainer-assigned-day-total nutrition-menu-total">'
+    +'<div class="nutrition-menu-total-heading"><span>Разом за раціон '+variant+'</span>'
+    +'<strong>'+Number(sums[0]).toLocaleString('uk-UA',{maximumFractionDigits:1})+' ккал</strong></div>'
+    +'<div class="nutrition-menu-total-grid">'
+    +[['Білки',sums[1]],['Жири',sums[2]],['Вуглеводи',sums[3]]]
+      .map(([label,value])=>'<span><small>'+label+'</small><strong>'
+        +Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1})
+        +' <small>г</small></strong></span>').join('')
+    +'</div></div>'
    :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>');
 }
+
 window.selectTrainerSavedRation=function(ration){
  const body=document.querySelector('#nutrition #nutritionPlanBody')||document.getElementById('nutritionPlanBody');
  if(!body)return;
@@ -387,13 +419,13 @@ window.ensureStructuredMealEditor=async function(){
    window.eplanStructuredMealPromise=(async()=>{
      await new Promise((resolve,reject)=>{
        const script=document.createElement('script');
-       script.src='/static/js/structured-meal-editor.js?v=2';
+       script.src='/static/js/structured-meal-editor.js?v=3';
        script.onload=resolve;script.onerror=()=>reject(Error('Editor JS unavailable'));
        document.head.appendChild(script);
      });
      await window.loadStructuredMealCatalog();
      for(const [url,test] of [
-       ['/static/js/nutrition-portion-fitter.js?v=1',()=>!!window.NutritionPortionFitter],
+       ['/static/js/nutrition-portion-fitter.js?v=2',()=>!!window.NutritionPortionFitter],
        ['/static/js/recipe-template-picker.js?v=4',()=>!!window.openRecipeTemplatePicker]
      ]){
        if(test())continue;
@@ -533,16 +565,11 @@ function clientMealPlanHTML(d){
    '" onclick="selectClientMealRation('+v+')">Раціон '+v+'</button>').join('')+'</div>':'';
  const pages=complete?variants.map((v,i)=>
   '<div class="client-ration-page" role="tabpanel" data-ration="'+v+'"'+(i?' hidden style="display:none"':'')+'>'
-  +nums.map(n=>{
-   const item=items.find(x=>x.meal_number===n&&x.variant_number===v);
-   return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'
-    +'<div class="meal-option"><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+
-     esc(item.content)+'</div></div></div>';
-  }).join('')+'</div>'
+  +trainerSavedRationPage(items,nums,v)+'</div>'
  ).join(''):legacy;
  return '<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar(\'clientMealPlanBody\',this)">'
   +'<span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">'+
-  (complete?'Обери один із раціонів на день':'Натисни, щоб переглянути прийоми їжі')+
+  (complete?'Готове меню на день із грамовками та БЖВ':'Натисни, щоб переглянути прийоми їжі')+
   '</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">'+
   tabs+pages+'</div></div>';
 }

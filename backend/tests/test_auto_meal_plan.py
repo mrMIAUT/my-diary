@@ -29,6 +29,10 @@ class AutomaticMealPlanTests(unittest.TestCase):
                 self.assertGreater(product['grams'],0)
                 self.assertTrue(product['source_id'].startswith('eplan12-fdc-'))
                 self.assertIn(product['name'],meal['content'])
+                if product.get('count') is not None:
+                    self.assertEqual(product['grams'],product['count']*50)
+                else:
+                    self.assertEqual(product['grams']%10,0,product['name'])
         for nutrient in ('kcal','protein','fat','carbs'):
             expected=sum(x['totals'][nutrient] for x in result['meals'] if x['variant_number']==1)
             self.assertAlmostEqual(expected,result['totals'][nutrient],places=1)

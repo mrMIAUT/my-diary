@@ -82,7 +82,7 @@ window.renderStructuredMealHTML=function(item){
     +'<div class="structured-food-title"><button type="button" class="structured-food-name" onclick="pickStructuredFood('+n+','+v+','+i+')">'+esc(food.name)+' <span>Замінити</span></button>'
     +'<button class="structured-remove" type="button" aria-label="Прибрати продукт" onclick="deleteStructuredFood('+n+','+v+','+i+')">×</button></div>'
     +(row.usage_note?'<div class="structured-food-use">'+esc(row.usage_note)+'</div>':'')
-    +'<div class="structured-food-details"><label><input class="structured-grams" type="number" min="'+(egg?'1':'1')+'" max="'+(egg?'8':'2000')+'" step="'+(egg?'1':'1')+'" inputmode="decimal" value="'+quantity+'" oninput="editStructuredQty('+n+','+v+','+i+',this)"><span>'+unit+'</span></label>'
+    +'<div class="structured-food-details"><label><input class="structured-grams" type="number" min="'+(egg?'1':'10')+'" max="'+(egg?'8':'2000')+'" step="'+(egg?'1':'10')+'" inputmode="decimal" value="'+quantity+'" oninput="editStructuredQty('+n+','+v+','+i+',this)" onchange="finishStructuredQty('+n+','+v+','+i+',this)"><span>'+unit+'</span></label>'
     +'<span class="structured-food-macro">'+macroLine(val)+'</span></div>'
     +(food.optional_vegetable?'<label class="structured-veg-opt"><input type="checkbox" '+(row.count_in_targets===false?'':'checked')+' onchange="toggleStructuredVegetable('+n+','+v+','+i+',this.checked)"> Враховувати овочі в цільових БЖВ</label>':'')
     +'</div>';
@@ -138,6 +138,16 @@ window.editStructuredQty=function(n,v,i,input){
  if(metric)metric.textContent=macroLine(perFood(row));
  window.refreshStructuredNutrition();
 };
+// Finish a manually entered portion at a convenient 10 g step, while
+// avoiding cursor jumps as the user types the number.
+window.finishStructuredQty=function(n,v,i,input){
+ const item=draft(n,v),row=item?.foods?.[i],food=row&&byId(row.source_id);
+ if(!row||!food||food.unit==='pcs')return;
+ const value=Number(input.value);
+ if(!Number.isFinite(value)||value<=0)return;
+ input.value=String(Math.max(10,Math.min(2000,Math.round(value/10)*10)));
+ window.editStructuredQty(n,v,i,input);
+};
 window.toggleStructuredVegetable=function(n,v,i,on){
  const item=draft(n,v),row=item?.foods?.[i],food=row&&byId(row.source_id);
  if(!food?.optional_vegetable)return;
@@ -183,7 +193,7 @@ window.selectStructuredFood=function(sid){
  if(!food||!item)return;
  const prev=i>=0?item.foods[i]:null;
  const count=food.unit==='pcs'?Math.max(1,Math.min(8,Math.round((prev?.grams||100)/50))):null;
- const fresh={source_id:sid,count,grams:count?count*50:(prev?.grams||100),
+ const fresh={source_id:sid,count,grams:count?count*50:Math.max(10,Math.min(2000,Math.round(Number(prev?.grams||100)/10)*10)),
     count_in_targets:!food.optional_vegetable};
  const ingredientChanged=i<0||item.foods?.[i]?.source_id!==sid;
  if(i>=0)item.foods[i]=fresh;else (item.foods||(item.foods=[])).push(fresh);
