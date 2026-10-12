@@ -1,4 +1,4 @@
-const VERSION='eplan-v222-nutrition-integration';
+const VERSION='eplan-v221';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
