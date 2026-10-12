@@ -12,10 +12,7 @@ let state=null;
 let loading=null;
 function currentDraft(){return (nutritionPlanDraft||[]).find(x=>x.meal_number===state?.n&&x.variant_number===state?.v)}
 async function getLibrary(){
- if(!loading)loading=fetch('/recipe-library.json',{cache:'no-store'}).then(r=>{
-  if(!r.ok)throw Error('Template catalog unavailable');
-  return r.json();
- }).then(result=>{
+ if(!loading)loading=api('/trainer/foods/recipes').then(result=>{
   if(!Array.isArray(result.templates)||result.templates.length!==60)
    throw Error('Template catalog incomplete');
   return result.templates;
@@ -42,7 +39,8 @@ function render(){
   button.onclick=()=>{state.category=button.dataset.cat;render()};
  });
  container.innerHTML=matches.map(r=>{
-  const total=r.totals||{};
+  const vals=window.NutritionPortionFitter.sumRows(r.foods||[],window.structuredCatalog||[]);
+  const total=Object.fromEntries(window.NutritionPortionFitter.macroKeys.map((k,i)=>[k,vals[i]]));
   const meta=(r.tags||[]).map(tag=>tags[tag]||tag);
   return '<article class="recipe-template-card">'
     +'<div class="recipe-template-meta">'+meta.map(label=>'<span>'+esc(label)+'</span>').join('')
@@ -71,7 +69,7 @@ function choose(id){
   fitted=window.applyRecipeToRation(item,r);
  }catch(e){
   console.warn('Recipe auto-fit',e);
-  alert('Не вдалося підібрати порції. Спробуй інший рецепт.');
+  alert(e?.message||'Не вдалося підібрати порції. Спробуй інший рецепт.');
   return;
  }
  close();
@@ -95,13 +93,13 @@ window.openRecipeTemplatePicker=async function(n,v){
  document.body.insertAdjacentHTML('beforeend',
   '<div id="recipeTemplatePicker" class="modal" role="dialog" aria-modal="true" aria-labelledby="recipeTemplateTitle">'
   +'<div class="card recipe-template-sheet">'
-  +'<header class="recipe-template-head"><div><h2 id="recipeTemplateTitle">Бібліотека страв</h2><p>Рецепти, які реально готують, із грамовками з бази Є ПЛАН</p></div>'
+  +'<header class="recipe-template-head"><div><h2 id="recipeTemplateTitle">Бібліотека страв</h2><p>60 варіантів, продукти з перевіреної бази · порції під добову ціль</p></div>'
   +'<button type="button" id="recipeTemplateClose" aria-label="Закрити">×</button></header>'
   +'<input id="recipeTemplateSearch" type="search" placeholder="Назва страви або інгредієнт" autocomplete="off">'
   +'<div class="recipe-template-categories" id="recipeTemplateFilters"></div>'
   +'<p id="recipeTemplateCount" class="recipe-template-count"></p>'
   +'<div class="recipe-template-list" id="recipeTemplateList"></div>'
-  +'<p class="recipe-template-credit">Рецепти — адаптації за кулінарними джерелами, не дослівні копії. БЖВ розраховані лише для інгредієнтів, які відображені в картці. Приготування та допуски перевіряє тренер.</p>'
+  +'<p class="recipe-template-credit">Рецепти — адаптації кулінарних ідей. БЖВ з перевіреного каталогу. Тренер перевіряє склад, порції та алергени перед збереженням плану.</p>'
   +'</div></div>');
  document.body.classList.add('picker-open');
  $('recipeTemplateClose').onclick=close;
