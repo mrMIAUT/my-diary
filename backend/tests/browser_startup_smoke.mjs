@@ -11,10 +11,39 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../static'
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.webp':'image/webp'};
 let remoteSearchCalls=0,previewCalls=0;
 let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
+let structuredCatalogCalls=0,mealPlanSavedPayload=null;
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/api/session'){
     res.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});res.end('{"detail":"Unauthorized"}');return;
+  }
+  if(pathname==='/api/client/999'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({
+      client:{id:999,name:'Test client',kcal:2500,protein:160,fat:70,carbs:300,
+        access:{features:{nutrition:true,meal_plan:true,workouts:true}}},
+      nutrition_plan:(mealPlanSavedPayload?.meals||[]).map(item=>({
+        meal_number:item.meal_number,variant_number:item.variant_number,
+        content:item.content,sort:item.sort,foods_json:JSON.stringify(item.foods)
+      }))
+    }));
+    return;
+  }
+  if(pathname==='/api/trainer/foods/catalog'){
+    structuredCatalogCalls++;
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    const mk=(source_id,name,kcal,p,f,c,unit='g',optional_vegetable=false)=>({
+      source_id,name,state:'cooked',kcal_100:kcal,protein_100:p,fat_100:f,carbs_100:c,
+      unit,optional_vegetable,grams_per_piece:unit==='pcs'?50:null
+    });
+    res.end(JSON.stringify({items:[
+      mk('eplan12-fdc-101','Вівсяні пластівці (сухі)',379,13.15,6.52,67.7),
+      mk('eplan12-fdc-102','Куряче філе (запечене)',165,31.02,3.57,0),
+      mk('eplan12-fdc-103','Гречка (відварена)',92,3.38,0.62,19.94),
+      mk('eplan12-fdc-104','Яйце куряче (варене круто)',155,12.58,10.61,1.12,'pcs'),
+      mk('eplan12-fdc-105','Помідор (сирий)',18,.88,.2,3.89,'g',true)
+    ]}));
+    return;
   }
   if(pathname==='/api/trainer/client/999/nutrition/auto-plan'){
     mealPlanPreviewCalls++;
@@ -27,17 +56,20 @@ const server=http.createServer(async(req,res)=>{
       warnings:['Потрібна перевірка тренером','Не гарантує відсутності алергенів'],
       meals:[
        {meal_number:1,meal_name:'Сніданок',variant_number:1,sort:0,totals:{kcal:600,protein:30,fat:20,carbs:70},
-        foods:[{name:'Вівсяні пластівці (сухі)',grams:65}],content:'Вівсяні пластівці (сухі) — 65 г'},
+        foods:[{source_id:'eplan12-fdc-101',name:'Вівсяні пластівці (сухі)',grams:65,count:null,count_in_targets:true}],content:'Вівсяні пластівці (сухі) — 65 г'},
        {meal_number:2,meal_name:'Обід',variant_number:1,sort:1,totals:{kcal:920,protein:65,fat:20,carbs:115},
-        foods:[{name:'Куряче філе (запечене)',grams:170}],content:'Куряче філе (запечене) — 170 г'},
+        foods:[{source_id:'eplan12-fdc-102',name:'Куряче філе (запечене)',grams:170,count:null,count_in_targets:true}],content:'Куряче філе (запечене) — 170 г'},
        {meal_number:3,meal_name:'Вечеря',variant_number:1,sort:2,totals:{kcal:950,protein:64,fat:31,carbs:111},
-        foods:[{name:'Гречка (відварена)',grams:230}],content:'Гречка (відварена) — 230 г'}
+        foods:[{source_id:'eplan12-fdc-103',name:'Гречка (відварена)',grams:230,count:null,count_in_targets:true}],content:'Гречка (відварена) — 230 г'}
       ]
     }));
     return;
   }
   if(pathname==='/api/client/999/nutrition'&&req.method==='PATCH'){
     mealPlanWriteCalls++;
+    let raw='';
+    for await(const part of req)raw+=part;
+    try{mealPlanSavedPayload=JSON.parse(raw)}catch{mealPlanSavedPayload=null}
     res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
   }
   if(pathname==='/api/foods/preview'){
@@ -127,7 +159,7 @@ try{
   assert.equal(await page.locator('#nprotein').inputValue(),'','Trainer protein must start empty');
   assert.match(await page.locator('.trainer-nutrition-current').innerText(),/2500 ккал/);
   const dialogMessages=[];
-  page.on('dialog',async dialog=>{dialogMessages.push(dialog.message());await dialog.accept();});
+  page.on('dialog',async dialog=>{dialogMessages.push(dialog.message());await dialog.accept().catch(()=>{});});
   await page.locator('#nutritionActions button').first().click();
   assert.match(dialogMessages.join(' '),/Заповни всі чотири/,'Empty targets were accepted');
   await page.locator('#nutrition .trainer-nutrition-calc-launch').click();
@@ -185,11 +217,63 @@ try{
   assert.equal(mealPlanWriteCalls,0,'Generator wrote meal plan without approval');
   assert.match(await page.locator('#autoMealPreview').innerText(),/Гречка/);
   await page.locator('#autoMealApply').click();
-  assert.equal(await page.locator('#autoMealPlanModal').count(),0,'Preview did not close');
+  await page.locator('#autoMealPlanModal').waitFor({state:'detached',timeout:6000});
   assert.equal(mealPlanWriteCalls,0,'Applying draft directly wrote nutrition');
-  assert.match(await page.locator('#nutritionPlanBody textarea').first().inputValue(),/Вівсяні пластівці/);
+  assert.equal(structuredCatalogCalls,1,'Trainer structured food catalog did not load');
+  assert.match(await page.locator('.structured-food-row').first().innerText(),/Вівсяні пластівці/);
+  assert.equal(await page.locator('.structured-food-row').count(),3,'Unexpected structured rows');
+  assert.equal(mealPlanWriteCalls,0,'Applying structured food draft wrote to production');
+  // Live grams changes must alter macros and model without rebuilding the screen.
+  const gramsInput=page.locator('.structured-food-row').first().locator('.structured-grams');
+  const before=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
+  await gramsInput.fill('130');
+  const after=await page.locator('.structured-food-row').first().locator('.structured-food-macro').innerText();
+  assert.notEqual(before,after,'Grams change did not recalculate item macros');
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[0].grams),130);
+  // Replace oats with whole eggs in the searchable product picker.
+  await page.locator('.structured-food-name').first().click();
+  await page.locator('#structuredFoodSearch').fill('Яйце');
+  await page.locator('#structuredFoodMatches button').first().click();
+  assert.match(await page.locator('.structured-food-row').first().innerText(),/Яйце куряче/);
+  const eggInput=page.locator('.structured-food-row').first().locator('.structured-grams');
+  await eggInput.fill('2');
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[0].grams),100,
+    'Two eggs should correspond to approx 100 edible grams');
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[0].count),2);
+  // Add tomato; non-starchy vegetable is excluded from target, but tracked in
+  // actual food energy. User may opt back into counting with a checkbox.
+  await page.locator('.structured-meal-editor').first().locator('.structured-add').click();
+  await page.locator('#structuredFoodSearch').fill('Помідор');
+  await page.locator('#structuredFoodMatches button').first().click();
+  const veg=page.locator('.structured-meal-editor').first().locator('.structured-food-row').nth(1);
+  assert.equal(await veg.locator('.structured-veg-opt input').isChecked(),false);
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[1].count_in_targets),false);
+  const tally=await page.locator('.structured-meal-editor').first().locator('.structured-meal-summary').innerText();
+  assert.match(tally,/Фактично з овочами/,'Actual vegetable energy is not shown');
+  await veg.locator('.structured-veg-opt input').check();
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[1].count_in_targets),true);
+  assert.ok(await page.locator('#structuredDailySummary').count(),'Missing day total from primary variants');
+  assert.equal(mealPlanWriteCalls,0,'Editing foods wrote before trainer save');
+  
   assert.equal(await page.locator('#nutritionPlanBody').evaluate(x=>x.classList.contains('hidden')),false,
     'Plan editor was not expanded');
+
+  // Explicit save must carry IDs and whole-egg pieces, not browser-supplied macros.
+  await Promise.all([
+    page.waitForResponse(r=>r.url().includes('/api/client/999/nutrition')&&r.request().method()==='PATCH',{timeout:3000}),
+    page.locator('.meal-autoplan-save').click()
+  ]);
+  assert.equal(mealPlanWriteCalls,1,'Saved meal request not issued exactly once');
+  assert.ok(mealPlanSavedPayload?.meals?.[0]?.foods?.length,'Structured food IDs not persisted');
+  assert.equal(mealPlanSavedPayload.meals[0].foods[0].count,2);
+  assert.equal(mealPlanSavedPayload.meals[0].foods[0].grams,100);
+  assert.equal(mealPlanSavedPayload.meals[0].foods[1].count_in_targets,true);
+  await page.locator('.meal-plan-edit-open').click();
+  await page.locator('.structured-food-row').first().waitFor({timeout:4000});
+  assert.equal(await page.locator('.structured-food-row').first().locator('.structured-grams').inputValue(),'2',
+     'Saved whole-egg quantity was not restored in trainer editor');
+  assert.equal(await page.evaluate(()=>nutritionPlanDraft[0].foods[0].source_id),'eplan12-fdc-104',
+     'Saved source ID was not restored');
 
   assert.deepEqual(pageErrors,[],'Unexpected JS errors during app launch/calculator');
   console.log('BROWSER STARTUP + CALCULATOR + LAZY SEARCH: PASS');
