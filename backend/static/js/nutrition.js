@@ -431,6 +431,18 @@ window.roundAssignedNutritionPlan=async function(cid,button){
  }catch(e){alert(e.message||'Не вдалося скоригувати раціон. Дані не змінено.')}
  finally{done()}
 };
+// Lucide 0.456 icons echo the approved sixth nutrition summary concept.
+// Decorative only: macro name and numeric quantity remain text.
+function nutritionTotalMacroIcon(key){
+ const paths={
+  protein:'<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>',
+  fat:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  carbs:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'
+ };
+ return '<svg class="nutrition-total-icon" viewBox="0 0 24 24" width="19" height="19" fill="none"'
+  +' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+  +' aria-hidden="true">'+paths[key]+'</svg>';
+}
 function trainerSavedRationPage(items,nums,variant){
  const meals=nums.map(n=>items.find(item=>item.meal_number===n&&item.variant_number===variant)).filter(Boolean);
  const totals=meals.map(trainerSavedMealMacros);
@@ -439,14 +451,19 @@ function trainerSavedRationPage(items,nums,variant){
  if(sums)totals.forEach(t=>t.forEach((x,i)=>{sums[i]+=x}));
  // The selected ration's full kcal and B/J/V summary belongs at the TOP,
  // just under the ration tabs. Client and trainer reuse this renderer.
- return (sums?'<div class="trainer-assigned-day-total nutrition-menu-total">'
+ return (sums?'<div class="trainer-assigned-day-total nutrition-menu-total nutrition-menu-total-v6">'
     +'<div class="nutrition-menu-total-heading"><span>Разом за раціон '+variant+'</span>'
-    +'<strong>'+Number(sums[0]).toLocaleString('uk-UA',{maximumFractionDigits:1})+' ккал</strong></div>'
+    +'<strong>'+Number(sums[0]).toLocaleString('uk-UA',{maximumFractionDigits:1})
+      +' <small>ккал</small></strong></div>'
     +'<div class="nutrition-menu-total-grid">'
-    +[['Білки',sums[1]],['Жири',sums[2]],['Вуглеводи',sums[3]]]
-      .map(([label,value])=>'<span><small>'+label+'</small><strong>'
-        +Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1})
-        +' <small>г</small></strong></span>').join('')
+    +[['protein','Білки',sums[1]],['fat','Жири',sums[2]],['carbs','Вуглеводи',sums[3]]]
+      .map(([key,label,value])=>'<div class="nutrition-total-chip '+key+'">'
+        +'<div class="nutrition-total-chip-main">'
+          +nutritionTotalMacroIcon(key)
+          +'<strong class="nutrition-total-value">'+Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1})
+            +'<small> г</small></strong>'
+        +'</div>'
+        +'<small class="nutrition-total-name">'+label+'</small></div>').join('')
     +'</div></div>'
    :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>')
   +'<div class="nutrition-menu-day-intro"><span>Меню на день</span><small>'
