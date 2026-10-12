@@ -188,20 +188,24 @@ function trainerSavedIngredientRows(text){
  });
  return '<ul class="nutrition-menu-ingredients" aria-label="Склад страви">'+rows.join('')+'</ul>';
 }
+// Uniform, local SVG categories. These are meal-type icons rather than
+// unreliable dish-matching emoji, so the same meal always looks consistent.
 function nutritionMealThumbnail(item,n){
- // The meal library currently has no licensed food photos; an offline-safe
- // ingredient-inspired illustration occupies the photo slot until such media
- // is available. Never display a stock photo as if it were this exact recipe.
- const title=String(item.dish_title||item.content||'').toLocaleLowerCase('uk-UA');
- const group=/вівсян|каша|йогурт|ягод|сир кисломолочн/.test(title)?'bowl':
-  /лосос|тунц|риб/.test(title)?'fish':
-  /тост|хліб|яйц|лаваш|піта|тортиль/.test(title)?'toast':
-  /кур|індич|м’яс|ялович|рис|греч|булгур/.test(title)?'plate':
-  /салат|овоч|нут|квасол/.test(title)?'greens':'meal';
- const icons={bowl:'🥣',fish:'🐟',toast:'🥑',plate:'🍗',greens:'🥗',meal:'🍽️'};
- return '<div class="nutrition-menu-photo nutrition-menu-photo-'+group+'" role="img" aria-label="Ілюстрація страви">'
-   +'<span aria-hidden="true">'+icons[group]+'</span></div>';
+ const category=Number(n)===1?'breakfast':Number(n)===2?'lunch':
+  Number(n)===3||Number(n)===5?'snack':Number(n)===4?'dinner':'lunch';
+ const symbols={
+  breakfast:'<path d="M4 11h16v3a8 8 0 0 1-16 0v-3Z"/><path d="M2.5 20h19"/><path d="M8 4v3m4-5v5m4-3v3"/>',
+  lunch:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4.5"/><path d="M2.5 3v7m-2-7v5m4-5v5m-2 2v11M22 3v18m-3.5-18v6c0 2 1.4 3 3.5 3"/>',
+  snack:'<path d="M12 9c-1.3-3.2-5.5-4-7.6-1.4-4.6 5.5 0 14.4 4.7 14.4 1.8 0 2.3-.8 2.9-.8s1.1.8 2.9.8c4.7 0 9.3-8.9 4.7-14.4C16.5 5 13.4 6.5 12 9Z"/><path d="M12 8c.2-3 .9-4.3 3-5.5M12 7c-2.4-3-4.1-3.2-6-2.5"/>',
+  dinner:'<path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/><path d="m17.5 3.5.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5.5-1.2Z"/>'
+ };
+ return '<div class="nutrition-menu-photo nutrition-meal-icon nutrition-meal-icon-'+category
+  +'" role="img" aria-label="'+esc(trainerSavedMealName(n))+'">'
+  +'<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"'
+  +' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  +symbols[category]+'</svg></div>';
 }
+
 function trainerSavedMealCard(item,n){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
@@ -246,26 +250,144 @@ function trainerSavedHasFiveGramPortions(d){
  });
 }
 function nutritionTens(grams){return Math.min(2000,Math.max(10,Math.round(Number(grams)/10)*10))}
+
+// Fits ALL meals in each saved day-ration as a unit rather than pushing every
+// ingredient upwards. Uses reviewed nutrient data, actual consumed macros (not
+// only goal-counted vegetables), a 10 g grid and bounded deviation from the
+// assigned recipe. Never alters egg counts or text-only meals. Pure and local;
+// only the trainer's confirmed action persists the suggested changes.
+window.fitAssignedNutritionToGoal=function(items,goal,catalog){
+ const keys=['kcal_100','protein_100','fat_100','carbs_100'];
+ const byId=new Map((catalog||[]).map(x=>[x.source_id,x]));
+ const copy=JSON.parse(JSON.stringify(items));
+ const groups=[...new Set(copy.map(x=>Number(x.variant_number)))];
+ const target=[goal.kcal,goal.protein,goal.fat,goal.carbs].map(Number);
+ const hasTarget=target.every(x=>Number.isFinite(x)&&x>0);
+ const reports=[];
+ for(const variant of groups){
+  const subset=copy.filter(x=>Number(x.variant_number)===variant);
+  const entries=[];
+  for(const item of subset){
+   for(const row of item.foods||[]){
+    const food=byId.get(row.source_id);
+    if(!food)throw Error('Не знайдено продукту в перевіреній базі — план не змінено.');
+    const egg=food.unit==='pcs'||row.count!=null;
+    const original=egg?Number(row.count)*Number(food.grams_per_piece||50):Number(row.grams);
+    if(!Number.isFinite(original)||original<=0)throw Error('Некоректна початкова порція — план не змінено.');
+    const unit=keys.map(k=>Number(food[k]));
+    if(unit.some(v=>!Number.isFinite(v)||v<0))throw Error('Некоректні БЖВ у каталозі — план не змінено.');
+    const span=Math.max(20,Math.round(original*.3/10)*10);
+    const low=egg?original:Math.max(10,Math.ceil((original-span)/10)*10);
+    const high=egg?original:Math.min(2000,Math.floor((original+span)/10)*10);
+    entries.push({row,egg,original,unit,low,high});
+   }
+  }
+  if(!entries.length)continue;
+  if(entries.length>90)throw Error('Забагато продуктів для точного підбору — план не змінено.');
+  const before=[0,0,0,0],sum=(values)=>{
+   const out=[0,0,0,0];
+   for(let i=0;i<entries.length;i++)
+    for(let j=0;j<4;j++)out[j]+=entries[i].unit[j]*values[i]/100;
+   return out;
+  };
+  const start=entries.map(e=>e.original);
+  const baseline=sum(start);
+  const goalVector=hasTarget?target:baseline;
+  const denom=goalVector.map((v,i)=>Math.max([500,35,20,50][i],v));
+  const score=(grams,totals)=>{
+   let loss=0;
+   for(let j=0;j<4;j++){
+    const relative=(totals[j]-goalVector[j])/denom[j];
+    // Overshooting calories/fats has an extra penalty, but never excludes
+    // balanced tradeoffs across protein and carbs.
+    const weight=[4.0,2.2,2.4,1.8][j]*
+      ((j===0&&relative>0)?1.5:1);
+    loss+=weight*relative*relative;
+   }
+   for(let i=0;i<entries.length;i++){
+    const e=entries[i];
+    const relative=(grams[i]-e.original)/Math.max(35,e.original);
+    loss+=.025*relative*relative;
+   }
+   return loss;
+  };
+  const current=entries.map(e=>e.egg?e.original:
+   Math.max(e.low,Math.min(e.high,nutritionTens(e.original))));
+  let totals=sum(current);
+  for(let pass=0;pass<9&&hasTarget;pass++){
+   let improved=false;
+   for(let i=0;i<entries.length;i++){
+    const e=entries[i];if(e.egg)continue;
+    let best=current[i],bestScore=score(current,totals);
+    for(let g=e.low;g<=e.high;g+=10){
+     if(g===current[i])continue;
+     const trial=current.slice();trial[i]=g;
+     const trialTotals=totals.map((x,j)=>x+e.unit[j]*(g-current[i])/100);
+     const cost=score(trial,trialTotals);
+     if(cost<bestScore-1e-9){best=g;bestScore=cost}
+    }
+    if(best!==current[i]){
+     const delta=best-current[i];current[i]=best;
+     totals=totals.map((x,j)=>x+e.unit[j]*delta/100);
+     improved=true;
+    }
+   }
+   if(!improved)break;
+  }
+  const after=sum(current);
+  entries.forEach((e,i)=>{if(!e.egg)e.row.grams=current[i]});
+  reports.push({
+   variant,original:baseline.map(x=>+x.toFixed(1)),
+   result:after.map(x=>+x.toFixed(1)),
+   target:goalVector,
+   changes:entries.filter((e,i)=>current[i]!==e.original).length
+  });
+ }
+ return {meals:copy,reports,changes:reports.reduce((n,r)=>n+r.changes,0),hasTarget};
+};
+function nutritionSavedStructuredRows(d){
+ return (d.nutrition_plan||[]).some(x=>{
+  try{
+   const rows=typeof x.foods_json==='string'?JSON.parse(x.foods_json):(x.foods||[]);
+   return Array.isArray(rows)&&rows.length>0;
+  }catch(_){return false}
+ });
+}
 window.roundAssignedNutritionPlan=async function(cid,button){
  const d=window.currentClientData||{},c=d.client||{};
  if(session?.role!=='trainer'||Number(c.id)!==Number(cid)||!clientAccess(c).features?.meal_plan)return;
- if(!trainerSavedHasFiveGramPortions(d))return;
  const before=planFromData(d).filter(x=>String(x.content||'').trim());
- if(!before.length)return;
- if(!confirm('Округлити порції призначеного плану до 10 г? БЖВ будуть перераховані за фактичними грамовками. Старі текстові страви залишаться без змін.'))return;
- const meals=before.map((item,i)=>({
-  meal_number:+item.meal_number,variant_number:+item.variant_number,sort:i,
-  content:String(item.content).trim(),dish_title:String(item.dish_title||''),
-  preparation:String(item.preparation||''),
-  foods:(item.foods||[]).map(food=>({
-   source_id:food.source_id,
-   grams:food.count==null?nutritionTens(food.grams):food.grams,
-   count:food.count==null?null:food.count,
-   count_in_targets:food.count_in_targets!==false
-  }))
- }));
- const done=setActionLoading(button,'Оновлюємо…');
+ if(!before.some(x=>(x.foods||[]).length))return;
+ const done=setActionLoading(button,'Розраховуємо…');
  try{
+  // Fetch only after a real trainer click. This is the same approved catalog
+  // used by the server, not estimated values parsed out of saved text.
+  const catalog=window.structuredCatalog?.length?window.structuredCatalog:
+   (await api('/trainer/foods/catalog')).items;
+  if(!Array.isArray(catalog)||!catalog.length)throw Error('Не вдалося завантажити перевірену базу продуктів.');
+  const plan=window.fitAssignedNutritionToGoal(before,c,catalog);
+  if(!plan.changes){
+   alert('Порції вже мають крок 10 г. Кращий збалансований варіант у встановлених межах не знайдено.');
+   return;
+  }
+  const fmt=v=>Math.round(Number(v)).toLocaleString('uk-UA');
+  const lines=plan.reports.map(x=>
+   'Раціон '+x.variant+': '+fmt(x.original[0])+' → '+fmt(x.result[0])+' ккал'
+   +' · Б '+x.result[1].toFixed(0)+' · Ж '+x.result[2].toFixed(0)+' · В '+x.result[3].toFixed(0));
+  const label=plan.hasTarget?'Ціль: '+fmt(c.kcal)+' ккал · Б '+c.protein
+   +' · Ж '+c.fat+' · В '+c.carbs+'\n\n':'';
+  if(!confirm('Підігнати весь денний раціон до цілі з кроком 10 г?\n\n'
+     +label+lines.join('\n')
+     +'\n\nЦе рекомендовані порції, а не гарантія точного збігу БЖВ. Змінено продуктів: '+plan.changes+'. Зберегти?'))return;
+  const meals=plan.meals.map((item,i)=>({
+   meal_number:+item.meal_number,variant_number:+item.variant_number,sort:i,
+   content:String(item.content).trim(),dish_title:String(item.dish_title||''),
+   preparation:String(item.preparation||''),
+   foods:(item.foods||[]).map(food=>({
+    source_id:food.source_id,grams:food.grams,count:food.count,
+    count_in_targets:food.count_in_targets!==false
+   }))
+  }));
   await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify({
    kcal:+c.kcal||0,protein:+c.protein||0,fat:+c.fat||0,carbs:+c.carbs||0,meal_plan:'',meals
   })});
@@ -274,7 +396,8 @@ window.roundAssignedNutritionPlan=async function(cid,button){
   nutritionPlanDraft=null;
   const host=document.querySelector('#nutrition');
   if(host)host.innerHTML=nutritionHTML(fresh);
- }catch(e){done();alert(e.message||'Не вдалося оновити грамовки. Спробуй ще раз.')}
+ }catch(e){alert(e.message||'Не вдалося скоригувати раціон. Дані не змінено.')}
+ finally{done()}
 };
 function trainerSavedRationPage(items,nums,variant){
  const meals=nums.map(n=>items.find(item=>item.meal_number===n&&item.variant_number===variant)).filter(Boolean);
@@ -354,7 +477,7 @@ function mealPlanEditorHTML(d,editing=false){
      +'</div>':'')
   +'<div id="nutritionPlanBody" class="meal-plan-body'+(expanded?'':' hidden')+'">'
   +(hasSavedPlan?savedPlan
-    +(trainerSavedHasFiveGramPortions(d)?'<div class="nutrition-menu-round-prompt"><span>У цьому плані залишилися порції з кроком 5 г.</span><button type="button" onclick="roundAssignedNutritionPlan('+cid+',this)">Округлити до 10 г</button></div>':'')
+    +(nutritionSavedStructuredRows(d)?'<div class="nutrition-menu-round-prompt"><span>Порції з кроком 10 г — з урахуванням цілі КБЖУ всього дня.</span><button type="button" onclick="roundAssignedNutritionPlan('+cid+',this)">Підігнати КБЖУ · 10 г</button></div>':'')
     +'<div class="trainer-saved-plan-actions"><button class="meal-plan-edit-open" type="button" onclick="openTrainerStructuredMealPlan()">'
     +uiIcon('edit')+' Редагувати план</button></div>'
     :(editing?(trainerCompleteRations()?trainerRationTabsHTML():'')
