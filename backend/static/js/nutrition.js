@@ -188,6 +188,20 @@ function trainerSavedIngredientRows(text){
  });
  return '<ul class="nutrition-menu-ingredients" aria-label="Склад страви">'+rows.join('')+'</ul>';
 }
+function nutritionMealThumbnail(item,n){
+ // The meal library currently has no licensed food photos; an offline-safe
+ // ingredient-inspired illustration occupies the photo slot until such media
+ // is available. Never display a stock photo as if it were this exact recipe.
+ const title=String(item.dish_title||item.content||'').toLocaleLowerCase('uk-UA');
+ const group=/вівсян|каша|йогурт|ягод|сир кисломолочн/.test(title)?'bowl':
+  /лосос|тунц|риб/.test(title)?'fish':
+  /тост|хліб|яйц|лаваш|піта|тортиль/.test(title)?'toast':
+  /кур|індич|м’яс|ялович|рис|греч|булгур/.test(title)?'plate':
+  /салат|овоч|нут|квасол/.test(title)?'greens':'meal';
+ const icons={bowl:'🥣',fish:'🐟',toast:'🥑',plate:'🍗',greens:'🥗',meal:'🍽️'};
+ return '<div class="nutrition-menu-photo nutrition-menu-photo-'+group+'" role="img" aria-label="Ілюстрація страви">'
+   +'<span aria-hidden="true">'+icons[group]+'</span></div>';
+}
 function trainerSavedMealCard(item,n){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
@@ -199,22 +213,69 @@ function trainerSavedMealCard(item,n){
    .split(/\n\s*(?:До цільових БЖВ:|Фактично разом з овочами:|Приготування:)/)[0].trim():raw.trim();
  if(!isStructured&&title)ingredients=ingredients.replace(/^Страва:\s*[^\n]*\n?/,'');
  const fmt=value=>Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1});
- return '<article class="trainer-assigned-meal nutrition-menu-meal">'
-  +'<div class="nutrition-menu-meal-head">'
-   +'<span class="nutrition-menu-category"><span class="nutrition-menu-number">'+String(n).padStart(2,'0')+'</span>'
-   +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n))+'</span></span>'
-   +(macros?'<span class="nutrition-menu-energy">'+fmt(macros[0])+' <small>ккал</small></span>':'')
+ return '<article class="trainer-assigned-meal nutrition-menu-meal nutrition-menu-meal-v2">'
+  +'<div class="nutrition-menu-v2-layout">'
+   +nutritionMealThumbnail({...item,dish_title:title},n)
+   +'<div class="nutrition-menu-v2-copy">'
+    +'<div class="nutrition-menu-v2-kicker"><span class="nutrition-menu-number">'+String(n).padStart(2,'0')+'</span>'
+     +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n))+'</span></div>'
+    +(title?'<h3 class="trainer-assigned-dish">'+esc(title)+'</h3>':'')
+    +(ingredients?trainerSavedIngredientRows(ingredients):'')
+   +'</div>'
+   +(macros?'<div class="nutrition-menu-v2-nutrients">'
+     +'<div class="nutrition-menu-energy">'+fmt(macros[0])+' <small>ккал</small></div>'
+     +'<div class="nutrition-menu-v2-macros">'
+      +[['Б',macros[1]],['Ж',macros[2]],['В',macros[3]]].map(([label,value],i)=>
+       '<span class="nutrition-menu-v2-macro macro-'+i+'"><small>'+label+'</small><b>'
+        +fmt(value)+' <small>г</small></b></span>').join('')
+     +'</div></div>':'')
   +'</div>'
-  +(title?'<h3 class="trainer-assigned-dish">'+esc(title)+'</h3>':'')
-  +(ingredients?trainerSavedIngredientRows(ingredients):'')
-  +(preparation?'<details class="nutrition-menu-method"><summary>Як приготувати <span aria-hidden="true">⌄</span></summary>'
+  +(preparation?'<details class="nutrition-menu-method nutrition-menu-v2-method"><summary>Як приготувати <span aria-hidden="true">⌄</span></summary>'
     +'<p class="trainer-assigned-preparation">'+esc(preparation)+'</p></details>':'')
-  +(macros?'<div class="trainer-assigned-meal-macros nutrition-menu-macros">'
-   +[['Б',macros[1]],['Ж',macros[2]],['В',macros[3]]].map(([label,value])=>
-     '<span><small>'+label+'</small><strong>'+fmt(value)+' <small>г</small></strong></span>').join('')
-   +'</div>':'')
   +'</article>';
 }
+
+// Explicitly normalize previously assigned structured portions. The backend
+// rebuilds ingredient names and nutrition numbers from the verified catalog.
+function trainerSavedHasFiveGramPortions(d){
+ return (d.nutrition_plan||[]).some(x=>{
+  try{
+   const rows=typeof x.foods_json==='string'?JSON.parse(x.foods_json):(x.foods||[]);
+   return Array.isArray(rows)&&rows.some(f=>f.count==null&&Number(f.grams)>0&&Math.abs(Number(f.grams)/10-Math.round(Number(f.grams)/10))>1e-6);
+  }catch(_){return false}
+ });
+}
+function nutritionTens(grams){return Math.min(2000,Math.max(10,Math.round(Number(grams)/10)*10))}
+window.roundAssignedNutritionPlan=async function(cid,button){
+ const d=window.currentClientData||{},c=d.client||{};
+ if(session?.role!=='trainer'||Number(c.id)!==Number(cid)||!clientAccess(c).features?.meal_plan)return;
+ if(!trainerSavedHasFiveGramPortions(d))return;
+ const before=planFromData(d).filter(x=>String(x.content||'').trim());
+ if(!before.length)return;
+ if(!confirm('Округлити порції призначеного плану до 10 г? БЖВ будуть перераховані за фактичними грамовками. Старі текстові страви залишаться без змін.'))return;
+ const meals=before.map((item,i)=>({
+  meal_number:+item.meal_number,variant_number:+item.variant_number,sort:i,
+  content:String(item.content).trim(),dish_title:String(item.dish_title||''),
+  preparation:String(item.preparation||''),
+  foods:(item.foods||[]).map(food=>({
+   source_id:food.source_id,
+   grams:food.count==null?nutritionTens(food.grams):food.grams,
+   count:food.count==null?null:food.count,
+   count_in_targets:food.count_in_targets!==false
+  }))
+ }));
+ const done=setActionLoading(button,'Оновлюємо…');
+ try{
+  await api('/client/'+cid+'/nutrition',{method:'PATCH',body:JSON.stringify({
+   kcal:+c.kcal||0,protein:+c.protein||0,fat:+c.fat||0,carbs:+c.carbs||0,meal_plan:'',meals
+  })});
+  const fresh=await loadClientData(cid);
+  window.currentClientData=fresh;
+  nutritionPlanDraft=null;
+  const host=document.querySelector('#nutrition');
+  if(host)host.innerHTML=nutritionHTML(fresh);
+ }catch(e){done();alert(e.message||'Не вдалося оновити грамовки. Спробуй ще раз.')}
+};
 function trainerSavedRationPage(items,nums,variant){
  const meals=nums.map(n=>items.find(item=>item.meal_number===n&&item.variant_number===variant)).filter(Boolean);
  const totals=meals.map(trainerSavedMealMacros);
@@ -293,6 +354,7 @@ function mealPlanEditorHTML(d,editing=false){
      +'</div>':'')
   +'<div id="nutritionPlanBody" class="meal-plan-body'+(expanded?'':' hidden')+'">'
   +(hasSavedPlan?savedPlan
+    +(trainerSavedHasFiveGramPortions(d)?'<div class="nutrition-menu-round-prompt"><span>У цьому плані залишилися порції з кроком 5 г.</span><button type="button" onclick="roundAssignedNutritionPlan('+cid+',this)">Округлити до 10 г</button></div>':'')
     +'<div class="trainer-saved-plan-actions"><button class="meal-plan-edit-open" type="button" onclick="openTrainerStructuredMealPlan()">'
     +uiIcon('edit')+' Редагувати план</button></div>'
     :(editing?(trainerCompleteRations()?trainerRationTabsHTML():'')
@@ -392,7 +454,7 @@ window.saveTrainerMealPlanDraft = async function(cid,button){
    meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i,
    dish_title:String(x.dish_title||'').slice(0,140),preparation:String(x.preparation||'').slice(0,1500),
    foods:Array.isArray(x.foods)?x.foods.map(food=>({
-     source_id:food.source_id,grams:food.grams,count:food.count,
+     source_id:food.source_id,grams:food.count==null?nutritionTens(food.grams):food.grams,count:food.count,
      count_in_targets:food.count_in_targets!==false
    })):[]
  }));
