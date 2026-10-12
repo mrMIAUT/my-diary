@@ -123,6 +123,7 @@ function lyftaProgressionRepUpper(reps){
 }
 
 function lyftaShouldSuggestProgression(x,d,prevSets=[]){
+  if(!programRirEnabled(d))return false;
   let planned=Math.max(1,+x?.sets||1),upper=lyftaProgressionRepUpper(x?.reps);
   if(!upper||prevSets.length<planned)return false;
   let targets=rirPlan(x);
@@ -146,7 +147,7 @@ function lyftaProgressionHintHTML(x,d,prevSets=[]){
 function lyftaWarmupRowsHTML(x,d,cid){
   let state=workoutAuxDraftState(d,x.id),rows=state.warmups||[];
   if(!rows.length)return '<button type="button" class="lyfta-warmup-toggle" onclick="addWorkoutWarmupSet('+cid+','+x.id+')">＋ Додати розминочні підходи</button>';
-  return '<div class="lyfta-warmup-block"><div class="lyfta-warmup-head"><div><strong>Розминка</strong><small>Не впливає на RIR і прогресію</small></div><button type="button" onclick="addWorkoutWarmupSet('+cid+','+x.id+')">＋ Підхід</button></div>'
+  return '<div class="lyfta-warmup-block"><div class="lyfta-warmup-head"><div><strong>Розминка</strong><small>'+(programRirEnabled(d)?'Не впливає на RIR і прогресію':'Не враховується у робочих підходах')+'</small></div><button type="button" onclick="addWorkoutWarmupSet('+cid+','+x.id+')">＋ Підхід</button></div>'
     +'<div class="lyfta-warmup-list">'+rows.map((row,i)=>'<div class="lyfta-aux-row"><span>'+(i+1)+'</span><input type="number" step="0.5" value="'+esc(String(row.weight??''))+'" placeholder="кг" oninput="saveWorkoutAuxValue('+x.id+',\'warmup\',0,'+i+',\'weight\',this.value)"><input type="number" value="'+esc(String(row.reps??''))+'" placeholder="повтори" oninput="saveWorkoutAuxValue('+x.id+',\'warmup\',0,'+i+',\'reps\',this.value)"><button type="button" aria-label="Видалити розминочний підхід" onclick="removeWorkoutWarmupSet('+cid+','+x.id+','+i+')">✕</button></div>').join('')+'</div>'
   +'</div>';
 }
@@ -184,21 +185,21 @@ function toggleLyftaSetSwipe(el){
 }
 
 function setRows(x,d,cid){
-  let rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x),mode=normalizeRepeatMode(x.repeat_mode);
+  let showRir=programRirEnabled(d),rp=rirPlan(x),sid=workoutDraftSessionId(d),draft=readWorkoutDraft(sid,x.id),exerciseName=workoutExerciseName(x),mode=normalizeRepeatMode(x.repeat_mode);
   let prev=lyftaPreviousDaySets(d,x.id,exerciseName).filter(v=>normalizeRepeatMode(v.repeat_mode)===mode),rest=lyftaRestSeconds(x);
   let restAfterSet=lyftaShouldStartRestAfterSet(x,d)?rest:0;
   let hasPrev=prev.length>0,total=workoutExerciseSetCount(x,d),planned=Math.max(1,+x.sets||1),skippedSet=new Set(workoutSkippedSetNumbers(d,x.id));
-  let modeLabel=repeatModeShortLabel(mode),h='<div class="lyfta-set-head"><span>Підхід</span><span>Вага</span><span>Повтори'+(modeLabel?'<small>'+esc(modeLabel)+'</small>':'')+'</span><span>RIR</span><span></span></div>';
+  let modeLabel=repeatModeShortLabel(mode),h='<div class="lyfta-set-head'+(showRir?'':' no-rir')+'"><span>Підхід</span><span>Вага</span><span>Повтори'+(modeLabel?'<small>'+esc(modeLabel)+'</small>':'')+'</span>'+(showRir?'<span>RIR</span>':'')+'<span></span></div>';
   for(let n=1;n<=total;n++){
     let q=draft[n]||{},p=prev.find(z=>+z.set_number===+n)||null,done=!!q.done,isExtra=n>planned,skipped=!isExtra&&skippedSet.has(n);
     let wv=q.weight??'',rv=q.reps??'',iv=q.rir??'',rirHint=rp[n-1]??rp[rp.length-1]??'';
-    let prevLine='<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?workoutRecordedSetText(p,p.repeat_mode||mode)+(workoutRecordedMetaText(p)?' · '+workoutRecordedMetaText(p):''):'—')+'</strong>'+(p&&!skipped?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>';
+    let prevLine='<div class="lyfta-prev-line"><span>'+(isExtra?'Додатковий · ':'')+'Попередньо</span><strong>'+(p?workoutRecordedSetText(p,p.repeat_mode||mode)+(showRir?(workoutRecordedMetaText(p)?' · '+workoutRecordedMetaText(p):''):(+p?.rest_seconds>0?' · ⏱ '+formatSetRest(p.rest_seconds):'')):'—')+'</strong>'+(p&&!skipped?'<button onclick="lyftaCopyPrevious('+x.id+','+n+')">Повторити</button>':'')+'</div>';
     let rowHTML=skipped
-      ?'<div class="lyfta-set-row is-skipped"><div class="setnum">'+n+'</div><div class="lyfta-skipped-copy"><strong>Пропущено</strong><small>Підхід залишиться у плані</small></div><span class="lyfta-swipe-hint">← свайп</span></div>'
-      :'<div class="lyfta-set-row'+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
+      ?'<div class="lyfta-set-row'+(showRir?'':' no-rir')+' is-skipped"><div class="setnum">'+n+'</div><div class="lyfta-skipped-copy"><strong>Пропущено</strong><small>Підхід залишиться у плані</small></div><span class="lyfta-swipe-hint">← свайп</span></div>'
+      :'<div class="lyfta-set-row'+(showRir?'':' no-rir')+(done?' is-complete':'')+(isExtra?' is-extra':'')+'"><div class="setnum">'+n+(isExtra?'<small>+</small>':'')+'</div>'
         +'<div class="lyfta-input-wrap"><input id="w'+x.id+'_'+n+'" type="number" step="0.5" value="'+esc(String(wv))+'" placeholder="кг" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'weight\',this.value);lyftaUpdatePR('+x.id+','+n+')"><span id="pr'+x.id+'_'+n+'" class="lyfta-pr-badge">PR</span></div>'
         +'<input id="r'+x.id+'_'+n+'" type="number" value="'+esc(String(rv))+'" placeholder="'+esc(x.reps)+'" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'reps\',this.value)">'
-        +'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">'
+        +(showRir?'<input id="i'+x.id+'_'+n+'" type="number" value="'+esc(String(iv))+'" placeholder="'+esc(String(rirHint))+'" min="0" max="10" oninput="saveWorkoutDraft('+sid+','+x.id+','+n+',\'rir\',this.value)">':'')
         +'<button class="lyfta-set-done'+(done?' done':'')+'" onclick="lyftaCompleteSet('+x.id+','+n+','+total+','+restAfterSet+',this)">✓</button>'
        +'</div>';
     let actionLabel=isExtra?'Видалити':(skipped?'Повернути':'Пропустити');
