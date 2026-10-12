@@ -859,3 +859,65 @@ body.eplan-redesign .client-ration-tabs button.active{
  color:#fff!important;background:#317ef0!important;border-color:#317ef0!important
 }
 body.eplan-redesign .client-ration-page[hidden]{display:none!important}
+
+
+/* Trainer: centered recipe-picker close, with no font-baseline offset. */
+body.eplan-redesign.trainer-ui #recipeTemplateClose{
+ display:grid!important;place-items:center!important;align-items:center!important;justify-content:center!important;
+ width:36px!important;height:36px!important;min-height:36px!important;
+ padding:0!important;line-height:1!important;appearance:none!important;
+}
+body.eplan-redesign.trainer-ui #recipeTemplateClose svg{display:block;flex:none;width:18px;height:18px}
+
+/* Assigned meal plan: visible immediately after saving, read-only until edit. */
+body.eplan-redesign.trainer-ui .trainer-saved-plan{display:grid;gap:12px;margin-top:4px;min-width:0}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tabs{
+ display:flex;align-items:center;gap:8px;overflow-x:auto;max-width:100%;
+ padding:2px 0 6px;scrollbar-width:none
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tab{
+ flex:0 0 auto!important;border:1px solid #d8e5f4!important;border-radius:11px!important;
+ background:#f5f9ff!important;color:#647d9c!important;padding:10px 14px!important;
+ min-height:39px!important;font-size:12px!important;font-weight:800!important;
+ box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tab.active{
+ background:#317bf0!important;border-color:#317bf0!important;color:#fff!important
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-page{display:grid;gap:10px;min-width:0}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-page[hidden]{display:none!important}
+body.eplan-redesign.trainer-ui .trainer-assigned-meal{
+ padding:13px;border:1px solid #e0e8f4;border-radius:13px;background:#f9fbff;
+ min-width:0;overflow-wrap:anywhere
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-meal-label{
+ display:block;font-size:11px;color:#6882a5;font-weight:850;margin-bottom:7px
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-dish{
+ display:block;font-size:14px;line-height:1.4;color:#192d50;margin-bottom:7px
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-ingredients{
+ white-space:pre-wrap;font-size:11px;line-height:1.65;color:#637995;margin:4px 0 8px
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-preparation{
+ font-size:11px;line-height:1.6;color:#627995;margin:8px 0
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-meal-macros{
+ background:#edf4ff;border-radius:9px;padding:9px 10px;margin-top:10px;
+ font-size:11px;line-height:1.45;color:#41658c;font-weight:800
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-day-total{
+ border:1px solid #cddff7;border-radius:13px;background:#edf5ff;
+ padding:13px;display:grid;gap:7px;color:#345b89
+}
+body.eplan-redesign.trainer-ui .trainer-assigned-day-total span{font-size:11px;color:#6682a5;font-weight:750}
+body.eplan-redesign.trainer-ui .trainer-assigned-day-total strong{font-size:13px;line-height:1.5}
+body.eplan-redesign.trainer-ui .trainer-assigned-no-totals{
+ color:#7b8da7;font-size:11px;line-height:1.5;margin:4px 0
+}
+body.eplan-redesign.trainer-ui .trainer-saved-plan-actions{display:flex;margin-top:12px}
+body.eplan-redesign.trainer-ui .trainer-saved-plan-actions button{width:100%}
+body.eplan-redesign.trainer-ui .trainer-saved-legacy{display:grid;gap:9px}
+body.eplan-redesign.trainer-ui .trainer-saved-legacy>strong{font-size:13px;color:#244365}
+body.eplan-redesign.trainer-ui .trainer-saved-legacy-option{display:grid;gap:6px}
+body.eplan-redesign.trainer-ui .trainer-saved-legacy-option>small{font-size:11px;color:#7289a6}
