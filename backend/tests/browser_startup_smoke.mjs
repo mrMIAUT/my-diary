@@ -13,6 +13,7 @@ let remoteSearchCalls=0,previewCalls=0;
 let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 let structuredCatalogCalls=0,mealPlanSavedPayload=null;
 let diarySeq=0;const diaryRows=[];const diaryDays=new Set();
+let customFoodSeq=0,recipeSeq=0;const personalFoods=[],personalRecipes=[],publicFoods=[];
 let customFoodSeq=0;const customFoods=[];let savedRecipeSeq=0;const savedRecipes=[];
 const calculated=(row)=>({...row,...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
 const diaryPayload=(day)=>{const items=diaryRows.filter(x=>x.day===day).map(calculated);
@@ -134,6 +135,77 @@ const server=http.createServer(async(req,res)=>{
     const body=JSON.parse(raw);row.grams=body.grams;row.meal=body.meal;
     res.writeHead(200,{'content-type':'application/json'});
     res.end(JSON.stringify({item:calculated(row)}));return;
+  }
+  if(pathname==='/api/nutrition/my-foods'&&['GET','POST'].includes(req.method)){
+    if(req.method==='GET'){
+      res.writeHead(200,{'content-type':'application/json'});
+      res.end(JSON.stringify({items:personalFoods}));return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const values=JSON.parse(raw);const item={...values,id:++customFoodSeq,
+      review_status:values.submit_for_review?'pending':'private'};
+    personalFoods.push(item);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/my-foods/')&&['PATCH','DELETE'].includes(req.method)){
+    const id=Number(pathname.split('/').at(-1)),item=personalFoods.find(x=>x.id===id);
+    if(!item){res.writeHead(404);res.end();return}
+    if(req.method==='DELETE'){
+      personalFoods.splice(personalFoods.indexOf(item),1);
+      res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const update=JSON.parse(raw);Object.assign(item,update);
+    item.review_status=update.submit_for_review?'pending':'private';
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item}));return;
+  }
+  if(pathname==='/api/trainer/foods/submissions'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({items:personalFoods.filter(x=>x.review_status==='pending')
+      .map(x=>({...x,author:'Test client'}))}));return;
+  }
+  if(pathname.startsWith('/api/trainer/foods/submissions/')&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw),id=Number(pathname.split('/')[5]);
+    const item=personalFoods.find(x=>x.id===id);
+    if(!item){res.writeHead(404);res.end();return;}
+    item.review_status=body.decision==='approve'?'approved':'rejected';
+    if(body.decision==='approve')publicFoods.push({...body,id});
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({status:item.review_status}));return;
+  }
+  if(pathname==='/api/nutrition/recipes'&&['GET','POST'].includes(req.method)){
+    if(req.method==='GET'){
+      res.writeHead(200,{'content-type':'application/json'});
+      res.end(JSON.stringify({items:personalRecipes}));return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw);
+    const ingredients=diaryRows.filter(x=>x.day===body.day&&x.meal===body.meal);
+    const grams=ingredients.reduce((v,x)=>v+Number(x.grams),0);
+    const nutrients=Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>
+      [k+'_100',+((ingredients.reduce((v,x)=>v+Number(x[k+'_100'])*Number(x.grams)/100,0))/grams*100).toFixed(2)]));
+    const record={name:body.name,id:++recipeSeq,ingredients,grams,...nutrients};
+    personalRecipes.push(record);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({id:record.id}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/recipes/')&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw),id=Number(pathname.split('/')[4]);
+    const recipe=personalRecipes.find(x=>x.id===id);
+    const row={...body,name:recipe.name,source_id:'recipe:'+id,
+      ...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k+'_100',recipe[k+'_100']])),
+      id:++diarySeq};
+    diaryRows.push(row);diaryDays.add(row.day);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item:calculated(row)}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/recipes/')&&req.method==='DELETE'){
+    const id=Number(pathname.split('/')[4]);personalRecipes.splice(personalRecipes.findIndex(x=>x.id===id),1);
+    res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
   }
   if(pathname==='/api/foods/preview'){
     previewCalls++;
