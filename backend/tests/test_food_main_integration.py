@@ -37,19 +37,19 @@ class MainFoodIntegrationTests(unittest.TestCase):
             self.assertIn('@app.get("/api/foods/' + endpoint + '",dependencies=[Depends(require_food_search_access)])', app)
         self.assertIn('require_active_client(user.client_id,"nutrition")', app)
         self.assertIn('RATE_LIMITS["food.search"]=(30,60)', app)
-        self.assertIn("window.openFoodSearchLazy = async function()", nutrition)
+        self.assertIn("window.openFoodSearchLazy = async function(meal='')", nutrition)
         self.assertIn("window.openFoodSearchModal", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertNotIn("window.calculateNutritionTargets = function()", nutrition)
         trainer_nutrition = (BACKEND / "static/js/nutrition.js").read_text(encoding="utf-8")
         self.assertIn("window.calculateTrainerNutritionTargets = function()", trainer_nutrition)
         self.assertIn("window.pendingTrainerNutritionTargets={kcal,protein,fat,carbs}", trainer_nutrition)
         self.assertNotIn('src="/static/js/food-lookup.js', index)
-        self.assertIn("/static/js/food-lookup.js?v=3", nutrition)
+        self.assertIn("/static/js/food-lookup.js?v=4", nutrition)
         self.assertIn("lookupLocal(", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertIn("/foods/preview", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertNotIn("/static/js/food-lookup.js", shell)
-        self.assertIn("nutrition-redesign.js?v=294", index)
-        self.assertIn("nutrition-redesign.js?v=294", shell)
+        self.assertIn("nutrition-redesign.js?v=312", index)
+        self.assertIn("nutrition-redesign.js?v=312", shell)
 
 
 if __name__ == "__main__":

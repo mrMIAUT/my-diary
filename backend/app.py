@@ -879,6 +879,34 @@ def init():
                      ON result_sets(client_id,program_id,day,set_number)""")
         c.execute("""CREATE TABLE IF NOT EXISTS workout_sessions(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,finished_at TIMESTAMP,status TEXT DEFAULT 'training')""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition(id SERIAL PRIMARY KEY,client_id INTEGER,day TEXT,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,checked INTEGER DEFAULT 0,screenshot TEXT)""")
+        # EPLAN 1.2: food diary is separate from hand-entered nutrition.
+        # No automatic rewrite of existing nutrition records or assigned plans.
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_diary_days(
+            client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+            day DATE NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(client_id,day)
+        )""")
+        c.execute("""CREATE TABLE IF NOT EXISTS nutrition_diary_items(
+            id BIGSERIAL PRIMARY KEY,
+            client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+            day DATE NOT NULL,
+            meal TEXT NOT NULL CHECK(meal IN ('breakfast','lunch','snack','dinner')),
+            name TEXT NOT NULL,
+            brand TEXT NOT NULL DEFAULT '',
+            source_label TEXT NOT NULL DEFAULT '',
+            source_id TEXT NOT NULL DEFAULT '',
+            approximate BOOLEAN NOT NULL DEFAULT TRUE,
+            grams NUMERIC(8,1) NOT NULL CHECK(grams > 0 AND grams <= 2000),
+            kcal_100 NUMERIC(8,2) NOT NULL CHECK(kcal_100 >= 0 AND kcal_100 <= 1000),
+            protein_100 NUMERIC(7,2) NOT NULL CHECK(protein_100 >= 0 AND protein_100 <= 100),
+            fat_100 NUMERIC(7,2) NOT NULL CHECK(fat_100 >= 0 AND fat_100 <= 100),
+            carbs_100 NUMERIC(7,2) NOT NULL CHECK(carbs_100 >= 0 AND carbs_100 <= 100),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        c.execute("""CREATE INDEX IF NOT EXISTS ix_nutrition_diary_client_day
+                     ON nutrition_diary_items(client_id,day,meal,id)""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS meal_plan TEXT DEFAULT ''")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition_plan_items(
             id SERIAL PRIMARY KEY, client_id INTEGER, meal_number INTEGER, variant_number INTEGER,
@@ -1369,6 +1397,24 @@ class PushUnsubscribeIn(BaseModel):
     endpoint:str=Field(max_length=4096)
 class CommentIn(BaseModel):
     client_id:int; day:date; program_id:int=0; exercise:str=Field(default="",max_length=255); author:str=Field(max_length=16); body:str=Field(max_length=5000)
+class FoodDiaryAddIn(BaseModel):
+    day:date
+    meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
+    name:str=Field(min_length=1,max_length=200)
+    brand:str=Field(default="",max_length=120)
+    source_label:str=Field(default="",max_length=120)
+    source_id:str=Field(default="",max_length=200)
+    approximate:bool=True
+    grams:float=Field(gt=0,le=2000,allow_inf_nan=False)
+    kcal_100:float=Field(ge=0,le=1000,allow_inf_nan=False)
+    protein_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    fat_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    carbs_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+
+class FoodDiaryEditIn(BaseModel):
+    meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
+    grams:float=Field(gt=0,le=2000,allow_inf_nan=False)
+
 class HistoricalNutritionIn(BaseModel):
     client_id:int; day:date; kcal:int=Field(ge=0,le=MAX_KCAL); protein:int=Field(ge=0,le=MAX_MACRO_G); fat:int=Field(ge=0,le=MAX_MACRO_G); carbs:int=Field(ge=0,le=MAX_MACRO_G)
 class HistoricalSetIn(BaseModel):
@@ -5243,6 +5289,126 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
                 f"{client_name} відредагував результати завершеного тренування. Потрібно перевірити повторно.",
                 "results",workout_day,0,sid,"Є ПЛАН · Тренування оновлено")
     return {"ok":True,"set_count":len(x.sets),"aux_set_count":len(x.aux_sets),"day":workout_day}
+
+# EPLAN 1.2 food diary. Only the authenticated CLIENT can access their
+# entries; client_id is deliberately not taken from request JSON or query.
+# Stored per-100 snapshots allow historical logs to remain stable even if a
+# source changes later. Values are references, not certified nutrition labels.
+def diary_view_client(cid:int):
+    state=client_state(cid)
+    if not state or state["status"]=="Видалений":
+        raise HTTPException(404,"Клієнта не знайдено")
+    # An expired/frozen account can still view its history. Writes remain
+    # blocked through require_active_client below.
+
+def diary_day_checked(day:date):
+    if day>kyiv_today(): raise HTTPException(400,"Майбутню дату ще не можна заповнити")
+    if day<kyiv_today()-timedelta(days=730):
+        raise HTTPException(400,"Щоденник доступний за останні два роки")
+    return day
+
+def diary_item_response(row):
+    data=dict(row)
+    grams=float(data["grams"])
+    for key in ("kcal","protein","fat","carbs"):
+        value=float(data[key+"_100"])
+        data[key+"_100"]=value
+        data[key]=round(value*grams/100,1)
+    data["grams"]=grams
+    data["day"]=str(data["day"])
+    return data
+
+def diary_day_payload(client_id:int,day:date):
+    with con() as db:
+        active=db.execute("SELECT 1 FROM nutrition_diary_days WHERE client_id=%s AND day=%s",
+                          (client_id,day)).fetchone() is not None
+        entries=db.execute("""SELECT * FROM nutrition_diary_items
+            WHERE client_id=%s AND day=%s ORDER BY
+            CASE meal WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2
+            WHEN 'snack' THEN 3 ELSE 4 END,id LIMIT 101""",
+            (client_id,day)).fetchall()
+    rows_out=[diary_item_response(x) for x in entries]
+    totals={key:round(sum(float(x[key]) for x in rows_out),1)
+            for key in ("kcal","protein","fat","carbs")}
+    return {"day":str(day),"active":active,"items":rows_out,"totals":totals}
+
+@app.get("/api/nutrition/diary")
+def food_diary_get(day:date,user:AuthUser=Depends(require_client)):
+    diary_view_client(user.client_id)
+    return diary_day_payload(user.client_id,diary_day_checked(day))
+
+@app.get("/api/nutrition/diary/overview")
+def food_diary_overview(days:int=Query(default=30,ge=1,le=60),
+                        user:AuthUser=Depends(require_client)):
+    diary_view_client(user.client_id)
+    cutoff=kyiv_today()-timedelta(days=days-1)
+    with con() as db:
+        marked=db.execute("""SELECT d.day,COUNT(i.id) AS item_count,
+            COALESCE(SUM(i.grams*i.kcal_100/100),0) AS kcal,
+            COALESCE(SUM(i.grams*i.protein_100/100),0) AS protein,
+            COALESCE(SUM(i.grams*i.fat_100/100),0) AS fat,
+            COALESCE(SUM(i.grams*i.carbs_100/100),0) AS carbs
+            FROM nutrition_diary_days d LEFT JOIN nutrition_diary_items i
+            ON i.client_id=d.client_id AND i.day=d.day
+            WHERE d.client_id=%s AND d.day>=%s
+            GROUP BY d.day ORDER BY d.day DESC LIMIT 60""",
+            (user.client_id,cutoff)).fetchall()
+    return {"days":[dict(day=str(row["day"]),item_count=int(row["item_count"]),
+                         **{k:round(float(row[k]),1) for k in ("kcal","protein","fat","carbs")})
+                    for row in marked]}
+
+@app.post("/api/nutrition/diary")
+def food_diary_add(x:FoodDiaryAddIn,user:AuthUser=Depends(require_client)):
+    cid=user.client_id
+    require_active_client(cid,"nutrition")
+    diary_day_checked(x.day)
+    name=x.name.strip()
+    if not name:raise HTTPException(400,"Вкажи назву продукту")
+    if x.kcal_100<=0 and (x.protein_100+x.fat_100+x.carbs_100)<=0:
+        raise HTTPException(400,"Цей продукт не має придатних даних БЖВ")
+    with con() as db:
+        if not db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone():
+            raise HTTPException(404,"Клієнта не знайдено")
+        count=db.execute("SELECT count(*) AS n FROM nutrition_diary_items WHERE client_id=%s AND day=%s",
+                         (cid,x.day)).fetchone()["n"]
+        if count>=100:raise HTTPException(409,"Максимум 100 продуктів за день")
+        db.execute("""INSERT INTO nutrition_diary_days(client_id,day)
+                      VALUES(%s,%s) ON CONFLICT(client_id,day) DO NOTHING""",(cid,x.day))
+        row=db.execute("""INSERT INTO nutrition_diary_items
+          (client_id,day,meal,name,brand,source_label,source_id,approximate,grams,
+           kcal_100,protein_100,fat_100,carbs_100)
+          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+          RETURNING *""",(cid,x.day,x.meal,name,x.brand.strip(),x.source_label.strip(),
+            x.source_id.strip(),x.approximate,round(x.grams,1),
+            x.kcal_100,x.protein_100,x.fat_100,x.carbs_100)).fetchone()
+        db.commit()
+    return {"item":diary_item_response(row)}
+
+@app.patch("/api/nutrition/diary/{entry_id}")
+def food_diary_edit(entry_id:int,x:FoodDiaryEditIn,user:AuthUser=Depends(require_client)):
+    cid=user.client_id
+    require_active_client(cid,"nutrition")
+    with con() as db:
+        row=db.execute("""UPDATE nutrition_diary_items SET meal=%s,grams=%s,
+                updated_at=CURRENT_TIMESTAMP
+                WHERE id=%s AND client_id=%s RETURNING *""",
+                (x.meal,round(x.grams,1),entry_id,cid)).fetchone()
+        if not row:raise HTTPException(404,"Запис щоденника не знайдено")
+        db.commit()
+    return {"item":diary_item_response(row)}
+
+@app.delete("/api/nutrition/diary/{entry_id}")
+def food_diary_delete(entry_id:int,user:AuthUser=Depends(require_client)):
+    cid=user.client_id
+    require_active_client(cid,"nutrition")
+    with con() as db:
+        row=db.execute("DELETE FROM nutrition_diary_items WHERE id=%s AND client_id=%s RETURNING id",
+                       (entry_id,cid)).fetchone()
+        if not row:raise HTTPException(404,"Запис щоденника не знайдено")
+        # Keep the day marker even if its last entry is deleted: manual legacy
+        # totals must not reappear unexpectedly in a diary-mode day.
+        db.commit()
+    return {"ok":True}
 
 @app.post("/api/history/nutrition")
 def historical_nutrition(x:HistoricalNutritionIn,user:AuthUser=Depends(require_client)):

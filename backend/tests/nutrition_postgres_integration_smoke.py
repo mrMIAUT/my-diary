@@ -101,4 +101,45 @@ assert all(x["foods"][0]["source_id"] in {f["source_id"] for f in catalog} for x
 app.init()
 again=app.rows("SELECT content,foods_json,variant_number FROM nutrition_plan_items WHERE client_id=? ORDER BY variant_number",(client,))
 assert again==snapshot,"Second startup failed idempotent migration"
+# EPLAN 1.2 food diary: independent from historical manual totals and the
+# trainer-assigned plan, with server-owned identity on every operation.
+day=app.kyiv_today()
+client_user=app.AuthUser(role="client",user_id=client,client_id=client,session_id=0,
+ expires_at=datetime.now(timezone.utc),name="CI Client")
+entry=app.FoodDiaryAddIn(
+ day=day,meal="lunch",name="Рис білий (сухий)",brand="",
+ source_label="Орієнтовні довідкові БЖВ",source_id="eplan12-rice-white-dry",
+ approximate=True,grams=150,kcal_100=365,protein_100=7.1,fat_100=0.7,carbs_100=80
+)
+saved=app.food_diary_add(entry,client_user)["item"]
+assert saved["grams"]==150 and saved["kcal"]==547.5,saved
+assert saved["protein"]==10.7 and saved["fat"]==1.1 and saved["carbs"]==120,saved
+snapshot=app.rows("SELECT content,foods_json,variant_number FROM nutrition_plan_items WHERE client_id=? ORDER BY variant_number",(client,))
+overview=app.food_diary_overview(30,client_user)
+assert len(overview["days"])==1 and overview["days"][0]["kcal"]==547.5,overview
+assert app.food_diary_get(day,client_user)["active"] is True
+assert len(app.food_diary_get(day,client_user)["items"])==1
+assert app.rows("SELECT * FROM nutrition WHERE client_id=?",(client,))==[], "Diary must never silently change legacy hand-entered daily BJU"
+assert app.rows("SELECT content,foods_json,variant_number FROM nutrition_plan_items WHERE client_id=? ORDER BY variant_number",(client,))==snapshot, "Diary write must not alter assigned nutrition plan"
+changed=app.food_diary_edit(saved["id"],app.FoodDiaryEditIn(meal="dinner",grams=100),client_user)["item"]
+assert changed["meal"]=="dinner" and changed["kcal"]==365 and changed["grams"]==100,changed
+other_user=app.AuthUser(role="client",user_id=client+1000,client_id=client+1000,
+ session_id=0,expires_at=datetime.now(timezone.utc),name="Other")
+try:app.food_diary_edit(saved["id"],app.FoodDiaryEditIn(meal="lunch",grams=200),other_user)
+except HTTPException as e:assert e.status_code==404,e
+else:raise AssertionError("Cross-client diary mutation was allowed")
+try:app.food_diary_delete(saved["id"],other_user)
+except HTTPException as e:assert e.status_code==404,e
+else:raise AssertionError("Cross-client diary deletion was allowed")
+try:app.FoodDiaryAddIn(
+ day=day,meal="lunch",name="Invalid",grams=float("nan"),
+ kcal_100=250,protein_100=10,fat_100=2,carbs_100=22)
+except Exception:pass
+else:raise AssertionError("NaN portion was accepted")
+assert app.food_diary_delete(saved["id"],client_user)["ok"] is True
+empty=app.food_diary_get(day,client_user)
+assert empty["active"] is True and empty["items"]==[] and empty["totals"]["kcal"]==0,empty
+app.init()
+assert app.food_diary_get(day,client_user)["active"] is True, "Idempotent schema startup unexpectedly removed diary-mode day"
+
 print("NUTRITION POSTGRES: legacy migration, structured+text save, recipes, rollback, repeat init PASS")
