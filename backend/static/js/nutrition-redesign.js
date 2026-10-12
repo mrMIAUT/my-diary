@@ -177,12 +177,26 @@ function nutritionDiaryDayHTML(d,cid){
       +'<button type="button" aria-label="Видалити продукт" onclick="deleteNutritionDiaryEntry('+id+')">×</button>'
       +'</div></div>';
    }).join(''):'')
+   +(items.length?'<button class="nutrition-diary-save-recipe" type="button" onclick="saveDiaryMealAsRecipe(\''+key+'\')">Зберегти як мій рецепт</button>':'')
    +'<button class="nutrition-diary-add" type="button" onclick="openFoodSearchLazy(\''+key+'\')">+ Додати продукт</button>'
    +'</div></section>';
   }).join('')
   +'<p class="nutrition-diary-note">Підрахунок за фактично доданими продуктами. Значення БЖВ залежать від джерела, марки та стану продукту.</p>'
   +'</section>';
 }
+window.saveDiaryMealAsRecipe=async function(meal){
+ if(!nutritionDiaryMeals.some(x=>x[0]===meal))return;
+ const label=nutritionDiaryMeals.find(x=>x[0]===meal)?.[1]||'Страва';
+ const name=prompt('Назва власного рецепта',label+' · мій рецепт');
+ if(name===null)return;
+ if(name.trim().length<2||name.length>120)return alert('Вкажи назву від 2 до 120 символів.');
+ try{
+  await api('/nutrition/recipes',{method:'POST',body:JSON.stringify({
+   name:name.trim(),day:window.nutritionDiaryDay||isoToday(),meal
+  })});
+  alert('Рецепт збережено! Додати його пізніше можна через «Додати продукт» → «Мої рецепти».');
+ }catch(e){alert(e.message||'Не вдалося зберегти рецепт.')}
+};
 window.changeNutritionDiaryDay=async function(day){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day>isoToday())return;
  window.nutritionDiaryDay=day;
@@ -264,7 +278,7 @@ window.openFoodSearchLazy = async function(meal=''){
     if(!window.eplanFoodSearchLoader){
       window.eplanFoodSearchLoader=new Promise((resolve,reject)=>{
         const script=document.createElement('script');
-        script.src='/static/js/food-lookup.js?v=4';
+        script.src='/static/js/food-lookup.js?v=6';
         script.onload=()=>resolve();
         script.onerror=()=>reject(new Error('Food search module unavailable'));
         document.head.appendChild(script);

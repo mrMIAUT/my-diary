@@ -13,6 +13,7 @@ let remoteSearchCalls=0,previewCalls=0;
 let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 let structuredCatalogCalls=0,mealPlanSavedPayload=null;
 let diarySeq=0;const diaryRows=[];const diaryDays=new Set();
+let customFoodSeq=0,recipeSeq=0;const personalFoods=[],personalRecipes=[],publicFoods=[];
 const calculated=(row)=>({...row,...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
 const diaryPayload=(day)=>{const items=diaryRows.filter(x=>x.day===day).map(calculated);
  return {day,active:diaryDays.has(day),items,totals:Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(items.reduce((sum,x)=>sum+x[k],0)).toFixed(1)]))};};
@@ -106,6 +107,77 @@ const server=http.createServer(async(req,res)=>{
     const body=JSON.parse(raw);row.grams=body.grams;row.meal=body.meal;
     res.writeHead(200,{'content-type':'application/json'});
     res.end(JSON.stringify({item:calculated(row)}));return;
+  }
+  if(pathname==='/api/nutrition/my-foods'&&['GET','POST'].includes(req.method)){
+    if(req.method==='GET'){
+      res.writeHead(200,{'content-type':'application/json'});
+      res.end(JSON.stringify({items:personalFoods}));return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const values=JSON.parse(raw);const item={...values,id:++customFoodSeq,
+      review_status:values.submit_for_review?'pending':'private'};
+    personalFoods.push(item);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/my-foods/')&&['PATCH','DELETE'].includes(req.method)){
+    const id=Number(pathname.split('/').at(-1)),item=personalFoods.find(x=>x.id===id);
+    if(!item){res.writeHead(404);res.end();return}
+    if(req.method==='DELETE'){
+      personalFoods.splice(personalFoods.indexOf(item),1);
+      res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const update=JSON.parse(raw);Object.assign(item,update);
+    item.review_status=update.submit_for_review?'pending':'private';
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item}));return;
+  }
+  if(pathname==='/api/trainer/foods/submissions'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({items:personalFoods.filter(x=>x.review_status==='pending')
+      .map(x=>({...x,author:'Test client'}))}));return;
+  }
+  if(pathname.startsWith('/api/trainer/foods/submissions/')&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw),id=Number(pathname.split('/')[5]);
+    const item=personalFoods.find(x=>x.id===id);
+    if(!item){res.writeHead(404);res.end();return;}
+    item.review_status=body.decision==='approve'?'approved':'rejected';
+    if(body.decision==='approve')publicFoods.push({...body,id});
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({status:item.review_status}));return;
+  }
+  if(pathname==='/api/nutrition/recipes'&&['GET','POST'].includes(req.method)){
+    if(req.method==='GET'){
+      res.writeHead(200,{'content-type':'application/json'});
+      res.end(JSON.stringify({items:personalRecipes}));return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw);
+    const ingredients=diaryRows.filter(x=>x.day===body.day&&x.meal===body.meal);
+    const grams=ingredients.reduce((v,x)=>v+Number(x.grams),0);
+    const nutrients=Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>
+      [k+'_100',+((ingredients.reduce((v,x)=>v+Number(x[k+'_100'])*Number(x.grams)/100,0))/grams*100).toFixed(2)]));
+    const record={name:body.name,id:++recipeSeq,ingredients,grams,...nutrients};
+    personalRecipes.push(record);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({id:record.id}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/recipes/')&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw),id=Number(pathname.split('/')[4]);
+    const recipe=personalRecipes.find(x=>x.id===id);
+    const row={...body,name:recipe.name,source_id:'recipe:'+id,
+      ...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k+'_100',recipe[k+'_100']])),
+      id:++diarySeq};
+    diaryRows.push(row);diaryDays.add(row.day);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item:calculated(row)}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/recipes/')&&req.method==='DELETE'){
+    const id=Number(pathname.split('/')[4]);personalRecipes.splice(personalRecipes.findIndex(x=>x.id===id),1);
+    res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
   }
   if(pathname==='/api/foods/preview'){
     previewCalls++;
@@ -234,6 +306,82 @@ try{
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).active,true,
     'Deleting last product must keep diary mode instead of restoring old manual totals');
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
+  // Custom foods remain private unless deliberately submitted for review.
+  await page.locator('.nutrition-food-search-button').click();
+  await page.locator('#foodSearchModal').waitFor();
+  assert.equal(await page.locator('.food-custom-actions button').count(),3);
+  await page.getByRole('button',{name:'+ Свій продукт',exact:true}).click();
+  await page.locator('#customFoodName').fill('Домашній сир CI');
+  await page.locator('#customFoodBrand').fill('Особистий');
+  await page.locator('#customFood_kcal_100').fill('142');
+  await page.locator('#customFood_protein_100').fill('18');
+  await page.locator('#customFood_fat_100').fill('7');
+  await page.locator('#customFood_carbs_100').fill('2');
+  await page.locator('#saveCustomFoodButton').click();
+  await page.locator('#myProductModal').waitFor({state:'detached',timeout:4000});
+  assert.equal(personalFoods.length,1);
+  assert.equal(personalFoods[0].review_status,'private');
+  assert.equal(publicFoods.length,0,'Personal food appeared in public catalogue without approval');
+  assert.equal(await page.locator('#foodLookupPortion strong').first().innerText(),'Домашній сир CI');
+  await page.locator('#foodLookupGrams').fill('120');
+  await page.locator('#foodLookupMeal').selectOption('breakfast');
+  await page.locator('#foodLookupAddToDiary').click();
+  await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item').waitFor({timeout:4000});
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).items[0].kcal,170.4);
+  const onRecipeDialog=async dialog=>{
+   if(dialog.type()==='prompt')await dialog.accept('Мій сирний сніданок');
+   else await dialog.accept();
+  };
+  page.on('dialog',onRecipeDialog);
+  const recipeSave=page.waitForResponse(r=>r.url().includes('/api/nutrition/recipes')&&r.request().method()==='POST');
+  await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-save-recipe').click();
+  await recipeSave;
+  page.off('dialog',onRecipeDialog);
+  assert.equal(personalRecipes.length,1,'Saving a logged meal did not create a reusable recipe');
+  await page.locator('.nutrition-food-search-button').click();
+  await page.getByRole('button',{name:'Мої рецепти'}).click();
+  await page.locator('.my-food-row').waitFor({timeout:4000});
+  page.once('dialog',dialog=>dialog.accept('120'));
+  await page.locator('#myRecipesList .my-food-row-actions button').first().click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===2);
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,340.8,
+   'Logging a saved recipe did not update totals');
+  const onDeleteConfirm=dialog=>dialog.accept();
+  page.on('dialog',onDeleteConfirm);
+  for(let i=0;i<2;i++){
+   await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item-actions button[aria-label="Видалити продукт"]').first().click();
+   await page.waitForFunction(n=>window.nutritionDiaryState?.items?.length===n,1-i);
+  }
+  page.off('dialog',onDeleteConfirm);
+  // Client submitted an unrelated private product, which must stay out of
+  // shared search until trainer explicitly approves it.
+  await page.locator('.nutrition-food-search-button').click();
+  await page.getByRole('button',{name:'+ Свій продукт',exact:true}).click();
+  await page.locator('#customFoodName').fill('Йогурт CI на перевірку');
+  await page.locator('#customFood_kcal_100').fill('88');
+  await page.locator('#customFood_protein_100').fill('6');
+  await page.locator('#customFood_fat_100').fill('3');
+  await page.locator('#customFood_carbs_100').fill('10');
+  await page.locator('#customFoodSubmitReview').check();
+  await page.locator('#saveCustomFoodButton').click();
+  await page.waitForFunction(()=>document.querySelector('#myProductModal')===null);
+  assert.equal(personalFoods.filter(x=>x.review_status==='pending').length,1);
+  assert.equal(publicFoods.length,0);
+  await page.locator('#foodSearchClose').click();
+  await page.evaluate(()=>window.openTrainerFoodReview());
+  await page.locator('.trainer-food-review-row').waitFor({timeout:4000});
+  assert.equal(await page.locator('.trainer-food-review-row').count(),1);
+  await page.locator('.trainer-food-review-row .food-review-kcal_100').fill('81');
+  await page.locator('.trainer-food-review-row .food-review-note').fill('Verified CI test label');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('.trainer-food-review-actions button.primary').click();
+  await page.waitForFunction(()=>document.querySelector('.trainer-food-review-row')===null);
+  assert.equal(publicFoods.length,1,'Trainer approval did not publish the reviewed product');
+  assert.equal(publicFoods[0].kcal_100,81,
+   'The shared catalogue ignored trainer-corrected nutrition values');
+  await page.locator('#trainerFoodReviewModal button.dark').click();
+  assert.equal(await page.locator('#foodSearchModal').count(),0);
+
   // Picking another day must keep the existing native control, then restore
   // today's diary data without losing the selected tab or saved records.
   const today=await diaryDate.inputValue();

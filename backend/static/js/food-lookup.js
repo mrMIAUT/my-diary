@@ -10,6 +10,9 @@ window.openFoodSearchModal=function(meal=''){
  $('foodSearchModal')?.remove();serial++;chosen=null;
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="foodSearchModal"><div class="card food-lookup-modal">'
   +'<div class="between"><div><h2>Пошук продуктів</h2><p class="muted">Калорії та БЖВ на 100 г продукту</p></div><button type="button" class="dark" id="foodSearchClose">✕</button></div>'
+  +'<div class="food-custom-actions"><button type="button" onclick="openMyFoodLibrary()">Мої продукти</button>'
+  +'<button type="button" onclick="openPrivateFoodForm()">+ Свій продукт</button>'
+  +'<button type="button" onclick="openMyRecipesLibrary()">Мої рецепти</button></div>'
   +'<input id="foodLookupQuery" type="search" maxlength="120" autocomplete="off" aria-label="Пошук продуктів" placeholder="Наприклад, гречка, молоко, курка">'
   +'<p class="food-lookup-status" id="foodLookupStatus">Введи щонайменше 2 символи.</p>'
   +'<div class="food-lookup-results" id="foodLookupResults"></div>'
@@ -136,4 +139,134 @@ window.addChosenFoodToDiary=async function(button){
   if(feedback)feedback.textContent=e.message||'Не вдалося додати продукт. Перевір підключення.';
  }
 };
+
+const escapeUser=s=>esc(s);
+let privateFoodItems=[],privateFoodEditing=null,recipeItems=[];
+const mealLabels=[['breakfast','Сніданок'],['lunch','Обід'],['snack','Перекус'],['dinner','Вечеря']];
+function customFoodOption(item){
+ return {name:item.name,brand:item.brand||'',
+ source_label:'Мій продукт · особиста бібліотека',source_id:'private:'+item.id,
+ approximate:true,
+ kcal_100:Number(item.kcal_100),protein_100:Number(item.protein_100),
+ fat_100:Number(item.fat_100),carbs_100:Number(item.carbs_100)};
+}
+window.openMyFoodLibrary=async function(){
+ $('myFoodsModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="myFoodsModal">'
+ +'<div class="card my-foods-panel"><div class="between"><h2>Мої продукти</h2>'
+ +'<button type="button" class="dark" onclick="myFoodsModal.remove()">×</button></div>'
+ +'<p class="muted">Тільки твої продукти. В загальному пошуку їх побачать інші лише після перевірки тренером.</p>'
+ +'<div id="myFoodsList">Завантаження…</div>'
+ +'<button type="button" class="my-food-primary" onclick="openPrivateFoodForm()">+ Створити продукт</button></div></div>');
+ try{
+  privateFoodItems=(await api('/nutrition/my-foods')).items||[];
+  $('myFoodsList').innerHTML=privateFoodItems.length?privateFoodItems.map(x=>
+  '<div class="my-food-row"><div><strong>'+esc(x.name)+'</strong>'
+  +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
+  +'<small>'+fmt(x.kcal_100)+' ккал · Б '+fmt(x.protein_100)+' · Ж '+fmt(x.fat_100)+' · В '+fmt(x.carbs_100)+'</small>'
+  +'<small>'+(x.review_status==='pending'?'На перевірці':x.review_status==='approved'?'Перевірено':x.review_status==='rejected'?'Не схвалено':'Особистий')+'</small></div>'
+  +'<div class="my-food-row-actions"><button type="button" onclick="choosePrivateFood('+Number(x.id)+')">Додати</button>'
+  +(x.review_status==='approved'?'':'<button type="button" onclick="openPrivateFoodForm('+Number(x.id)+')">Змінити</button>')
+  +(x.review_status==='private'||x.review_status==='rejected'
+   ?'<button type="button" aria-label="Видалити власний продукт" onclick="deletePrivateFood('+Number(x.id)+')">×</button>':'')
+  +'</div></div>'
+  ).join(''):'<p class="muted">Поки немає власних продуктів.</p>';
+ }catch(e){$('myFoodsList').textContent=e.message||'Не вдалося завантажити продукти.'}
+};
+window.choosePrivateFood=function(id){
+ const item=privateFoodItems.find(x=>Number(x.id)===Number(id));if(!item)return;
+ $('myFoodsModal')?.remove();
+ if(!$('foodSearchModal'))window.openFoodSearchModal(defaultMeal);
+ choose(customFoodOption(item));
+};
+window.deletePrivateFood=async function(id){
+ if(!confirm('Видалити власний продукт? Уже записані дні щоденника залишаться незмінними.'))return;
+ try{await api('/nutrition/my-foods/'+id,{method:'DELETE'});await openMyFoodLibrary();}
+ catch(e){alert(e.message||'Не вдалося видалити продукт.')}
+};
+window.openPrivateFoodForm=function(id=null){
+ const item=id?privateFoodItems.find(x=>Number(x.id)===Number(id)):null;
+ privateFoodEditing=item?Number(item.id):null;
+ $('myProductModal')?.remove();
+ const value=(key)=>item?esc(item[key]):'';
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="myProductModal">'
+  +'<div class="card my-foods-panel"><div class="between"><h2>'+(item?'Редагувати продукт':'Свій продукт')+'</h2>'
+  +'<button type="button" class="dark" onclick="myProductModal.remove()">×</button></div>'
+  +'<p class="muted">Калорії та БЖВ на 100 г. Вводь інформацію з етикетки продукту.</p>'
+  +'<label>Назва<input id="customFoodName" maxlength="150" value="'+value('name')+'" placeholder="Наприклад, домашній сир"></label>'
+  +'<label>Бренд (необов’язково)<input id="customFoodBrand" maxlength="120" value="'+value('brand')+'"></label>'
+  +'<div class="my-food-macros">'
+  +[['kcal_100','Ккал'],['protein_100','Білки, г'],['fat_100','Жири, г'],['carbs_100','Вуглеводи, г']]
+   .map(([k,label])=>'<label>'+label+'<input id="customFood_'+k+'" inputmode="decimal" type="number" min="0" max="'+(k==='kcal_100'?1000:100)+'" step="0.01" value="'+value(k)+'"></label>').join('')
+  +'</div><label class="my-food-review"><input type="checkbox" id="customFoodSubmitReview">'
+  +' Запропонувати для загальної бази після перевірки тренером</label>'
+  +'<p class="my-food-hint">Без цього прапорця продукт залишиться тільки твоїм. Навіть із ним продукт НЕ публікується автоматично.</p>'
+  +'<p class="my-food-error" id="customFoodError" role="alert"></p>'
+  +'<button type="button" id="saveCustomFoodButton" class="my-food-primary" onclick="savePrivateFood(this)">Зберегти</button></div></div>');
+};
+window.savePrivateFood=async function(button){
+ const read=id=>{
+  const raw=String($(id)?.value??'').trim();
+  return raw===''?NaN:Number(raw.replace(',','.'));
+ };
+ const vals={name:String($('customFoodName')?.value||'').trim(),brand:String($('customFoodBrand')?.value||'').trim(),
+  kcal_100:read('customFood_kcal_100'),protein_100:read('customFood_protein_100'),
+  fat_100:read('customFood_fat_100'),carbs_100:read('customFood_carbs_100'),
+  submit_for_review:Boolean($('customFoodSubmitReview')?.checked)};
+ const issue=$('customFoodError');
+ if(vals.name.length<2||Object.keys(vals).filter(k=>k.endsWith('_100')).some(k=>!Number.isFinite(vals[k])||vals[k]<0)||
+  (!vals.kcal_100&&!vals.protein_100&&!vals.fat_100&&!vals.carbs_100)){
+  if(issue)issue.textContent='Заповни назву та всі значення КБЖУ на 100 г.';return;
+ }
+ button.disabled=true;
+ try{
+  const response=await api('/nutrition/my-foods'+(privateFoodEditing?'/'+privateFoodEditing:''),{
+   method:privateFoodEditing?'PATCH':'POST',body:JSON.stringify(vals)
+  });
+  $('myProductModal')?.remove();
+  if($('myFoodsModal'))await openMyFoodLibrary();
+  else{
+   if(!$('foodSearchModal'))window.openFoodSearchModal(defaultMeal);
+   choose(customFoodOption(response.item));
+  }
+ }catch(e){button.disabled=false;if(issue)issue.textContent=e.message||'Не вдалося зберегти продукт.'}
+};
+window.openMyRecipesLibrary=async function(){
+ $('myRecipesModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="myRecipesModal">'
+ +'<div class="card my-foods-panel"><div class="between"><h2>Мої рецепти</h2>'
+ +'<button type="button" class="dark" onclick="myRecipesModal.remove()">×</button></div>'
+ +'<p class="muted">Збережені страви з твого щоденника. Вони не потрапляють у загальну базу.</p>'
+ +'<div id="myRecipesList">Завантаження…</div></div></div>');
+ try{
+  recipeItems=(await api('/nutrition/recipes')).items||[];
+  $('myRecipesList').innerHTML=recipeItems.length?recipeItems.map(x=>
+   '<div class="my-food-row"><div><strong>'+esc(x.name)+'</strong><small>'+fmt(x.grams)+' г · '
+   +fmt(x.kcal_100*Number(x.grams)/100)+' ккал</small><small>'+x.ingredients.length+' складників</small></div>'
+   +'<div class="my-food-row-actions"><button type="button" onclick="logMyRecipe('+Number(x.id)+',this)">Додати</button>'
+   +'<button type="button" onclick="deleteMyRecipe('+Number(x.id)+')">×</button></div></div>'
+  ).join(''):'<p class="muted">Збережених рецептів поки немає. Створи їх з будь-якого заповненого прийому їжі.</p>';
+ }catch(e){$('myRecipesList').textContent=e.message||'Не вдалося завантажити рецепти.'}
+};
+window.logMyRecipe=async function(id,button){
+ const recipe=recipeItems.find(x=>Number(x.id)===Number(id));if(!recipe)return;
+ const input=prompt('Вага порції рецепта, г',Math.min(2000,recipe.grams));
+ if(input===null)return;
+ const grams=Number(String(input).replace(',','.'));
+ if(!Number.isFinite(grams)||grams<=0||grams>2000)return alert('Вкажи вагу від 1 до 2000 г.');
+ button.disabled=true;
+ try{
+  await api('/nutrition/recipes/'+id+'/log',{method:'POST',body:JSON.stringify({
+   day:window.nutritionDiaryDay||isoToday(),meal:defaultMeal,grams
+  })});
+  $('myRecipesModal')?.remove();$('foodSearchModal')?.remove();serial++;
+  await showClientNutrition(session.client_id);
+ }catch(e){button.disabled=false;alert(e.message||'Не вдалося додати рецепт.')}
+};
+window.deleteMyRecipe=async function(id){
+ if(!confirm('Видалити збережений рецепт? Записи щоденника залишаться.'))return;
+ try{await api('/nutrition/recipes/'+id,{method:'DELETE'});await openMyRecipesLibrary()}
+ catch(e){alert(e.message||'Не вдалося видалити рецепт.')}
+};
+
 })();
