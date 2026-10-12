@@ -146,6 +146,10 @@ try{
   'Trainer preview stacks independent whole-day rations');
  assert.equal(await page.locator('#nutrition .trainer-assigned-meal').count(),12,
   'Trainer preview must include all saved dishes across three rations');
+ assert.equal(await page.locator('#nutrition .nutrition-menu-photo').count(),12,
+   'Photo-slot thumbnails must render for assigned dishes');
+ assert.equal(await page.locator('#nutrition .nutrition-menu-v2-nutrients').count(),12,
+   'Each assigned dish needs a compact calorie and BJU rail');
  assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),3,
   'Saved, structured full-day totals are missing');
  assert.ok(await page.locator('#nutrition .nutrition-menu-ingredient').count()>4,
@@ -173,8 +177,39 @@ try{
    'Editing dishes should not reset previously saved calorie/BJU targets');
 
 
- // Older incomplete or text-only alternatives must remain readable, with no
- // invented total when per-meal nutrient provenance is unavailable.
+ // Previously saved plans can contain five-gram quantities: the trainer has an
+ // explicit rounding action, not a misleading display-only transformation.
+ await page.evaluate(meals=>{
+  const legacy=meals.map(x=>({
+   ...x,foods_json:JSON.stringify(x.foods.map((row,i)=>
+     x.meal_number===1&&x.variant_number===1&&i===0?{...row,grams:155}:row
+   ))
+  }));
+  const adjusted=legacy.find(x=>x.meal_number===1&&x.variant_number===1);
+  adjusted.content=adjusted.content.replace('smoke-rice — 180 г','smoke-rice — 155 г');
+  window.currentClientData={client:window.currentClientData.client,nutrition_plan:legacy};
+  document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData);
+ },saved.meals);
+ assert.equal(await page.locator('#nutrition .nutrition-menu-round-prompt button').count(),1,
+   'A previously assigned 155-g portion should offer a safe explicit update');
+ const unchanged=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
+ assert.ok(unchanged.includes('155 г'),'Old nutrition quantities were silently changed in the saved view');
+ await page.locator('#nutrition .nutrition-menu-round-prompt button').click();
+ const rounded=await page.evaluate(()=>{
+  const requests=window.__requests.filter(x=>x.path==='/client/123/nutrition');
+  return JSON.parse(requests.at(-1).opts.body);
+ });
+ assert.equal(rounded.meals.find(x=>x.meal_number===1&&x.variant_number===1).foods[0].grams,160,
+   'Old assigned portions were not rounded in persisted payload');
+ assert.equal(rounded.meals.find(x=>x.meal_number===1&&x.variant_number===1).foods[1].count,2,
+   'Eggs must stay whole pieces');
+ assert.equal(await page.locator('#nutrition .nutrition-menu-round-prompt button').count(),0,
+   'Rounded assigned plan must refresh without reintroducing the warning');
+ assert.ok((await page.locator('#nutrition').innerText()).includes('160 г'),
+   'The assigned trainer menu must refresh after confirmed rounding');
+
+ // Older incomplete or text-only alternatives remain readable with no
+ // invented macro total when meal nutrition provenance is unavailable.
  await page.evaluate(meals=>{
   const legacy=meals.filter(x=>!(x.meal_number===4&&x.variant_number===2))
    .map(x=>({...x,foods_json:'[]',content:'Звичайний текстовий план <script>невідоме</script>'}));
@@ -205,6 +240,12 @@ try{
  },saved.meals);
  assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),3,
    'Client cannot choose complete rations');
+ assert.equal(await page.locator('#clientRationSmoke #clientMealPlanBody.hidden').count(),0,
+   'Client assigned ration should be open upon entering nutrition');
+ assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-photo').count()>0,
+   'Client must have illustrated meal previews');
+ assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-v2-nutrients').count()>0,
+   'Client meal macros should use the chosen compact design');
  assert.equal(await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').count(),1,
    'Client sees several daily rations stacked together');
  assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-ingredient').count()>0,
