@@ -319,7 +319,7 @@ window.showClientNutrition = async function(cid){
   const body=plan
    ?(access.features?.meal_plan
       ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
-      :'<div class="card nutrition-coaching-upsell"><strong>Персональний план харчування</strong><p>Тренер призначає індивідуальний раціон окремо. Твій щоденник харчування доступний у сусідній вкладці.</p></div>')
+      :'<div class="card nutrition-coaching-upsell"><strong>Персональний план харчування</strong><p>Тренер призначає індивідуальний раціон окремо. Твій щоденник харчування доступний у сусідній вкладці.</p><button type="button" onclick="showClientTrainers('+cid+')">Переглянути тренерів ›</button></div>')
    :window.clientNutritionPeriod==='week'?nutritionHistoryHTML(display,7,'тиждень')
    :window.clientNutritionPeriod==='month'?nutritionHistoryHTML(display,30,'місяць')
    :redesignNutritionTodayHTML(display,c,cid);
