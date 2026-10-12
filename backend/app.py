@@ -5294,6 +5294,13 @@ def edit_finished_workout_results(sid:int,x:CompletedWorkoutEditIn,user:AuthUser
 # entries; client_id is deliberately not taken from request JSON or query.
 # Stored per-100 snapshots allow historical logs to remain stable even if a
 # source changes later. Values are references, not certified nutrition labels.
+def diary_view_client(cid:int):
+    state=client_state(cid)
+    if not state or state["status"]=="Видалений":
+        raise HTTPException(404,"Клієнта не знайдено")
+    # An expired/frozen account can still view its history. Writes remain
+    # blocked through require_active_client below.
+
 def diary_day_checked(day:date):
     if day>kyiv_today(): raise HTTPException(400,"Майбутню дату ще не можна заповнити")
     if day<kyiv_today()-timedelta(days=730):
@@ -5327,13 +5334,13 @@ def diary_day_payload(client_id:int,day:date):
 
 @app.get("/api/nutrition/diary")
 def food_diary_get(day:date,user:AuthUser=Depends(require_client)):
-    require_active_client(user.client_id,"nutrition")
+    diary_view_client(user.client_id)
     return diary_day_payload(user.client_id,diary_day_checked(day))
 
 @app.get("/api/nutrition/diary/overview")
 def food_diary_overview(days:int=Query(default=30,ge=1,le=60),
                         user:AuthUser=Depends(require_client)):
-    require_active_client(user.client_id,"nutrition")
+    diary_view_client(user.client_id)
     cutoff=kyiv_today()-timedelta(days=days-1)
     with con() as db:
         marked=db.execute("""SELECT d.day,COUNT(i.id) AS item_count,
