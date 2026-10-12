@@ -159,6 +159,31 @@ try{
   await page.locator('.redesign-nutrition-today').waitFor({timeout:3000});
   assert.equal(await page.locator('.nutrition-targets-button').count(),0,'Client should not edit targets');
   assert.equal(await page.evaluate(()=>typeof window.openNutritionTargetsModal),'undefined','Client target calculator still exposed');
+  const diaryDate=page.locator('#nutritionDiaryDate');
+  assert.ok(await diaryDate.inputValue(),'Date input must keep the native YYYY-MM-DD value');
+  assert.equal(await page.locator('.nutrition-diary-date-pill svg').count(),2,
+    'Date chip must show the calendar and dropdown SVGs');
+  assert.ok((await page.locator('.nutrition-diary-date-pill strong').innerText()).length>4,
+    'Human-readable compact Ukrainian date is missing');
+  for(const width of [390,320]){
+    await page.setViewportSize({width,height:844});
+    const rects=await page.locator('.nutrition-diary-date-pill').evaluate(el=>{
+      const picker=el.querySelector('input[type=date]');
+      const control=el.getBoundingClientRect(),hit=picker.getBoundingClientRect();
+      return {width:control.width,height:control.height,
+        pickerWidth:hit.width,pickerHeight:hit.height,
+        opacity:getComputedStyle(picker).opacity,
+        within:control.left>=-1&&control.right<=document.documentElement.clientWidth+1,
+        label:el.querySelector('strong').textContent
+      };
+    });
+    assert.ok(rects.within,'Diary date chip spills outside '+width+'px viewport');
+    assert.ok(rects.width<240&&rects.height<=48,'Date control became oversized on '+width+'px screen');
+    assert.equal(rects.pickerWidth,rects.width,'Native date hit-target does not cover its visual pill');
+    assert.equal(rects.pickerHeight,rects.height,'Native picker has a clipped tap target');
+    assert.equal(rects.opacity,'0','Browser-native date content should not overlap the custom label');
+  }
+  await page.setViewportSize({width:390,height:844});
   const lazyBefore=await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('food-lookup.js')));
   assert.equal(lazyBefore,false,'Food lookup loaded during startup');
   await page.locator('.nutrition-food-search-button').click();
@@ -188,6 +213,10 @@ try{
   assert.equal(afterAdd.items[0].grams,150);
   assert.equal(afterAdd.items[0].protein,6);
   assert.equal(afterAdd.totals.carbs,30);
+  assert.equal(await page.getByRole('button',{name:/Мій щоденник/}).count(),0,
+    'Redundant diary navigation should disappear once food is logged');
+  assert.equal(await page.locator('.redesign-nutrition-actions button').count(),1,
+    'Only the functional add-product action should remain in diary mode');
   assert.ok(await page.locator('.redesign-calorie-card').innerText().then(x=>x.includes('150')),
     'Main calorie progress was not connected to recorded products');
   await page.locator('.nutrition-diary-item-actions button').first().click();
@@ -203,6 +232,26 @@ try{
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).active,true,
     'Deleting last product must keep diary mode instead of restoring old manual totals');
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
+  // Picking another day must keep the existing native control, then restore
+  // today's diary data without losing the selected tab or saved records.
+  const today=await diaryDate.inputValue();
+  const yesterday=await page.evaluate(today=>{
+    const d=new Date(today+'T12:00:00');d.setDate(d.getDate()-1);
+    const pad=n=>String(n).padStart(2,'0');
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  },today);
+  await diaryDate.fill(yesterday);
+  await diaryDate.dispatchEvent('change');
+  await page.waitForFunction(day=>
+    document.querySelector('#nutritionDiaryDate')?.value===day&&window.nutritionDiaryDay===day,
+    yesterday,{timeout:3500});
+  assert.ok(await page.locator('.nutrition-diary-date-pill strong').innerText(),
+    'The formatted chip label should update with the selected day');
+  await page.locator('#nutritionDiaryDate').fill(today);
+  await page.locator('#nutritionDiaryDate').dispatchEvent('change');
+  await page.waitForFunction(day=>
+    document.querySelector('#nutritionDiaryDate')?.value===day&&window.nutritionDiaryDay===day,
+    today,{timeout:3500});
   assert.equal(await page.locator('#foodSearchModal').count(),0,'Search modal remained open');
   // The two modes must remain separate: plan = assigned, diary = consumed.
   assert.equal(await page.locator('.client-nutrition-view-tabs [role=tab]').count(),2);
