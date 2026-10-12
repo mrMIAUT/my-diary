@@ -3109,9 +3109,11 @@ def prototype_food_preview(
         )
     ]
     ranked=_food_rank(normalized,options)
+    reviewed=_public_food_matches(q,limit)
     return {
         "query":q,"normalized_query":normalized,"preliminary":True,
-        "items":[dict(item,food_type=_food_search_type(item)) for item in ranked[:limit]],
+        "items":reviewed[:limit]+[dict(item,food_type=_food_search_type(item))
+                                 for item in ranked[:max(0,limit-len(reviewed))]],
     }
 
 
@@ -3123,6 +3125,9 @@ def prototype_food_search(
     food_type:str=Query(default="all",pattern="^(all|generic|branded|dish)$"),
 ):
     raw=q.strip()
+    # Reviewed products are in the shared database and appear in the same
+    # client product search, without changing the immutable USDA catalog.
+    reviewed=_public_food_matches(raw,limit) if page==1 and food_type=="all" else []
     compact="".join(ch for ch in raw if ch.isdigit())
     if raw.replace(" ","").isdigit() and 8<=len(compact)<=14:
         items=_off_barcode(compact)
@@ -3136,7 +3141,9 @@ def prototype_food_search(
     cached=_food_cache_get(FOOD_RESULT_CACHE,FOOD_RESULT_CACHE_LOCK,
                            cache_key,FOOD_RESULT_CACHE_TTL_SECONDS)
     if cached is not None:
-        return _food_result_page(raw,normalized,variants,cached,limit,page,food_type)
+        result=_food_result_page(raw,normalized,variants,cached,limit,page,food_type)
+        result["items"]=(reviewed+result["items"])[:limit] if reviewed else result["items"]
+        return result
     # Build a stable candidate window before UI pagination. Otherwise OFF's
     # own page order leaks into EPLAN and good Ukrainian brands appear only
     # after "Показати ще".
