@@ -559,7 +559,8 @@ window.openTrainerFoodReview=async function(){
     +'<strong>'+esc(x.name)+'</strong>'
     +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
     +'<small>Додав: '+esc(x.author||'Клієнт')+' · КБЖУ автора ще не перевірені</small>'
-    +'<div class="trainer-food-review-inputs">'
+    +'<small>'+(x.review_status==='pending'?'Клієнт запропонував для перевірки':'Особистий продукт, без запиту на публікацію')+'</small>'
+    +(x.review_status==='pending'?'<div class="trainer-food-review-inputs">':'<div class="trainer-food-review-inputs" style="opacity:.8">')
     +'<label>Назва<input class="food-review-name" maxlength="150" value="'+esc(x.name)+'"></label>'
     +'<label>Бренд<input class="food-review-brand" maxlength="120" value="'+esc(x.brand||'')+'"></label>'
     +[['kcal_100','Ккал'],['protein_100','Білки'],['fat_100','Жири'],['carbs_100','Вуглеводи']]
@@ -569,11 +570,12 @@ window.openTrainerFoodReview=async function(){
     +'</div><label>Джерело перевірки / коментар'
     +'<textarea class="food-review-note" maxlength="500" rows="2" placeholder="Етикетка, виробник або причина відхилення"></textarea></label>'
     +'<p class="food-review-message" role="status"></p>'
-    +'<div class="trainer-food-review-actions">'
-    +'<button type="button" onclick="submitTrainerFoodReview('+id+',\'reject\',this)">Відхилити</button>'
-    +'<button type="button" class="primary" onclick="submitTrainerFoodReview('+id+',\'approve\',this)">Схвалити в загальну базу</button>'
-    +'</div></div>';
-  }).join(''):'<p class="muted">Наразі немає продуктів на перевірці.</p>';
+    +(x.review_status==='pending'?'<div class="trainer-food-review-actions">'
+     +'<button type="button" onclick="submitTrainerFoodReview('+id+',\'reject\',this)">Відхилити</button>'
+     +'<button type="button" class="primary" onclick="submitTrainerFoodReview('+id+',\'approve\',this)">Схвалити в загальну базу</button>'
+     +'</div>':'<p class="my-food-hint">Перегляд без публікації. Автор не надсилав продукт на перевірку.</p>')
+    +'</div>';
+  }).join(''):'<p class="muted">Клієнти ще не додавали власні продукти.</p>';
  }catch(e){const el=document.getElementById('trainerFoodReviewList');if(el)el.textContent=e.message||'Не вдалося завантажити заявки.'}
 };
 window.submitTrainerFoodReview=async function(id,decision,button){
