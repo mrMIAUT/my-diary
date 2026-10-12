@@ -1705,3 +1705,12 @@ body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-s
 body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon-dinner{
  background:#fff0e5!important;color:#b76e2e!important;
 }
+
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon::before{
+ display:none!important;content:none!important;
+}
+body.eplan-redesign.client-ui .nutrition-diary-meal-title .nutrition-meal-icon svg{
+ display:block!important;fill:none!important;stroke:currentColor!important;
+ stroke-linecap:round!important;stroke-linejoin:round!important;
+ filter:none!important;transform:none!important;
+}
