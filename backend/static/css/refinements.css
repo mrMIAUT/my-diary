@@ -1209,3 +1209,56 @@ body.eplan-redesign .client-ration-tabs button{
 body.eplan-redesign .client-ration-tabs button.active{
  background:#fff!important;color:#327bf1!important;box-shadow:0 2px 6px rgba(31,65,115,.08)!important;
 }
+
+
+/* v304 — native meal-category SVGs, not emoji, random food photos or egg ovals. */
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-v2-layout{
+ grid-template-columns:64px minmax(0,1fr) 108px;
+ gap:12px;align-items:start;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon{
+ min-height:0!important;max-height:none!important;
+ width:64px!important;height:64px!important;aspect-ratio:1;
+ padding:0;border-radius:16px!important;
+ display:grid;place-items:center;background:#edf4ff!important;
+ color:#397deb;box-shadow:none!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon::before{
+ content:none!important;display:none!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon svg{
+ display:block;width:33px;height:33px;stroke:currentColor;
+ fill:none;filter:none!important;transform:none!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast{
+ background:#ecf3ff!important;color:#437de1!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-lunch{
+ background:#e9f6ef!important;color:#3c956f!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-snack{
+ background:#f5efff!important;color:#8261ce!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-dinner{
+ background:#fff3e5!important;color:#d2914a!important;
+}
+@media(max-width:560px){
+ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-v2-layout{
+  grid-template-columns:54px minmax(0,1fr)!important;
+  gap:10px!important;
+ }
+ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon{
+  width:54px!important;height:54px!important;border-radius:13px!important;
+ }
+ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon svg{
+  width:29px;height:29px;
+ }
+}
+@media(max-width:350px){
+ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-v2-layout{
+  grid-template-columns:48px minmax(0,1fr)!important;gap:8px!important;
+ }
+ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon{
+  width:48px!important;height:48px!important;
+ }
+}
