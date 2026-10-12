@@ -21,7 +21,7 @@ from math import ceil
 from zoneinfo import ZoneInfo
 import base64
 from food_reference_catalog import reference_food_items
-from meal_plan_generator import generate_meal_plan
+from meal_plan_generator import generate_meal_plan,MEAL_SOURCES,FOODS,approved_plan_catalog
 from nutrition_structured import foods_for_trainer,serialize_structured_foods,structured_meal_summary
 try:
     from pywebpush import webpush, WebPushException
@@ -1343,6 +1343,8 @@ class CheckinReviewIn(BaseModel):
 class NutritionPlanItemIn(BaseModel):
     meal_number:int=Field(ge=1,le=100); variant_number:int=Field(default=1,ge=1,le=100); content:str=Field(default="",max_length=5000); sort:int=Field(default=0,ge=0,le=10_000)
     foods:List[dict]=Field(default_factory=list,max_length=30)
+    dish_title:str=Field(default="",max_length=140)
+    preparation:str=Field(default="",max_length=1500)
 class AutoMealPlanIn(BaseModel):
     meals:int=Field(default=4,ge=3,le=5)
     variants:int=Field(default=2,ge=1,le=2)
@@ -4008,6 +4010,10 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
             try:
                 foods,foods_json=serialize_structured_foods(item.foods)
                 text=structured_meal_summary(foods)["content"]
+                title=item.dish_title.strip()
+                steps=item.preparation.strip()
+                if title:text="Страва: "+title+"\n"+text
+                if steps:text+="\n\nПриготування: "+steps
             except ValueError as exc:
                 raise HTTPException(422,str(exc)) from None
         else:
@@ -4036,6 +4042,41 @@ RATE_LIMITS["meal.catalog"]=(20,60)
 def trainer_meal_food_catalog(user:AuthUser=Depends(require_trainer)):
     consume_rate_limit("meal.catalog",str(user.user_id))
     return {"items":foods_for_trainer(),"source":"ЄПЛАН · USDA FoodData Central"}
+
+# Approved trainer-only recipe templates for the real assigned-meal editor.
+# Ingredients are resolved by verified catalogue IDs; browser nutrient values
+# are NEVER trusted when storing a client's plan.
+RATE_LIMITS["meal.recipes"]=(25,60)
+@app.get("/api/trainer/foods/recipes")
+def trainer_meal_recipe_library(user:AuthUser=Depends(require_trainer)):
+    consume_rate_limit("meal.recipes",str(user.user_id))
+    audited=approved_plan_catalog()
+    results=[]
+    for category,recipes in MEAL_SOURCES.items():
+        if category=="evening":
+            continue  # Same snack catalogue is available for a second snack.
+        for recipe in recipes:
+            foods=[]
+            for key in recipe["keys"]:
+                name,lo,hi,step,start,_tags=FOODS[key]
+                record=audited[key]
+                minimum=max(1,lo,3 if key=="oil" else 1)
+                portion=max(minimum,min(hi,start))
+                egg=name in ("Яйце куряче (сире)","Яйце куряче (варене круто)")
+                foods.append({
+                    "source_id":record["source_id"],"grams":portion,
+                    "count":portion//50 if egg else None,
+                    "count_in_targets":name not in ("Огірок (сирий)","Помідор (сирий)","Шпинат (сирий)","Шпинат (відварений)"),
+                    "usage_note":recipe["notes"].get(key,""),
+                    "portion_rules":{"min_grams":minimum,"max_grams":hi,"step_grams":step},
+                })
+            results.append({
+                "id":recipe["id"],"category":category,"title":recipe["title"],
+                "preparation":recipe["preparation"],
+                "source_name":recipe["source_name"],"source_url":recipe["source_url"],
+                "minutes":recipe["minutes"],"tags":recipe["tags"],"foods":foods
+            })
+    return {"templates":results,"version":1}
 
 # Draft-only generator; trainer reviews and explicitly saves using existing
 # /api/client/{cid}/nutrition. Never mutates a client's meal plan here.
