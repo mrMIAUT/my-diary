@@ -585,10 +585,10 @@ function clientTrainingProgramHTML(d,cid,groups){
      let x=xs[i];if(used.has(x.id))continue;
      if(x.superset_group){
        let pair=xs.filter(y=>y.superset_group===x.superset_group);pair.forEach(y=>used.add(y.id));
-       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(repeatPlanText(y))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${y.technique_url?techniqueLinkHTML(y.technique_url):''}</div>`}).join('')}</div></div>`;
+       exercises+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden;margin-top:12px"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:4px 16px">${pair.map((y,pi)=>{let rest=restLabel(y),rp=rirPlan(y),num=xs.indexOf(y)+1;return `<div class="client-program-exercise" style="${pi?'border-top:1px solid var(--line)':'border-top:0'}"><div class="client-program-exercise-top"><strong>${num}. ${esc(y.exercise)}</strong></div><div class="muted">${y.sets} підходи × ${esc(repeatPlanText(y))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}${programRirEnabled(d)?'<span class="badge">RIR: '+rp.join(' / ')+'</span>':''}</div>${y.technique_url?techniqueLinkHTML(y.technique_url):''}</div>`}).join('')}</div></div>`;
      }else{
        used.add(x.id);let rest=restLabel(x),rp=rirPlan(x);
-       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(repeatPlanText(x))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>${x.technique_url?techniqueLinkHTML(x.technique_url):''}</div>`;
+       exercises+=`<div class="client-program-exercise"><div class="client-program-exercise-top"><strong>${i+1}. ${esc(x.exercise)}</strong></div><div class="muted">${x.sets} підходи × ${esc(repeatPlanText(x))}</div><div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}${programRirEnabled(d)?'<span class="badge">RIR: '+rp.join(' / ')+'</span>':''}</div>${x.technique_url?techniqueLinkHTML(x.technique_url):''}</div>`;
      }
    }
    let dayTitle=programDayTitle(d,previewWorkoutDay);
@@ -598,7 +598,7 @@ function clientTrainingProgramHTML(d,cid,groups){
 }
 
 function trainingTermsHelpHTML(){
- return `<div class="card client-collapsible training-terms-card"><button class="exercise-toggle" onclick="toggleClientPanel('trainingTermsPanel',this)"><span><strong>Як читати програму тренувань?</strong><span class="muted" style="display:block;margin-top:5px">Коротка інструкція перед тренуванням</span></span><span class="arrow">⌄</span></button><div id="trainingTermsPanel" class="client-collapsible-body hidden"><div class="rir-help"><strong>1. Розминка</strong><br>Перед кожним тренуванням обов’язково виконуємо загальну розминку. Перед кожною вправою за потреби робимо розминочні підходи, поступово підводячись до робочої ваги.</div><div class="rir-help" style="margin-top:10px"><strong>2. Робочі підходи</strong><br>У програмі вказані робочі підходи. Розминочні підходи можна вносити за бажанням — вони не враховуються як робочі та не впливають на прогресію.</div><div class="rir-help" style="margin-top:10px"><strong>3. RIR (Reps In Reserve)</strong><br>Показує, скільки повторів залишилося б у запасі до відмови. Наприклад, <strong>RIR 2</strong> — ти міг би виконати ще приблизно 2 повтори.</div><div class="rir-help" style="margin-top:10px"><strong>4. Дроп-сет</strong><br>Після робочого підходу зменшуємо вагу й без звичайного відпочинку продовжуємо вправу. За потреби можна додати кілька дропів.</div><div class="rir-help" style="margin-top:10px"><strong>5. Суперсет</strong><br>Дві вправи виконуються одна за одною без звичайного відпочинку між ними. Відпочинок — після виконання обох вправ.</div></div></div>`;
+ return `<div class="card client-collapsible training-terms-card"><button class="exercise-toggle" onclick="toggleClientPanel('trainingTermsPanel',this)"><span><strong>Як читати програму тренувань?</strong><span class="muted" style="display:block;margin-top:5px">Коротка інструкція перед тренуванням</span></span><span class="arrow">⌄</span></button><div id="trainingTermsPanel" class="client-collapsible-body hidden"><div class="rir-help"><strong>1. Розминка</strong><br>Перед кожним тренуванням обов’язково виконуємо загальну розминку. Перед кожною вправою за потреби робимо розминочні підходи, поступово підводячись до робочої ваги.</div><div class="rir-help" style="margin-top:10px"><strong>2. Робочі підходи</strong><br>У програмі вказані робочі підходи. Розминочні підходи можна вносити за бажанням — вони не враховуються як робочі та не впливають на прогресію.</div>${programRirEnabled()?'<div class="rir-help" style="margin-top:10px"><strong>3. RIR (Reps In Reserve)</strong><br>Показує, скільки повторів залишилося б у запасі до відмови. Наприклад, <strong>RIR 2</strong> — ти міг би виконати ще приблизно 2 повтори.</div>':''}<div class="rir-help" style="margin-top:10px"><strong>4. Дроп-сет</strong><br>Після робочого підходу зменшуємо вагу й без звичайного відпочинку продовжуємо вправу. За потреби можна додати кілька дропів.</div><div class="rir-help" style="margin-top:10px"><strong>5. Суперсет</strong><br>Дві вправи виконуються одна за одною без звичайного відпочинку між ними. Відпочинок — після виконання обох вправ.</div></div></div>`;
 }
 
 function selectClientProgramDay(day,cid){
@@ -618,7 +618,7 @@ function workoutEffectiveExercise(x){
 
 function workoutChoiceSummary(v){
  let rest=restLabel(v),rir=rirPlan(v).join(' / ');
- return v.sets+' × '+esc(repeatPlanText(v))+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'');
+ return v.sets+' × '+esc(repeatPlanText(v))+(programRirEnabled()?' · RIR '+esc(rir):'')+(rest?' · '+esc(rest):'');
 }
 
 function chooseWorkoutExercise(pid,cid){
@@ -738,7 +738,7 @@ function activeExercisesHTML(items,d,cid){
       doneToday=timed?timedDoneCount>=Math.max(1,+effective.sets||1):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
       shownName=effective.exercise,shownTech=exerciseTechniqueUrl(shownName,shownName===x.exercise?x.technique_url:'');
   let rest=showRest?(timed?timedRestLabel(effective):restLabel(effective)):'',plan=timed?timedWorkoutPlanText(effective):repeatPlanText(effective),
-      rir=timed?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
+      rir=timed||!programRirEnabled(d)?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
       swap=!timed&&exerciseAlternatives(x).length&&!todaySets(d,x.id).length?'<button class="swap-exercise-btn" onclick="chooseWorkoutExercise('+x.id+','+cid+')">⇄ Замінити вправу</button>':'',
       content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid),
       title='<span><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
@@ -803,10 +803,10 @@ function previewExercisesHTML(items){
   if(x.superset_group){
    let pair=items.filter(y=>y.superset_group===x.superset_group);
    pair.forEach(y=>used.add(y.id));
-   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(repeatPlanText(y))}${restLabel(y)?` · Відпочинок ${esc(restLabel(y))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(y).join(' / ')}</span></div></div>`).join('')}</div></div>`;
+   html+=`<div class="exercise" style="border-color:#6b5b00;padding:0;overflow:hidden"><div style="padding:12px 16px;background:#232116;border-bottom:1px solid #4d4300"><strong style="color:var(--yellow)">Суперсет</strong></div><div style="padding:6px 16px">${pair.map((y,i)=>`<div style="padding:12px 0;${i<pair.length-1?'border-bottom:1px solid var(--line)':''}"><strong>${esc(y.exercise)}</strong><div class="muted">План: ${y.sets} × ${esc(repeatPlanText(y))}${restLabel(y)?` · Відпочинок ${esc(restLabel(y))}`:``}${programRirEnabled()?'<span style="display:block;margin-top:3px">RIR '+rirPlan(y).join(' / ')+'</span>':''}</div></div>`).join('')}</div></div>`;
   }else{
    used.add(x.id);
-   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }<div class="muted">План: ${x.sets} × ${esc(repeatPlanText(x))}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}<span style="display:block;margin-top:3px">RIR ${rirPlan(x).join(' / ')}</span></div></div>`;
+   html+=`<div class="exercise"><strong>${esc(x.exercise)}</strong>${x.technique_url?` ${techniqueLinkHTML(x.technique_url,'Техніка',true)}`:'' }<div class="muted">План: ${x.sets} × ${esc(repeatPlanText(x))}${restLabel(x)?` · Відпочинок ${esc(restLabel(x))}`:``}${programRirEnabled()?'<span style="display:block;margin-top:3px">RIR '+rirPlan(x).join(' / ')+'</span>':''}</div></div>`;
   }
  }
  return html;
@@ -830,8 +830,8 @@ async function saveSets(cid,pid,exercise,count){
  for(let n=1;n<=count;n++){
   if(skipped.has(n))continue;
   let w=$(`#w${pid}_${n}`),r=$(`#r${pid}_${n}`),i=$(`#i${pid}_${n}`);
-  if(!w||!r||!i)continue;
-  let weight=w.value.trim(),reps=r.value.trim(),rir=i.value.trim();
+  if(!w||!r)continue;
+  let weight=w.value.trim(),reps=r.value.trim(),rir=programRirEnabled(currentData)?(i?.value?.trim()||''):'';
   if(!weight&&!reps&&!rir)continue;
   if(!reps)return alert(`Заповни кількість повторів у підході ${n}`);
   raw.push({set_number:n,weight:weight===''?0:+weight,reps:+reps,rir:rir===''?null:+rir});
