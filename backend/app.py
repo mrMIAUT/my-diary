@@ -4060,15 +4060,27 @@ def trainer_meal_recipe_library(user:AuthUser=Depends(require_trainer)):
             for key in recipe["keys"]:
                 name,lo,hi,step,start,_tags=FOODS[key]
                 record=audited[key]
-                minimum=max(1,lo,3 if key=="oil" else 1)
-                portion=max(minimum,min(hi,start))
                 egg=name in ("Яйце куряче (сире)","Яйце куряче (варене круто)")
+                # Return practical starting grams and bounds to the recipe UI.
+                # Never silently rescale existing assigned plans.
+                if egg:
+                    minimum=max(50,lo)
+                    maximum=hi
+                    increment=50
+                    portion=max(minimum,min(maximum,start))
+                else:
+                    minimum=max(10,(max(1,lo)+9)//10*10)
+                    maximum=hi//10*10
+                    increment=10
+                    if maximum<minimum:
+                        raise HTTPException(500,"Невірні межі порції рецепта.")
+                    portion=max(minimum,min(maximum,(start+5)//10*10))
                 foods.append({
                     "source_id":record["source_id"],"grams":portion,
                     "count":portion//50 if egg else None,
                     "count_in_targets":name not in ("Огірок (сирий)","Помідор (сирий)","Шпинат (сирий)","Шпинат (відварений)"),
                     "usage_note":recipe["notes"].get(key,""),
-                    "portion_rules":{"min_grams":minimum,"max_grams":hi,"step_grams":step},
+                    "portion_rules":{"min_grams":minimum,"max_grams":maximum,"step_grams":increment},
                 })
             results.append({
                 "id":recipe["id"],"category":category,"title":recipe["title"],
