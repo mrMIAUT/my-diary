@@ -216,6 +216,7 @@ async function openEditProgramTemplate(templateId){
       id:+t.id||+templateId,
       name:String(t.name||''),
       description:String(t.description||''),
+      show_rir:t.show_rir!==false,
       days:days.map((d,di)=>{
         let dayName=String(d.day_name||('День '+(di+1)));
         let items=(t.items||[]).filter(x=>String(x.day_name||'')===dayName)
@@ -265,13 +266,13 @@ function programTemplateAlternativesEditorHTML(item,di,ii){
         +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(value.sets))+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'sets\',this.value)"></label>'
         +'<label><span>Повтори</span><input value="'+esc(value.reps)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'reps\',this.value)"></label>'
         +'<label><span>Як рахувати</span>'+repeatModeSelectHTML('',value.repeat_mode,'trainer-program-alternative-repeat-mode').replace('<select','<select onchange="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'repeat_mode\',this.value)"')+'</label>'
-        +'<label><span>RIR по підходах</span><input value="'+esc(value.rir_by_set)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rir_by_set\',this.value)"></label>'
+        +'<label class="program-rir-field"><span>RIR по підходах</span><input value="'+esc(value.rir_by_set)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rir_by_set\',this.value)"></label>'
         +'<label><span>Відпочинок</span><input value="'+esc(value.rest_text)+'" oninput="updateProgramTemplateAlternativeField('+di+','+ii+','+ai+',\'rest_text\',this.value)"></label>'
       +'</div>'
     +'</div>';
   }).join('');
   return '<div class="trainer-program-alternatives-block trainer-template-alternatives">'
-    +'<div class="trainer-program-alternatives-title trainer-template-alternatives-head"><span>Альтернативи</span><small>Для кожної можна задати окремі підходи, повтори, RIR і відпочинок</small></div>'
+    +'<div class="trainer-program-alternatives-title trainer-template-alternatives-head"><span>Альтернативи</span><small>Для кожної можна задати окремі підходи, повтори й відпочинок</small></div>'
     +'<div class="trainer-program-alternatives-editor">'+(rows||'<div class="trainer-template-alternatives-empty">Альтернатив ще немає.</div>')+'</div>'
     +'<button type="button" class="trainer-program-alternative-add trainer-template-alternative-add" onclick="addProgramTemplateAlternative('+di+','+ii+')">＋ Додати альтернативу</button>'
   +'</div>';
@@ -294,8 +295,8 @@ function trainerTemplateEditorItemHTML(item,di,ii){
       +'<label><span>Підходи</span><input type="number" min="1" max="100" value="'+esc(String(item.sets))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'sets\',this.value)"></label>'
       +'<label><span>Повтори</span><input value="'+esc(item.reps)+'" placeholder="8-12" oninput="updateProgramTemplateItem('+di+','+ii+',\'reps\',this.value)"></label>'
       +'<label><span>Як рахувати повтори</span>'+repeatModeSelectHTML('',item.repeat_mode,'trainer-template-repeat-mode').replace('<select','<select onchange="updateProgramTemplateItem('+di+','+ii+',\'repeat_mode\',this.value)"')+'</label>'
-      +'<label><span>RIR базовий</span><input type="number" min="0" max="10" value="'+esc(String(item.target_rir))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'target_rir\',this.value)"></label>'
-      +'<label><span>RIR по підходах</span><input value="'+esc(item.rir_by_set)+'" placeholder="2,1,1" oninput="updateProgramTemplateItem('+di+','+ii+',\'rir_by_set\',this.value)"></label>'
+      +'<label class="program-rir-field"><span>RIR базовий</span><input type="number" min="0" max="10" value="'+esc(String(item.target_rir))+'" oninput="updateProgramTemplateItem('+di+','+ii+',\'target_rir\',this.value)"></label>'
+      +'<label class="program-rir-field"><span>RIR по підходах</span><input value="'+esc(item.rir_by_set)+'" placeholder="2,1,1" oninput="updateProgramTemplateItem('+di+','+ii+',\'rir_by_set\',this.value)"></label>'
       +'<label><span>Відпочинок</span><input value="'+esc(item.rest_text)+'" placeholder="2-3 хв" oninput="updateProgramTemplateItem('+di+','+ii+',\'rest_text\',this.value)"></label>'
     +'</div>'
     +programTemplateAlternativesEditorHTML(item,di,ii)
@@ -317,8 +318,9 @@ function renderProgramTemplateEditor(){
       +'<button type="button" class="trainer-template-editor-add-exercise" onclick="addProgramTemplateItem('+di+')">＋ Додати вправу</button>'
     +'</section>';
   }).join('');
-  let html='<div class="modal trainer-template-editor-modal" id="programTemplateEditorModal"><div class="card trainer-template-editor-card">'
+  let html='<div class="modal trainer-template-editor-modal'+(st.show_rir===false?' program-rir-disabled':'')+'" id="programTemplateEditorModal"><div class="card trainer-template-editor-card">'
     +'<div class="trainer-template-editor-top"><div><small>ШАБЛОН ПРОГРАМИ</small><h2>Редагувати шаблон</h2><p>Зміни тут не вплинуть на програми, які вже призначені клієнтам.</p></div><button type="button" class="dark" onclick="closeProgramTemplateEditor()">✕</button></div>'
+    +'<label class="trainer-program-rir-toggle"><span><strong>Відображати RIR</strong><small>Якщо вимкнено, поля RIR не показуються під час редагування та в тренуванні.</small></span><input type="checkbox" '+(st.show_rir===false?'':'checked')+' onchange="updateProgramTemplateRir(this.checked)"></label>'
     +'<div class="trainer-template-editor-meta"><label><span>Назва шаблону</span><input value="'+esc(st.name)+'" oninput="updateProgramTemplateMeta(\'name\',this.value)"></label><label><span>Опис</span><textarea oninput="updateProgramTemplateMeta(\'description\',this.value)">'+esc(st.description)+'</textarea></label></div>'
     +'<datalist id="programTemplateExerciseLibraryNames">'+programTemplateEditorLibraryOptions()+'</datalist>'
     +'<div class="trainer-template-editor-days">'+days+'</div>'
@@ -335,6 +337,11 @@ function closeProgramTemplateEditor(){
 
 function updateProgramTemplateMeta(field,value){
   let st=programTemplateEditorState();if(st&&['name','description'].includes(field))st[field]=value;
+}
+function updateProgramTemplateRir(checked){
+ let st=programTemplateEditorState();if(!st)return;
+ st.show_rir=!!checked;
+ renderProgramTemplateEditor();
 }
 function updateProgramTemplateDayTitle(di,value){
   let st=programTemplateEditorState();if(st?.days?.[di])st.days[di].title=value;
@@ -450,7 +457,7 @@ function programTemplateEditorPayload(nameOverride=''){
       });
     }
   }
-  return {name,description,days,items};
+  return {name,description,show_rir:st.show_rir!==false,days,items};
 }
 
 async function saveProgramTemplateChanges(btn){

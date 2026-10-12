@@ -3,6 +3,21 @@
 // H02: user strings belong in quoted, HTML-escaped data-* attributes.
 // Fixed handlers read dataset values; never interpolate those strings into JS.
 
+// Missing show_rir means enabled for older app/API payloads.
+function programRirEnabled(d=window.currentClientData){return d?.client?.show_rir!==false}
+async function toggleClientProgramRir(button){
+ let d=window.currentClientData||{},cid=+d.client?.id||0;
+ if(!cid||!button)return;
+ let enabled=!!button.checked;
+ button.disabled=true;
+ try{
+  await api('/client/'+cid+'/program-rir',{method:'PATCH',body:JSON.stringify({show_rir:enabled})});
+  d.client.show_rir=enabled;
+  let pane=document.getElementById('program');
+  if(pane)pane.innerHTML=programHTML(d);
+ }catch(e){button.checked=!enabled;alert(e?.message||'Не вдалося зберегти налаштування RIR')}
+ finally{button.disabled=false}
+}
 function rirPlan(x){
  let a=String(x?.rir_by_set||'').split(',').map(v=>v.trim()).filter(Boolean);
  return Array.from({length:+x.sets||0},(_,i)=>a[i]!==undefined?+a[i]:(+x.target_rir||0));
@@ -134,7 +149,7 @@ function programAlternativeRowHTML(value='',fallback={}){
      <label><span>Підходи</span><input class="trainer-program-alternative-sets" type="number" min="1" max="100" value="${esc(String(v.sets))}"></label>
      <label><span>Повтори</span><input class="trainer-program-alternative-reps" value="${esc(v.reps)}" placeholder="8-12"></label>
      <label><span>Як рахувати</span>${repeatModeSelectHTML('',v.repeat_mode,'trainer-program-alternative-repeat-mode')}</label>
-     <label><span>RIR по підходах</span><input class="trainer-program-alternative-rir" value="${esc(v.rir_by_set)}" placeholder="2,2,1"></label>
+     <label class="program-rir-field"><span>RIR по підходах</span><input class="trainer-program-alternative-rir" value="${esc(v.rir_by_set)}" placeholder="2,2,1"></label>
      <label><span>Відпочинок</span><input class="trainer-program-alternative-rest" value="${esc(v.rest_text)}" placeholder="2-3 хв"></label>
    </div>
  </div>`;
@@ -183,7 +198,7 @@ function alternativesTrainerHTML(x){
  if(!a.length)return '';
  let html=a.map(v=>{
    let tech=exerciseTechniqueUrl(v.exercise),rest=restLabel(v),rir=rirPlan(v).join(' / ');
-   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-chip-top"><span class="alternative-name">'+esc(v.exercise)+'</span>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span><small>'+v.sets+' × '+esc(repeatPlanText(v))+' · RIR '+esc(rir)+(rest?' · '+esc(rest):'')+'</small></span>';
+   return '<span class="alternative-chip alternative-chip-detailed"><span class="alternative-chip-top"><span class="alternative-name">'+esc(v.exercise)+'</span>'+(tech?techniqueLinkHTML(tech,'Техніка',true,'alternative-tech-link'):'')+'</span><small>'+v.sets+' × '+esc(repeatPlanText(v))+(programRirEnabled()?' · RIR '+esc(rir):'')+(rest?' · '+esc(rest):'')+'</small></span>';
  }).join('');
  return '<div class="exercise-alternatives"><strong>Альтернативи</strong><div>'+html+'</div></div>';
 }
@@ -230,7 +245,7 @@ function programExtraHTML(x,showRest=true){
  if(isTimedProgramExercise(x)){
    return `<div class="program-extra"><span class="badge">За часом${timedSideModeSuffix(x.repeat_mode)?' · '+esc(repeatModeShortLabel(x.repeat_mode)):''}</span>${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}</div>`;
  }
- return `<div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}<span class="badge">RIR: ${rp.join(' / ')}</span></div>`;
+ return `<div class="program-extra">${rest?`<span class="badge">Відпочинок ${esc(rest)}</span>`:''}${programRirEnabled()?'<span class="badge">RIR: '+rp.join(' / ')+'</span>':''}</div>`;
 }
 
 function autofillTechnique(name,targetId){
@@ -529,6 +544,7 @@ function trainerExtraTrainingPanelHTML(d,groups){
 }
 
 function programHTML(d){
+ let showRir=programRirEnabled(d);
  let groups={}; (d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
  (d.program_days||[]).forEach(m=>{if(String(m.kind||'standard').toLowerCase()==='extra'&&!groups[m.day_name])groups[m.day_name]=[]});
  let extraPanel=trainerExtraTrainingPanelHTML(d,groups);
@@ -543,7 +559,7 @@ function programHTML(d){
      <label><span>Тип виконання</span><select id="executionmode" onchange="toggleProgramExecutionFields('new')"><option value="reps">Повтори</option><option value="time">За часом</option></select></label>
      <label class="program-reps-only"><span>Повтори</span><input id="rp" value="8-12" placeholder="8-12"></label>
      <label class="program-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('repeatmode','normal')}</label>
-     <label class="program-reps-only"><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
+     <label class="program-reps-only program-rir-field"><span>RIR по підходах</span><input id="rirset" value="2,2,2" placeholder="2,2,1"></label>
      <label class="program-reps-only"><span>Відпочинок</span><input id="resttext" value="2" placeholder="2 хв"></label>
      <label class="program-time-only hidden"><span>Робота, сек / сторону</span><input id="workseconds" type="number" min="5" max="3600" value="30" placeholder="30"></label>
      <label class="program-time-only hidden"><span>Режим таймера</span>${timedSideModeSelectHTML('workTimeSideMode')}</label>
@@ -559,7 +575,7 @@ function programHTML(d){
            <label><span>Підходи</span><input id="ssInlineSets" type="number" min="1" value="3" placeholder="3"></label>
            <label><span>Повтори</span><input id="ssInlineReps" value="8-12" placeholder="8-12"></label>
            <label><span>Як рахувати повтори</span>${repeatModeSelectHTML('ssInlineRepeatMode','normal')}</label>
-           <label class="wide"><span>RIR по підходах</span><input id="ssInlineRirSet" value="2,2,2" placeholder="2,2,1"></label>
+           <label class="wide program-rir-field"><span>RIR по підходах</span><input id="ssInlineRirSet" value="2,2,2" placeholder="2,2,1"></label>
            <div class="wide trainer-program-alternatives-block"><div class="trainer-program-alternatives-title"><span>Альтернативи другої вправи</span><small>Необов'язково</small></div>${programAlternativeEditorHTML('programSupersetAlternativesEditor',[],{sets:3,reps:'8-12',rir_by_set:'2,2,2',target_rir:2,rest_text:'2'})}</div>
          </div>
        </div>
@@ -570,7 +586,10 @@ function programHTML(d){
  </div>`;
  let standardEntries=Object.entries(groups).filter(([day])=>!programDayIsExtra(d,day));
  let list=standardEntries.length?standardEntries.map(([day,xs],di)=>trainerStandardProgramDayCardHTML(d,day,xs,di)).join(''):'<div class="card muted">Основна програма ще порожня.</div>';
- return extraPanel+form+list;
+ return '<div class="trainer-program-root'+(showRir?'':' program-rir-disabled')+'">'
+   +'<label class="trainer-program-rir-toggle"><span><strong>Відображати RIR</strong><small>Для досвідчених клієнтів. Коли вимкнено, RIR зникає з редактора та тренування.</small></span>'
+   +'<input type="checkbox" '+(showRir?'checked':'')+' onchange="toggleClientProgramRir(this)" aria-label="Відображати RIR"></label>'
+   +extraPanel+form+list+'</div>';
 }
 
 function useProgramDayInEditor(day){
@@ -731,7 +750,7 @@ async function moveProgramBlock(dayName,blockIndex,direction){
 function editExercise(pid){
  let d=window.currentClientData||{},x=(d.program||[]).find(v=>v.id===pid);
  if(!x)return alert('Вправу не знайдено');
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><div class="trainer-program-exercise-field"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><button type="button" onclick="openProgramExercisePicker('editName','editTech')">Обрати з бібліотеки</button></div><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><label><span>Тип виконання</span><select id="editExecutionMode" onchange="toggleProgramExecutionFields('edit')"><option value="reps" ${programExecutionMode(x)==='reps'?'selected':''}>Повтори</option><option value="time" ${programExecutionMode(x)==='time'?'selected':''}>За часом</option></select></label><input class="edit-reps-only" id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><label class="wide trainer-repeat-mode-field edit-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('editRepeatMode',x.repeat_mode)}</label><input class="edit-reps-only" id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input class="edit-reps-only" id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input class="edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}" id="editWorkSeconds" type="number" min="5" max="3600" value="${Math.max(5,+x.work_seconds||30)}" placeholder="Робота, сек"><label class="wide edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}"><span>Режим таймера</span>${timedSideModeSelectHTML('editWorkSideMode',x.repeat_mode)}</label><input class="edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}" id="editTimeRestSeconds" type="number" min="0" max="3600" value="${x.rest_seconds===undefined||x.rest_seconds===null?30:Math.max(0,+x.rest_seconds||0)}" placeholder="Відпочинок, сек"><div class="wide trainer-program-alternatives-block edit-reps-only"><div class="trainer-program-alternatives-title"><span>Альтернативи</span><small>Обери з бібліотеки або введи вручну</small></div>${programAlternativeEditorHTML('editAlternativesEditor',exerciseAlternativeConfigs(x),x)}</div></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal ${programRirEnabled()?'':'program-rir-disabled'}" id="editExerciseModal"><div class="card edit-exercise-card"><div class="edit-exercise-head"><h2>Редагувати вправу</h2><button class="dark edit-exercise-close" onclick="editExerciseModal.remove()">✕</button></div><div class="grid"><input id="editDay" value="${esc(x.day_name)}" placeholder="День"><div class="trainer-program-exercise-field"><input id="editName" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,\'editTech\')" value="${esc(x.exercise)}" placeholder="Вправа"><button type="button" onclick="openProgramExercisePicker('editName','editTech')">Обрати з бібліотеки</button></div><input id="editTech" value="${esc(x.technique_url||'')}" placeholder="Посилання на техніку"><input id="editSets" type="number" min="1" value="${x.sets||3}" placeholder="Підходи"><label><span>Тип виконання</span><select id="editExecutionMode" onchange="toggleProgramExecutionFields('edit')"><option value="reps" ${programExecutionMode(x)==='reps'?'selected':''}>Повтори</option><option value="time" ${programExecutionMode(x)==='time'?'selected':''}>За часом</option></select></label><input class="edit-reps-only" id="editReps" value="${esc(x.reps||'')}" placeholder="Повтори"><label class="wide trainer-repeat-mode-field edit-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('editRepeatMode',x.repeat_mode)}</label><input class="edit-reps-only program-rir-field" id="editRirSet" value="${esc(x.rir_by_set||rirPlan(x).join(','))}" placeholder="RIR по підходах"><input class="edit-reps-only" id="editRest" value="${esc(x.rest_text||((+x.rest_seconds||0)?String((+x.rest_seconds/60)).replace(/\.0$/,""):""))}" placeholder="Відпочинок, хв (напр. 2-3)"><input class="edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}" id="editWorkSeconds" type="number" min="5" max="3600" value="${Math.max(5,+x.work_seconds||30)}" placeholder="Робота, сек"><label class="wide edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}"><span>Режим таймера</span>${timedSideModeSelectHTML('editWorkSideMode',x.repeat_mode)}</label><input class="edit-time-only ${programExecutionMode(x)==='time'?'':'hidden'}" id="editTimeRestSeconds" type="number" min="0" max="3600" value="${x.rest_seconds===undefined||x.rest_seconds===null?30:Math.max(0,+x.rest_seconds||0)}" placeholder="Відпочинок, сек"><div class="wide trainer-program-alternatives-block edit-reps-only"><div class="trainer-program-alternatives-title"><span>Альтернативи</span><small>Обери з бібліотеки або введи вручну</small></div>${programAlternativeEditorHTML('editAlternativesEditor',exerciseAlternativeConfigs(x),x)}</div></div><br><button class="trainer-edit-exercise-primary" onclick="saveExerciseEdit(${pid},${x.client_id})">Зберегти зміни</button></div></div>`);
  setTimeout(()=>toggleProgramExecutionFields('edit'),0);
 }
 
@@ -822,7 +841,7 @@ function addSupersetExercise(sourceId,dayName){
  let source=supersetSourceExercise(sourceId),sourceSets=Math.max(1,+source?.sets||3),sourceTimed=isTimedProgramExercise(source),
      sourceRest=sourceTimed?supersetSourceRestSeconds(source):String(source?.rest_text||'2').replace(/\s*(хв|min|мин)\.?$/i,'')||'2';
  document.getElementById('supersetModal')?.remove();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. У суперсеті вправи виконуються по черзі, а відпочинок запускається після завершення всього кола.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи / кола</span><input id="sssets" type="number" min="1" value="${sourceSets}" placeholder="3"></label><label><span>Тип виконання</span><select id="ssexecutionmode" onchange="toggleSupersetExecutionFields(${sourceId})"><option value="reps">Повтори</option><option value="time">За часом</option></select></label><label class="superset-reps-only"><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label class="superset-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('ssrepeatmode','normal')}</label><label class="superset-reps-only"><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label class="superset-reps-only"><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="superset-time-only hidden"><span>Робота, сек / сторону</span><input id="ssworkseconds" type="number" min="5" max="3600" value="30" placeholder="30"></label><label class="superset-time-only hidden"><span>Режим таймера</span>${timedSideModeSelectHTML('ssWorkSideMode')}</label><label class="wide"><span id="ssrestlabel">${sourceTimed?'Відпочинок після суперсету, сек':'Відпочинок після суперсету'}</span><input id="ssrest" data-mode="${sourceTimed?'seconds':'minutes'}" value="${esc(String(sourceRest))}" placeholder="${sourceTimed?'60':'2 хв'}"></label><p id="ssroundnote" class="wide muted trainer-superset-round-note ${sourceTimed?'':'hidden'}">У суперсеті з вправою за часом кількість підходів однакова для обох вправ — це кількість кіл.</p></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">Зберегти вправу</button></div></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal ${programRirEnabled()?'':'program-rir-disabled'}" id="supersetModal" onclick="if(event.target===this)this.remove()"><div class="card trainer-superset-modal"><div class="edit-exercise-head"><div><h2>Додати вправу в суперсет</h2><div class="muted">${esc(dayName)}</div></div><button class="dark edit-exercise-close" type="button" onclick="supersetModal.remove()">✕</button></div><p class="muted trainer-superset-modal-copy">Обери вправу з бібліотеки або введи свою. У суперсеті вправи виконуються по черзі, а відпочинок запускається після завершення всього кола.</p><div class="trainer-superset-modal-grid"><label class="wide"><span>Вправа</span><div class="trainer-program-exercise-field"><input id="ssex" list="exerciseLibraryNames" oninput="autofillTechnique(this.value,'sstech')" placeholder="Оберіть або введіть вправу"><button type="button" onclick="openProgramExercisePicker('ssex','sstech')">Обрати з бібліотеки</button></div></label><label class="wide"><span>Техніка</span><input id="sstech" placeholder="https://..."></label><label><span>Підходи / кола</span><input id="sssets" type="number" min="1" value="${sourceSets}" placeholder="3"></label><label><span>Тип виконання</span><select id="ssexecutionmode" onchange="toggleSupersetExecutionFields(${sourceId})"><option value="reps">Повтори</option><option value="time">За часом</option></select></label><label class="superset-reps-only"><span>Повтори</span><input id="ssreps" value="8-12" placeholder="8-12"></label><label class="superset-reps-only"><span>Як рахувати повтори</span>${repeatModeSelectHTML('ssrepeatmode','normal')}</label><label class="superset-reps-only program-rir-field"><span>RIR</span><input id="ssrir" type="number" min="0" max="10" value="2" placeholder="2"></label><label class="superset-reps-only program-rir-field"><span>RIR по підходах</span><input id="ssrirset" value="2,2,2" placeholder="2,2,1"></label><label class="superset-time-only hidden"><span>Робота, сек / сторону</span><input id="ssworkseconds" type="number" min="5" max="3600" value="30" placeholder="30"></label><label class="superset-time-only hidden"><span>Режим таймера</span>${timedSideModeSelectHTML('ssWorkSideMode')}</label><label class="wide"><span id="ssrestlabel">${sourceTimed?'Відпочинок після суперсету, сек':'Відпочинок після суперсету'}</span><input id="ssrest" data-mode="${sourceTimed?'seconds':'minutes'}" value="${esc(String(sourceRest))}" placeholder="${sourceTimed?'60':'2 хв'}"></label><p id="ssroundnote" class="wide muted trainer-superset-round-note ${sourceTimed?'':'hidden'}">У суперсеті з вправою за часом кількість підходів однакова для обох вправ — це кількість кіл.</p></div><button class="trainer-superset-primary" type="button" data-day="${esc(dayName)}" onclick="saveSupersetExercise(${sourceId},this.dataset.day,this)">Зберегти вправу</button></div></div>`);
  toggleSupersetExecutionFields(sourceId);
  // Avoid forcing the iOS keyboard to open and scroll this long modal on entry.
  // Desktop still gets the convenient initial focus.

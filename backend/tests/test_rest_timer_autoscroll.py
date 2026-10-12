@@ -27,10 +27,10 @@ class RestAutoScrollTests(unittest.TestCase):
     def test_pwa_revisions(self):
         for shell in (INDEX,SW):
             for ref in ("/static/js/timer.js?v=169",
-                        "/static/js/workout-lyfta.js?v=172",
+                        "/static/js/workout-lyfta.js?v=173",
                         "/static/js/timed-workout.js?v=7"):
                 self.assertIn(ref,shell)
-        self.assertIn("const VERSION='eplan-v220'",SW)
+        self.assertIn("const VERSION='eplan-v221'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Requires Node.js")
     def test_real_start_scroll_once_with_no_automatic_jumps(self):
