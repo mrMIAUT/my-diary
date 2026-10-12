@@ -419,13 +419,13 @@ window.ensureStructuredMealEditor=async function(){
    window.eplanStructuredMealPromise=(async()=>{
      await new Promise((resolve,reject)=>{
        const script=document.createElement('script');
-       script.src='/static/js/structured-meal-editor.js?v=2';
+       script.src='/static/js/structured-meal-editor.js?v=3';
        script.onload=resolve;script.onerror=()=>reject(Error('Editor JS unavailable'));
        document.head.appendChild(script);
      });
      await window.loadStructuredMealCatalog();
      for(const [url,test] of [
-       ['/static/js/nutrition-portion-fitter.js?v=1',()=>!!window.NutritionPortionFitter],
+       ['/static/js/nutrition-portion-fitter.js?v=2',()=>!!window.NutritionPortionFitter],
        ['/static/js/recipe-template-picker.js?v=4',()=>!!window.openRecipeTemplatePicker]
      ]){
        if(test())continue;
