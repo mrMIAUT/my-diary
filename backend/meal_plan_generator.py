@@ -4,7 +4,10 @@ No external APIs, generative hallucinations, database writes or allergy guarante
 Portions are always labeled in the catalog's food preparation state.
 """
 from functools import lru_cache
+import json
+from pathlib import Path
 from food_local_catalog import approved_reference_food_items
+from nutrition_structured import FREE_VEGETABLE_NAMES,EGG_NAMES,EGG_EDIBLE_GRAMS
 
 # Food names must match audited food_local_nutrition.json exactly.
 # Bounds are edible grams in the precisely specified state (raw/dry/cooked/as_sold).
@@ -19,7 +22,7 @@ FOODS = {
     "almonds": ("Мигдаль (сирий)", 0, 40, 5, 15, ("nuts",)),
     "avocado": ("Авокадо (сире, м'якоть)", 0, 160, 5, 60, ()),
     "bread": ("Хліб пшеничний цільнозерновий", 50, 180, 5, 85, ("gluten",)),
-    "eggs": ("Яйце куряче (варене круто)", 50, 240, 5, 110, ("eggs",)),
+    "eggs": ("Яйце куряче (варене круто)", 50, 250, 50, 100, ("eggs",)),
     "buckwheat": ("Гречка (відварена)", 120, 380, 5, 200, ()),
     "rice": ("Рис білий (відварений)", 100, 350, 5, 200, ()),
     "potatoes": ("Картопля (відварена без шкірки)", 140, 420, 5, 250, ()),
@@ -33,44 +36,50 @@ FOODS = {
     "cucumber": ("Огірок (сирий)", 90, 230, 5, 130, ()),
     "spinach": ("Шпинат (сирий)", 60, 170, 5, 100, ()),
     "carrot": ("Морква (відварена)", 90, 210, 5, 120, ()),
-    "oil": ("Оливкова олія", 0, 27, 1, 10, ()),
+    "oil": ("Оливкова олія", 0, 16, 1, 8, ()),
+    "milk": ("Молоко коров'яче 1%", 100, 300, 10, 160, ("dairy",)),
+    "blueberries": ("Лохина (сира)", 40, 200, 5, 100, ()),
+    "strawberries": ("Полуниця (сира)", 50, 220, 5, 110, ()),
+    "chia": ("Насіння чіа (сухе)", 0, 30, 2, 12, ()),
+    "feta": ("Сир фета", 15, 70, 5, 35, ("dairy",)),
+    "white_beans": ("Квасоля біла (відварена)", 70, 260, 5, 160, ()),
+    "quinoa": ("Кіноа (відварена)", 100, 300, 5, 190, ()),
+    "chickpeas": ("Нут (відварений)", 70, 270, 5, 170, ()),
+    "mushrooms": ("Печериці (приготовані без олії)", 50, 220, 5, 120, ()),
+    "bulgur": ("Булгур (відварений)", 100, 320, 5, 190, ("gluten",)),
+    "tofu": ("Тофу твердий натуральний", 80, 300, 5, 170, ()),
+    "soy_sauce": ("Соєвий соус класичний", 5, 20, 1, 10, ()),
+    "canned_tomatoes": ("Помідори консервовані у власному соку", 70, 240, 5, 140, ()),
+    "eggs_raw": ("Яйце куряче (сире)", 50, 200, 50, 100, ("eggs",)),
+    "couscous": ("Кускус (готовий на воді)", 110, 330, 5, 190, ("gluten",)),
+    "pita": ("Піта пшенична", 45, 180, 5, 90, ("gluten",)),
+    "ricotta": ("Сир рикота", 55, 250, 5, 115, ("dairy",)),
+    "mozzarella": ("Сир моцарела", 25, 160, 5, 70, ("dairy",)),
+    "pepper": ("Перець солодкий червоний (сирий)", 60, 240, 5, 120, ()),
+    "broccoli": ("Броколі (сирі)", 70, 250, 5, 140, ()),
+    "tortilla": ("Тортилья пшенична", 45, 160, 5, 80, ("gluten",)),
+    "cheddar": ("Сир чеддер", 20, 85, 5, 35, ("dairy",)),
+    "tahini": ("Тахіні 100%", 5, 30, 1, 12, ("sesame",)),
+    "carrot_raw": ("Морква (сира)", 65, 190, 5, 110, ()),
 }
-EXCLUSIONS = frozenset(("dairy", "eggs", "fish", "nuts", "gluten", "meat"))
-# Food combinations chosen for straightforward meals, not arbitrary nutrient sums.
-TEMPLATES = {
-    "breakfast": [
-        ("oats", "yogurt", "banana", "walnuts"),
-        ("bread", "eggs", "banana", "avocado"),
-        ("buckwheat", "turkey", "apple", "oil"),
-        ("oats", "banana", "avocado", "oil"),
-    ],
-    "lunch": [
-        ("chicken", "rice", "tomato", "oil"),
-        ("turkey", "buckwheat", "cucumber", "oil"),
-        ("salmon", "potatoes", "cucumber"),
-        ("tuna", "rice", "tomato", "oil"),
-        ("beans", "rice", "avocado", "tomato"),
-    ],
-    "snack": [
-        ("yogurt", "banana", "walnuts"),
-        ("tuna", "bread", "cucumber", "avocado"),
-        ("eggs", "apple", "almonds"),
-        ("turkey", "bread", "apple"),
-        ("beans", "banana", "walnuts"),
-    ],
-    "dinner": [
-        ("salmon", "potatoes", "spinach"),
-        ("chicken", "pasta", "carrot", "oil"),
-        ("turkey", "buckwheat", "tomato", "oil"),
-        ("beans", "rice", "spinach", "oil"),
-    ],
-    "evening": [
-        ("yogurt", "apple", "walnuts"),
-        ("eggs", "bread", "cucumber"),
-        ("turkey", "bread", "cucumber"),
-        ("beans", "banana", "avocado"),
-    ],
-}
+EXCLUSIONS = frozenset(("dairy", "eggs", "fish", "nuts", "gluten", "meat", "sesame"))
+# Culinary source references accompany every menu option. The linked recipes
+# inspire our adapted dishes; we do not duplicate third-party recipe instructions.
+_RECIPE_DATA=json.loads((Path(__file__).parent/"real_meal_templates.json").read_text(encoding="utf-8"))
+_RECIPE_LIBRARY=_RECIPE_DATA["recipes"]
+CATEGORIES=("breakfast","lunch","snack","dinner","evening")
+assert len(_RECIPE_LIBRARY)>=40 and len({r["id"] for r in _RECIPE_LIBRARY})==len(_RECIPE_LIBRARY)
+assert all(r["category"] in CATEGORIES and r["source_url"].startswith("https://")
+           and all(key in FOODS for key in r["keys"])
+           for r in _RECIPE_LIBRARY)
+TEMPLATES={kind:[tuple(r["keys"]) for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+MEAL_RECIPES={kind:[(r["title"],r["preparation"],r["notes"])
+                     for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+MEAL_SOURCES={kind:[r for r in _RECIPE_LIBRARY if r["category"]==kind] for kind in CATEGORIES}
+# The second snack uses the same 15 options, not a separate duplicate list.
+for library in (TEMPLATES,MEAL_RECIPES,MEAL_SOURCES):
+    library["evening"]=library["snack"]
+
 SCHEDULES = {
     3: (("breakfast", .30), ("lunch", .38), ("dinner", .32)),
     4: (("breakfast", .27), ("lunch", .35), ("snack", .14), ("dinner", .24)),
@@ -102,8 +111,9 @@ def _values(food, grams):
     return [float(food[f]) * grams / 100 for f in FOOD_NUTRIENTS]
 
 
-def _nutrition(food_keys, grams, foods):
-    return [sum(_values(foods[key], g)[i] for key, g in zip(food_keys, grams))
+def _nutrition(food_keys, grams, foods, include_vegetables=False):
+    return [sum(_values(foods[key], g)[i] for key, g in zip(food_keys, grams)
+                if include_vegetables or foods[key]["name"] not in FREE_VEGETABLE_NAMES)
             for i in range(4)]
 
 
@@ -142,17 +152,30 @@ def _fit_meal(keys, target, foods):
         if not changed:
             break
     vals = _nutrition(keys, grams, foods)
-    rows = [{
-        "source_id": foods[k]["source_id"],
-        "name": foods[k]["name"], "state": foods[k]["preparation_state"],
-        "grams": grams[i], "kcal": round(_values(foods[k], grams[i])[0], 1),
-        "protein": round(_values(foods[k], grams[i])[1], 1),
-        "fat": round(_values(foods[k], grams[i])[2], 1),
-        "carbs": round(_values(foods[k], grams[i])[3], 1),
-    } for i, k in enumerate(keys) if grams[i] > 0]
-    total = {n: round(v, 1) for n, v in zip(NUTRIENTS, vals)}
-    return rows, total
-
+    actual = _nutrition(keys, grams, foods,include_vegetables=True)
+    rows=[]
+    for i,k in enumerate(keys):
+        if grams[i] <= 0: continue
+        food=foods[k]
+        name=food["name"]
+        egg=name in EGG_NAMES
+        vegetables=name in FREE_VEGETABLE_NAMES
+        detail={
+            "source_id":food["source_id"],
+            "name":name,"state":food["preparation_state"],
+            "grams":grams[i], "count":grams[i]//EGG_EDIBLE_GRAMS if egg else None,
+            "unit":"pcs" if egg else "g",
+            "count_in_targets":not vegetables,
+            "optional_vegetable":vegetables,
+            "kcal":round(_values(food,grams[i])[0],1),
+            "protein":round(_values(food,grams[i])[1],1),
+            "fat":round(_values(food,grams[i])[2],1),
+            "carbs":round(_values(food,grams[i])[3],1)
+        }
+        rows.append(detail)
+    total={n:round(v,1) for n,v in zip(NUTRIENTS,vals)}
+    gross={n:round(v,1) for n,v in zip(NUTRIENTS,actual)}
+    return rows,total,gross
 
 def _percent_diff(actual, target):
     return round(100 * (actual - target) / target, 1) if target else 0.0
@@ -179,26 +202,41 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
     result = []
     daily = [0.0] * 4
     for meal_index, (kind, portion) in enumerate(SCHEDULES[meals], start=1):
-        suitable = [template for template in TEMPLATES[kind]
+        suitable = [(template, MEAL_RECIPES[kind][index], MEAL_SOURCES[kind][index])
+                    for index, template in enumerate(TEMPLATES[kind])
                     if all(not excluded.intersection(FOODS[k][-1]) for k in template)]
         if len(suitable) < variants:
             raise ValueError("За вибраних обмежень бракує перевірених продуктів для "
                              + LABELS[kind].lower() + ". Змініть обмеження або складіть план вручну.")
         target = tuple(v * portion for v in targets)
-        for variant_index, keys in enumerate(suitable[:variants], start=1):
-            rows, total = _fit_meal(keys, target, foods)
+        for variant_index, (keys, recipe, meta) in enumerate(suitable[:variants], start=1):
+            title, preparation, food_notes = recipe
+            rows, total, gross = _fit_meal(keys, target, foods)
+            for row in rows:
+                matching_key = next((key for key in keys if FOODS[key][0] == row["name"]), None)
+                row["usage_note"] = food_notes.get(matching_key, "")
+            # Olive oil is always a recipe ingredient, with an explicit use
+            # description. It is still counted in the nutrient calculation.
+            if any(key == "oil" for key in keys):
+                if "оливков" not in preparation.lower() or not food_notes.get("oil"):
+                    raise ValueError("Олію потрібно додавати до страви, а не подавати окремо.")
             if variant_index == 1:
                 for i, n in enumerate(NUTRIENTS):
                     daily[i] += total[n]
-            lines = [f'{row["name"]} — {row["grams"]} г' for row in rows]
-            content = "\n".join(lines)
+            lines = [f'{row["name"]} — {row["count"]} шт.' if row["count"] is not None
+                     else f'{row["name"]} — {row["grams"]} г' for row in rows]
+            content = title + "\n" + "\n".join(lines)
+            content += "\n\nСпосіб приготування: " + preparation
             content += ("\n\nОрієнтовно на прийом: "
                         + f'{total["kcal"]:.0f} ккал · Б {total["protein"]:.0f} г'
                         + f' · Ж {total["fat"]:.0f} г · В {total["carbs"]:.0f} г')
             result.append({
                 "meal_number": meal_index, "meal_name": LABELS[kind],
                 "variant_number": variant_index, "sort": len(result),
-                "foods": rows, "totals": total, "content": content,
+                "foods": rows, "totals": total, "actual_totals": gross,
+                "dish_title": title, "preparation": preparation, "content": content,
+                "recipe_id":meta["id"],"recipe_source_url":meta["source_url"],
+                "recipe_source_name":meta["source_name"],"recipe_minutes":meta["minutes"],
             })
     total = {key: round(value, 1) for key, value in zip(NUTRIENTS, daily)}
     target_dict = dict(zip(NUTRIENTS, targets))
@@ -215,5 +253,7 @@ def generate_meal_plan(kcal, protein, fat, carbs, meals=4, variants=2, excluded=
             "Вага кожного продукту відповідає стану в назві (сухий, варений, запечений тощо).",
             "Виключення продуктів за категоріями не гарантує відсутності алергенів або перехресного контакту.",
             "У добовому підсумку враховано тільки варіант 1 кожного прийому; альтернативи не додаються разом.",
+            "Некрохмалисті овочі за замовчуванням не включені до цільових БЖВ, але враховуються у фактичній енергії.",
+            "Яйця враховуються цілими штуками за 50 г їстівної частини; точна маса відрізняється.",
         ],
     }

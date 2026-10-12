@@ -294,7 +294,7 @@ class ReleaseContracts(unittest.TestCase):
         self.assertNotIn('"/client/"+cid+"/nutrition"', planner)
         self.assertIn("saveTrainerMealPlanDraft", NUTRITION_JS)
         self.assertIn("clientAccess(c).features?.meal_plan", NUTRITION_JS)
-        self.assertIn("auto-meal-plan.js?v=1", NUTRITION_JS)
+        self.assertIn("auto-meal-plan.js?v=2", NUTRITION_JS)
         self.assertNotIn('src="/static/js/auto-meal-plan.js', INDEX)
         self.assertNotIn("auto-meal-plan.js", SW)
 

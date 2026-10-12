@@ -568,3 +568,294 @@ body.eplan-redesign.trainer-ui #autoMealPlanModal .auto-meal-footnote{
 @media(max-width:370px){
  body.eplan-redesign.trainer-ui #autoMealPlanModal .auto-meal-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Structured trainer meal cards v297: never affect client workout editor. */
+body.eplan-redesign.trainer-ui .meal-autoplan-toolbar{gap:8px;flex-wrap:wrap}
+body.eplan-redesign.trainer-ui .meal-plan-edit-open{
+ padding:10px 13px!important;min-height:40px;border-radius:12px!important;
+ border:1px solid #dce5f1!important;background:#f7f9fd!important;
+ color:#3e587c!important;font-weight:800;font-size:12px;box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui .structured-meal-editor{
+ display:grid;gap:9px;margin-top:12px
+}
+body.eplan-redesign.trainer-ui .structured-food-row{
+ border:1px solid #dce6f3;border-radius:14px;background:#fff;
+ padding:12px;min-width:0
+}
+body.eplan-redesign.trainer-ui .structured-food-title{
+ display:flex;align-items:flex-start;justify-content:space-between;gap:10px
+}
+body.eplan-redesign.trainer-ui .structured-food-name{
+ flex:1;min-width:0;display:block!important;text-align:left!important;
+ background:none!important;border:0!important;padding:0!important;
+ color:#14274c!important;font-size:13px!important;font-weight:800!important;
+ line-height:1.35!important;box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui .structured-food-name span{
+ display:inline-block;margin-left:6px;color:#287bee!important;
+ font-size:11px!important;font-weight:800!important
+}
+body.eplan-redesign.trainer-ui .structured-remove{
+ flex:0 0 29px!important;width:29px!important;height:29px!important;
+ padding:0!important;background:#f3f6fb!important;color:#6e809b!important;
+ border:1px solid #e1e8f2!important;border-radius:9px!important;
+ box-shadow:none!important;font-size:19px!important
+}
+body.eplan-redesign.trainer-ui .structured-food-details{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px
+}
+body.eplan-redesign.trainer-ui .structured-food-details label{
+ display:flex;align-items:center;gap:6px;color:#6e8097;font-size:12px!important;
+ white-space:nowrap
+}
+body.eplan-redesign.trainer-ui .structured-food-details input.structured-grams{
+ width:70px!important;height:36px!important;min-height:36px!important;
+ padding:0 7px!important;border:1px solid #dce7f4!important;
+ border-radius:9px!important;background:#f8faff!important;
+ font-size:13px!important;font-weight:750;color:#0e2042!important;
+ margin:0!important
+}
+body.eplan-redesign.trainer-ui .structured-food-macro{
+ text-align:right;color:#74839b;font-size:11px;line-height:1.45
+}
+body.eplan-redesign.trainer-ui .structured-veg-opt{
+ display:flex!important;gap:8px;align-items:center;
+ margin-top:10px;color:#58708e!important;font-size:11px!important;
+ font-weight:650!important
+}
+body.eplan-redesign.trainer-ui .structured-veg-opt input{
+ appearance:auto!important;-webkit-appearance:checkbox!important;
+ width:17px!important;height:17px!important;margin:0!important;
+ padding:0!important;accent-color:#347df0
+}
+body.eplan-redesign.trainer-ui .structured-add,
+body.eplan-redesign.trainer-ui .structured-start,
+body.eplan-redesign.trainer-ui .structured-meal-loader button{
+ display:inline-flex;justify-content:center;align-items:center;
+ width:100%!important;min-height:40px!important;
+ border:1px dashed #c9dcf4!important;background:#f0f6ff!important;
+ color:#2675e6!important;border-radius:12px!important;
+ padding:8px!important;font-size:12px!important;font-weight:800!important;
+ box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui .structured-meal-summary{
+ display:flex;flex-direction:column;gap:5px;padding:12px;
+ border-radius:12px;background:#edf5ff;color:#143461;
+ font-size:11.5px;line-height:1.5
+}
+body.eplan-redesign.trainer-ui .structured-meal-summary small{color:#6d809b;font-size:11px}
+body.eplan-redesign.trainer-ui .structured-daily-summary{
+ margin:14px 3px;padding:14px;border:1px solid #d6e4f6;
+ border-radius:14px;background:#f5f9ff;color:#0f2343
+}
+body.eplan-redesign.trainer-ui .structured-daily-summary>strong{font-size:13px}
+body.eplan-redesign.trainer-ui .structured-daily-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0
+}
+body.eplan-redesign.trainer-ui .structured-daily-grid>span{
+ display:flex;flex-direction:column;gap:3px;padding:8px 5px;min-width:0;
+ border:1px solid #dfe8f4;border-radius:10px;background:white;text-align:center
+}
+body.eplan-redesign.trainer-ui .structured-daily-grid b{color:#133055;font-size:14px}
+body.eplan-redesign.trainer-ui .structured-daily-grid small{
+ color:#8291a6;font-size:10px;overflow-wrap:anywhere
+}
+body.eplan-redesign.trainer-ui .structured-daily-summary p{
+ font-size:11px;color:#426289;margin:4px 0
+}
+body.eplan-redesign.trainer-ui .structured-daily-summary>small{font-size:10px;color:#8c9aaf}
+body.eplan-redesign.trainer-ui #structuredFoodPicker{
+ position:fixed!important;inset:0!important;z-index:1600!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ padding:12px!important;background:rgba(15,29,53,.55)!important
+}
+body.eplan-redesign.trainer-ui #structuredFoodPicker .structured-picker{
+ margin:0!important;width:100%!important;max-width:510px!important;
+ max-height:calc(100dvh - 28px)!important;overflow:auto!important;
+ border:1px solid #dce5f3!important;border-radius:20px!important;
+ background:#fff!important;padding:16px!important
+}
+body.eplan-redesign.trainer-ui .structured-picker-head{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ margin-bottom:12px;color:#0e1f41;font-size:18px;font-weight:850
+}
+body.eplan-redesign.trainer-ui .structured-picker-head button{
+ width:36px!important;height:36px!important;padding:0!important;
+ border:1px solid #dce5f0!important;border-radius:11px!important;
+ color:#647991!important;background:#f2f6fc!important;box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui #structuredFoodSearch{
+ width:100%!important;height:46px!important;border:1px solid #dbe5f2!important;
+ background:#f7f9fd!important;border-radius:12px!important;padding:0 13px!important;
+ color:#102342!important;font-size:15px!important
+}
+body.eplan-redesign.trainer-ui #structuredFoodMatches{
+ display:grid;gap:6px;max-height:50dvh;overflow:auto;margin-top:12px
+}
+body.eplan-redesign.trainer-ui #structuredFoodMatches button{
+ display:flex;flex-direction:column;gap:6px;align-items:flex-start!important;
+ border:1px solid #e1e8f3!important;border-radius:12px!important;
+ padding:11px!important;text-align:left!important;background:#fff!important;
+ color:#162949!important;box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui #structuredFoodMatches button strong{font-size:12px}
+body.eplan-redesign.trainer-ui #structuredFoodMatches button small{font-size:10px;color:#798ba6}
+@media(max-width:380px){
+ body.eplan-redesign.trainer-ui .structured-daily-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.eplan-redesign.trainer-ui .structured-food-details{flex-direction:column;align-items:flex-start}
+}
+
+
+/* Trainer's nutrition v299: isolated whole-day ration tabs and recipe library. */
+body.eplan-redesign.trainer-ui .trainer-ration-tabs{
+ display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+ padding:12px 0;margin:5px 0 15px;
+}
+body.eplan-redesign.trainer-ui .trainer-ration-tabs button{
+ min-height:38px;padding:9px 12px!important;
+ font-size:12px!important;font-weight:800!important;
+ border-radius:11px!important;background:#f3f7ff!important;
+ border:1px solid #d8e6f9!important;color:#47709f!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-ration-tabs button.active{
+ background:#317bf0!important;color:white!important;border-color:#317bf0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-ration-tabs .trainer-ration-remove{
+ color:#a27474!important;background:#fff!important;
+}
+body.eplan-redesign.trainer-ui .trainer-meal-recipe{
+ background:#f1f6ff;border:1px solid #e0eafb;border-radius:13px;
+ padding:12px;margin:9px 0 11px;display:flex;flex-wrap:wrap;
+ gap:9px;align-items:center;
+}
+body.eplan-redesign.trainer-ui .trainer-meal-recipe strong{width:100%;font-size:13px;color:#193b6e}
+body.eplan-redesign.trainer-ui .trainer-meal-recipe p{width:100%;margin:0;color:#7387a3;font-size:11px;line-height:1.5}
+body.eplan-redesign.trainer-ui .trainer-meal-recipe button{
+ color:#2678ed!important;background:white!important;
+ border:1px solid #c8ddfb!important;padding:9px 12px!important;
+ border-radius:10px!important;box-shadow:none!important;font-size:11px!important;font-weight:850!important
+}
+body.eplan-redesign.trainer-ui .trainer-meal-recipe a{color:#6f87a6;font-size:10px;text-decoration:none}
+body.eplan-redesign.trainer-ui .trainer-auto-fit,
+body.eplan-redesign.trainer-ui .trainer-ration-accuracy{
+ border-radius:12px;border:1px solid #dbe8fa;background:#edf5ff;
+ padding:12px;margin:8px 0;font-size:11px;color:#5b789c;line-height:1.5
+}
+body.eplan-redesign.trainer-ui .trainer-auto-fit.warn,
+body.eplan-redesign.trainer-ui .trainer-ration-accuracy.offset{
+ background:#fff8eb;border-color:#efdfbc;
+}
+body.eplan-redesign.trainer-ui .trainer-auto-fit strong,
+body.eplan-redesign.trainer-ui .trainer-ration-accuracy strong{
+ display:block;font-size:12px;color:#264979;margin-bottom:5px
+}
+body.eplan-redesign.trainer-ui .trainer-ration-accuracy span{display:block;font-weight:750;color:#587496}
+body.eplan-redesign.trainer-ui .trainer-ration-accuracy button{
+ background:white!important;color:#9a672b!important;border:1px solid #eed8ad!important;
+ border-radius:10px!important;padding:9px!important;font-size:11px!important;margin-top:8px
+}
+body.eplan-redesign.trainer-ui .structured-food-use{
+ margin:7px 0;color:#408366;font-weight:750;font-size:10px
+}
+body.eplan-redesign.trainer-ui #recipeTemplatePicker{
+ position:fixed!important;inset:0!important;z-index:1700!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ background:rgba(13,29,52,.6)!important;padding:12px!important
+}
+body.eplan-redesign.trainer-ui #recipeTemplatePicker .recipe-template-sheet{
+ margin:0!important;padding:17px!important;width:100%!important;
+ max-width:620px!important;max-height:93dvh!important;overflow:auto!important;
+ background:#fff!important;border:1px solid #dce6f3!important;border-radius:20px!important;
+}
+body.eplan-redesign.trainer-ui #recipeTemplatePicker .recipe-template-head{
+ display:flex;justify-content:space-between;align-items:flex-start;gap:12px
+}
+body.eplan-redesign.trainer-ui #recipeTemplatePicker .recipe-template-head h2{
+ font-size:20px;color:#193455;margin:0
+}
+body.eplan-redesign.trainer-ui #recipeTemplatePicker .recipe-template-head p{
+ font-size:11px;color:#788ba5;margin:6px 0 0;line-height:1.4
+}
+body.eplan-redesign.trainer-ui #recipeTemplateClose{
+ width:36px!important;min-height:36px!important;flex:0 0 36px!important;
+ border:1px solid #dce4f0!important;border-radius:10px!important;
+ color:#677a95!important;background:#f5f8fd!important
+}
+body.eplan-redesign.trainer-ui #recipeTemplateSearch{
+ width:100%!important;min-height:44px!important;margin:12px 0!important;
+ background:#f8faff!important;border:1px solid #dce6f2!important;border-radius:11px!important;
+ color:#193455!important;padding:0 13px!important;font-size:14px!important
+}
+body.eplan-redesign.trainer-ui .recipe-template-categories{
+ display:flex;gap:6px;overflow-x:auto;margin:6px 0;padding:4px 0;scrollbar-width:none
+}
+body.eplan-redesign.trainer-ui .recipe-template-categories button{
+ flex:0 0 auto!important;min-height:34px!important;padding:7px 10px!important;
+ background:#f6f9fd!important;color:#647a9a!important;border:1px solid #dfe8f4!important;
+ border-radius:20px!important;font-size:11px!important;box-shadow:none!important
+}
+body.eplan-redesign.trainer-ui .recipe-template-categories button.active{
+ color:#246ddd!important;background:#eaf3ff!important;border-color:#bed7fb!important
+}
+body.eplan-redesign.trainer-ui .recipe-template-count,
+body.eplan-redesign.trainer-ui .recipe-template-credit{
+ font-size:10px;color:#8698b1;line-height:1.5;margin:8px 0
+}
+body.eplan-redesign.trainer-ui .recipe-template-list{
+ display:grid;gap:9px;max-height:45dvh;overflow:auto
+}
+body.eplan-redesign.trainer-ui .recipe-template-card{
+ padding:12px;border-radius:13px;background:#fff;border:1px solid #dce7f4
+}
+body.eplan-redesign.trainer-ui .recipe-template-card h3{
+ color:#1d3659;font-size:13px;margin:8px 0 4px
+}
+body.eplan-redesign.trainer-ui .recipe-template-card>p{
+ color:#7087a4;font-size:11px;line-height:1.5;margin:7px 0
+}
+body.eplan-redesign.trainer-ui .recipe-template-meta{
+ display:flex;gap:5px;flex-wrap:wrap
+}
+body.eplan-redesign.trainer-ui .recipe-template-meta span{
+ padding:4px 6px;border-radius:7px;background:#edf5ff;color:#507cae;font-size:10px
+}
+body.eplan-redesign.trainer-ui .recipe-template-macros{
+ padding:8px;border-radius:9px;background:#f6f9fd;color:#426688;font-size:11px;font-weight:750
+}
+body.eplan-redesign.trainer-ui .recipe-template-footer{
+ display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:9px
+}
+body.eplan-redesign.trainer-ui .recipe-template-source{font-size:10px;color:#7790ae}
+body.eplan-redesign.trainer-ui .recipe-template-footer button{
+ padding:9px 11px!important;font-size:11px!important;color:white!important;
+ background:#327ff2!important;border-radius:10px!important;border:1px solid #327ff2!important
+}
+@media(max-width:630px){
+ body.eplan-redesign.trainer-ui #recipeTemplatePicker{align-items:flex-end!important;padding:0!important}
+ body.eplan-redesign.trainer-ui #recipeTemplatePicker .recipe-template-sheet{
+  max-height:95dvh!important;border-radius:22px 22px 0 0!important;padding:14px!important
+ }
+ body.eplan-redesign.trainer-ui .trainer-ration-tabs{flex-wrap:nowrap;overflow-x:auto}
+ body.eplan-redesign.trainer-ui .trainer-ration-tabs button{flex-shrink:0}
+}
+
+
+/* Complete day rations in the client read-only meal plan.
+   Incomplete legacy per-meal alternatives deliberately keep the old view. */
+body.eplan-redesign .client-ration-tabs{
+ display:flex;align-items:center;gap:8px;max-width:100%;
+ overflow-x:auto;scrollbar-width:none;padding:6px 0 12px
+}
+body.eplan-redesign .client-ration-tabs button{
+ flex:0 0 auto!important;min-height:40px!important;padding:9px 14px!important;
+ border:1px solid #d8e5f4!important;border-radius:11px!important;
+ background:#f5f9ff!important;color:#5d7697!important;
+ font-size:12px!important;font-weight:800!important;box-shadow:none!important
+}
+body.eplan-redesign .client-ration-tabs button.active{
+ color:#fff!important;background:#317ef0!important;border-color:#317ef0!important
+}
+body.eplan-redesign .client-ration-page[hidden]{display:none!important}

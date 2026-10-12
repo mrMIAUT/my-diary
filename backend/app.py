@@ -21,7 +21,8 @@ from math import ceil
 from zoneinfo import ZoneInfo
 import base64
 from food_reference_catalog import reference_food_items
-from meal_plan_generator import generate_meal_plan
+from meal_plan_generator import generate_meal_plan,MEAL_SOURCES,FOODS,approved_plan_catalog
+from nutrition_structured import foods_for_trainer,serialize_structured_foods,structured_meal_summary
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -883,6 +884,7 @@ def init():
             id SERIAL PRIMARY KEY, client_id INTEGER, meal_number INTEGER, variant_number INTEGER,
             content TEXT DEFAULT '', sort INTEGER DEFAULT 0
         )""")
+        c.execute("ALTER TABLE nutrition_plan_items ADD COLUMN IF NOT EXISTS foods_json TEXT NOT NULL DEFAULT '[]'")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS trainer_id INTEGER")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT ''")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT ''")
@@ -1340,6 +1342,9 @@ class CheckinReviewIn(BaseModel):
 
 class NutritionPlanItemIn(BaseModel):
     meal_number:int=Field(ge=1,le=100); variant_number:int=Field(default=1,ge=1,le=100); content:str=Field(default="",max_length=5000); sort:int=Field(default=0,ge=0,le=10_000)
+    foods:List[dict]=Field(default_factory=list,max_length=30)
+    dish_title:str=Field(default="",max_length=140)
+    preparation:str=Field(default="",max_length=1500)
 class AutoMealPlanIn(BaseModel):
     meals:int=Field(default=4,ge=3,le=5)
     variants:int=Field(default=2,ge=1,le=2)
@@ -3997,22 +4002,81 @@ def update_client_nutrition(cid:int,x:NutritionTargetIn,user:AuthUser=Depends(re
     require_active_client(cid,'meal_plan')
     if not one("SELECT id FROM clients WHERE id=?",(cid,)):
         raise HTTPException(404,"Клієнта не знайдено")
+    # Validate every structured row before modifying any persistent client data.
+    # Ordinary pre-existing text-only plans remain valid and unmodified.
+    validated=[]
+    for item in x.meals:
+        if item.foods:
+            try:
+                foods,foods_json=serialize_structured_foods(item.foods)
+                text=structured_meal_summary(foods)["content"]
+                title=item.dish_title.strip()
+                steps=item.preparation.strip()
+                if title:text="Страва: "+title+"\n"+text
+                if steps:text+="\n\nПриготування: "+steps
+            except ValueError as exc:
+                raise HTTPException(422,str(exc)) from None
+        else:
+            text=item.content.strip()
+            foods_json="[]"
+        if len(text)>5000: raise HTTPException(422,"Занадто довгий прийом їжі.")
+        if text:
+            validated.append((item.meal_number,item.variant_number,text,item.sort,foods_json))
     legacy=x.meal_plan.strip()
     if x.meals:
-        parts=[]
-        for item in x.meals:
-            txt=item.content.strip()
-            if txt: parts.append(f"Прийом їжі {item.meal_number}, варіант {item.variant_number}: {txt}")
-        legacy="\n\n".join(parts)
+        legacy="\n\n".join(f"Прийом їжі {n}, варіант {v}: {text}"
+                             for n,v,text,_,_ in validated)
+    if len(legacy)>50000:raise HTTPException(422,"План харчування завеликий.")
     with con() as c:
         c.execute("UPDATE clients SET kcal=%s,protein=%s,fat=%s,carbs=%s,meal_plan=%s WHERE id=%s",(x.kcal,x.protein,x.fat,x.carbs,legacy,cid))
         c.execute("DELETE FROM nutrition_plan_items WHERE client_id=%s",(cid,))
-        if x.meals:
-            for item in x.meals:
-                if item.content.strip():
-                    c.execute("INSERT INTO nutrition_plan_items(client_id,meal_number,variant_number,content,sort) VALUES(%s,%s,%s,%s,%s)",(cid,max(1,item.meal_number),max(1,item.variant_number),item.content.strip(),item.sort))
+        for n,v,text,sort,foods_json in validated:
+            c.execute("INSERT INTO nutrition_plan_items(client_id,meal_number,variant_number,content,sort,foods_json) VALUES(%s,%s,%s,%s,%s,%s)",(cid,n,v,text,sort,foods_json))
         c.commit()
     return client_response(one("SELECT * FROM clients WHERE id=?",(cid,)))
+
+# Explicit trainer-only catalogue for the structured nutrition editor.
+# Only reviewed local foods; downloaded on editing and never on application boot.
+RATE_LIMITS["meal.catalog"]=(20,60)
+@app.get("/api/trainer/foods/catalog")
+def trainer_meal_food_catalog(user:AuthUser=Depends(require_trainer)):
+    consume_rate_limit("meal.catalog",str(user.user_id))
+    return {"items":foods_for_trainer(),"source":"ЄПЛАН · USDA FoodData Central"}
+
+# Approved trainer-only recipe templates for the real assigned-meal editor.
+# Ingredients are resolved by verified catalogue IDs; browser nutrient values
+# are NEVER trusted when storing a client's plan.
+RATE_LIMITS["meal.recipes"]=(25,60)
+@app.get("/api/trainer/foods/recipes")
+def trainer_meal_recipe_library(user:AuthUser=Depends(require_trainer)):
+    consume_rate_limit("meal.recipes",str(user.user_id))
+    audited=approved_plan_catalog()
+    results=[]
+    for category,recipes in MEAL_SOURCES.items():
+        if category=="evening":
+            continue  # Same snack catalogue is available for a second snack.
+        for recipe in recipes:
+            foods=[]
+            for key in recipe["keys"]:
+                name,lo,hi,step,start,_tags=FOODS[key]
+                record=audited[key]
+                minimum=max(1,lo,3 if key=="oil" else 1)
+                portion=max(minimum,min(hi,start))
+                egg=name in ("Яйце куряче (сире)","Яйце куряче (варене круто)")
+                foods.append({
+                    "source_id":record["source_id"],"grams":portion,
+                    "count":portion//50 if egg else None,
+                    "count_in_targets":name not in ("Огірок (сирий)","Помідор (сирий)","Шпинат (сирий)","Шпинат (відварений)"),
+                    "usage_note":recipe["notes"].get(key,""),
+                    "portion_rules":{"min_grams":minimum,"max_grams":hi,"step_grams":step},
+                })
+            results.append({
+                "id":recipe["id"],"category":category,"title":recipe["title"],
+                "preparation":recipe["preparation"],
+                "source_name":recipe["source_name"],"source_url":recipe["source_url"],
+                "minutes":recipe["minutes"],"tags":recipe["tags"],"foods":foods
+            })
+    return {"templates":results,"version":1}
 
 # Draft-only generator; trainer reviews and explicitly saves using existing
 # /api/client/{cid}/nutrition. Never mutates a client's meal plan here.

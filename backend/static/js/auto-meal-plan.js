@@ -75,16 +75,25 @@ function renderPreview(data){
     +'<p class="auto-meal-footnote">Перенесення не призначає план клієнту. Після перевірки натисни «Зберегти план клієнту».</p>';
  $('autoMealApply').onclick=applyDraft;
 }
-function applyDraft(){
+async function applyDraft(){
  const current=window.currentClientData||{},c=current.client||{};
  if(!preview||session?.role!=='trainer'||+c.id!==+clientId)return;
  if((current.nutrition_plan||[]).some(x=>String(x.content||'').trim())||
       String(c.meal_plan||'').trim()){
    if(!confirm('У редакторі вже є план. Замінити лише чернетку? Збережений у клієнта план не зміниться, поки ти не натиснеш «Зберегти план клієнту».'))return;
  }
+ try{await window.ensureStructuredMealEditor();}
+ catch(e){console.warn(e);alert('Не вдалося завантажити редактор продуктів. Чернетка збережена у вікні.');return;}
  const copy=(preview.meals||[]).map(x=>({
    meal_number:+x.meal_number,variant_number:+x.variant_number,
-   sort:+x.sort,content:String(x.content||'')
+   sort:+x.sort,content:String(x.content||''),
+   dish_title:String(x.dish_title||''),preparation:String(x.preparation||''),
+   recipe_id:String(x.recipe_id||''),recipe_source_url:String(x.recipe_source_url||''),
+   recipe_source_name:String(x.recipe_source_name||''),
+   foods:(x.foods||[]).map(food=>({
+     source_id:food.source_id,grams:+food.grams,
+     count:food.count??null,count_in_targets:food.count_in_targets!==false
+   }))
  }));
  if(!copy.length)return;
  // Prepare the normal trainer editor, then replace only its local unsaved draft.

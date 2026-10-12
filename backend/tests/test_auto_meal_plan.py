@@ -46,8 +46,17 @@ class AutomaticMealPlanTests(unittest.TestCase):
         self.assertTrue(any('не гарантує' in x for x in r['warnings']))
 
     def test_incompatible_exclusions_fail_closed(self):
+        # With sixty recipes, excluding fish and nuts still leaves balanced
+        # choices; restrictions must instead be honoured, not force-fail.
+        allowed=generate_meal_plan(2380,160,60,300,meals=4,variants=2,excluded=['fish','nuts'])
+        names=" ".join(food["name"] for meal in allowed["meals"] for food in meal["foods"])
+        self.assertNotIn("Лосось",names)
+        self.assertNotIn("Тунець",names)
+        self.assertNotIn("Волоський горіх",names)
+        self.assertNotIn("Мигдаль",names)
         with self.assertRaisesRegex(ValueError,'бракує'):
-            generate_meal_plan(2380,160,60,300,meals=4,variants=2,excluded=['fish','nuts'])
+            generate_meal_plan(2380,160,60,300,meals=4,variants=2,
+                               excluded=['fish','nuts','dairy','eggs','gluten','meat','sesame'])
 
     def test_invalid_targets_and_restricted_inputs_fail(self):
         for kwargs in (
