@@ -22,7 +22,7 @@ class ExerciseLibraryPostAddTests(unittest.TestCase):
         self.assertIn("!groupFilter||+x.group_id===groupFilter",LIB)
         for page in (INDEX,SW):
             self.assertIn("/static/js/library.js?v=164",page)
-        self.assertIn("const VERSION='eplan-v220'",SW)
+        self.assertIn("const VERSION='eplan-v221'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Requires Node.js")
     def test_adding_two_exercises_never_loses_list_or_next_form(self):
