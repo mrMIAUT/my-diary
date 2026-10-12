@@ -131,6 +131,66 @@ else:raise AssertionError("Cross-client diary mutation was allowed")
 try:app.food_diary_delete(saved["id"],other_user)
 except HTTPException as e:assert e.status_code==404,e
 else:raise AssertionError("Cross-client diary deletion was allowed")
+# Private products are never visible globally before an explicit trainer review.
+private=app.create_private_food(app.PrivateFoodIn(
+ name="Домашній сир CI",brand="Власний",kcal_100=142,
+ protein_100=18,fat_100=7,carbs_100=2,submit_for_review=False),client_user)["item"]
+assert private["review_status"]=="private"
+assert any(x["id"]==private["id"] for x in app.my_private_foods(client_user)["items"])
+assert not any(x["name"]=="Домашній сир CI" for x in app._public_food_matches("Домашній сир CI",8))
+try:app.edit_private_food(private["id"],app.PrivateFoodIn(
+ name="Чужий сир",kcal_100=190,protein_100=10,fat_100=8,carbs_100=8),other_user)
+except HTTPException as e:assert e.status_code==404,e
+else:raise AssertionError("Another client edited a private product")
+candidate=app.create_private_food(app.PrivateFoodIn(
+ name="Йогурт перевірка CI",brand="CI",kcal_100=87,
+ protein_100=6.0,fat_100=2.7,carbs_100=10.5,submit_for_review=True),client_user)["item"]
+assert candidate["review_status"]=="pending"
+assert not app._public_food_matches("Йогурт перевірка CI",8)
+trainer=app.AuthUser(role="trainer",user_id=1,client_id=None,session_id=0,
+ expires_at=datetime.now(timezone.utc),name="Trainer")
+queue=app.trainer_food_submissions(trainer)["items"]
+assert any(x["id"]==candidate["id"] for x in queue)
+approved=app.trainer_food_review(candidate["id"],app.PrivateFoodReviewIn(
+ decision="approve",name="Йогурт перевірка CI",brand="CI",note="Verified CI test label",
+ kcal_100=81,protein_100=6,fat_100=2.4,carbs_100=9.8),trainer)
+assert approved["status"]=="approved"
+global_hit=app._public_food_matches("Йогурт перевірка CI",8)
+assert len(global_hit)==1 and global_hit[0]["kcal_100"]==81,global_hit
+assert any(x["source_id"]==global_hit[0]["source_id"] for x in
+ app.prototype_food_preview("Йогурт перевірка CI",8)["items"])
+assert any(x["name"]=="Йогурт перевірка CI" for x in
+ app.prototype_food_search("Йогурт перевірка CI",8,1,"all")["items"])
+try:app.trainer_food_review(candidate["id"],app.PrivateFoodReviewIn(
+ decision="reject",note="Already approved"),trainer)
+except HTTPException as e:assert e.status_code==409,e
+else:raise AssertionError("Moderation decision was applied twice")
+reject=app.create_private_food(app.PrivateFoodIn(
+ name="Невідомі БЖВ CI",kcal_100=99,protein_100=5,
+ fat_100=1,carbs_100=10,submit_for_review=True),client_user)["item"]
+app.trainer_food_review(reject["id"],app.PrivateFoodReviewIn(
+ decision="reject",note="No reliable label or source"),trainer)
+assert not app._public_food_matches("Невідомі БЖВ CI",8)
+# Save a filled meal as a reusable private recipe. Ingredient snapshots come
+# from owned diary rows, never from a client-supplied nutrient payload.
+recipe=app.create_saved_recipe(app.SavedRecipeCreateIn(
+ name="Моя вечірня страва",day=day,meal="dinner"),client_user)
+recipes=app.my_saved_recipes(client_user)["items"]
+assert len(recipes)==1 and recipes[0]["id"]==recipe["id"]
+assert len(recipes[0]["ingredients"])==1
+assert recipes[0]["grams"]==100 and recipes[0]["kcal_100"]==365
+try:app.log_saved_recipe(recipe["id"],app.SavedRecipeLogIn(
+ day=day,meal="lunch",grams=100),other_user)
+except HTTPException as e:assert e.status_code==404,e
+else:raise AssertionError("Other client's private recipe was accessible")
+logged=app.log_saved_recipe(recipe["id"],app.SavedRecipeLogIn(
+ day=day,meal="breakfast",grams=100),client_user)["item"]
+assert logged["kcal"]==365 and logged["source_id"]=="recipe:"+str(recipe["id"])
+assert app.delete_saved_recipe(recipe["id"],client_user)["ok"] is True
+assert any(x["id"]==logged["id"] for x in app.food_diary_get(day,client_user)["items"]),\
+ "Deleting a recipe must not delete historical consumed diary records"
+assert app.food_diary_delete(logged["id"],client_user)["ok"] is True
+
 try:app.FoodDiaryAddIn(
  day=day,meal="lunch",name="Invalid",grams=float("nan"),
  kcal_100=250,protein_100=10,fat_100=2,carbs_100=22)
