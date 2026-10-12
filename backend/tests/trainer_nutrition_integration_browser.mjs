@@ -150,6 +150,40 @@ try{
    'All meal cards must render SVGs instead of food-emoji thumbnails');
  for (const category of ['breakfast','lunch','snack','dinner'])
   assert.equal(await page.locator('#nutrition .nutrition-meal-icon-'+category).count(),3);
+ // Regress the actual Lucide 0.456.0 SVG geometry shown to the user.
+ // Equivalent-looking custom art is NOT acceptable for this UI decision.
+ const lucideIcons={
+  breakfast:[
+   'M10 2v2','M14 2v2',
+   'M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1',
+   'M6 2v2'
+  ],
+  lunch:[
+   'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2',
+   'M7 2v20',
+   'M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'
+  ],
+  snack:[
+   'M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z',
+   'M10 2c1 .5 2 2 2 5'
+  ],
+  dinner:['M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z']
+ };
+ for(const [category,paths] of Object.entries(lucideIcons)){
+  const svg=page.locator('#nutrition .nutrition-meal-icon-'+category+' svg').first();
+  assert.deepEqual(await svg.locator('path').evaluateAll(all=>all.map(p=>p.getAttribute('d'))),paths,
+   'The '+category+' icon differs from the approved Lucide artwork');
+  assert.equal(await svg.getAttribute('stroke-width'),'2');
+  const style=await svg.evaluate(el=>({
+   stroke:getComputedStyle(el).stroke,
+   width:Math.round(el.getBoundingClientRect().width)
+  }));
+  assert.equal(style.width,28,'The '+category+' icon size has drifted');
+ }
+ const iconBackgrounds=await page.locator('#nutrition .nutrition-meal-icon').evaluateAll(
+  nodes=>[...new Set(nodes.map(x=>getComputedStyle(x).backgroundColor))]);
+ assert.equal(iconBackgrounds.length,1,'All meal-category icons should use the same neutral background');
+
  assert.equal(await page.locator('#nutrition .nutrition-menu-v2-nutrients').count(),12,
    'Each assigned dish needs a compact calorie and BJU rail');
  assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),3,

@@ -1262,3 +1262,21 @@ body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-dinner{
   width:48px!important;height:48px!important;
  }
 }
+
+
+/* v305 — match the four original Lucide icons shown in chat exactly.
+   No colored per-meal backgrounds or custom bowl/plate drawings. */
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon,
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast,
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-lunch,
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-snack,
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon-dinner{
+ background:#f2f5fa!important;color:#397dec!important;
+ border-radius:14px!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-meal-icon svg{
+ display:block;width:28px;height:28px;
+ stroke:currentColor;stroke-width:2;fill:none;
+ stroke-linecap:round;stroke-linejoin:round;
+ transform:none!important;filter:none!important;
+}
