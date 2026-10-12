@@ -387,7 +387,7 @@ window.ensureStructuredMealEditor=async function(){
      await window.loadStructuredMealCatalog();
      for(const [url,test] of [
        ['/static/js/nutrition-portion-fitter.js?v=1',()=>!!window.NutritionPortionFitter],
-       ['/static/js/recipe-template-picker.js?v=3',()=>!!window.openRecipeTemplatePicker]
+       ['/static/js/recipe-template-picker.js?v=4',()=>!!window.openRecipeTemplatePicker]
      ]){
        if(test())continue;
        await new Promise((resolve,reject)=>{
