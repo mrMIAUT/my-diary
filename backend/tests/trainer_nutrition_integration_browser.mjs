@@ -153,6 +153,12 @@ try{
  assert.notEqual(seenOne,seenTwo);
  assert.equal(await page.locator('#nutrition .trainer-saved-ration-tab[aria-selected="true"]').count(),1);
  assert.equal(await page.locator('#nutrition .trainer-saved-plan-actions button').count(),1);
+ await page.locator('#nutrition .trainer-saved-plan-actions button').click();
+ assert.equal(await page.locator('#nutrition .meal-editor').count(),4,
+   'Edit button did not reopen the assigned meal editor');
+ assert.equal(await page.locator('#nutrition .trainer-nutrition-target-card.is-saved').count(),1,
+   'Editing dishes should not reset previously saved calorie/BJU targets');
+
 
  // Older incomplete or text-only alternatives must remain readable, with no
  // invented total when per-meal nutrient provenance is unavailable.
