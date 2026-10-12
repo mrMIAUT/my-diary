@@ -5464,6 +5464,11 @@ def edit_private_food(food_id:int,x:PrivateFoodIn,user:AuthUser=Depends(require_
     require_active_client(user.client_id,"nutrition")
     name,brand=_valid_custom_food(x)
     with con() as db:
+        previous=db.execute("""SELECT review_status FROM nutrition_private_foods
+          WHERE id=%s AND client_id=%s FOR UPDATE""",(food_id,user.client_id)).fetchone()
+        if not previous:raise HTTPException(404,"Продукт не знайдено")
+        if previous["review_status"]=="approved":
+            raise HTTPException(409,"Опублікований продукт незмінний. Створи нову версію для перевірки.")
         item=db.execute("""UPDATE nutrition_private_foods SET
             name=%s,brand=%s,kcal_100=%s,protein_100=%s,fat_100=%s,carbs_100=%s,
             review_status=%s,review_note='',reviewed_at=NULL,updated_at=CURRENT_TIMESTAMP
@@ -5490,7 +5495,9 @@ def delete_private_food(food_id:int,user:AuthUser=Depends(require_client)):
 def trainer_food_submissions(user:AuthUser=Depends(require_trainer)):
     items=rows("""SELECT p.*,c.name AS author
                    FROM nutrition_private_foods p JOIN clients c ON c.id=p.client_id
-                   WHERE p.review_status='pending' ORDER BY p.created_at,id LIMIT 100""")
+                   WHERE p.review_status IN ('pending','private')
+                   ORDER BY CASE WHEN p.review_status='pending' THEN 0 ELSE 1 END,
+                            p.created_at DESC,p.id DESC LIMIT 200""")
     return {"items":[_private_food_payload(x) for x in items]}
 
 @app.post("/api/trainer/foods/submissions/{food_id}/review")
