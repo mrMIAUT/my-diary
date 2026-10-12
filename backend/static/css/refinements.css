@@ -1051,3 +1051,148 @@ body.eplan-redesign .nutrition-menu-total-grid strong small{
  body.eplan-redesign .nutrition-menu-macros>span{padding:8px}
  body.eplan-redesign .nutrition-menu-total-grid{gap:5px}
 }
+
+
+/* v303: compact image-left nutrition menu (shared trainer/client, second concept) */
+body.eplan-redesign .nutrition-menu-meal-v2{
+ border:1px solid #e0e8f3!important;border-radius:16px!important;
+ padding:12px!important;background:#fff!important;
+ box-shadow:0 3px 14px rgba(29,67,122,.035)!important;
+ overflow:hidden;min-width:0;
+}
+body.eplan-redesign .nutrition-menu-v2-layout{
+ display:grid;grid-template-columns:96px minmax(0,1fr) 110px;
+ gap:12px;align-items:start;min-width:0;
+}
+body.eplan-redesign .nutrition-menu-photo{
+ position:relative;isolation:isolate;min-height:114px;height:100%;max-height:190px;
+ border-radius:13px;display:grid;place-items:center;overflow:hidden;
+ background:linear-gradient(145deg,#f4ebd9,#d3dcec);
+}
+body.eplan-redesign .nutrition-menu-photo::before{
+ content:"";position:absolute;inset:14px;border-radius:50%;
+ background:radial-gradient(ellipse at 35% 32%,#fff 15%,#f7f4ec 56%,#dbd7cf 69%,#aeb9bc 72%,transparent 74%);
+ filter:drop-shadow(0 7px 8px rgba(30,50,85,.17));z-index:-1;
+}
+body.eplan-redesign .nutrition-menu-photo span{
+ font-size:44px;filter:drop-shadow(0 5px 6px rgba(37,58,85,.16));
+ transform:translateY(-2px);line-height:1;
+}
+body.eplan-redesign .nutrition-menu-photo-bowl{background:linear-gradient(140deg,#f0e5cc,#e9eee5)}
+body.eplan-redesign .nutrition-menu-photo-toast{background:linear-gradient(140deg,#f4e3cb,#e8ded4)}
+body.eplan-redesign .nutrition-menu-photo-fish{background:linear-gradient(140deg,#dbe9df,#f2e6d8)}
+body.eplan-redesign .nutrition-menu-photo-plate{background:linear-gradient(140deg,#f2e8d8,#dae7db)}
+body.eplan-redesign .nutrition-menu-photo-greens{background:linear-gradient(140deg,#dcf0de,#e6eadb)}
+body.eplan-redesign .nutrition-menu-v2-copy{min-width:0}
+body.eplan-redesign .nutrition-menu-v2-kicker{
+ display:flex;align-items:center;gap:7px;margin-bottom:6px;
+}
+body.eplan-redesign .nutrition-menu-v2-kicker .nutrition-menu-number{
+ width:25px;height:25px;border-radius:9px;display:grid;place-items:center;
+ font-size:10px;color:#3275da;background:#ebf3ff;flex:0 0 auto;
+}
+body.eplan-redesign .nutrition-menu-v2-kicker .trainer-assigned-meal-label{
+ color:#6c84a4!important;font-size:11px!important;font-weight:750!important;
+ display:inline!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .trainer-assigned-dish{
+ font-size:13px!important;line-height:1.37!important;font-weight:850!important;
+ margin:0 0 9px!important;color:#172d4f!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-ingredients{
+ display:grid!important;gap:1px!important;
+ list-style:none!important;margin:0!important;padding:0!important;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-ingredient{
+ padding:2px 0!important;border:0!important;
+ font-size:11px!important;line-height:1.45!important;
+ color:#7184a1!important;gap:5px;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-ingredient b{
+ font-size:11px!important;color:#526b8f!important;flex:0 0 auto;
+}
+body.eplan-redesign .nutrition-menu-v2-nutrients{
+ min-width:0;display:grid;gap:8px;align-content:start;
+}
+body.eplan-redesign .nutrition-menu-meal-v2 .nutrition-menu-energy{
+ width:100%;box-sizing:border-box;text-align:center;
+ border-radius:11px;background:#edf4ff;color:#3278e7;
+ font-size:14px;font-weight:850;padding:10px 4px;
+ line-height:1.2;white-space:nowrap;
+}
+body.eplan-redesign .nutrition-menu-v2-macros{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;min-width:0;
+}
+body.eplan-redesign .nutrition-menu-v2-macro{
+ display:grid;place-items:center;gap:3px;padding:7px 0;
+ border-radius:9px;min-width:0;background:#edf3ff;color:#2b73d6;
+}
+body.eplan-redesign .nutrition-menu-v2-macro.macro-1{background:#fff4db;color:#bf8222}
+body.eplan-redesign .nutrition-menu-v2-macro.macro-2{background:#e9f9ef;color:#26845c}
+body.eplan-redesign .nutrition-menu-v2-macro>small{font-size:10px;font-weight:850}
+body.eplan-redesign .nutrition-menu-v2-macro>b{
+ display:block;font-size:10px!important;line-height:1.1;text-align:center;font-weight:800;
+ white-space:nowrap;
+}
+body.eplan-redesign .nutrition-menu-v2-macro>b>small{font-size:8px;font-weight:650}
+body.eplan-redesign .nutrition-menu-v2-method{
+ margin-top:10px;padding-top:8px;min-width:0;
+}
+body.eplan-redesign .nutrition-menu-v2-method summary{
+ font-size:11px!important;min-height:24px;cursor:pointer;
+}
+body.eplan-redesign .nutrition-menu-round-prompt{
+ margin:11px 0 6px;padding:12px;border:1px solid #dbe7f9;
+ border-radius:13px;background:#f5f9ff;
+ display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;
+}
+body.eplan-redesign .nutrition-menu-round-prompt span{
+ flex:1 1 170px;font-size:11px;line-height:1.5;color:#6a7f9a;
+}
+body.eplan-redesign.trainer-ui .nutrition-menu-round-prompt button{
+ border-radius:10px!important;padding:10px 12px!important;min-height:36px!important;
+ background:#e5efff!important;color:#2a75df!important;border:1px solid #c9dcfd!important;
+ font-size:11px!important;font-weight:850!important;width:auto!important;
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tabs{
+ padding:3px;background:#edf2f9;border-radius:13px;gap:4px;overflow-x:auto;
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tab{
+ background:transparent!important;border:0!important;min-height:36px!important;border-radius:10px!important;
+ color:#6f839f!important;flex:1 0 auto!important;
+}
+body.eplan-redesign.trainer-ui .trainer-saved-ration-tab.active{
+ background:#fff!important;color:#327bf1!important;box-shadow:0 2px 6px rgba(31,65,115,.08)!important;
+}
+body.eplan-redesign .nutrition-menu-day-intro{margin-top:5px}
+body.eplan-redesign .nutrition-menu-total{margin-top:3px}
+body.eplan-redesign .client-ration-page .nutrition-menu-meal-v2{max-width:100%}
+
+/* On narrow phones the thumbnail and recipe stay side-by-side; nutrients
+   have a dedicated readable row, avoiding 3 crushed text columns. */
+@media(max-width:560px){
+ body.eplan-redesign .nutrition-menu-v2-layout{
+   grid-template-columns:82px minmax(0,1fr);gap:10px;
+ }
+ body.eplan-redesign .nutrition-menu-photo{
+   min-height:105px;max-height:135px;
+ }
+ body.eplan-redesign .nutrition-menu-photo span{font-size:36px}
+ body.eplan-redesign .nutrition-menu-v2-nutrients{
+   grid-column:1/-1;display:flex;align-items:center;gap:7px;
+ }
+ body.eplan-redesign .nutrition-menu-v2-nutrients .nutrition-menu-energy{
+   width:auto;min-width:90px;flex:0 0 auto;margin:0!important;padding:9px 8px;font-size:13px;
+ }
+ body.eplan-redesign .nutrition-menu-v2-macros{
+   flex:1 1 auto;gap:5px;
+ }
+ body.eplan-redesign .nutrition-menu-v2-macro{display:flex;gap:4px;justify-content:center;padding:10px 2px}
+ body.eplan-redesign .nutrition-menu-v2-macro>b{font-size:11px!important}
+ body.eplan-redesign .nutrition-menu-meal-v2 .trainer-assigned-dish{font-size:13px!important}
+}
+@media(max-width:350px){
+ body.eplan-redesign .nutrition-menu-photo{min-height:90px}
+ body.eplan-redesign .nutrition-menu-v2-layout{grid-template-columns:65px minmax(0,1fr);gap:7px}
+ body.eplan-redesign .nutrition-menu-v2-macro>b{font-size:10px!important}
+}
