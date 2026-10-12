@@ -1,6 +1,22 @@
 // Redesign V1 — client Nutrition tab.
 
 window.clientNutritionPeriod = window.clientNutritionPeriod || 'today';
+window.clientNutritionView = window.clientNutritionView || 'diary';
+function nutritionViewTabs(){
+ const tabs=[['plan','Раціон'],['diary','Щоденник']];
+ return '<div class="client-nutrition-view-tabs" role="tablist" aria-label="Режим харчування">'
+  +tabs.map(([key,label])=>'<button type="button" role="tab" aria-selected="'
+   +(window.clientNutritionView===key?'true':'false')+'" class="'
+   +(window.clientNutritionView===key?'active':'')
+   +'" onclick="switchClientNutritionView(\''+key+'\')">'+label+'</button>').join('')
+  +'</div>';
+}
+window.switchClientNutritionView=async function(key){
+ if(!['plan','diary'].includes(key))return;
+ window.clientNutritionView=key;
+ if(session?.role==='client'&&session.client_id)await showClientNutrition(session.client_id);
+};
+
 window.clientNutritionHistoryExpanded = window.clientNutritionHistoryExpanded || false;
 
 function nutritionPct(v,target){
@@ -117,19 +133,23 @@ function nutritionDiaryDayHTML(d,cid){
  const amount=(k)=>nutritionDiaryNumber(state.totals?.[k]||0);
  const day=window.nutritionDiaryDay||isoToday();
  return '<section class="card nutrition-diary-card" id="nutritionDiaryCard">'
-  +'<div class="nutrition-diary-heading"><div><span class="nutrition-kicker">ХАРЧУВАННЯ</span>'
+  +'<div class="nutrition-diary-heading"><div><span class="nutrition-kicker">ФАКТИЧНЕ ХАРЧУВАННЯ</span>'
   +'<h2>Щоденник харчування</h2><p>'+display+'</p></div>'
   +'<label>Дата<input type="date" id="nutritionDiaryDate" aria-label="Дата щоденника"'
   +' max="'+isoToday()+'" value="'+esc(day)+'" onchange="changeNutritionDiaryDay(this.value)"></label></div>'
   +'<div class="nutrition-diary-day-total"><strong>'+amount('kcal')+' <small>ккал</small></strong>'
   +'<span>Б '+amount('protein')+' · Ж '+amount('fat')+' · В '+amount('carbs')+' г</span></div>'
-  +meals.map(([key,label])=>{
+  +meals.map(([key,label],index)=>{
    const items=(state.items||[]).filter(x=>x.meal===key);
    const subtotal=items.reduce((v,x)=>v+Number(x.kcal||0),0);
+   const icon=nutritionMealThumbnail({},index+1);
    return '<section class="nutrition-diary-meal" data-meal="'+key+'">'
-   +'<div class="nutrition-diary-meal-head"><div><strong>'+label+'</strong><small>'
-   +nutritionDiaryNumber(subtotal)+' ккал</small></div>'
-   +'<button type="button" onclick="openFoodSearchLazy(\''+key+'\')">+ Додати</button></div>'
+   +'<div class="nutrition-diary-meal-head">'
+   +'<div class="nutrition-diary-meal-title">'+icon+'<div><strong>'+label+'</strong>'
+   +'<small>'+items.length+' '+(items.length===1?'продукт':'продуктів')+'</small></div></div>'
+   +'<span class="nutrition-diary-meal-calories">'+nutritionDiaryNumber(subtotal)+' ккал</span>'
+   +'</div>'
+   +'<div class="nutrition-diary-meal-body">'
    +(items.length?items.map(item=>{
     const id=Number(item.id);
     return '<div class="nutrition-diary-item"><div><strong>'+esc(item.name)+'</strong>'
@@ -140,8 +160,9 @@ function nutritionDiaryDayHTML(d,cid){
       +'<button type="button" aria-label="Змінити порцію" onclick="editNutritionDiaryEntry('+id+')">'+uiIcon('edit')+'</button>'
       +'<button type="button" aria-label="Видалити продукт" onclick="deleteNutritionDiaryEntry('+id+')">×</button>'
       +'</div></div>';
-   }).join(''):'<p class="nutrition-diary-empty">Ще немає продуктів</p>')
-   +'</section>';
+   }).join(''):'')
+   +'<button class="nutrition-diary-add" type="button" onclick="openFoodSearchLazy(\''+key+'\')">+ Додати продукт</button>'
+   +'</div></section>';
   }).join('')
   +'<p class="nutrition-diary-note">Підрахунок за фактично доданими продуктами. Значення БЖВ залежать від джерела, марки та стану продукту.</p>'
   +'</section>';
@@ -217,9 +238,6 @@ function redesignNutritionTodayHTML(d,c,cid){
       +'<button type="button" class="nutrition-food-search-button" onclick="openFoodSearchLazy()">'+uiIcon('search')+' Додати продукт</button>'
     +'</div>'
     +nutritionDiaryDayHTML(d,cid)
-    +(clientAccess(c).features?.meal_plan
-      ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
-      :'<div class="card nutrition-coaching-upsell"><span class="nutrition-kicker">ПОСЛУГА ТРЕНЕРА</span><strong>Персональний план харчування</strong><p>Щоденник БЖВ доступний у твоєму тарифі. Персональний план харчування складається тренером окремо.</p><button onclick="showClientTrainers('+cid+')">Переглянути тренерів ›</button></div>')
   +'</div>';
 }
 
@@ -297,7 +315,15 @@ window.showClientNutrition = async function(cid){
      window.nutritionDiaryState=null;
    }
   }
-  let body=window.clientNutritionPeriod==='week'?nutritionHistoryHTML(display,7,'тиждень'):window.clientNutritionPeriod==='month'?nutritionHistoryHTML(display,30,'місяць'):redesignNutritionTodayHTML(display,c,cid);
-  app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1>'+nutritionPeriodTabs()+body+'</div>');
+  const plan=window.clientNutritionView==='plan';
+  const body=plan
+   ?(access.features?.meal_plan
+      ?(clientMealPlanHTML(d)||'<div class="card"><div class="empty-state"><strong>План харчування ще не додано.</strong>Коли тренер додасть план, він з’явиться тут.</div></div>')
+      :'<div class="card nutrition-coaching-upsell"><strong>Персональний план харчування</strong><p>Тренер призначає індивідуальний раціон окремо. Твій щоденник харчування доступний у сусідній вкладці.</p></div>')
+   :window.clientNutritionPeriod==='week'?nutritionHistoryHTML(display,7,'тиждень')
+   :window.clientNutritionPeriod==='month'?nutritionHistoryHTML(display,30,'місяць')
+   :redesignNutritionTodayHTML(display,c,cid);
+  app.innerHTML=shell('<div class="client-section-page redesign-nutrition-page"><h1>Харчування</h1>'
+    +nutritionViewTabs()+(plan?'':nutritionPeriodTabs())+body+'</div>');
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
 };
