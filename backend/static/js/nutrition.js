@@ -386,8 +386,57 @@ async function saveTrainerNutritionTargets(cid,button=null){
  }catch(e){restore();alert(e.message||'Не вдалося зберегти харчування. Спробуй ще раз.')}
 }
 
-function clientMealPlanHTML(d){let items=planFromData(d).filter(x=>x.content.trim());if(!items.length)return '';let nums=[...new Set(items.map(x=>x.meal_number))].sort((a,b)=>a-b);return `<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar('clientMealPlanBody',this)"><span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">Натисни, щоб переглянути прийоми їжі</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">${nums.map(n=>{let xs=items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);return `<div class="meal-view"><strong>Прийом їжі ${n}</strong>${xs.map(x=>`<div class="meal-option"><span class="variant-pill">Варіант ${x.variant_number}</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">${esc(x.content)}</div></div>`).join('')}</div>`}).join('')}</div></div>`}
-
+// The client chooses an entire day's ration, never stacks mutually
+// exclusive alternatives. Incomplete legacy per-meal variants retain their
+// original layout, so saved older plans remain fully readable.
+window.selectClientMealRation=function(ration){
+ const body=document.getElementById('clientMealPlanBody');
+ if(!body)return;
+ const number=Number(ration);
+ for(const button of body.querySelectorAll('.client-ration-tab')){
+  const chosen=Number(button.dataset.ration)===number;
+  button.classList.toggle('active',chosen);
+  button.setAttribute('aria-selected',String(chosen));
+  button.setAttribute('tabindex',chosen?'0':'-1');
+ }
+ for(const page of body.querySelectorAll('.client-ration-page')){
+  const chosen=Number(page.dataset.ration)===number;
+  page.hidden=!chosen;
+  page.style.display=chosen?'':'none';
+ }
+};
+function clientMealPlanHTML(d){
+ const items=planFromData(d).filter(x=>String(x.content||'').trim());
+ if(!items.length)return '';
+ const nums=[...new Set(items.map(x=>x.meal_number))].sort((a,b)=>a-b);
+ const variants=[...new Set(items.map(x=>x.variant_number))].sort((a,b)=>a-b);
+ const complete=variants.length<=7&&variants.every(v=>
+  nums.every(n=>items.some(x=>x.meal_number===n&&x.variant_number===v)));
+ const legacy=nums.map(n=>{
+  const xs=items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
+  return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'+
+   xs.map(x=>'<div class="meal-option"><span class="variant-pill">Варіант '+x.variant_number+
+    '</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+esc(x.content)+'</div></div>').join('')+'</div>';
+ }).join('');
+ const tabs=complete?'<div class="client-ration-tabs" role="tablist" aria-label="Обери раціон">'
+  +variants.map((v,i)=>'<button type="button" role="tab" class="client-ration-tab'+(i===0?' active':'')+
+   '" data-ration="'+v+'" aria-selected="'+(i===0)+'" tabindex="'+(i===0?'0':'-1')+
+   '" onclick="selectClientMealRation('+v+')">Раціон '+v+'</button>').join('')+'</div>':'';
+ const pages=complete?variants.map((v,i)=>
+  '<div class="client-ration-page" role="tabpanel" data-ration="'+v+'"'+(i?' hidden style="display:none"':'')+'>'
+  +nums.map(n=>{
+   const item=items.find(x=>x.meal_number===n&&x.variant_number===v);
+   return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'
+    +'<div class="meal-option"><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+
+     esc(item.content)+'</div></div></div>';
+  }).join('')+'</div>'
+ ).join(''):legacy;
+ return '<div class="card meal-plan-card"><button class="exercise-toggle meal-plan-head" onclick="toggleCalendar(\'clientMealPlanBody\',this)">'
+  +'<span><strong>Мій план харчування</strong><span class="muted" style="display:block;margin-top:5px">'+
+  (complete?'Обери один із раціонів на день':'Натисни, щоб переглянути прийоми їжі')+
+  '</span></span><span class="arrow">⌄</span></button><div id="clientMealPlanBody" class="hidden meal-plan-body">'+
+  tabs+pages+'</div></div>';
+}
 
 async function addDailyNutrition(cid,nid=null,button=null){
  let k=+$('#dkcal').value||0,p=+$('#dprotein').value||0,f=+$('#dfat').value||0,c=+$('#dcarbs').value||0;
