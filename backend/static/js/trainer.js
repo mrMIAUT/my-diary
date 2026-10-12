@@ -526,6 +526,7 @@ async function showTrainerNutrition(){
  }).join('');
  app.innerHTML=shell(`<div class="trainer-nutrition-page">
    <div class="trainer-page-title"><div><h1>Харчування</h1><p class="trainer-page-sub">Контроль цілей, БЖВ і заповнення щоденника</p></div></div>
+   <button type="button" class="trainer-food-review-entry" onclick="openTrainerFoodReview()">Перевірка нових продуктів</button>
    <div class="trainer-nutrition-summary">
      <div><span class="trainer-stat-icon green">${uiIcon('food')}</span><strong>${tracked.length}</strong><small>з цілями харчування</small></div>
      <div><span class="trainer-stat-icon orange">!</span><strong>${needs.length}</strong><small>потребують уваги</small></div>
@@ -540,6 +541,60 @@ async function showTrainerNutrition(){
    <div class="trainer-nutrition-list modern">${rows||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div>
  </div>`);
 }
+
+window.openTrainerFoodReview=async function(){
+ document.getElementById('trainerFoodReviewModal')?.remove();
+ document.body.insertAdjacentHTML('beforeend','<div class="modal" id="trainerFoodReviewModal">'
+  +'<div class="card trainer-food-review-panel"><div class="between"><div>'
+  +'<h2>Перевірка продуктів</h2><p class="muted">Поки ти не схвалиш продукт, його не видно в загальному пошуку.</p></div>'
+  +'<button type="button" class="dark" onclick="trainerFoodReviewModal.remove()">×</button></div>'
+  +'<div id="trainerFoodReviewList">Завантаження…</div></div></div>');
+ try{
+  const data=await api('/trainer/foods/submissions');
+  const list=document.getElementById('trainerFoodReviewList');if(!list)return;
+  const items=data.items||[];
+  list.innerHTML=items.length?items.map(x=>{
+   const id=Number(x.id),value=k=>Number(x[k]||0);
+   return '<div class="trainer-food-review-row" data-food-id="'+id+'">'
+    +'<strong>'+esc(x.name)+'</strong>'
+    +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
+    +'<small>Додав: '+esc(x.author||'Клієнт')+' · КБЖУ автора ще не перевірені</small>'
+    +'<div class="trainer-food-review-inputs">'
+    +'<label>Назва<input class="food-review-name" maxlength="150" value="'+esc(x.name)+'"></label>'
+    +'<label>Бренд<input class="food-review-brand" maxlength="120" value="'+esc(x.brand||'')+'"></label>'
+    +[['kcal_100','Ккал'],['protein_100','Білки'],['fat_100','Жири'],['carbs_100','Вуглеводи']]
+      .map(([key,label])=>'<label>'+label+' /100 г<input type="number" min="0" step="0.01"'
+        +' max="'+(key==='kcal_100'?1000:100)+'" class="food-review-'+key+'"'
+        +' value="'+value(key)+'"></label>').join('')
+    +'</div><label>Джерело перевірки / коментар'
+    +'<textarea class="food-review-note" maxlength="500" rows="2" placeholder="Етикетка, виробник або причина відхилення"></textarea></label>'
+    +'<p class="food-review-message" role="status"></p>'
+    +'<div class="trainer-food-review-actions">'
+    +'<button type="button" onclick="submitTrainerFoodReview('+id+',\'reject\',this)">Відхилити</button>'
+    +'<button type="button" class="primary" onclick="submitTrainerFoodReview('+id+',\'approve\',this)">Схвалити в загальну базу</button>'
+    +'</div></div>';
+  }).join(''):'<p class="muted">Наразі немає продуктів на перевірці.</p>';
+ }catch(e){const el=document.getElementById('trainerFoodReviewList');if(el)el.textContent=e.message||'Не вдалося завантажити заявки.'}
+};
+window.submitTrainerFoodReview=async function(id,decision,button){
+ const row=button.closest('.trainer-food-review-row');if(!row)return;
+ const read=key=>Number(row.querySelector('.food-review-'+key)?.value);
+ const note=row.querySelector('.food-review-note')?.value.trim()||'';
+ const error=row.querySelector('.food-review-message');
+ const payload={decision,name:row.querySelector('.food-review-name')?.value.trim()||'',
+  brand:row.querySelector('.food-review-brand')?.value.trim()||'',
+  kcal_100:read('kcal_100'),protein_100:read('protein_100'),
+  fat_100:read('fat_100'),carbs_100:read('carbs_100'),note};
+ if(note.length<4||decision==='approve'&&(!payload.name||!(payload.kcal_100||payload.protein_100||payload.fat_100||payload.carbs_100))){
+  if(error)error.textContent='Вкажи перевірене джерело та коректне КБЖУ.';return;
+ }
+ if(decision==='approve'&&!confirm('Опублікувати перевірений продукт у загальному пошуку для всіх клієнтів?'))return;
+ button.disabled=true;
+ try{
+  await api('/trainer/foods/submissions/'+id+'/review',{method:'POST',body:JSON.stringify(payload)});
+  await openTrainerFoodReview();
+ }catch(e){button.disabled=false;if(error)error.textContent=e.message||'Не вдалося розглянути заявку.'}
+};
 
 function trainerProfileAvatarEditorHTML(p){
   return '<div class="trainer-profile-editor-avatar '+(p.avatar_url?'has-photo':'')+'">'
