@@ -186,7 +186,7 @@ try{
    ))
   }));
   const adjusted=legacy.find(x=>x.meal_number===1&&x.variant_number===1);
-  adjusted.content=adjusted.content.replace('smoke-rice — 180 г','smoke-rice — 155 г');
+  adjusted.content='Страва: Тестова страва з рисом\nРис білий (відварений) — 155 г\nЯйце куряче — 2 шт.\n\nДо цільових БЖВ: 500 ккал · Б 25 · Ж 15 · В 65\n\nПриготування: Приготуй рис.';
   window.currentClientData={client:window.currentClientData.client,nutrition_plan:legacy};
   document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData);
  },saved.meals);
