@@ -106,13 +106,18 @@ try{
  const selected=await page.evaluate(()=>nutritionPlanDraft.find(x=>x.meal_number===2&&x.variant_number===2));
  assert.equal(selected.dish_title,'Страва lunch 3');
  assert.ok(selected.auto_fit?.diff);
+ assert.ok(selected.foods.filter(x=>x.count==null).every(x=>x.grams%10===0),
+  'Automatic recipe portions should all end in zero grams');
  assert.ok(selected.foods.every(x=>x.grams>=x.portion_rules.min_grams&&x.grams<=x.portion_rules.max_grams));
  assert.deepEqual(await page.evaluate(()=>JSON.stringify(nutritionPlanDraft.filter(x=>x.variant_number===1))),before,'Cross-ration mutation');
 
  // Real structured quantity input recalculates without changing other rations.
  const firstGram=page.locator('.structured-grams').first();
  const initial=await firstGram.inputValue();
- await firstGram.fill(String(+initial+5));
+ await firstGram.fill('155');
+ await firstGram.blur();
+ assert.equal(await firstGram.inputValue(),'160','Hand-entered gram portions should snap to tens on blur');
+ assert.equal(await page.evaluate(()=>nutritionPlanDraft.find(x=>x.meal_number===1&&x.variant_number===2).foods[0].grams),160);
  const stale=await page.evaluate(()=>nutritionPlanDraft.find(x=>x.meal_number===2&&x.variant_number===2).auto_fit);
  assert.ok(stale,'Editing breakfast must not accidentally erase the lunch recipe');
  await page.locator('.trainer-ration-tab').first().click();
@@ -143,6 +148,14 @@ try{
   'Trainer preview must include all saved dishes across three rations');
  assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),3,
   'Saved, structured full-day totals are missing');
+ assert.ok(await page.locator('#nutrition .nutrition-menu-ingredient').count()>4,
+  'Saved meals must present clean ingredient and gram rows');
+ const viewed=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
+ assert.ok(!viewed.includes('До цільових БЖВ:'),'Technical source summary leaked into the polished menu');
+ const preparation=page.locator('#nutrition .nutrition-menu-method').first();
+ assert.equal(await preparation.getAttribute('open'),null,'Preparation should start collapsed');
+ await preparation.locator('summary').click();
+ assert.ok((await preparation.innerText()).includes('Змішай'),'Recipe steps should expand on demand');
  const seenOne=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
  assert.ok(seenOne.includes('Вихідне блюдо 1 1'));
  assert.ok(seenOne.replace(/\s/g,'').includes('2300ккал'));
@@ -194,6 +207,8 @@ try{
    'Client cannot choose complete rations');
  assert.equal(await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').count(),1,
    'Client sees several daily rations stacked together');
+ assert.ok(await page.locator('#clientRationSmoke .nutrition-menu-ingredient').count()>0,
+  'Client menu must show the same readable ingredient rows');
  const clientRationOne=await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').innerText();
  await page.locator('#clientRationSmoke .client-ration-tab').nth(1).click();
  const clientRationTwo=await page.locator('#clientRationSmoke .client-ration-page:not([hidden])').innerText();
