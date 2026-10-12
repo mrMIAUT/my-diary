@@ -760,6 +760,9 @@ def init():
     with con() as c:
         c.execute("""CREATE TABLE IF NOT EXISTS clients(id SERIAL PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE,password TEXT,goal TEXT,weight DOUBLE PRECISION,kcal INTEGER,protein INTEGER,fat INTEGER,carbs INTEGER,meal_plan TEXT DEFAULT '',status TEXT DEFAULT 'Активний',created_at TIMESTAMP)""")
         c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS created_at TIMESTAMP")
+        # Existing assigned programs keep RIR; newly created clients start without it.
+        c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS show_rir BOOLEAN NOT NULL DEFAULT TRUE")
+        c.execute("ALTER TABLE clients ALTER COLUMN show_rir SET DEFAULT FALSE")
         c.execute("ALTER TABLE clients ALTER COLUMN password DROP DEFAULT")
         c.execute("""CREATE TABLE IF NOT EXISTS program(id SERIAL PRIMARY KEY,client_id INTEGER,day_name TEXT,exercise TEXT,sets INTEGER,reps TEXT,target_rir INTEGER,sort INTEGER DEFAULT 0)""")
         c.execute("ALTER TABLE program ADD COLUMN IF NOT EXISTS superset_group TEXT DEFAULT ''")
@@ -1011,6 +1014,7 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        c.execute("ALTER TABLE program_templates ADD COLUMN IF NOT EXISTS show_rir BOOLEAN NOT NULL DEFAULT TRUE")
         c.execute("""CREATE TABLE IF NOT EXISTS program_template_days(
             id BIGSERIAL PRIMARY KEY,
             template_id BIGINT NOT NULL REFERENCES program_templates(id) ON DELETE CASCADE,
@@ -1150,6 +1154,8 @@ def password_input_schema(schema:dict):
 class Login(BaseModel):
     email:str=Field(max_length=254); password:str=Field(max_length=256)
 class ClientStatusIn(BaseModel): status:str=Field(max_length=32)
+class ProgramRirVisibilityIn(BaseModel):
+    show_rir:bool
 class ClientAccessIn(BaseModel):
     plan_code:str=Field(default="coaching",max_length=64); access_until:str=Field(default="",max_length=32)
 class TrainerProfileIn(BaseModel):
@@ -1192,6 +1198,7 @@ class ProgramTemplateItemSaveIn(BaseModel):
     repeat_mode:str=Field(default="normal",max_length=16)
 class ProgramTemplateSaveIn(BaseModel):
     name:str=Field(min_length=1,max_length=160)
+    show_rir:bool=True
     description:str=Field(default="",max_length=1000)
     days:List[ProgramTemplateDaySaveIn]=Field(min_length=1,max_length=30)
     items:List[ProgramTemplateItemSaveIn]=Field(min_length=1,max_length=500)
@@ -3262,7 +3269,7 @@ CLIENT_RESPONSE_FIELDS=(
     "id","name","email","goal","weight","kcal","protein","fat","carbs",
     "meal_plan","status","first_name","last_name","age","sex",
     "contraindications","injuries","contact","instagram","telegram","tiktok","avatar","trainer_id",
-    "plan_code","access_until","access","live_status","created_at","needs_review_count",
+    "plan_code","access_until","access","live_status","created_at","needs_review_count","show_rir",
     "finished_workout_count","last_finished_at","review_state",
     "workouts_28d","program_days_count","nutrition_days_7d","checkin_pending_count","last_checkin_at",
 )
@@ -3365,6 +3372,12 @@ def add_client(x:ClientIn,user:AuthUser=Depends(require_trainer)):
         c=one("SELECT * FROM clients WHERE id=?",(i,))
         return {"client":client_response(c),"invite_sent":sent}
     except psycopg.errors.UniqueViolation: raise HTTPException(400,"Email вже використовується")
+
+@app.patch("/api/client/{cid}/program-rir")
+def set_program_rir(cid:int,x:ProgramRirVisibilityIn,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    run("UPDATE clients SET show_rir=? WHERE id=?",(x.show_rir,cid))
+    return {"ok":True,"show_rir":x.show_rir}
 
 @app.patch("/api/clients/{cid}/status")
 def set_client_status(cid:int,x:ClientStatusIn,user:AuthUser=Depends(require_trainer)):
@@ -3673,15 +3686,15 @@ def create_program_template(x:ProgramTemplateCreateIn,user:AuthUser=Depends(requ
     name=x.name.strip()
     if not name:raise HTTPException(400,"Вкажіть назву шаблону")
     with con() as db:
-        client=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.source_client_id,)).fetchone()
+        client=db.execute("SELECT id,show_rir FROM clients WHERE id=%s FOR UPDATE",(x.source_client_id,)).fetchone()
         if not client:raise HTTPException(404,"Клієнта не знайдено")
         items=db.execute("""SELECT * FROM program WHERE client_id=%s
                             ORDER BY day_name,COALESCE(sort,0),id""",(x.source_client_id,)).fetchall()
         if not items:raise HTTPException(400,"У клієнта ще немає програми")
         if any(normalize_execution_mode(item.get("execution_mode"))=="time" for item in items):
             raise HTTPException(400,"Шаблони вправ за часом додамо окремим етапом. Поточну програму клієнта не змінено.")
-        tid=db.execute("""INSERT INTO program_templates(trainer_id,name,description)
-                          VALUES(%s,%s,%s) RETURNING id""",(user.user_id,name,x.description.strip())).fetchone()["id"]
+        tid=db.execute("""INSERT INTO program_templates(trainer_id,name,description,show_rir)
+                          VALUES(%s,%s,%s,%s) RETURNING id""",(user.user_id,name,x.description.strip(),bool(client["show_rir"]))).fetchone()["id"]
         days=db.execute("""SELECT day_name,title FROM program_days WHERE client_id=%s""",(x.source_client_id,)).fetchall()
         day_names=[]
         for item in items:
@@ -3741,8 +3754,8 @@ def write_program_template_payload(db,template_id:int,x:ProgramTemplateSaveIn):
     used_days={row[0] for row in normalized_items}
     if any(day not in used_days for day in day_names):
         raise HTTPException(400,"Кожен тренувальний день має містити хоча б одну вправу")
-    db.execute("UPDATE program_templates SET name=%s,description=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",
-               (name,x.description.strip(),template_id))
+    db.execute("UPDATE program_templates SET name=%s,description=%s,show_rir=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",
+               (name,x.description.strip(),x.show_rir,template_id))
     db.execute("DELETE FROM program_template_items WHERE template_id=%s",(template_id,))
     db.execute("DELETE FROM program_template_days WHERE template_id=%s",(template_id,))
     for pos,d in enumerate(ordered_days,1):
@@ -3793,7 +3806,7 @@ def delete_program_template(template_id:int,user:AuthUser=Depends(require_traine
 def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUser=Depends(require_trainer)):
     authorize_client(user,x.client_id)
     with con() as db:
-        t=db.execute("SELECT id FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",(template_id,user.user_id)).fetchone()
+        t=db.execute("SELECT id,show_rir FROM program_templates WHERE id=%s AND trainer_id=%s FOR UPDATE",(template_id,user.user_id)).fetchone()
         if not t:raise HTTPException(404,"Шаблон не знайдено")
         client=db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(x.client_id,)).fetchone()
         if not client:raise HTTPException(404,"Клієнта не знайдено")
@@ -3802,6 +3815,7 @@ def apply_program_template(template_id:int,x:ProgramTemplateApplyIn,user:AuthUse
         days=db.execute("SELECT * FROM program_template_days WHERE template_id=%s ORDER BY sort,id",(template_id,)).fetchall()
         items=db.execute("SELECT * FROM program_template_items WHERE template_id=%s ORDER BY day_name,sort,id",(template_id,)).fetchall()
         if not items:raise HTTPException(400,"Шаблон порожній")
+        db.execute("UPDATE clients SET show_rir=%s WHERE id=%s",(bool(t["show_rir"]),x.client_id))
         db.execute("DELETE FROM program_days WHERE client_id=%s",(x.client_id,))
         db.execute("DELETE FROM program WHERE client_id=%s",(x.client_id,))
         for d in days:
