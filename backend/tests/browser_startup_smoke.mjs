@@ -12,6 +12,10 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 let remoteSearchCalls=0,previewCalls=0;
 let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 let structuredCatalogCalls=0,mealPlanSavedPayload=null;
+let diarySeq=0;const diaryRows=[];const diaryDays=new Set();
+const calculated=(row)=>({...row,...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
+const diaryPayload=(day)=>{const items=diaryRows.filter(x=>x.day===day).map(calculated);
+ return {day,active:diaryDays.has(day),items,totals:Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(items.reduce((sum,x)=>sum+x[k],0)).toFixed(1)]))};};
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/api/session'){
@@ -71,6 +75,37 @@ const server=http.createServer(async(req,res)=>{
     for await(const part of req)raw+=part;
     try{mealPlanSavedPayload=JSON.parse(raw)}catch{mealPlanSavedPayload=null}
     res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
+  }
+  if(pathname==='/api/nutrition/diary/overview'){
+    const days=[...diaryDays].map(day=>({
+      ...diaryPayload(day).totals,day,item_count:diaryRows.filter(x=>x.day===day).length
+    }));
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({days}));return;
+  }
+  if(pathname==='/api/nutrition/diary'&&req.method==='GET'){
+    const day=new URL(req.url,'http://localhost').searchParams.get('day');
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify(diaryPayload(day)));return;
+  }
+  if(pathname==='/api/nutrition/diary'&&req.method==='POST'){
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw);const row={...body,id:++diarySeq};
+    diaryRows.push(row);diaryDays.add(body.day);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item:calculated(row)}));return;
+  }
+  if(pathname.startsWith('/api/nutrition/diary/')&&['PATCH','DELETE'].includes(req.method)){
+    const id=Number(pathname.split('/').at(-1)),row=diaryRows.find(x=>x.id===id);
+    if(!row){res.writeHead(404,{'content-type':'application/json'});res.end('{"detail":"Not found"}');return;}
+    if(req.method==='DELETE'){
+      diaryRows.splice(diaryRows.indexOf(row),1);
+      res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;
+    }
+    let raw='';for await(const part of req)raw+=part;
+    const body=JSON.parse(raw);row.grams=body.grams;row.meal=body.meal;
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify({item:calculated(row)}));return;
   }
   if(pathname==='/api/foods/preview'){
     previewCalls++;
@@ -141,8 +176,34 @@ try{
   await page.locator('#foodLookupMacros').getByText('150',{exact:true}).waitFor({timeout:3000});
   const portions=await page.locator('#foodLookupMacros .food-lookup-macros b').allInnerTexts();
   assert.deepEqual(portions.map(v=>Number(v.replace(',','.'))),[150,6,1.5,30],'Incorrect macro portion');
-  await page.locator('#foodSearchClose').click();
-  assert.equal(await page.locator('#foodSearchModal').count(),0,'Food modal remains open');
+  assert.equal(await page.locator('#foodLookupMeal option').count(),4);
+  await page.locator('#foodLookupMeal').selectOption('lunch');
+  await page.locator('#foodLookupAddToDiary').click();
+  await page.locator('#foodSearchModal').waitFor({state:'detached',timeout:5000});
+  await page.locator('.nutrition-diary-meal[data-meal="lunch"] .nutrition-diary-item').waitFor({timeout:5000});
+  assert.equal(await page.locator('.nutrition-diary-item').count(),1,'Search product never reached diary');
+  assert.ok((await page.locator('.nutrition-diary-day-total').innerText()).includes('150'),
+    'Diary total did not reflect new consumed meal');
+  const afterAdd=await page.evaluate(()=>window.nutritionDiaryState);
+  assert.equal(afterAdd.items[0].grams,150);
+  assert.equal(afterAdd.items[0].protein,6);
+  assert.equal(afterAdd.totals.carbs,30);
+  assert.ok(await page.locator('.redesign-calorie-card').innerText().then(x=>x.includes('150')),
+    'Main calorie progress was not connected to recorded products');
+  await page.locator('.nutrition-diary-item-actions button').first().click();
+  await page.locator('#nutritionDiaryEditGrams').fill('200');
+  await page.locator('#nutritionDiaryEditMeal').selectOption('breakfast');
+  await page.locator('#nutritionDiaryEditModal button.primary').click();
+  await page.locator('.nutrition-diary-meal[data-meal="breakfast"] .nutrition-diary-item').waitFor({timeout:5000});
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,200,
+    'Editing portion should update day total');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('.nutrition-diary-item-actions button').nth(1).click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===0);
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).active,true,
+    'Deleting last product must keep diary mode instead of restoring old manual totals');
+  assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
+  assert.equal(await page.locator('#foodSearchModal').count(),0,'Search modal remained open');
   await page.evaluate(()=>{
     session={role:'trainer',user_id:1};
     document.body.classList.remove('client-ui');
