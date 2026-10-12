@@ -236,7 +236,13 @@ try{
  // daily choices. Legacy incomplete per-meal alternatives remain readable.
  await page.evaluate(meals=>{
   const host=document.createElement('section');host.id='clientRationSmoke';document.body.appendChild(host);
-  host.innerHTML=clientMealPlanHTML({client:{meal_plan:''},nutrition_plan:meals});
+  host.innerHTML=clientMealPlanHTML({client:{meal_plan:''},nutrition_plan:meals.map(item=>({
+   ...item,foods_json:JSON.stringify(item.foods),
+   content:'Страва: '+item.dish_title+'\n'
+    +item.foods.map(food=>food.source_id+' — '+food.grams+' г').join('\n')
+    +'\n\nДо цільових БЖВ: 500 ккал · Б 30 · Ж 15 · В 65'
+    +'\n\nПриготування: '+item.preparation
+  }))});
  },saved.meals);
  assert.equal(await page.locator('#clientRationSmoke .client-ration-tab').count(),3,
    'Client cannot choose complete rations');
