@@ -8,7 +8,8 @@ try{
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  const errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.setContent('<html><body><section id="nutritionPlanHost"></section><div id="nutrition"></div></body></html>');
+ await page.setContent('<html><body class="eplan-redesign trainer-ui"><section id="nutritionPlanHost"></section><div id="nutrition"></div></body></html>');
+ await page.addStyleTag({path:'backend/static/css/refinements.css'});
  const foodCatalog=[
   {source_id:'smoke-rice',name:'Рис білий (відварений)',unit:'g',kcal_100:130,protein_100:2.8,fat_100:.3,carbs_100:28.7,optional_vegetable:false},
   {source_id:'smoke-egg',name:'Яйце куряче (варене круто)',unit:'pcs',grams_per_piece:50,kcal_100:155,protein_100:12.6,fat_100:10.6,carbs_100:1.1,optional_vegetable:false},
@@ -25,7 +26,18 @@ try{
   window.alert=msg=>{(window.__alerts||=[]).push(msg)};
   window.setActionLoading=()=>()=>{};
   window.currentClientData={client:{id:123,kcal:2380,protein:160,fat:60,carbs:300},nutrition_plan:[]};
-  window.loadClientData=async()=>window.currentClientData;
+  window.loadClientData=async()=>{
+   const request=window.__requests?.findLast(x=>x.path==='/client/123/nutrition');
+   if(!request)return window.currentClientData;
+   const saved=JSON.parse(request.opts.body);
+   return {client:window.currentClientData.client,nutrition_plan:saved.meals.map(item=>({
+    ...item,foods_json:JSON.stringify(item.foods),
+    content:'Страва: '+(item.dish_title||'Страва без назви')+'\n'
+     +item.foods.map(f=>f.source_id+' — '+f.grams+' г').join('\n')
+     +'\n\nДо цільових БЖВ: '+(item.variant_number===1?'2300':'2450')
+     +' ккал · Б 140 · Ж 70 · В 290\n\nПриготування: '+item.preparation
+   }))};
+  };
   window.nutritionHTML=()=>'<p>Saved</p>';
   window.__requests=[];
   const cats=['breakfast','lunch','dinner','snack'];
@@ -83,6 +95,12 @@ try{
  await page.locator('.meal-editor').nth(1).locator('.trainer-meal-recipe button').click();
  await page.locator('#recipeTemplatePicker').waitFor();
  assert.equal(await page.locator('.recipe-template-card').count(),15);
+ // A stable SVG cross must be exactly centered in its square tap target.
+ const closeOffset=await page.locator('#recipeTemplateClose').evaluate(button=>{
+  const a=button.getBoundingClientRect(),b=button.querySelector('svg').getBoundingClientRect();
+  return Math.max(Math.abs(a.x+a.width/2-b.x-b.width/2),Math.abs(a.y+a.height/2-b.y-b.height/2));
+ });
+ assert.ok(closeOffset<1,'Recipe library close icon is not visually centered: '+closeOffset);
  await page.locator('#recipeTemplateList [data-recipe="mock-lunch-3"]').click();
  await page.locator('#recipeTemplatePicker').waitFor({state:'detached'});
  const selected=await page.evaluate(()=>nutritionPlanDraft.find(x=>x.meal_number===2&&x.variant_number===2));
@@ -114,6 +132,58 @@ try{
  assert.equal(saved.meals.length,12,'Rations must persist as meal/variant combinations');
  assert.ok(saved.meals.some(x=>x.dish_title==='Страва lunch 3'&&x.preparation.includes('Змішай')));
  assert.ok(saved.meals.every(x=>x.foods.length>0));
+ // After trainer saves, the persisted assigned plan is visible without another tap.
+ assert.equal(await page.locator('#nutrition .trainer-saved-ration-tab').count(),3,
+  'Saved plan must render ration tabs in the trainer client card immediately');
+ assert.equal(await page.locator('#nutrition #nutritionPlanBody.hidden').count(),0,
+  'Saved plan card unexpectedly collapsed after saving');
+ assert.equal(await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').count(),1,
+  'Trainer preview stacks independent whole-day rations');
+ assert.equal(await page.locator('#nutrition .trainer-assigned-meal').count(),12,
+  'Trainer preview must include all saved dishes across three rations');
+ assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),3,
+  'Saved, structured full-day totals are missing');
+ const seenOne=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
+ assert.ok(seenOne.includes('Вихідне блюдо 1 1'));
+ assert.ok(seenOne.replace(/\s/g,'').includes('2300ккал'));
+ await page.locator('#nutrition .trainer-saved-ration-tab').nth(1).click();
+ const seenTwo=await page.locator('#nutrition .trainer-saved-ration-page:not([hidden])').innerText();
+ assert.ok(seenTwo.includes('Страва lunch 3'));
+ assert.ok(seenTwo.replace(/\s/g,'').includes('2450ккал'));
+ assert.notEqual(seenOne,seenTwo);
+ assert.equal(await page.locator('#nutrition .trainer-saved-ration-tab[aria-selected="true"]').count(),1);
+ assert.equal(await page.locator('#nutrition .trainer-saved-plan-actions button').count(),1);
+ await page.locator('#nutrition .trainer-saved-plan-actions button').click();
+ assert.equal(await page.locator('#nutrition .meal-editor').count(),4,
+   'Edit button did not reopen the assigned meal editor');
+ assert.equal(await page.locator('#nutrition .trainer-nutrition-target-card.is-saved').count(),1,
+   'Editing dishes should not reset previously saved calorie/BJU targets');
+
+
+ // Older incomplete or text-only alternatives must remain readable, with no
+ // invented total when per-meal nutrient provenance is unavailable.
+ await page.evaluate(meals=>{
+  const legacy=meals.filter(x=>!(x.meal_number===4&&x.variant_number===2))
+   .map(x=>({...x,foods_json:'[]',content:'Звичайний текстовий план <script>невідоме</script>'}));
+  document.querySelector('#nutrition').innerHTML=nutritionHTML({
+   client:window.currentClientData.client,nutrition_plan:legacy
+  });
+ },saved.meals);
+ assert.equal(await page.locator('#nutrition .trainer-saved-ration-tab').count(),0,
+  'Incomplete legacy alternatives falsely grouped into whole-day rations');
+ assert.ok((await page.locator('#nutrition').innerText()).includes('Варіант 2'));
+ assert.equal(await page.locator('#nutrition .trainer-assigned-day-total').count(),0);
+ assert.equal(await page.locator('#nutrition script').count(),0,'Legacy text must be escaped');
+
+ // Empty plan keeps old creation actions, rather than showing phantom rations.
+ await page.evaluate(()=>{
+  document.querySelector('#nutrition').innerHTML=nutritionHTML({
+   client:{...window.currentClientData.client,meal_plan:''},nutrition_plan:[]
+  });
+ });
+ assert.equal(await page.locator('#nutrition .trainer-saved-plan').count(),0);
+ assert.equal(await page.locator('#nutrition .meal-autoplan-open').count(),1);
+
  // Real client view: select one complete ration, never stack incompatible
  // daily choices. Legacy incomplete per-meal alternatives remain readable.
  await page.evaluate(meals=>{

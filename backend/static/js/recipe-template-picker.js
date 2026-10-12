@@ -94,7 +94,7 @@ window.openRecipeTemplatePicker=async function(n,v){
   '<div id="recipeTemplatePicker" class="modal" role="dialog" aria-modal="true" aria-labelledby="recipeTemplateTitle">'
   +'<div class="card recipe-template-sheet">'
   +'<header class="recipe-template-head"><div><h2 id="recipeTemplateTitle">Бібліотека страв</h2><p>60 варіантів, продукти з перевіреної бази · порції під добову ціль</p></div>'
-  +'<button type="button" id="recipeTemplateClose" aria-label="Закрити">×</button></header>'
+  +'<button type="button" id="recipeTemplateClose" aria-label="Закрити"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18"/></svg></button></header>'
   +'<input id="recipeTemplateSearch" type="search" placeholder="Назва страви або інгредієнт" autocomplete="off">'
   +'<div class="recipe-template-categories" id="recipeTemplateFilters"></div>'
   +'<p id="recipeTemplateCount" class="recipe-template-count"></p>'
