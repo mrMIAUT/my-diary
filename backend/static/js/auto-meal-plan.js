@@ -87,6 +87,9 @@ async function applyDraft(){
  const copy=(preview.meals||[]).map(x=>({
    meal_number:+x.meal_number,variant_number:+x.variant_number,
    sort:+x.sort,content:String(x.content||''),
+   dish_title:String(x.dish_title||''),preparation:String(x.preparation||''),
+   recipe_id:String(x.recipe_id||''),recipe_source_url:String(x.recipe_source_url||''),
+   recipe_source_name:String(x.recipe_source_name||''),
    foods:(x.foods||[]).map(food=>({
      source_id:food.source_id,grams:+food.grams,
      count:food.count??null,count_in_targets:food.count_in_targets!==false
