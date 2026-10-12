@@ -313,7 +313,14 @@ function mealEditorBlock(n,editing){
 
 function updateMealDraft(el){let x=nutritionPlanDraft.find(v=>v.meal_number===+el.dataset.meal&&v.variant_number===+el.dataset.variant);if(x){x.content=el.value;if(x.foods?.length)x.foods=[];window.trainerRecipeChanged(x);window.refreshTrainerRationAccuracy()}}
 
-function rerenderNutritionPlan(editing=true){let old=$('#nutritionPlanBody'),wasOpen=old&&!old.classList.contains('hidden');let host=$('#nutritionPlanHost');if(host)host.innerHTML=mealPlanEditorHTML(window.currentClientData,editing);if(wasOpen){let b=$('#nutritionPlanBody');if(b)b.classList.remove('hidden')}}
+function rerenderNutritionPlan(editing=true){
+ const scope=document.querySelector('#nutrition');
+ const old=scope?.querySelector('#nutritionPlanBody')||$('#nutritionPlanBody');
+ const wasOpen=old&&!old.classList.contains('hidden');
+ const host=scope?.querySelector('#nutritionPlanHost')||$('#nutritionPlanHost');
+ if(host)host.innerHTML=mealPlanEditorHTML(window.currentClientData,editing);
+ if(wasOpen)host?.querySelector('#nutritionPlanBody')?.classList.remove('hidden');
+}
 
 function addMealBlock(){let n=Math.max(0,...nutritionPlanDraft.map(x=>x.meal_number))+1;let ids=trainerCompleteRations()?trainerRationIds():[1];for(const v of ids)nutritionPlanDraft.push({meal_number:n,variant_number:v,content:'',foods:[],sort:0});rerenderNutritionPlan(true)}
 
@@ -403,11 +410,9 @@ window.ensureStructuredMealEditor=async function(){
 window.openTrainerStructuredMealPlan=async function(){
  try{
    await window.ensureStructuredMealEditor();
-   if(!document.querySelector('#nutritionPlanBody textarea')&&!document.querySelector('.meal-editor')){
-     editNutritionTargets();
-   }else if(!document.querySelector('#nutritionPlanBody .meal-editor')){
-     editNutritionTargets();
-   }
+   // Edit the assigned plan only. Do not put saved calorie/BJU targets
+   // into blank edit inputs just because the trainer opened the meal editor.
+   nutritionPlanDraft=planFromData(window.currentClientData);
    rerenderNutritionPlan(true);
    document.querySelector('#nutritionPlanBody')?.classList.remove('hidden');
  }catch(e){console.warn(e);alert('Не вдалося відкрити редактор продуктів.');}
