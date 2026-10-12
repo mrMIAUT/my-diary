@@ -317,13 +317,25 @@ try{
   await page.locator('#customFood_protein_100').fill('18');
   await page.locator('#customFood_fat_100').fill('7');
   await page.locator('#customFood_carbs_100').fill('2');
+  assert.equal(await page.locator('#customFood_saturated_fat_100').inputValue(),'');
+  assert.equal(await page.locator('#customFood_sugars_100').inputValue(),'');
+  await page.locator('#customFood_saturated_fat_100').fill('8');
+  await page.locator('#saveCustomFoodButton').click();
+  assert.ok((await page.locator('#customFoodError').innerText()).includes('Насичені'),
+    'Saturated fat larger than total fat should fail on client');
+  await page.locator('#customFood_saturated_fat_100').fill('3.2');
+  await page.locator('#customFood_sugars_100').fill('1.2');
   await page.locator('#saveCustomFoodButton').click();
   await page.locator('#myProductModal').waitFor({state:'detached',timeout:4000});
   assert.equal(personalFoods.length,1);
   assert.equal(personalFoods[0].review_status,'private');
+  assert.equal(personalFoods[0].saturated_fat_100,3.2);
+  assert.equal(personalFoods[0].sugars_100,1.2);
   assert.equal(publicFoods.length,0,'Personal food appeared in public catalogue without approval');
   assert.equal(await page.locator('#foodLookupPortion strong').first().innerText(),'Домашній сир CI');
   await page.locator('#foodLookupGrams').fill('120');
+  assert.match(await page.locator('#foodLookupMacros .food-lookup-details').innerText(),/3,8 г/);
+  assert.match(await page.locator('#foodLookupMacros .food-lookup-details').innerText(),/1,4 г/);
   await page.locator('#foodLookupMeal').selectOption('breakfast');
   await page.locator('#foodLookupAddToDiary').click();
   await page.locator('.nutrition-diary-meal[data-meal=breakfast] .nutrition-diary-item').waitFor({timeout:4000});
@@ -362,16 +374,24 @@ try{
   await page.locator('#customFood_protein_100').fill('6');
   await page.locator('#customFood_fat_100').fill('3');
   await page.locator('#customFood_carbs_100').fill('10');
+  await page.locator('#customFood_saturated_fat_100').fill('1.1');
+  await page.locator('#customFood_sugars_100').fill('8');
   await page.locator('#customFoodSubmitReview').check();
   await page.locator('#saveCustomFoodButton').click();
   await page.waitForFunction(()=>document.querySelector('#myProductModal')===null);
   assert.equal(personalFoods.filter(x=>x.review_status==='pending').length,1);
+  assert.equal(personalFoods.find(x=>x.review_status==='pending').sugars_100,8);
   assert.equal(publicFoods.length,0);
   await page.locator('#foodSearchClose').click();
   await page.evaluate(()=>window.openTrainerFoodReview());
   await page.locator('.trainer-food-review-row').waitFor({timeout:4000});
   assert.equal(await page.locator('.trainer-food-review-row').count(),1);
   await page.locator('.trainer-food-review-row .food-review-kcal_100').fill('81');
+  assert.equal(await page.locator('.trainer-food-review-row .food-review_saturated_fat_100').count(),0);
+  assert.equal(await page.locator('.trainer-food-review-row .food-review-saturated_fat_100').inputValue(),'1.1');
+  assert.equal(await page.locator('.trainer-food-review-row .food-review-sugars_100').inputValue(),'8');
+  await page.locator('.trainer-food-review-row .food-review-saturated_fat_100').fill('1.4');
+  await page.locator('.trainer-food-review-row .food-review-sugars_100').fill('8.6');
   await page.locator('.trainer-food-review-row .food-review-note').fill('Verified CI test label');
   page.once('dialog',dialog=>dialog.accept());
   await page.locator('.trainer-food-review-actions button.primary').click();
@@ -379,6 +399,8 @@ try{
   assert.equal(publicFoods.length,1,'Trainer approval did not publish the reviewed product');
   assert.equal(publicFoods[0].kcal_100,81,
    'The shared catalogue ignored trainer-corrected nutrition values');
+  assert.equal(publicFoods[0].saturated_fat_100,1.4);
+  assert.equal(publicFoods[0].sugars_100,8.6);
   await page.locator('#trainerFoodReviewModal button.dark').click();
   assert.equal(await page.locator('#foodSearchModal').count(),0);
 

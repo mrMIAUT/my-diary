@@ -136,6 +136,23 @@ private=app.create_private_food(app.PrivateFoodIn(
  name="Домашній сир CI",brand="Власний",kcal_100=142,
  protein_100=18,fat_100=7,carbs_100=2,submit_for_review=False),client_user)["item"]
 assert private["review_status"]=="private"
+assert private["saturated_fat_100"] is None and private["sugars_100"] is None, "Legacy custom foods must preserve unknown optional values as NULL"
+private=app.edit_private_food(private["id"],app.PrivateFoodIn(
+ name="Домашній сир CI",brand="Власний",kcal_100=142,
+ protein_100=18,fat_100=7,carbs_100=2,
+ saturated_fat_100=3.2,sugars_100=1.2),client_user)["item"]
+assert private["saturated_fat_100"]==3.2 and private["sugars_100"]==1.2,private
+assert any(x["saturated_fat_100"]==3.2 for x in app.my_private_foods(client_user)["items"])
+try:app.create_private_food(app.PrivateFoodIn(
+ name="Недійсні жири",kcal_100=100,protein_100=1,
+ fat_100=3,carbs_100=10,saturated_fat_100=4),client_user)
+except HTTPException as e:assert e.status_code==400,e
+else:raise AssertionError("Saturated fat larger than total fat was accepted")
+try:app.create_private_food(app.PrivateFoodIn(
+ name="Недійсні цукри",kcal_100=100,protein_100=1,
+ fat_100=3,carbs_100=10,sugars_100=11),client_user)
+except HTTPException as e:assert e.status_code==400,e
+else:raise AssertionError("Sugar larger than total carbohydrates was accepted")
 assert any(x["id"]==private["id"] for x in app.my_private_foods(client_user)["items"])
 assert not any(x["name"]=="Домашній сир CI" for x in app._public_food_matches("Домашній сир CI",8))
 try:app.edit_private_food(private["id"],app.PrivateFoodIn(
@@ -144,8 +161,14 @@ except HTTPException as e:assert e.status_code==404,e
 else:raise AssertionError("Another client edited a private product")
 candidate=app.create_private_food(app.PrivateFoodIn(
  name="Йогурт перевірка CI",brand="CI",kcal_100=87,
- protein_100=6.0,fat_100=2.7,carbs_100=10.5,submit_for_review=True),client_user)["item"]
+ protein_100=6.0,fat_100=2.7,carbs_100=10.5,
+ saturated_fat_100=1.2,sugars_100=9.1,
+ submit_for_review=True),client_user)["item"]
 assert candidate["review_status"]=="pending"
+assert candidate["saturated_fat_100"]==1.2 and candidate["sugars_100"]==9.1
+assert any(x["sugars_100"]==9.1 for x in app.trainer_food_submissions(
+ app.AuthUser(role="trainer",user_id=1,client_id=None,session_id=0,
+ expires_at=datetime.now(timezone.utc),name="Trainer"))["items"])
 assert not app._public_food_matches("Йогурт перевірка CI",8)
 trainer=app.AuthUser(role="trainer",user_id=1,client_id=None,session_id=0,
  expires_at=datetime.now(timezone.utc),name="Trainer")
@@ -153,10 +176,12 @@ queue=app.trainer_food_submissions(trainer)["items"]
 assert any(x["id"]==candidate["id"] for x in queue)
 approved=app.trainer_food_review(candidate["id"],app.PrivateFoodReviewIn(
  decision="approve",name="Йогурт перевірка CI",brand="CI",note="Verified CI test label",
- kcal_100=81,protein_100=6,fat_100=2.4,carbs_100=9.8),trainer)
+ kcal_100=81,protein_100=6,fat_100=2.4,carbs_100=9.8,
+ saturated_fat_100=1.4,sugars_100=8.6),trainer)
 assert approved["status"]=="approved"
 global_hit=app._public_food_matches("Йогурт перевірка CI",8)
 assert len(global_hit)==1 and global_hit[0]["kcal_100"]==81,global_hit
+assert global_hit[0]["saturated_fat_100"]==1.4 and global_hit[0]["sugars_100"]==8.6,global_hit
 assert any(x["source_id"]==global_hit[0]["source_id"] for x in
  app.prototype_food_preview("Йогурт перевірка CI",8)["items"])
 assert any(x["name"]=="Йогурт перевірка CI" for x in
@@ -190,6 +215,12 @@ assert app.delete_saved_recipe(recipe["id"],client_user)["ok"] is True
 assert any(x["id"]==logged["id"] for x in app.food_diary_get(day,client_user)["items"]),\
  "Deleting a recipe must not delete historical consumed diary records"
 assert app.food_diary_delete(logged["id"],client_user)["ok"] is True
+# Idempotent additive schema migration must preserve older and newly filled
+# optional values, with no rewriting of saved diary or assigned plans.
+app.init()
+post=app.rows("SELECT saturated_fat_100,sugars_100 FROM nutrition_private_foods WHERE id=?",
+              (private["id"],))[0]
+assert float(post["saturated_fat_100"])==3.2 and float(post["sugars_100"])==1.2
 
 try:app.FoodDiaryAddIn(
  day=day,meal="lunch",name="Invalid",grams=float("nan"),

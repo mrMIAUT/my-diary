@@ -554,7 +554,8 @@ window.openTrainerFoodReview=async function(){
   const list=document.getElementById('trainerFoodReviewList');if(!list)return;
   const items=data.items||[];
   list.innerHTML=items.length?items.map(x=>{
-   const id=Number(x.id),value=k=>Number(x[k]||0);
+   const id=Number(x.id),value=k=>Number(x[k]||0),
+     optional=k=>x[k]==null?'':Number(x[k]);
    return '<div class="trainer-food-review-row" data-food-id="'+id+'">'
     +'<strong>'+esc(x.name)+'</strong>'
     +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
@@ -567,6 +568,12 @@ window.openTrainerFoodReview=async function(){
       .map(([key,label])=>'<label>'+label+' /100 г<input type="number" min="0" step="0.01"'
         +' max="'+(key==='kcal_100'?1000:100)+'" class="food-review-'+key+'"'
         +' value="'+value(key)+'"></label>').join('')
+    +'<div class="trainer-food-review-extra"><small>Додатково (необов’язково) · на 100 г</small>'
+      +'<div class="trainer-food-review-inputs">'
+      +[['saturated_fat_100','Насичені жири'],['sugars_100','Цукри']]
+        .map(([key,label])=>'<label>'+label+' /100 г<input type="number" min="0" step="0.01" max="100"'
+          +' class="food-review-'+key+'" placeholder="—" value="'+optional(key)+'"></label>').join('')
+      +'</div></div>'
     +'</div><label>Джерело перевірки / коментар'
     +'<textarea class="food-review-note" maxlength="500" rows="2" placeholder="Етикетка, виробник або причина відхилення"></textarea></label>'
     +'<p class="food-review-message" role="status"></p>'
@@ -581,14 +588,24 @@ window.openTrainerFoodReview=async function(){
 window.submitTrainerFoodReview=async function(id,decision,button){
  const row=button.closest('.trainer-food-review-row');if(!row)return;
  const read=key=>Number(row.querySelector('.food-review-'+key)?.value);
+ const readOptional=key=>{
+  const raw=String(row.querySelector('.food-review-'+key)?.value??'').trim();
+  return raw===''?null:Number(raw.replace(',','.'));
+ };
  const note=row.querySelector('.food-review-note')?.value.trim()||'';
  const error=row.querySelector('.food-review-message');
  const payload={decision,name:row.querySelector('.food-review-name')?.value.trim()||'',
   brand:row.querySelector('.food-review-brand')?.value.trim()||'',
   kcal_100:read('kcal_100'),protein_100:read('protein_100'),
-  fat_100:read('fat_100'),carbs_100:read('carbs_100'),note};
- if(note.length<4||decision==='approve'&&(!payload.name||!(payload.kcal_100||payload.protein_100||payload.fat_100||payload.carbs_100))){
-  if(error)error.textContent='Вкажи перевірене джерело та коректне КБЖУ.';return;
+  fat_100:read('fat_100'),carbs_100:read('carbs_100'),
+  saturated_fat_100:readOptional('saturated_fat_100'),
+  sugars_100:readOptional('sugars_100'),note};
+ if(note.length<4||decision==='approve'&&(
+   !payload.name||!(payload.kcal_100||payload.protein_100||payload.fat_100||payload.carbs_100)||
+   ['saturated_fat_100','sugars_100'].some(k=>payload[k]!==null&&(!Number.isFinite(payload[k])||payload[k]<0||payload[k]>100))||
+   (payload.saturated_fat_100!==null&&payload.saturated_fat_100>payload.fat_100+0.01)||
+   (payload.sugars_100!==null&&payload.sugars_100>payload.carbs_100+0.01))){
+  if(error)error.textContent='Вкажи перевірене джерело і правильні КБЖУ. Насичені жири не більші за жири, цукри — за вуглеводи.';return;
  }
  if(decision==='approve'&&!confirm('Опублікувати перевірений продукт у загальному пошуку для всіх клієнтів?'))return;
  button.disabled=true;

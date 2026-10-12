@@ -924,6 +924,14 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        # v316: optional label details; NULL means not provided, not zero.
+        # ALTER is additive for databases with already-created private/public foods.
+        c.execute("""ALTER TABLE nutrition_private_foods
+            ADD COLUMN IF NOT EXISTS saturated_fat_100 NUMERIC(7,2)
+            CHECK(saturated_fat_100 BETWEEN 0 AND 100)""")
+        c.execute("""ALTER TABLE nutrition_private_foods
+            ADD COLUMN IF NOT EXISTS sugars_100 NUMERIC(7,2)
+            CHECK(sugars_100 BETWEEN 0 AND 100)""")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_private_foods_client
                      ON nutrition_private_foods(client_id,id DESC)""")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_private_foods_queue
@@ -939,6 +947,12 @@ def init():
             carbs_100 NUMERIC(7,2) NOT NULL CHECK(carbs_100 BETWEEN 0 AND 100),
             reviewed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        c.execute("""ALTER TABLE nutrition_public_foods
+            ADD COLUMN IF NOT EXISTS saturated_fat_100 NUMERIC(7,2)
+            CHECK(saturated_fat_100 BETWEEN 0 AND 100)""")
+        c.execute("""ALTER TABLE nutrition_public_foods
+            ADD COLUMN IF NOT EXISTS sugars_100 NUMERIC(7,2)
+            CHECK(sugars_100 BETWEEN 0 AND 100)""")
         c.execute("""CREATE TABLE IF NOT EXISTS nutrition_saved_recipes(
             id BIGSERIAL PRIMARY KEY,
             client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
@@ -1469,6 +1483,8 @@ class PrivateFoodIn(BaseModel):
     protein_100:float=Field(ge=0,le=100,allow_inf_nan=False)
     fat_100:float=Field(ge=0,le=100,allow_inf_nan=False)
     carbs_100:float=Field(ge=0,le=100,allow_inf_nan=False)
+    saturated_fat_100:float|None=Field(default=None,ge=0,le=100,allow_inf_nan=False)
+    sugars_100:float|None=Field(default=None,ge=0,le=100,allow_inf_nan=False)
     submit_for_review:bool=False
 
 class PrivateFoodReviewIn(BaseModel):
@@ -1479,6 +1495,8 @@ class PrivateFoodReviewIn(BaseModel):
     protein_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
     fat_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
     carbs_100:float=Field(default=0,ge=0,le=100,allow_inf_nan=False)
+    saturated_fat_100:float|None=Field(default=None,ge=0,le=100,allow_inf_nan=False)
+    sugars_100:float|None=Field(default=None,ge=0,le=100,allow_inf_nan=False)
     note:str=Field(min_length=4,max_length=500)
 
 class SavedRecipeCreateIn(BaseModel):
@@ -5421,8 +5439,9 @@ def diary_day_payload(client_id:int,day:date):
 # enter global searches, and review status cannot be set by client input.
 def _private_food_payload(row):
     d=dict(row)
-    for key in ("kcal_100","protein_100","fat_100","carbs_100"):
-        d[key]=float(d[key])
+    for key in ("kcal_100","protein_100","fat_100","carbs_100",
+                "saturated_fat_100","sugars_100"):
+        if d.get(key) is not None:d[key]=float(d[key])
     for key in ("created_at","updated_at","reviewed_at"):
         if d.get(key) is not None:d[key]=str(d[key])
     return d
@@ -5432,6 +5451,10 @@ def _valid_custom_food(x):
         raise HTTPException(400,"Вкажи назву та КБЖУ з етикетки або іншого джерела.")
     if x.protein_100+x.fat_100+x.carbs_100>110:
         raise HTTPException(400,"Сума БЖВ перевищує можливі 100 г продукту.")
+    if x.saturated_fat_100 is not None and x.saturated_fat_100>x.fat_100+0.01:
+        raise HTTPException(400,"Насичені жири не можуть перевищувати загальні жири.")
+    if x.sugars_100 is not None and x.sugars_100>x.carbs_100+0.01:
+        raise HTTPException(400,"Цукри не можуть перевищувати загальні вуглеводи.")
     return x.name.strip(),x.brand.strip()
 
 @app.get("/api/nutrition/my-foods")
@@ -5452,9 +5475,11 @@ def create_private_food(x:PrivateFoodIn,user:AuthUser=Depends(require_client)):
                              WHERE client_id=%s""",(user.client_id,)).fetchone()["n"]
         if count>=200:raise HTTPException(409,"Максимум 200 власних продуктів.")
         item=db.execute("""INSERT INTO nutrition_private_foods
-            (client_id,name,brand,kcal_100,protein_100,fat_100,carbs_100,review_status)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+            (client_id,name,brand,kcal_100,protein_100,fat_100,carbs_100,
+             saturated_fat_100,sugars_100,review_status)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
             (user.client_id,name,brand,x.kcal_100,x.protein_100,x.fat_100,x.carbs_100,
+             x.saturated_fat_100,x.sugars_100,
              "pending" if x.submit_for_review else "private")).fetchone()
         db.commit()
     return {"item":_private_food_payload(item)}
@@ -5471,9 +5496,11 @@ def edit_private_food(food_id:int,x:PrivateFoodIn,user:AuthUser=Depends(require_
             raise HTTPException(409,"Опублікований продукт незмінний. Створи нову версію для перевірки.")
         item=db.execute("""UPDATE nutrition_private_foods SET
             name=%s,brand=%s,kcal_100=%s,protein_100=%s,fat_100=%s,carbs_100=%s,
+            saturated_fat_100=%s,sugars_100=%s,
             review_status=%s,review_note='',reviewed_at=NULL,updated_at=CURRENT_TIMESTAMP
             WHERE id=%s AND client_id=%s RETURNING *""",
             (name,brand,x.kcal_100,x.protein_100,x.fat_100,x.carbs_100,
+             x.saturated_fat_100,x.sugars_100,
              "pending" if x.submit_for_review else "private",food_id,user.client_id)).fetchone()
         if not item:raise HTTPException(404,"Продукт не знайдено")
         db.commit()
@@ -5516,10 +5543,10 @@ def trainer_food_review(food_id:int,x:PrivateFoodReviewIn,user:AuthUser=Depends(
         if x.decision=="approve":
             db.execute("""INSERT INTO nutrition_public_foods(
                       private_food_id,name,brand,source_note,kcal_100,
-                      protein_100,fat_100,carbs_100)
-                      VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
+                      protein_100,fat_100,carbs_100,saturated_fat_100,sugars_100)
+                      VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                       (food_id,name,brand,x.note.strip(),x.kcal_100,
-                       x.protein_100,x.fat_100,x.carbs_100))
+                       x.protein_100,x.fat_100,x.carbs_100,x.saturated_fat_100,x.sugars_100))
         status="approved" if x.decision=="approve" else "rejected"
         db.execute("""UPDATE nutrition_private_foods SET review_status=%s,
              review_note=%s,reviewed_at=CURRENT_TIMESTAMP
@@ -5541,7 +5568,9 @@ def _public_food_matches(q,limit):
          source_id="eplan-reviewed:"+str(x["id"]),source_label="ЄПЛАН · перевірено тренером",
          source="ЄПЛАН",approximate=False,food_type="branded" if x["brand"] else "generic",
          kcal_100=float(x["kcal_100"]),protein_100=float(x["protein_100"]),
-         fat_100=float(x["fat_100"]),carbs_100=float(x["carbs_100"])) for x in found]
+         fat_100=float(x["fat_100"]),carbs_100=float(x["carbs_100"]),
+         saturated_fat_100=(float(x["saturated_fat_100"]) if x["saturated_fat_100"] is not None else None),
+         sugars_100=(float(x["sugars_100"]) if x["sugars_100"] is not None else None)) for x in found]
 
 @app.get("/api/nutrition/recipes")
 def my_saved_recipes(user:AuthUser=Depends(require_client)):

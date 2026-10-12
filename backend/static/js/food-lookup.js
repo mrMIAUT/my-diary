@@ -103,7 +103,13 @@ function portion(){
   +'<span><b>'+amount('kcal_100')+'</b><small>ккал</small></span>'
   +'<span><b>'+amount('protein_100')+'</b><small>Білки</small></span>'
   +'<span><b>'+amount('fat_100')+'</b><small>Жири</small></span>'
-  +'<span><b>'+amount('carbs_100')+'</b><small>Вуглеводи</small></span></div>';
+  +'<span><b>'+amount('carbs_100')+'</b><small>Вуглеводи</small></span></div>'
+  +(chosen.saturated_fat_100!=null||chosen.sugars_100!=null
+    ?'<p class="food-lookup-details">'
+      +(chosen.saturated_fat_100!=null?'Із них насичені жири: '+amount('saturated_fat_100')+' г':'')
+      +(chosen.saturated_fat_100!=null&&chosen.sugars_100!=null?' · ':'')
+      +(chosen.sugars_100!=null?'Із них цукри: '+amount('sugars_100')+' г':'')
+      +'</p>':'');
 }
 
 window.addChosenFoodToDiary=async function(button){
@@ -148,7 +154,9 @@ function customFoodOption(item){
  source_label:'Мій продукт · особиста бібліотека',source_id:'private:'+item.id,
  approximate:true,
  kcal_100:Number(item.kcal_100),protein_100:Number(item.protein_100),
- fat_100:Number(item.fat_100),carbs_100:Number(item.carbs_100)};
+ fat_100:Number(item.fat_100),carbs_100:Number(item.carbs_100),
+ saturated_fat_100:item.saturated_fat_100==null?null:Number(item.saturated_fat_100),
+ sugars_100:item.sugars_100==null?null:Number(item.sugars_100)};
 }
 window.openMyFoodLibrary=async function(){
  $('myFoodsModal')?.remove();
@@ -164,6 +172,10 @@ window.openMyFoodLibrary=async function(){
   '<div class="my-food-row"><div><strong>'+esc(x.name)+'</strong>'
   +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
   +'<small>'+fmt(x.kcal_100)+' ккал · Б '+fmt(x.protein_100)+' · Ж '+fmt(x.fat_100)+' · В '+fmt(x.carbs_100)+'</small>'
+  +(x.saturated_fat_100!=null||x.sugars_100!=null
+   ?'<small>'+(x.saturated_fat_100!=null?'Насичені жири '+fmt(x.saturated_fat_100)+' г':'')
+    +(x.saturated_fat_100!=null&&x.sugars_100!=null?' · ':'')
+    +(x.sugars_100!=null?'Цукри '+fmt(x.sugars_100)+' г':'')+'</small>':'')
   +'<small>'+(x.review_status==='pending'?'На перевірці':x.review_status==='approved'?'Перевірено':x.review_status==='rejected'?'Не схвалено':'Особистий')+'</small></div>'
   +'<div class="my-food-row-actions"><button type="button" onclick="choosePrivateFood('+Number(x.id)+')">Додати</button>'
   +(x.review_status==='approved'?'':'<button type="button" onclick="openPrivateFoodForm('+Number(x.id)+')">Змінити</button>')
@@ -188,7 +200,7 @@ window.openPrivateFoodForm=function(id=null){
  const item=id?privateFoodItems.find(x=>Number(x.id)===Number(id)):null;
  privateFoodEditing=item?Number(item.id):null;
  $('myProductModal')?.remove();
- const value=(key)=>item?esc(item[key]):'';
+ const value=(key)=>item&&item[key]!=null?esc(item[key]):'';
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="myProductModal">'
   +'<div class="card my-foods-panel"><div class="between"><h2>'+(item?'Редагувати продукт':'Свій продукт')+'</h2>'
   +'<button type="button" class="dark" onclick="myProductModal.remove()">×</button></div>'
@@ -198,13 +210,22 @@ window.openPrivateFoodForm=function(id=null){
   +'<div class="my-food-macros">'
   +[['kcal_100','Ккал'],['protein_100','Білки, г'],['fat_100','Жири, г'],['carbs_100','Вуглеводи, г']]
    .map(([k,label])=>'<label>'+label+'<input id="customFood_'+k+'" inputmode="decimal" type="number" min="0" max="'+(k==='kcal_100'?1000:100)+'" step="0.01" value="'+value(k)+'"></label>').join('')
-  +'</div><label class="my-food-review"><input type="checkbox" id="customFoodSubmitReview">'
+  +'</div><div class="my-food-extra"><span>Додатково (необов’язково) · на 100 г</span>'
+  +'<div class="my-food-macros">'
+  +[['saturated_fat_100','Насичені жири, г'],['sugars_100','Цукри, г']]
+   .map(([k,label])=>'<label>'+label+'<input id="customFood_'+k+'" inputmode="decimal" type="number" min="0" max="100" step="0.01" placeholder="—" value="'+value(k)+'"></label>').join('')
+  +'</div><small>Насичені жири вже входять до жирів, а цукри — до вуглеводів. Не додавай їх до підсумку ще раз.</small></div>'
+  +'<label class="my-food-review"><input type="checkbox" id="customFoodSubmitReview">'
   +' Запропонувати для загальної бази після перевірки тренером</label>'
   +'<p class="my-food-hint">Без цього прапорця продукт залишиться тільки твоїм. Навіть із ним продукт НЕ публікується автоматично.</p>'
   +'<p class="my-food-error" id="customFoodError" role="alert"></p>'
   +'<button type="button" id="saveCustomFoodButton" class="my-food-primary" onclick="savePrivateFood(this)">Зберегти</button></div></div>');
 };
 window.savePrivateFood=async function(button){
+ const readOptional=id=>{
+  const raw=String($(id)?.value??'').trim();
+  return raw===''?null:Number(raw.replace(',','.'));
+ };
  const read=id=>{
   const raw=String($(id)?.value??'').trim();
   return raw===''?NaN:Number(raw.replace(',','.'));
@@ -212,11 +233,16 @@ window.savePrivateFood=async function(button){
  const vals={name:String($('customFoodName')?.value||'').trim(),brand:String($('customFoodBrand')?.value||'').trim(),
   kcal_100:read('customFood_kcal_100'),protein_100:read('customFood_protein_100'),
   fat_100:read('customFood_fat_100'),carbs_100:read('customFood_carbs_100'),
+  saturated_fat_100:readOptional('customFood_saturated_fat_100'),
+  sugars_100:readOptional('customFood_sugars_100'),
   submit_for_review:Boolean($('customFoodSubmitReview')?.checked)};
  const issue=$('customFoodError');
- if(vals.name.length<2||Object.keys(vals).filter(k=>k.endsWith('_100')).some(k=>!Number.isFinite(vals[k])||vals[k]<0)||
+ if(vals.name.length<2||['kcal_100','protein_100','fat_100','carbs_100'].some(k=>!Number.isFinite(vals[k])||vals[k]<0)||
+  ['saturated_fat_100','sugars_100'].some(k=>vals[k]!==null&&(!Number.isFinite(vals[k])||vals[k]<0||vals[k]>100))||
+  (vals.saturated_fat_100!==null&&vals.saturated_fat_100>vals.fat_100+0.01)||
+  (vals.sugars_100!==null&&vals.sugars_100>vals.carbs_100+0.01)||
   (!vals.kcal_100&&!vals.protein_100&&!vals.fat_100&&!vals.carbs_100)){
-  if(issue)issue.textContent='Заповни назву та всі значення КБЖУ на 100 г.';return;
+  if(issue)issue.textContent='Перевір КБЖУ на 100 г. Насичені жири мають бути не більші за всі жири, а цукри — за вуглеводи.';return;
  }
  button.disabled=true;
  try{
