@@ -1366,16 +1366,19 @@ body.eplan-redesign.client-ui .redesign-nutrition-page .meal-plan-card > .meal-p
 
 /* v310 — sixth concept: clean kcal header and three soft-colored B/J/V chips.
    Kept inside saved ration summaries only, shared between trainer and client. */
+/* v311: give the whole-day total a quiet visual priority over meal cards.
+   Pastel B/J/V chips and nutrition values are unchanged. */
 body.eplan-redesign .nutrition-menu-total-v6{
  display:grid!important;
  gap:12px!important;
  margin:3px 0 12px!important;
- padding:15px 13px 13px!important;
- border:1px solid #dfe7f2!important;
+ padding:15px 13px 13px 12px!important;
+ border:1px solid #bdd4f7!important;
+ border-left:3px solid #629cf2!important;
  border-radius:17px!important;
- background:#fff!important;
+ background:linear-gradient(115deg,#f0f6ff 0%,#f7faff 52%,#fff 100%)!important;
  color:#142b4d!important;
- box-shadow:0 4px 14px rgba(31,61,102,.035)!important;
+ box-shadow:0 7px 20px rgba(45,106,197,.10)!important;
  min-width:0!important;
 }
 body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading{
@@ -1387,9 +1390,9 @@ body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading{
  padding:0!important;
 }
 body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>span{
- color:#788aa5!important;
+ color:#496f9f!important;
  font-size:12px!important;
- font-weight:750!important;
+ font-weight:800!important;
  line-height:1.35!important;
 }
 body.eplan-redesign .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong{
