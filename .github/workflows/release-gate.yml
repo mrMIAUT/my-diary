@@ -83,3 +83,34 @@ jobs:
         run: python -m pip install -r backend/requirements.txt httpx
       - name: Test authenticated food route and catalog fallback
         run: python backend/tests/food_api_smoke.py
+
+  optional-rir-postgres:
+    name: RIR migration rehearsal (PostgreSQL 18)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eplan_rir_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d eplan_rir_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend runtime
+        run: python -m pip install -r backend/requirements.txt
+      - name: Exercise legacy schema migration, program toggle, and template ON/OFF
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/eplan_rir_test
+          TRAINER_EMAIL: rir-ci@example.invalid
+          TRAINER_PASSWORD: Ephemeral-CI-Trainer-Password-2026
+        run: python backend/tests/optional_rir_postgres_smoke.py
