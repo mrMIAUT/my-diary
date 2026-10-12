@@ -19080,3 +19080,59 @@ body.eplan-redesign.trainer-ui .trainer-review-set-block.skipped .trainer-review
   text-align:center!important;
   white-space:nowrap!important;
 }
+
+/* v263 — optional per-program RIR, including exercise and template editors.
+   We hide only unneeded controls; stored RIR and completed history are intact. */
+body.eplan-redesign.trainer-ui .program-rir-disabled .program-rir-field{
+  display:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-rir-toggle{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:14px 16px!important;
+  margin:0 0 14px!important;
+  border:1px solid #dce7f5!important;
+  border-radius:14px!important;
+  background:#f6f9fd!important;
+  color:#163153!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-rir-toggle>span{
+  display:flex!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  gap:3px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-rir-toggle strong{
+  font-size:14px!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-rir-toggle small{
+  font-size:11px!important;
+  line-height:1.35!important;
+  color:#718199!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-rir-toggle>input{
+  flex:0 0 20px!important;
+  width:20px!important;
+  height:20px!important;
+  accent-color:#267af3!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-head.no-rir,
+body.eplan-redesign.client-ui .lyfta-set-row.no-rir{
+  grid-template-columns:42px minmax(0,1fr) minmax(0,1fr) 38px!important;
+}
+body.eplan-redesign.client-ui .lyfta-set-row.no-rir.is-skipped{
+  grid-template-columns:42px minmax(0,1fr) auto!important;
+}
+@media(max-width:370px){
+  body.eplan-redesign.client-ui .lyfta-set-head.no-rir,
+  body.eplan-redesign.client-ui .lyfta-set-row.no-rir{
+    grid-template-columns:36px minmax(0,1fr) minmax(0,1fr) 34px!important;
+    gap:5px!important;
+  }
+  body.eplan-redesign.client-ui .lyfta-set-row.no-rir.is-skipped{
+    grid-template-columns:36px minmax(0,1fr) auto!important;
+  }
+}
