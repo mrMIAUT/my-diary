@@ -127,8 +127,24 @@ def _score(actual, target, grams, defaults):
     return fit + plausible
 
 
+def _practical_portion_bounds(item):
+    """Round automatically generated ingredients to tens of grams.
+    Whole eggs still count as 50 g of edible mass per piece.
+    Existing manual or saved portions are not modified.
+    """
+    name, low, high, step, start, tags = item
+    if name in EGG_NAMES:
+        return item
+    low = max(10, (max(1, low) + 9) // 10 * 10)
+    high = high // 10 * 10
+    if high < low:
+        raise ValueError("Немає допустимої порції продукту з кроком 10 г: " + name)
+    start = min(high, max(low, (start + 5) // 10 * 10))
+    return name, low, high, 10, start, tags
+
+
 def _fit_meal(keys, target, foods):
-    bounds = [FOODS[k] for k in keys]
+    bounds = [_practical_portion_bounds(FOODS[k]) for k in keys]
     grams = [int(item[4]) for item in bounds]
     defaults = list(grams)
     # Small bounded coordinate search. Pure Python; ~1000-3000 evaluations / dish.
