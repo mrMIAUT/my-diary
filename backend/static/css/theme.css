@@ -1288,3 +1288,63 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form input{
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form input::placeholder{
   -webkit-text-fill-color:#99afc3;
 }
+
+
+/* v20 — shared measurement thumbnail alignment, light and dark */
+/* All measurement icons use one correctly proportioned 5x2 sprite viewport.
+   Keep the name alongside the image; center each sprite cell in its slot.
+   These structural rules are intentionally theme-independent. */
+body.eplan-redesign.client-ui .measurement-place-top,
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top{
+  --measurement-art-slot:84px;
+  --measurement-art-width:76px;
+  --measurement-art-height:80px;
+  display:grid!important;
+  grid-template-columns:var(--measurement-art-slot) minmax(0,1fr)!important;
+  align-items:center!important;
+  column-gap:10px!important;
+}
+body.eplan-redesign.client-ui .measurement-place-top>.measurement-generated-art,
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top>.measurement-generated-art,
+body.eplan-redesign.client-ui .measurement-weight-visual .measurement-place-top>.measurement-generated-art,
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-weight-visual .measurement-place-top>.measurement-generated-art{
+  display:block!important;
+  box-sizing:border-box!important;
+  width:var(--measurement-art-width)!important;
+  height:var(--measurement-art-height)!important;
+  justify-self:center!important;
+  align-self:center!important;
+  flex:none!important;
+  margin:0!important;
+  background-size:500% 200%!important;
+  background-position:var(--mx) var(--my)!important;
+  background-repeat:no-repeat!important;
+}
+body.eplan-redesign.client-ui .measurement-place-top>span:not(.measurement-generated-art),
+body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top>span:not(.measurement-generated-art){
+  min-width:0;
+  align-self:center;
+}
+/* Dark skin uses a separate backing plate for the sprite. Keep it exactly
+   aligned with the centered viewport; avoid an off-center double frame. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-place-top::before{
+  box-sizing:border-box;
+  top:0!important;
+  left:calc((var(--measurement-art-slot) - var(--measurement-art-width)) / 2)!important;
+  width:var(--measurement-art-width)!important;
+  height:var(--measurement-art-height)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-weight-visual .measurement-place-top::before{
+  left:calc((var(--measurement-art-slot) - var(--measurement-art-width)) / 2)!important;
+  width:var(--measurement-art-width)!important;
+  height:var(--measurement-art-height)!important;
+}
+@media (max-width:370px){
+  body.eplan-redesign.client-ui .measurement-place-top,
+  body.eplan-redesign.trainer-ui .trainer-measurements-page .measurement-place-top{
+    --measurement-art-slot:72px;
+    --measurement-art-width:66px;
+    --measurement-art-height:70px;
+    column-gap:8px!important;
+  }
+}
