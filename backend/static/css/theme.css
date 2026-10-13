@@ -303,3 +303,50 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-edit-act
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
  .nutrition-diary-day-total>span,.nutrition-diary-meal-calories
 ){color:#a8c9ee!important}
+
+
+/* v6: dark theme only — training supersets and exercise alternatives.
+   Keep workout structure and interactions unchanged. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset{
+ background:#192530!important;
+ border:1px solid #344557!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset-label{
+ background:#23374b!important;
+ border-color:#344557!important;
+ color:#b6d2ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset-label span{
+ color:#a8c9ee!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset-label small{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset .redesign-training-exercise{
+ background:#192530!important;
+ border-color:#344557!important;
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alternatives{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alternatives em{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alt-chip{
+ background:#243444!important;
+ border:1px solid #405367!important;
+ color:#f1f5fa!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alt-chip i{
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alt-chip small{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alt-chip .redesign-training-alt-tech{
+ border-color:#405367!important;
+ color:#e58a49!important;
+}
