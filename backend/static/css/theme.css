@@ -1928,3 +1928,74 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-settings-panel 
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-settings-panel .phone-notify-enable:not(.push-enabled){
  background:#294867!important;border:1px solid #476c8e!important;color:#c3e2ff!important;box-shadow:none!important;
 }
+
+
+/* v31 — follow-up QA: More, trainer cards, exercise library and profile.
+   Dark client theme ONLY. Explicitly cover elements previously rendered white.
+   No layout or behavior changes; light mode remains unchanged. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-profile-page .client-profile-avatar.is-placeholder,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-profile-hero .client-profile-avatar.is-placeholder{
+ background:#28394c!important;border:1px solid #49637c!important;color:#d5e4f2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-profile-page .client-profile-hero h1,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-profile-page .client-profile-hero .avatar-initials{
+ color:#eff6fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-editor-card,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-sticky{
+ background:#172431!important;color:#eff6fd!important;border-color:#3b536a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-head,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-head h2{background:transparent!important;color:#eff6fd!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-field label{color:#b8cbdc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-body select,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-body input,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-modal-body textarea{
+ background-color:#1c2d3e!important;border:1px solid #425a72!important;color:#eef6fd!important;color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #profileModal .profile-close{
+ background:#263e53!important;border-color:#45627d!important;color:#e4f1fe!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-market-page .trainer-market-card.trainer-card-v3.marketplace{
+ background:#1b2d3c!important;border:1px solid #3c556b!important;color:#edf5fc!important;
+ background-image:none!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-market-page .trainer-card-v3-head strong{color:#eef5fd!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-market-page .trainer-card-v3-footer>em{color:#91c2ff!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-head,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-body{
+ background:#192a39!important;border-color:#3b536a!important;color:#edf6fe!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-head strong,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-row strong{
+ color:#eff6fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-row{
+ background:#172431!important;border-color:#31475e!important;color:#e9f3fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-row small{color:#a9c0d4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-meta b{
+ background:#2b4762!important;color:#aed3fc!important;border-color:#3c6287!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .redesign-help-item,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .redesign-help-item>button{
+ background:#192a39!important;border-color:#364f66!important;color:#edf5fd!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .redesign-help-item strong{
+ color:#edf5fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .redesign-help-item>div{
+ background:#192a39!important;color:#bcd0e0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-page .redesign-more-logout{
+ background:#35252c!important;border-color:#67424a!important;color:#ffb1bb!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .calendar-head button{
+ background:#273f54!important;border-color:#46627c!important;color:#e2f0ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-settings-panel .phone-notify-enable.push-enabled{
+ background:#254638!important;border-color:#407159!important;color:#a3e5bd!important;
+}
