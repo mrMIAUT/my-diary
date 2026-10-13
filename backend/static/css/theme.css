@@ -820,3 +820,86 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-edit{
   color:#e7f5ec!important;
   box-shadow:none!important;
 }
+
+
+/* v16: dark workout warm-up rows and extra sets — exact Lyfta classes */
+/* Warm-up approaches live inside a separate card, not inside .lyfta-set-wrap. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block{
+ background:#203344!important;
+ color:#edf5ff!important;
+ border:1px solid #3a5469!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-head strong{
+ color:#eaf3fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-head small{
+ color:#b4c6d7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-head>button{
+ background:#30495e!important;
+ border:1px solid #4d6980!important;
+ color:#dcecfb!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-list{
+ background:transparent!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block .lyfta-aux-row{
+ background:transparent!important;
+ color:#e8f0fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block .lyfta-aux-row>span{
+ color:#b4cce0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block .lyfta-aux-row>input{
+ background:#2a4355!important;
+ border:1px solid #4e6a7e!important;
+ color:#f2f7fc!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block .lyfta-aux-row>input::placeholder{
+ color:#b0bfd0!important;
+ opacity:1;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-block .lyfta-aux-row>button{
+ background:#294354!important;
+ border:1px solid #4b687d!important;
+ color:#dceaf7!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-warmup-toggle{
+ background:#223849!important;
+ border:1px dashed #49657d!important;
+ color:#ccdef0!important;
+ box-shadow:none!important;
+}
+/* Extra working sets should look like other set rows, without a white number plate. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-extra{
+ border-top:0!important;
+ background:transparent!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row.is-extra .setnum{
+ position:relative!important;
+ background:#30485e!important;
+ border:1px solid #47657d!important;
+ border-radius:10px!important;
+ color:#e3f0ff!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row.is-extra .setnum small{
+ background:#4778a7!important;
+ border:1px solid #5d8db8!important;
+ color:#fff!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-extra-set-actions .lyfta-add-set{
+ background:#2a4054!important;
+ border:1px solid #456077!important;
+ color:#e7f2fd!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-extra-set-actions>small{
+ color:#aabdd0!important;
+}
