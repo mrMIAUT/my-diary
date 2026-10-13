@@ -1028,3 +1028,173 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-week .
   color:#80bcff!important;
   stroke:#80bcff!important;
 }
+
+
+/* v18 — measurement artwork and history/calendar surfaces (dark client theme only) */
+/* Reuse the existing male/female measurement sprites. Their opaque white
+   backgrounds become visually dark through a reversible dark-only filter.
+   Screen blending retains colored measurement zones without new image assets. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-place-top{
+  position:relative;
+  isolation:isolate;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-place-top::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  box-sizing:border-box;
+  width:74px;
+  height:78px;
+  border-radius:14px;
+  border:1px solid #3a5166;
+  background:#1e2c39;
+  pointer-events:none;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-weight-visual .measurement-place-top::before{
+  width:82px;
+  height:82px;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-place-top .measurement-generated-art{
+  position:relative;
+  z-index:1;
+  background-color:#fff!important;
+  box-shadow:none!important;
+  filter:invert(1) hue-rotate(180deg) brightness(1.9) saturate(1.25);
+  mix-blend-mode:screen;
+}
+@media (max-width:370px){
+  body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-place-top::before{
+    width:66px;
+    height:70px;
+  }
+  body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-weight-visual .measurement-place-top::before{
+    width:66px;
+    height:70px;
+  }
+}
+/* Collapsed history row at the bottom of Progress > Заміри. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-card{
+  background:#18232e!important;
+  border-color:#34485b!important;
+  color:#eef4fb!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-toggle{
+  background:#18232e!important;
+  color:#eef4fb!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-toggle strong{
+  color:#eef4fb!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-toggle small,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-toggle>b{
+  color:#adbed1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-calendar-body{
+  background:#18232e!important;
+  border-top:1px solid #34485b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-head>strong{
+  color:#eaf3fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-head>button{
+  background:#293d50!important;
+  color:#dbeafa!important;
+  border-color:#445e76!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-weekdays span{
+  color:#9eb1c5!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-day{
+  background:#253647!important;
+  color:#bfd0df!important;
+  border-color:#32475a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-day.has-data{
+  background:#24466a!important;
+  border-color:#477eae!important;
+  color:#d3e8ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-day.has-data::after{
+  background:#7fbaff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-day.active{
+  background:#2465b8!important;
+  border-color:#4b99ef!important;
+  color:#fff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-day.active::after{
+  background:#fff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-calendar-selected{
+  border-top-color:#34485b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.measurement-calendar-hint,.measurement-calendar-empty){
+  background:#223446!important;
+  color:#b7c9db!important;
+  border-color:#34485b!important;
+}
+/* Expanded date details, including paired measurements. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-card.redesigned-history{
+  background:#1d2b39!important;
+  border-color:#3a4f63!important;
+  color:#eef4fb!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-head{
+  border-bottom-color:#3a4f63!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-head strong{
+  color:#eaf3fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .measurement-history-caption,.measurement-history-section h4,
+  .measurement-history-pair-sides small
+){
+  color:#a9bbce!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .measurement-history-metric,.measurement-history-pair,
+  .measurement-history-legacy,.measurement-history-pair-sides>span
+){
+  background:#26394a!important;
+  border-color:#3b5268!important;
+  color:#e7f0f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .measurement-history-metric>span,.measurement-history-pair-title
+){
+  color:#bdd0e2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .measurement-history-metric>strong,.measurement-history-pair-sides b
+){
+  color:#f0f6fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-card .measurement-edit{
+  background:#25486b!important;
+  border-color:#4779aa!important;
+  color:#b6dcff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-card .measurement-delete{
+  background:#55313b!important;
+  border-color:#824a58!important;
+  color:#ffb7bf!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-history-card .measurement-delete svg{
+  stroke:currentColor!important;
+}
+/* Paired body measurement values should not retain pale filled subcards. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-side-values>span{
+  background:#25394a!important;
+  border-color:#3b5268!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-side-values :is(b,strong){
+  color:#eaf3fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-side-values small{
+  color:#b2c4d6!important;
+}
