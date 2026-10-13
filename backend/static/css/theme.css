@@ -2087,3 +2087,95 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-done .redesign-training-day-status strong{
   color:#90e0b0!important;
 }
+
+
+/* v33 — dark theme QA: training completion, cycle, library counters, trainer profile. */
+/* Only the client dark theme is affected. No layout or workout logic changes. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-today-done{
+  background:#172b27!important;border:1px solid #355e4c!important;color:#e8f6ec!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-today-done-icon{
+  background:#254b3a!important;border:1px solid #377457!important;color:#99e5b5!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-today-done strong{
+  color:#a2e7bc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-today-done small{
+  color:#b4c9bf!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-summary .redesign-training-cycle{
+  background:#36485c!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-summary .redesign-training-cycle i{
+  background:#548fed!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-summary>b{
+  color:#85b7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-done{
+  background:#162921!important;border-color:#365b48!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-done .redesign-training-day-main{
+  background:#162921!important;
+}
+/* Library: the meta wrapper must stay invisible; only the number is a pill. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-head .redesign-library-group-meta{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  width:auto!important;min-width:0!important;height:auto!important;padding:0!important;
+  background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-head .redesign-library-group-meta b{
+  display:grid!important;place-items:center!important;min-width:31px!important;height:28px!important;
+  padding:0 9px!important;border:1px solid #46698a!important;border-radius:999px!important;
+  background:#2b4a66!important;color:#b7d9fc!important;font-size:11px!important;line-height:1!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-client-library .redesign-library-group-head .redesign-library-group-meta i{
+  background:transparent!important;border:0!important;border-radius:0!important;
+  padding:0!important;color:#acc2d6!important;box-shadow:none!important;
+}
+/* Public trainer profile: cover, stats, socials and review surfaces. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-cover{
+  background:radial-gradient(circle at 100% 0%,rgba(85,145,205,.13),transparent 55%),linear-gradient(135deg,#223649,#172633)!important;
+  border:1px solid #405a70!important;color:#edf5fd!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-cover-copy h2,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-rating-line strong{
+  color:#f2f7fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-cover-copy>p,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-rating-line small{
+  color:#b4c9da!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-cover .trainer-market-avatar.large{
+  border-color:#344f66!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-stats>div{
+  background:#1b2d3d!important;border:1px solid #3f586d!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-stats strong{
+  color:#e9f3fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-stats span{
+  color:#b7c9da!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-market-socials a{
+  background:#25394c!important;border:1px solid #45627e!important;color:#c0dcf7!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-availability.open{
+  background:#244538!important;color:#9be2b6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-reviews-head p,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-review-row p{
+  color:#adc1d3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-review-row{
+  border-top-color:#3c5368!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-review-action{
+  background:#294866!important;border:1px solid #4a6c8b!important;color:#b2d7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-market-primary.current{
+  background:#253e35!important;border:1px solid #416452!important;color:#9de0b6!important;
+}
