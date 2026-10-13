@@ -501,3 +501,40 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercis
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercise input::placeholder,.workout-live-superset input::placeholder){
  color:#91a6bb!important;
 }
+
+
+/* Active workout expanded sets: eliminate light-mode surfaces in dark theme. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise .workout-live-body,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise .exercise-body,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-superset .exercise-body{
+ background:#18232e!important;color:#eef3f9!important;border-color:#334454!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(.set-row,.set-card,.workout-set-row,.workout-set-card,.previous-set-row,.warmup-set-row){
+ background:#202e3c!important;color:#eef3f9!important;border-color:#34485c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(.muted,small,label,.set-label,.set-header,.previous-result,.previous-set,.workout-set-meta){
+ color:#adbed1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(button,.btn,.secondary,.btn-secondary){
+ background:#273c50!important;color:#dce9f8!important;border-color:#40576f!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(input,select,textarea){
+ background:#243748!important;color:#f1f5fa!important;border-color:#476078!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(th,td,strong,b){
+ color:#eaf2fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body :is(hr,table,thead,tbody,tr){
+ border-color:#35485a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-duration-strip :is(.workout-duration-badge,.duration-badge,strong,b,span){
+ color:#edf5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-duration-strip :is(.workout-duration-badge,.duration-badge){
+ background:#254137!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise :is(.workout-day-title,.workout-active-day-title),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body h1,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body h2{
+ color:#f1f5fa!important;
+}
