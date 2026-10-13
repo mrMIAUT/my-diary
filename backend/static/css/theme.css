@@ -20,3 +20,82 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .eplan-theme-option[aria-
 .eplan-theme-option[aria-checked="true"]{border-color:#1677ff;background:#e7f1ff;color:#0958ba}
 .eplan-theme-note{font-size:13px;color:var(--muted);margin-top:12px}
 @media(max-width:360px){.eplan-theme-option{font-size:12px;padding:12px 3px}}
+
+/* v2: comprehensive dark surfaces, preserving macro colors and the light theme */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ --eplan-surface:#151e27;--eplan-raised:#1b2733;--eplan-ink:#f1f5fa;--eplan-subtle:#9baec0;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top.client-top-compact{
+ background:#0b1117!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav{
+ background:rgba(21,30,39,.96)!important;border:1px solid #344557!important;
+ box-shadow:0 8px 30px #0006!important;backdrop-filter:blur(16px);
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav button{background:transparent!important;color:#9baec0!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav button.active{color:#2388f5!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .client-home-today-card,.client-home-metric,.client-home-trainer-card,
+ .redesign-training-summary,.redesign-training-day,.redesign-training-help,
+ .redesign-training-exercise,.redesign-training-last,.redesign-training-details,
+ .redesign-training-stat-grid>div,.redesign-training-today-done,
+ .redesign-progress-kpi,.redesign-progress-week,.redesign-progress-chart-card,
+ .redesign-progress-training-row,.redesign-progress-achievements>div,
+ .redesign-progress-workout-detail,.progress-workout-stat,
+ .redesign-calorie-card,.redesign-macro-ring-card,.redesign-nutrition-summary-grid>div,
+ .redesign-nutrition-day-row,.redesign-bju-summary,.redesign-empty-panel,
+ .activity-field-card,.activity-steps-card,.activity-saved-card,
+ .measurement-next,.measurement-metric,.measurement-place-card,
+ .measurement-weight-visual,.measurement-history-card,.measurement-history-calendar-card,
+ .meal-plan-card,.meal-view,.meal-option,.meal-variant,
+ .redesign-more-settings-card,.redesign-help-item
+ ){background:#151e27!important;border-color:#344557!important;box-shadow:none!important;color:#f1f5fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-tabs,.redesign-progress-tabs,.redesign-nutrition-tabs,
+ .redesign-bju-detail-grid,.redesign-nutrition-actions,
+ .redesign-training-day-status,.redesign-training-day-index,
+ .client-home-today-icon,.client-home-metric-icon,.training-row-icon,
+ .activity-field-icon,.redesign-more-icon
+ ){background-color:#1b2733!important;border-color:#344557!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-tabs,.redesign-progress-tabs,.redesign-nutrition-tabs
+ ) button{background:transparent!important;color:#9baec0!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-tabs,.redesign-progress-tabs,.redesign-nutrition-tabs
+ ) button.active{background:#24466b!important;color:#fff!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-day,.redesign-progress-training-row,.client-home-today-card,
+ .client-home-metric,.redesign-progress-kpi,.redesign-macro-ring-card,
+ .measurement-place-card,.meal-plan-card,.meal-view,.meal-option,
+ .redesign-training-stat-grid>div,.redesign-progress-achievements>div
+ ) :is(strong,b,h2,h3){color:#f1f5fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-day,.redesign-progress-training-row,.client-home-today-card,
+ .client-home-metric,.redesign-progress-kpi,.redesign-macro-ring-card,
+ .measurement-place-card,.meal-plan-card,.meal-view,.meal-option
+ ) :is(small,em,p){color:#a9b9ca}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-training-day-status,.redesign-training-day-index,
+ .redesign-training-day-status strong
+ ){color:#8dbdff!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-next{border-color:#2388f5!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-nutrition-actions button,.redesign-training-details,
+ .redesign-training-progress-link,.redesign-progress-training-more,
+ .nutrition-targets-button
+ ){background:#203954!important;color:#a8d2ff!important;border-color:#344e70!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .redesign-more-page,.redesign-training-page,.redesign-progress-page,
+ .redesign-nutrition-page,.measurements-page
+ )>h1{color:#f1f5fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-back-title{position:relative;z-index:1}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-back-title h1{color:#f1f5fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .client-home-trainer-card,.meal-plan-card,.meal-view,.meal-option,
+ .measurement-place-card,.measurement-weight-visual
+ ) :is(button,input,select){border-color:#344557}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-item{background:#151e27!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-item :is(strong,small){color:#f1f5fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-item small{color:#9baec0!important}
