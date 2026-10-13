@@ -1999,3 +1999,91 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-subpage .c
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-settings-panel .phone-notify-enable.push-enabled{
  background:#254638!important;border-color:#407159!important;color:#a3e5bd!important;
 }
+
+
+/* v32 — dark workout completion modal and completed-day status. */
+/* This modal is appended directly to body. All changes are intentionally
+   client dark-mode only; the existing light design and workout flows remain. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal{
+  background:rgba(3,9,17,.76)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary{
+  background:#182531!important;
+  border:1px solid #3b5166!important;
+  color:#eef5fc!important;
+  box-shadow:0 22px 65px rgba(0,0,0,.46)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary h2{
+  color:#f3f7fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary>p,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary>p.muted{
+  color:#b2c2d3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary>p strong{
+  color:#e7f1fb!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .workout-finish-summary-grid>div{
+  background:#223548!important;
+  border:1px solid #41586e!important;
+  color:#edf5fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .workout-finish-summary-grid .muted{
+  color:#aabbcd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .summary-number{
+  color:#f0f6fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .workout-finish-phase{
+  background:#413323!important;
+  border:1px solid #6c5131!important;
+  color:#f1c07b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment{
+  border-top-color:#3b4f63!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment-head strong{
+  color:#eef5fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment-head span{
+  color:#a9bcd0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment textarea{
+  background:#203244!important;
+  border:1px solid #455d75!important;
+  color:#eef5fc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment textarea::placeholder{
+  color:#9eb3c8!important;
+  opacity:1;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment-actions button:not(.dark),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary>button{
+  background:#35618c!important;
+  border:1px solid #4c79a5!important;
+  color:#f5f9fe!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-workout-comment-actions button.dark,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary-recovery-actions button.dark{
+  background:#293e52!important;
+  border:1px solid #466079!important;
+  color:#e2eefb!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #finishSummaryModal .finish-summary-recovery-actions .finish-summary-reopen{
+  background:#1c2a38!important;
+  border:1px solid #45596d!important;
+  color:#bdd0e3!important;
+  box-shadow:none!important;
+}
+/* A completed day should read as green success without a pale pill. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-done .redesign-training-day-status{
+  background:#224637!important;
+  border:1px solid #366b51!important;
+  color:#90e0b0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-done .redesign-training-day-status strong{
+  color:#90e0b0!important;
+}
