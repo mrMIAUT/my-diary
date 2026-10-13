@@ -329,12 +329,18 @@ window.showClientMore = function(cid){
       +redesignMoreItem('calendar','Історія тренувань','Усі виконані тренування','showClientSection(\'history\')')
       +redesignMoreItem('dumbbell','Вправи','Бібліотека вправ і техніка','showClientExerciseLibrary('+cid+')')
       +redesignMoreItem('bell','Сповіщення','Налаштування повідомлень','showClientNotificationSettings('+cid+')')
+      +redesignMoreItem('settings','Тема оформлення','Світла, темна або як на пристрої','showClientThemeSettings('+cid+')')
       +redesignMoreItem('message','Допомога','Відповіді на часті питання','showClientHelp('+cid+')')
     +'</div>'
     +'<button class="redesign-more-logout" onclick="logout()">'+uiIcon('logout')+' Вийти з акаунта</button>'
   +'</div>';
   app.innerHTML=shell(body);
   refreshNotificationBadge(cid,'client','clientNotifyBtn');
+};
+
+window.showClientThemeSettings = function(cid){
+ currentClientView='more';
+ app.innerHTML=shell('<div class="client-section-page redesign-more-subpage"><div class="redesign-back-title"><button class="unified-back-button" onclick="showClientMore('+cid+')" aria-label="Назад">‹</button><h1>Тема оформлення</h1></div>'+window.eplanThemeOptionsHTML()+'</div>');
 };
 
 window.toggleAchievementPRList = function(){
