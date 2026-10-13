@@ -572,3 +572,60 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-done.done{
  background:#235746!important;color:#d9f6e7!important;
 }
+
+
+/* v12: focused active-workout dark polish, based on actual component classes.
+   Applies only to the client dark theme; no layout or workout logic changes. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout>h2{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .redesign-rest-timer-icon,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .redesign-rest-timer-play{
+  background:#243749!important;
+  color:#d9eafa!important;
+  border:1px solid #435a70!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .redesign-rest-timer-icon.running,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .redesign-rest-timer-play.running{
+  background:#1e4465!important;
+  color:#b6dcff!important;
+  border-color:#417cbb!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .redesign-rest-timer-icon.paused{
+  background:#293746!important;
+  color:#aebfd0!important;
+  border-color:#435a70!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise>.workout-live-toggle.open{
+  background:#18232e!important;
+  border-bottom:1px solid #304255!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise .workout-live-body{
+  border-top:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-head{
+  color:#a0b2c6!important;
+  border:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap{
+  background:transparent!important;
+  border-top:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-complete{
+  background:#1d3933!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-swipe-content{
+  background:#223547!important;
+  border:1px solid #34485c!important;
+  border-radius:12px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-swipe-content{
+  background:#254238!important;
+  border-color:#356454!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-prev-line>span{
+  color:#b0c3d6!important;
+}
