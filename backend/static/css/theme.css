@@ -1198,3 +1198,93 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-side-values 
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-side-values small{
   color:#b2c4d6!important;
 }
+
+
+/* v19 — measurement entry form: dark surfaces and readable inputs */
+/* Explicitly override the older light-only !important form tiles. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-tip{
+  background:#203142!important;
+  border:1px solid #3c536a!important;
+  color:#e8f1fa!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-tip strong{
+  color:#edf5fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-tip span{
+  color:#afc3d6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-date-row{
+  background:#203142!important;
+  border:1px solid #3c536a!important;
+  color:#e8f1fa!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-date-row label{
+  color:#b7c9d9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-date-row input[type="date"]{
+  background:#182a3a!important;
+  border:1px solid #476178!important;
+  color:#f1f7fd!important;
+  color-scheme:dark;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-date-row input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1) brightness(1.3);
+  opacity:.8;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-form-section h3{
+  color:#f1f6fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-form-section>p{
+  color:#afc3d6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-input-grid label{
+  color:#b7c9d9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-input-grid input{
+  background:#1b2b3a!important;
+  border:1px solid #3c5266!important;
+  color:#eef5fc!important;
+  box-shadow:none!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-pair-group{
+  background:#203142!important;
+  border:1px solid #3c536a!important;
+  color:#edf5fd!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-pair-title{
+  color:#eef5fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-pair-inputs label,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-pair-inputs label span{
+  color:#b7c9d9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-pair-inputs input{
+  background:#1b2b3a!important;
+  border:1px solid #476178!important;
+  color:#edf5fd!important;
+  box-shadow:none!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form input::placeholder{
+  color:#99afc3!important;
+  opacity:1;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form :is(
+  .measurement-pair-inputs input,.measurement-input-grid input,.measurement-date-row input
+):focus{
+  outline:2px solid #438cf0!important;
+  outline-offset:1px;
+  border-color:#438cf0!important;
+}
+/* Date/number controls remain legible in iOS Safari/PWA dark appearance. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form input{
+  -webkit-text-fill-color:#edf5fd;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form input::placeholder{
+  -webkit-text-fill-color:#99afc3;
+}
