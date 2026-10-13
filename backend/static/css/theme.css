@@ -903,3 +903,128 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-extra-set-actions>small{
  color:#aabdd0!important;
 }
+
+
+/* v17 — dark workout swipe actions and progress measurement contrast */
+/* Color-coded swipe actions: skip = amber, delete = red, restore = blue.
+   The actions are already wired by workout-lyfta.js; only their CSS changes. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.skip,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.skip button{
+  background:#6b4721!important;
+  color:#ffe5b3!important;
+  border-color:#906536!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.delete,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.delete button{
+  background:#6c303b!important;
+  color:#ffe0e4!important;
+  border-color:#944b59!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.restore,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray.restore button{
+  background:#264e77!important;
+  color:#d8eafe!important;
+  border-color:#4778a6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-action-tray button{
+  font-weight:900!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-skipped .lyfta-set-swipe-content{
+  background:#26313b!important;
+  border-color:#435568!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-skipped-copy strong{
+  color:#e7edf4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-skipped-copy small{
+  color:#a9b8c8!important;
+}
+/* Exercise history modal: the date/result row still used a light-mode surface. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-modal{
+  background:#17222e!important;
+  color:#f1f5fa!important;
+  border:1px solid #344557!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-modal h2{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-kicker,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-chart>div{
+  color:#a9bbce!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-item{
+  background:#253748!important;
+  border-color:#3e566b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-item span{
+  color:#afc1d4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-item strong{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .lyfta-history-modal .between>button{
+  background:#273d52!important;
+  color:#dceafb!important;
+  border-color:#435d75!important;
+  box-shadow:none!important;
+}
+/* Progress overview: explicit light-theme text colors were invisible on graphite. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements-head>div>span{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements-head>div>strong{
+  color:#b0c0d0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-kpi .kpi-icon.blue{
+  background:#213c58!important;
+  color:#80bcff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-kpi .kpi-icon.green{
+  background:#214538!important;
+  color:#83dbab!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-kpi .kpi-icon.blue svg{
+  color:#80bcff!important;
+  stroke:#80bcff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-kpi .kpi-icon.green svg{
+  color:#83dbab!important;
+  stroke:#83dbab!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-kpi-arrows button{
+  background:#273b4f!important;
+  color:#dceafb!important;
+  border-color:#3a5268!important;
+}
+/* Measurement summary: the strongest heading and 'Вага' label were dark navy. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-next .measurement-kicker{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-next h2{
+  color:#dce7f1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-next p{
+  color:#a9bbce!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-weight-visual .measurement-place-top>span,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-place-card .measurement-place-top>span{
+  color:#eaf2fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-weight-visual strong,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page .measurement-place-card>strong{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurements-page :is(
+ .measurement-weight-visual,.measurement-place-card
+) :is(em,small){
+  color:#a9bbce!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-week .progress-week-icon{
+  background:#213c58!important;
+  color:#80bcff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-week .progress-week-icon svg{
+  color:#80bcff!important;
+  stroke:#80bcff!important;
+}
