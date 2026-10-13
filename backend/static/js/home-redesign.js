@@ -163,7 +163,7 @@ function redesignClientHomeHTML(d,c,cid,groups,trainers=[]){
 
     +'<div class="client-home-section-head"><h2>Сьогодні</h2></div>'
     +'<div class="client-home-today-grid '+(nutritionEnabled?'':'single')+'">'
-      +'<button class="client-home-today-card" onclick="showClientTraining('+cid+')">'
+      +'<button class="client-home-today-card'+(todayFinished&&!active?' is-completed':'')+'" onclick="showClientTraining('+cid+')">'
         +'<span class="client-home-today-icon">'+uiIcon('dumbbell')+'</span>'
         +'<small>Тренування</small>'
         +'<strong>'+esc(trainMain)+'</strong>'
