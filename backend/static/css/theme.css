@@ -1722,3 +1722,76 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page 
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-v2-macro.macro-1{background:#433424!important;color:#f4c171!important;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-v2-macro.macro-2{background:#203f34!important;color:#8bdeb0!important;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-v2-macro :is(b,small){color:inherit!important;}
+
+
+/* v29 — final dark mode nutrition forms and notification center */
+/* Client dark theme only: no data or light-theme behavior changes. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-day-intro>span{color:#ebf3fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-day-intro>small{color:#b4c4d5!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .trainer-assigned-meal-label{color:#bfd2e7!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-ingredient{color:#aabdd2!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-ingredient b{color:#ecf4fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-kicker{color:#bbd0e5!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel{background:#172431!important;border:1px solid #40536a!important;color:#e9f2fc!important;box-shadow:0 18px 60px #0006!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel h2,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel h2,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel h2{color:#f2f7fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel .muted,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel .muted,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel .muted{color:#aec1d4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel label,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel label,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel label{color:#c1d3e4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel input:not([type=checkbox]),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel input:not([type=checkbox]),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel input:not([type=checkbox]){background:#1c2d3d!important;border:1px solid #4a6178!important;color:#f1f6fc!important;color-scheme:dark;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel input::placeholder{color:#9aafc3!important;opacity:1;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel input:not([type=checkbox]):focus{border-color:#73acf1!important;outline:2px solid #518ed2!important;outline-offset:1px;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-extra{background:#203345!important;border:1px solid #425b72!important;color:#e8f2fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-extra>span{color:#d9e7f5!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-extra>small{color:#b3c7d9!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-review{color:#d1e0ef!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-review input[type=checkbox]{appearance:auto!important;accent-color:#438fe5!important;color-scheme:dark;background-color:#203345!important;border-color:#67839e!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-hint{color:#aec1d4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-error{color:#ffb1b5!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-primary,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-food-primary{background:#315d88!important;border:1px solid #507eaa!important;color:#f1f7ff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel .between>button.dark,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-foods-panel .between>button.dark,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-foods-panel .between>button.dark{background:#273c51!important;border:1px solid #466079!important;color:#eaf3fc!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-food-row,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-food-row{background:#203244!important;border:1px solid #3c536a!important;color:#eaf2fb!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-food-row strong,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-food-row strong{color:#ebf4fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-food-row small,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-food-row small{color:#adc2d7!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myFoodsModal .my-food-row-actions button,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myRecipesModal .my-food-row-actions button{background:#294866!important;border:1px solid #436383!important;color:#c1deff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-modal-card,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-modal-card{background:#172431!important;border:1px solid #3d5368!important;color:#edf5fd!important;box-shadow:0 20px 65px #0006!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-modal-head h2,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-modal-head h2{color:#f0f6fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-modal-head small,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-modal-head small{color:#9fb7cd!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-close,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-close{background:#263b50!important;border:1px solid #475e76!important;color:#edf5ff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-clear-all{background:#432c35!important;border:1px solid #76515d!important;color:#ffb4bb!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-phone-toggle{background:#243f59!important;border:1px solid #406589!important;color:#bcdfff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-phone-toggle.push-enabled{background:#224436!important;border:1px solid #387455!important;color:#a3efc4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-swipe .notification-item{background:#1e2d3b!important;border:1px solid #3b5167!important;color:#e9f2fb!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-swipe .notification-item.unread{background:#20374e!important;border:1px solid #547fa7!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-item-top strong{color:#f0f7ff!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-item-top time{color:#a7bcd0!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-item p{color:#d8e6f3!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-dot{background:#54a1fa!important;box-shadow:0 0 0 3px #284463!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-delete-bg.notification-delete{background:#432b34!important;border:1px solid #76505b!important;color:#ffb8c0!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty{background:#1e3040!important;border:1px dashed #4a647c!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty .ui-icon{color:#97b5d2!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty strong{color:#eff6fd!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty span{color:#adc0d3!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-message{background:#203243!important;border:1px solid #415870!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-message p{color:#eaf3fc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-message time{color:#a7bcd0!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-back{background:#2a4866!important;border:1px solid #456985!important;color:#dceeff!important;box-shadow:none!important;}
