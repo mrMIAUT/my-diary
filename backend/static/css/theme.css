@@ -724,3 +724,99 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-floating-rest-t
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-floating-rest-timer :is(
  .redesign-floating-rest-timer-copy small,.redesign-floating-rest-timer-icon
 ){color:#a9c7e8!important}
+
+
+/* v15 — finished exercise summary, dark mode only. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete{
+  background:#182a26!important;
+  border-color:#3c6152!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete>.workout-live-toggle,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-superset .workout-live-exercise.is-exercise-complete>.workout-live-toggle,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete>.workout-live-toggle.open,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-superset .workout-live-exercise.is-exercise-complete>.workout-live-toggle.open{
+  background:#1d302b!important;
+  color:#edf5f1!important;
+  border-color:#3c6152!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete .workout-live-toggle :is(strong,b,h2,h3){
+  color:#edf5f1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete .workout-live-toggle .workout-plan-line{
+  color:#b3c7bd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-exercise.is-exercise-complete .workout-live-body{
+  background:#182a26!important;
+  color:#edf5f1!important;
+  border-color:#3c6152!important;
+}
+/* Previously a white-on-white completion panel: match the surrounding graphite palette. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-summary{
+  background:#1d332d!important;
+  border:1px solid #416a57!important;
+  color:#e7f3eb!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-summary-head strong{
+  color:#eaf6ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-summary-head small{
+  color:#afc9ba!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-summary-icon{
+  background:#285441!important;
+  color:#a8e2ba!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-set{
+  background:#293f37!important;
+  color:#b8cfc2!important;
+  border:1px solid #3a584c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-set span{
+  color:#b8cfc2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-set strong{
+  color:#f0f8f3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-set em{
+  color:#bed3c6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-set.skipped{
+  background:#2b343c!important;
+  border-color:#475565!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-drop{
+  background:#263d37!important;
+  border-left-color:#49745b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-drop span{
+  color:#b8cfc2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-drop strong{
+  color:#eaf6ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-aux{
+  background:#263a34!important;
+  border-color:#416354!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-aux small{
+  color:#bbd0c3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-aux span{
+  background:#334b41!important;
+  color:#eef6f0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-replacement{
+  background:#263a34!important;
+  color:#b8cfc2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-replacement strong{
+  color:#eef6f0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-completed-edit{
+  background:#294c40!important;
+  border-color:#4e7763!important;
+  color:#e7f5ec!important;
+  box-shadow:none!important;
+}
