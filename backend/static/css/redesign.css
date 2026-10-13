@@ -707,6 +707,10 @@ body.eplan-redesign.client-ui .redesign-training-day-list{
   display:grid;
   gap:10px;
 }
+/* Keep training cards visually separate from the collapsible training rules. */
+body.eplan-redesign.client-ui .redesign-training-help + .redesign-training-day-list{
+  margin-top:16px;
+}
 body.eplan-redesign.client-ui .redesign-training-day{
   border:1px solid #e1e8f2;
   border-radius:18px;
