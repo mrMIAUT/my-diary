@@ -1,0 +1,22 @@
+/* EPLAN theme v1 — client only; existing light design remains the default. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ color-scheme:dark;
+ --bg:#0b1117;--card:#151e27;--card2:#1b2733;--line:#2b3948;
+ --text:#f1f5fa;--muted:#9baec0;--yellow:#2388f5;
+ background:#0b1117!important;color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#app,.wrap.client-shell,.client-section-page){background-color:#0b1117!important;color:#f1f5fa}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top{background:rgba(11,17,23,.95)!important;border-color:#2b3948!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.card,.exercise,.redesign-more-item,.redesign-settings-panel,.redesign-help-item,.redesign-more-list,.calendar-day){background-color:#151e27!important;border-color:#2b3948!important;color:#f1f5fa!important;box-shadow:none!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(input,textarea,select){background:#1b2733!important;color:#f1f5fa!important;border-color:#344557!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(h1,h2,h3,h4,strong,.redesign-more-copy strong){color:#f1f5fa}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.muted,small,.redesign-more-copy small){color:#9baec0}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.client-top .notify-btn,.redesign-back-title button){background:#1b2733!important;color:#f1f5fa!important;border-color:#344557!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-more-chevron{color:#9baec0}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .eplan-theme-option{background:#1b2733;border-color:#344557;color:#f1f5fa}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .eplan-theme-option[aria-checked="true"]{background:#153657;border-color:#2388f5;color:#d8ebff}
+.eplan-theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.eplan-theme-option{min-width:0;padding:13px 5px;border-radius:12px;border:1px solid #d8e2f0;background:#f4f7fd;color:#142542;font-size:13px;font-weight:700;cursor:pointer}
+.eplan-theme-option[aria-checked="true"]{border-color:#1677ff;background:#e7f1ff;color:#0958ba}
+.eplan-theme-note{font-size:13px;color:var(--muted);margin-top:12px}
+@media(max-width:360px){.eplan-theme-option{font-size:12px;padding:12px 3px}}
