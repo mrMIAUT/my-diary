@@ -1502,3 +1502,77 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workou
 .progress-workout-muscles-head>span{
   color:#f1f5fa!important;
 }
+
+
+/* v23 — complete progress accents and globally dark client back buttons */
+/* Keep client subpage back arrows consistent with the dark shell.
+   Both controls share the exact same arrow pseudo-element in redesign.css. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .unified-back-button,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-back-title>button{
+  background:#223346!important;
+  border:1px solid #3c536b!important;
+  color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .unified-back-button::before,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-back-title>button::before{
+  border-left-color:#d5e4f5!important;
+  border-bottom-color:#d5e4f5!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .unified-back-button>svg,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-back-title>button>svg{
+  color:#d5e4f5!important;
+  stroke:#d5e4f5!important;
+}
+/* A light avatar circle is distracting in the dark navigation header. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top .client-avatar{
+  background:#223346!important;
+  border-color:#3c536b!important;
+  color:#d5e4f5!important;
+  box-shadow:none!important;
+}
+/* Incomplete weekly sessions should be muted tracks rather than white bars. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-week .progress-week-bars>i{
+  background:#334558!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-week .progress-week-bars>i.done{
+  background:#2388f5!important;
+}
+/* Preserve the achievement colors with graphite backgrounds, not pale tiles. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements .achievement-icon.trophy{
+  background:#453824!important;
+  color:#f1c46a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements .achievement-icon.fire{
+  background:#483227!important;
+  color:#f0a16e!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements .achievement-icon.blue{
+  background:#213c58!important;
+  color:#8dc4ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements .achievement-icon.green{
+  background:#214538!important;
+  color:#8bd9ae!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-achievements .achievement-icon svg{
+  color:inherit!important;
+  stroke:currentColor!important;
+}
+/* Completed workout: the section count was white text on a white badge. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.progress-workout-detail-section-head>strong{
+  background:#253e58!important;
+  border:1px solid #3c5870!important;
+  color:#9dcaff!important;
+}
+/* 'Reviewed by trainer' is a positive completion state, never neutral white. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.calendar-review-done>strong{
+  color:#54d39b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.calendar-review-done{
+  border-top-color:#344557!important;
+  color:#a9b9ca!important;
+}
