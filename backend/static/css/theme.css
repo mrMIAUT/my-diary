@@ -459,3 +459,45 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-stat-g
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-details>span{
  color:#b6d2ef!important;
 }
+
+
+/* Dark theme: active workout surface, without touching workout behavior. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercise,.workout-live-superset,.workout-live-superset-head,.workout-live-superset-body,.workout-live-exercise-inner,.workout-duration-strip,.workout-current-phase){
+ background:#18232e!important;border-color:#334454!important;color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-toggle,.workout-live-grouped-exercise-head){
+ background:transparent!important;color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-toggle strong,.workout-live-superset-copy strong,.workout-current-phase strong,.workout-duration-strip>span){
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-plan-line,.workout-plan-meta,.workout-live-superset-copy>span,.workout-current-phase small){
+ color:#aabbd0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-superset-head{
+ background:#223648!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-body,.workout-live-grouped-body,.workout-live-superset-divider){
+ border-color:#334454!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-toggle .arrow,.workout-live-superset-arrow,.workout-live-toggle-side){
+ color:#b5c8dd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-current-phase[data-phase="heavy"]{
+ background:#292a2b!important;border-color:#65503b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-current-phase[data-phase="medium"]{
+ background:#1d3044!important;border-color:#365b80!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-current-phase[data-phase="light"]{
+ background:#1d342e!important;border-color:#356452!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercise.is-exercise-complete,.workout-live-superset.is-superset-complete){
+ background:#1a302b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercise input,.workout-live-exercise select,.workout-live-exercise textarea,.workout-live-superset input,.workout-live-superset select){
+ background:#223344!important;color:#f1f5fa!important;border-color:#405467!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.workout-live-exercise input::placeholder,.workout-live-superset input::placeholder){
+ color:#91a6bb!important;
+}
