@@ -1375,3 +1375,130 @@ body.eplan-redesign .measurement-generated-art.sex-female.metric-art-arms      {
 body.eplan-redesign .measurement-generated-art.sex-female.metric-art-forearms  { --measurement-figure-x:0.40%; }
 /* The scales sprite is already centered; keep its original crop. */
 body.eplan-redesign .measurement-generated-art.metric-art-weight { --measurement-figure-x:0%; }
+
+
+/* v22 — readable completed workout timed and skipped sets, both themes */
+/* Historic timed sets need two columns, not the generic three-column row:
+   the plan/rest text otherwise crushes '30 сек на кожну руку' to a word-wide strip. */
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.progress-workout-sets .calendar-workout-set.progress-workout-timed-set{
+  display:grid!important;
+  grid-template-columns:72px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  column-gap:10px!important;
+  row-gap:6px!important;
+  align-items:start!important;
+  padding:12px!important;
+  min-width:0;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.calendar-workout-set.progress-workout-timed-set>span{
+  grid-column:1;
+  grid-row:1;
+  white-space:nowrap;
+  line-height:1.5;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.calendar-workout-set.progress-workout-timed-set>strong{
+  grid-column:2;
+  grid-row:1;
+  display:block;
+  min-width:0;
+  line-height:1.4!important;
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:break-word;
+  font-size:13px!important;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.progress-workout-timed-meta{
+  grid-column:2;
+  grid-row:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 12px;
+  min-width:0;
+  line-height:1.4;
+  font-size:11px;
+  font-weight:650;
+  color:#61758b;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.progress-workout-timed-meta>span{
+  flex:0 1 auto;
+  min-width:0;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:break-word;
+  color:inherit;
+}
+/* Skipped sets have their own status line instead of three competing columns. */
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.progress-workout-sets .calendar-workout-set.skipped{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  gap:4px 9px!important;
+  padding:11px 12px!important;
+  border:1px solid #e9d8b7;
+  background:#fff9ef;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.calendar-workout-set.skipped>span{
+  grid-column:1;
+  grid-row:1;
+  white-space:nowrap;
+  color:#6e7380;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.calendar-workout-set.skipped>strong{
+  grid-column:2;
+  grid-row:1;
+  justify-self:end;
+  padding:5px 9px;
+  border-radius:9px;
+  background:#fff0d6;
+  color:#8b5515!important;
+  font-size:11px!important;
+  white-space:nowrap;
+  line-height:1.3;
+}
+body.eplan-redesign.client-ui .redesign-progress-workout-detail
+.calendar-workout-set.skipped>em{
+  grid-column:1 / -1;
+  grid-row:2;
+  color:#987a56;
+  font-size:11px;
+  white-space:normal!important;
+  line-height:1.4;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.progress-workout-sets .calendar-workout-set.skipped{
+  background:#2b2927!important;
+  border-color:#665239!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.calendar-workout-set.skipped>span{
+  color:#bcc6d2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.calendar-workout-set.skipped>strong{
+  background:#5a4128!important;
+  color:#ffdca8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.calendar-workout-set.skipped>em{
+  color:#cab08b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.progress-workout-timed-meta,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.progress-workout-timed-meta>span{
+  color:#aebfd1!important;
+}
+/* Existing exercise-volume title inherited a light navy color in dark mode. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workout-detail
+.progress-workout-muscles-head>span{
+  color:#f1f5fa!important;
+}
