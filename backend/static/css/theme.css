@@ -1662,3 +1662,13 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring{
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.blue{--ring:#7cb7ff;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.orange{--ring:#f5be6f;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.green{--ring:#8ee0ac;}
+
+
+/* v27 — vivid nutrition macro rings on dark backgrounds */
+/* Sharper contrast between completed and remaining sections, dark mode only. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring{
+  background:conic-gradient(var(--ring) calc(var(--pct)*1%),#263548 0)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.blue{--ring:#2f9bff;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.orange{--ring:#ffb300;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.green{--ring:#20e786;}
