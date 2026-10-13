@@ -629,3 +629,98 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-prev-line>span{
   color:#b0c3d6!important;
 }
+
+
+/* v13: rest timer surfaces, dropset and active workout seam (dark theme only) */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .card.redesign-active-workout{
+ background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .workout-live-exercise:not(.workout-live-exercise-inner){
+ background:#18232e!important;border-color:#344557!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .workout-live-exercise>.workout-live-toggle.open{
+ background:#18232e!important;border-bottom:0!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .workout-live-exercise>.workout-live-body{
+ background:#18232e!important;border-top:0!important;box-shadow:none!important;
+}
+/* The drop-set strip under a completed set was still a light-mode white block. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-drop-zone,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-complete .lyfta-drop-zone{
+ background:#254238!important;border-left:1px solid #426858!important;
+ color:#dcece5!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-add-drop{
+ background:#304a52!important;border:1px solid #4b6970!important;
+ color:#edf5f4!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-aux-row>input,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-aux-row>button{
+ background:#2b4250!important;border-color:#48616e!important;color:#ecf3fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-aux-row>span{
+ color:#b8cbd4!important;
+}
+/* Rest timer picker is appended to <body>, not inside the workout card. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker .rest-timer-picker-card{
+ background:#192530!important;color:#f1f5fa!important;border:1px solid #344557!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker :is(.rest-timer-picker-head strong,.rest-timer-picker-head h2){
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker .rest-timer-picker-head span{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker .rest-timer-picker-handle{
+ background:#586a7d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker :is(.rest-timer-picker-close,.rest-timer-preset-list button,.rest-timer-custom){
+ background:#263a4c!important;color:#e5eff8!important;
+ border:1px solid #41586d!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .rest-timer-picker .rest-timer-preset-list button.selected{
+ background:#254e7a!important;color:#cbe3ff!important;border-color:#4584c4!important;
+}
+/* Running in-page rest timer: avoid pale blue card and low-contrast countdown. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-active-workout .workout-featured-rest{
+ background:#1b2c3d!important;border:1px solid #3d5c7a!important;
+ color:#f1f5fa!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest :is(
+ .workout-featured-rest-heading,.workout-featured-rest-value
+){color:#edf5ff!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest :is(
+ .workout-featured-rest-next,.workout-featured-rest-status
+){color:#acc0d5!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-settings{
+ background:transparent!important;color:#b9cbe0!important;border:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-track{
+ stroke:#42576c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-ring>span,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-ring>span svg{
+ color:#bfd7ec!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-actions>button{
+ background:#273e54!important;border-color:#466684!important;
+ color:#d7e8f7!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-actions>.workout-featured-rest-pause,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest.is-paused .workout-featured-rest-actions>.workout-featured-rest-pause{
+ background:#225480!important;border-color:#4a92d6!important;color:#e2f2ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-featured-rest .workout-featured-rest-actions>button svg{
+ color:inherit!important;
+}
+/* Persistent floating rest timer uses independent fixed-position markup. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-floating-rest-timer{
+ background:rgba(29,46,62,.97)!important;border:1px solid #456079!important;
+ color:#eaf3ff!important;box-shadow:0 9px 24px rgba(0,0,0,.30)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-floating-rest-timer :is(
+ #floatingRestTimerValue,.redesign-floating-rest-timer-copy strong
+){color:#edf5ff!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-floating-rest-timer :is(
+ .redesign-floating-rest-timer-copy small,.redesign-floating-rest-timer-icon
+){color:#a9c7e8!important}
