@@ -1652,3 +1652,13 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nu
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-day-total{background:#1b2a3a!important;border-color:#364f67!important;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-day-total strong small{color:#b5c6da!important;}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal-title small{color:#a9b9ca!important;}
+
+
+/* v26 — brighter dark-mode nutrition macro progress arcs */
+/* Brighten only the filled arc, retain calm graphite cards and percent layout. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring{
+  background:conic-gradient(var(--ring) calc(var(--pct)*1%),#2c3d50 0)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.blue{--ring:#7cb7ff;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.orange{--ring:#f5be6f;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.green{--ring:#8ee0ac;}
