@@ -374,3 +374,36 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-supers
  border:0!important;
  border-bottom:1px solid #344557!important;
 }
+
+
+/* v8: eliminate nested training-day seams in dark mode.
+   The day card owns the sole outer border; exercise rows retain subtle dividers. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day-body,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-exercises{
+ background:#151e27!important;
+ border:0!important;
+ outline:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day-main{
+ border-bottom:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-exercise{
+ background:transparent!important;
+ border-left:0!important;
+ border-right:0!important;
+ outline:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset{
+ background:#192530!important;
+ border:0!important;
+ outline:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset .redesign-training-exercise{
+ background:transparent!important;
+ border-left:0!important;
+ border-right:0!important;
+}
