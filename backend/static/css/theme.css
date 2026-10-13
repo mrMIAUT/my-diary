@@ -1622,3 +1622,33 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"]
   opacity:.68;
   cursor:wait;
 }
+
+
+/* v25 — nutrition dark surfaces and softer measurement primary */
+/* CSS-only client dark overrides. Preserve original Lucide SVG markup and all data flows. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-form-actions>button:first-child{background:#337ac3!important;border-color:#4a8bc9!important;color:#f7fbff!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .measurement-form .measurement-form-actions>button:first-child:not(:disabled):hover{background:#4289d0!important;border-color:#66a1da!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-nutrition-view-tabs{background:#1d2b39!important;border:1px solid #314658!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-nutrition-view-tabs>button{background:transparent!important;color:#a9bacb!important;border:0!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-nutrition-view-tabs>button.active{background:#2d5079!important;color:#f1f7ff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-nutrition-view-tabs>button:focus-visible{outline:2px solid #8bbdea!important;outline-offset:1px;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring{background:conic-gradient(var(--ring) calc(var(--pct)*1%),#35485a 0)!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring::after{background:#1b2a39!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring>span{color:#e9f3fd!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.orange{--ring:#dfa24c;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.green{--ring:#56b78a;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-macro-ring.blue{--ring:#5396eb;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-calorie-progress{background:#35485a!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-calorie-progress>i{background:#397fcc!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-fire{background:#3f312b!important;border:1px solid #68503c!important;color:#ee9d66!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon{box-shadow:none!important;border:1px solid #374e63!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon-breakfast{background:#233951!important;border-color:#385879!important;color:#89baff!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon-lunch{background:#203e35!important;border-color:#365f4f!important;color:#84d2ab!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon-snack{background:#332d46!important;border-color:#54466c!important;color:#bea1f4!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon-dinner{background:#403328!important;border-color:#665039!important;color:#e8ae71!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(.nutrition-diary-meal-title,.nutrition-menu-meal-v2) .nutrition-meal-icon>svg{stroke:currentColor!important;fill:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-actions .nutrition-food-search-button{background:#284663!important;border:1px solid #3f607e!important;color:#d8eaff!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nutrition-diary-save-recipe{background:#1c2b3a!important;border:1px dashed #47627b!important;color:#bcd6f0!important;box-shadow:none!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-day-total{background:#1b2a3a!important;border-color:#364f67!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-day-total strong small{color:#b5c6da!important;}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal-title small{color:#a9b9ca!important;}
