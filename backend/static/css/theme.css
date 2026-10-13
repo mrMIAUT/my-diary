@@ -1576,3 +1576,49 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-progress-workou
   border-top-color:#344557!important;
   color:#a9b9ca!important;
 }
+
+
+/* v24 — calm measurement actions for the dark client theme */
+/* The measurements form previously used the global electric-blue save button
+   and near-white secondary actions. Keep interactions intact and limit the
+   palette update to the client dark measurements interface. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button:first-child{
+  background:#30577b!important;
+  border:1px solid #436b90!important;
+  color:#f3f8fe!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button:first-child:not(:disabled):hover{
+  background:#386489!important;
+  border-color:#54799b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button.dark,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-early>button.dark{
+  background:#233444!important;
+  border:1px solid #42586d!important;
+  color:#d5e4f3!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button.dark:not(:disabled):hover,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-early>button.dark:not(:disabled):hover{
+  background:#2b4155!important;
+  border-color:#537087!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button:focus-visible,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-early>button.dark:focus-visible{
+  outline:2px solid #84b6e1!important;
+  outline-offset:2px;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.measurement-form .measurement-form-actions>button:disabled{
+  opacity:.68;
+  cursor:wait;
+}
