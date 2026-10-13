@@ -350,3 +350,27 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-alt-ch
  border-color:#405367!important;
  color:#e58a49!important;
 }
+
+
+/* v7: dark training exercise numbers and remove the extra superset outline. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-exercise > span:first-child{
+ background:#2a4058!important;
+ color:#c6dcf3!important;
+ border:1px solid #3b5269!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset .redesign-training-exercise > span:first-child{
+ background:#2a4058!important;
+ color:#c6dcf3!important;
+ border-color:#3b5269!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset{
+ border:0!important;
+ outline:0!important;
+ box-shadow:none!important;
+ background:#192530!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-superset-label{
+ border:0!important;
+ border-bottom:1px solid #344557!important;
+}
