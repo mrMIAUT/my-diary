@@ -2223,3 +2223,47 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] #trainingRulesBody .redes
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] #trainingRulesBody .redesign-rule-item p {
   color:#b5c5d5!important;
 }
+
+/* v35 — dark client UI: weekly report controls, home progress and food diary actions. */
+/* Keep neutral report controls on the same dark surface as the check-in modal. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-modal .between>button.dark{
+  background:#253748!important;border:1px solid #40556c!important;
+  color:#dce9f7!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-save{
+  background:#284b70!important;border:1px solid #4274a0!important;
+  color:#edf6ff!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-save:focus-visible,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .between>button.dark:focus-visible{
+  outline:2px solid #87bfff!important;outline-offset:2px;
+}
+/* The empty parts of nutrition and weekly training progress should never be white. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-home-today-card .home-mini-progress{
+  background:#35495d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-home-today-card .home-mini-progress i{
+  background:#318afa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-home-training-metric .home-week-bars i{
+  background:#35495d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-home-training-metric .home-week-bars i.done{
+  background:#318afa!important;
+}
+/* Highlight only today's completed training, not all future training cards. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-home-today-card.is-completed>strong{
+  color:#86dbaa!important;
+}
+/* A clear but restrained action in each meal card; search/data logic is unchanged. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nutrition-diary-add{
+  background:#294f77!important;border:1px solid #4776a5!important;
+  color:#e4f1ff!important;box-shadow:none!important;
+  min-height:42px!important;font-size:13px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nutrition-diary-add:active{
+  background:#32618d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nutrition-diary-add:focus-visible{
+  outline:2px solid #87bfff!important;outline-offset:2px;
+}
