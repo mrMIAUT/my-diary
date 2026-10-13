@@ -247,7 +247,17 @@ function progressWorkoutDetailHTML(d,sid){
      // Resolve side mode from the workout's historical snapshot, never today's edited plan.
      let sideSuffix=timedSideModeSuffix(x.planItem?.repeat_mode);
      let timedRows=(x.timed||[]).slice().sort((a,b)=>(+a.set_number||0)-(+b.set_number||0));
-     let rows=timedRows.map(set=>'<div class="progress-workout-set-group"><div class="calendar-workout-set timed"><span>Підхід '+esc(set.set_number)+'</span><strong>'+esc(set.work_seconds)+' сек'+esc(sideSuffix)+'</strong><em>план '+esc(set.planned_seconds)+' сек'+esc(sideSuffix)+(+set.rest_seconds>0?' · відпочинок '+esc(set.rest_seconds)+' сек':'')+'</em></div></div>').join('');
+     // Long time-per-side labels cannot share the three-column set grid with the plan text.
+     // Render result and plan as distinct lines, preserving all recorded values.
+     let rows=timedRows.map(set=>{
+       let rest=+set.rest_seconds||0;
+       return '<div class="progress-workout-set-group"><div class="calendar-workout-set timed progress-workout-timed-set">'
+         +'<span>Підхід '+esc(set.set_number)+'</span>'
+         +'<strong>'+esc(set.work_seconds)+' сек'+esc(sideSuffix)+'</strong>'
+         +'<div class="progress-workout-timed-meta"><span>План: '+esc(set.planned_seconds)+' сек'+esc(sideSuffix)+'</span>'
+         +(rest>0?'<span>Відпочинок: '+esc(rest)+' сек</span>':'')
+         +'</div></div></div>';
+     }).join('');
      let count=timedRows.length;
      return '<div class="progress-workout-exercise timed"><div class="progress-workout-exercise-head"><div><strong>'+esc(x.name)+'</strong>'+replacement+'<small class="progress-timed-label">За часом'+esc(sideSuffix)+'</small></div><span>'+count+' '+(count===1?'підхід':count<5?'підходи':'підходів')+'</span></div><div class="progress-workout-sets">'+rows+'</div></div>';
    }
