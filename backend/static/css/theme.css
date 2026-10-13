@@ -248,3 +248,58 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
  ) :is(.redesign-progress-achievements-head h2,.redesign-progress-achievements-title h2){
  color:#f1f5fa!important
 }
+
+
+/* v5: dark nutrition contrast. Scoped to client dark mode; no light-theme changes.
+   Fixes white nested plan/diary panels and light-on-light text in the iPhone QA. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ --nutrition-dark-surface:#151e27;
+ --nutrition-dark-raised:#1b2733;
+ --nutrition-dark-border:#344557;
+ --nutrition-dark-text:#f1f5fa;
+ --nutrition-dark-muted:#a9b9ca;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-card,.nutrition-diary-meal,.nutrition-diary-meal-body,
+ .nutrition-diary-day-total,.nutrition-diary-edit,
+ .nutrition-menu-meal-v2,.nutrition-menu-meal-v2 .nutrition-menu-meal-body,
+ .meal-plan-card,.meal-plan-head,.meal-plan-body,.meal-view,.meal-option,.meal-variant
+){
+ background:var(--nutrition-dark-surface)!important;
+ border-color:var(--nutrition-dark-border)!important;
+ color:var(--nutrition-dark-text)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-meal-title strong,.nutrition-diary-item strong,
+ .nutrition-diary-heading h2,.nutrition-diary-meal-head strong,
+ .nutrition-diary-edit h2,.nutrition-diary-day-total strong,
+ .nutrition-menu-meal-v2 h3,.nutrition-menu-meal-v2 strong,
+ .meal-plan-card h2,.meal-plan-card h3,.meal-plan-card strong
+){color:var(--nutrition-dark-text)!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-meal-title small,.nutrition-diary-meal-head small,
+ .nutrition-diary-item small,.nutrition-diary-empty,
+ .nutrition-diary-note,.nutrition-diary-heading p,
+ .nutrition-diary-meal-calories,.nutrition-diary-edit label,
+ .nutrition-menu-meal-v2 p,.nutrition-menu-meal-v2 small,
+ .meal-plan-card p,.meal-plan-card small
+){color:var(--nutrition-dark-muted)!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-item,.nutrition-diary-meal-head,
+ .nutrition-diary-day-total
+){border-color:var(--nutrition-dark-border)!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-date-pill,.nutrition-diary-edit input,
+ .nutrition-diary-edit select,.nutrition-diary-item-actions button,
+ .nutrition-diary-add,.nutrition-diary-save-recipe
+){
+ background:var(--nutrition-dark-raised)!important;
+ border-color:var(--nutrition-dark-border)!important;
+ color:#dce9f7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-edit-actions button.primary{
+ background:#2b69c5!important;color:#fff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ .nutrition-diary-day-total>span,.nutrition-diary-meal-calories
+){color:#a8c9ee!important}
