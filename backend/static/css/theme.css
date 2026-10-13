@@ -538,3 +538,37 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body h1,
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body h2{
  color:#f1f5fa!important;
 }
+
+
+/* Dark theme: actual Lyfta set markup (workout-lyfta.js). */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-swipe,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-swipe-content{
+ background:#202e3c!important;color:#eef3f9!important;border-color:#34485c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-swipe-content{
+ background:#1d3933!important;border-color:#426858!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-prev-line,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-prev-line :is(span,strong),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row .setnum{
+ color:#d2e0ee!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-prev-line button{
+ background:#30465c!important;color:#e6f0fa!important;border-color:#466079!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row{
+ background:transparent!important;color:#edf3fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row input{
+ background:#263a4c!important;color:#f3f7fc!important;border-color:#4a6279!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-row input::placeholder{
+ color:#a6b9cc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-done{
+ background:#30475d!important;color:#e6f0fa!important;border-color:#4a6279!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-live-body .lyfta-set-done.done{
+ background:#235746!important;color:#d9f6e7!important;
+}
