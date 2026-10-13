@@ -407,3 +407,55 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-supers
  border-left:0!important;
  border-right:0!important;
 }
+
+
+/* v9: dark-only contrast fixes for workout start, activity and stats. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-start-confirm{
+ background:#18232f!important;color:#f1f5fa!important;border:1px solid #344557!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-start-confirm :is(h2,p strong,.workout-phase-select>strong,.workout-phase-copy strong){
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-start-confirm :is(p,.workout-phase-select>small,.workout-phase-copy small){
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-phase-option{
+ background:#202e3e!important;border-color:#405367!important;color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-phase-option.selected{
+ background:#253d55!important;border-color:#4388e4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal :is(.workout-confirm-close,.workout-confirm-secondary){
+ background:#263747!important;color:#dce9f7!important;border-color:#405367!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-confirm-primary:disabled{
+ background:#3b608d!important;color:#c7d8ec!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .cardio-entry-card{
+ background:#202e3e!important;color:#f1f5fa!important;border-color:#405367!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .cardio-entry-card :is(strong,b){
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .cardio-entry-card small{
+ color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .cardio-entry-card.selected{
+ background:#263e55!important;border-color:#4388e4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .activity-steps-card :is(label,input){
+ color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .activity-steps-card input{
+ background:#202e3e!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .activity-approved-icon{
+ filter:brightness(0) saturate(100%) invert(85%) sepia(12%) saturate(333%) hue-rotate(171deg)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-stat-grid .ui-icon,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-stat-grid svg{
+ color:#b6d2ef!important;stroke:#b6d2ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-details>span{
+ color:#b6d2ef!important;
+}
