@@ -95,6 +95,13 @@ try{
  await page.locator('.meal-editor').nth(1).locator('.trainer-meal-recipe button').click();
  await page.locator('#recipeTemplatePicker').waitFor();
  assert.equal(await page.locator('.recipe-template-card').count(),15);
+ assert.equal(await page.locator('.recipe-fit-choices button').count(),2,
+  'Replacement must support previous-meal vs daily-goal nutrition matching');
+ assert.equal(await page.locator('.recipe-fit-choices [data-fit=previous]').getAttribute('aria-pressed'),'true',
+  'Already-populated meal should default to matching the previous meal');
+ await page.locator('.recipe-fit-choices [data-fit=day]').click();
+ assert.equal(await page.locator('.recipe-fit-choices [data-fit=day]').getAttribute('aria-pressed'),'true');
+ await page.locator('.recipe-fit-choices [data-fit=previous]').click();
  // A stable SVG cross must be exactly centered in its square tap target.
  const closeOffset=await page.locator('#recipeTemplateClose').evaluate(button=>{
   const a=button.getBoundingClientRect(),b=button.querySelector('svg').getBoundingClientRect();
@@ -106,6 +113,10 @@ try{
  const selected=await page.evaluate(()=>nutritionPlanDraft.find(x=>x.meal_number===2&&x.variant_number===2));
  assert.equal(selected.dish_title,'Страва lunch 3');
  assert.ok(selected.auto_fit?.diff);
+ assert.equal(selected.auto_fit.mode,'previous',
+  'Replacing a filled dish should preserve its target meal BJU by default');
+ assert.ok(selected.auto_fit.target.kcal>200&&selected.auto_fit.target.kcal<1000,
+  'Replacement target must come from the previous meal, not whole-day calories');
  assert.ok(selected.foods.filter(x=>x.count==null).every(x=>x.grams%10===0),
   'Automatic recipe portions should all end in zero grams');
  assert.ok(selected.foods.every(x=>x.grams>=x.portion_rules.min_grams&&x.grams<=x.portion_rules.max_grams));
@@ -123,10 +134,43 @@ try{
  await page.locator('.trainer-ration-tab').first().click();
  assert.equal(await page.locator('#structuredDailySummary').innerText(),rationOne,'Ration one totals changed after editing ration two');
 
- // One more entire daily ration duplicates, then can be edited independently.
+ // '+ Раціон' must create an entirely blank alternative, not an accidental
+ // clone; saving an unfinished alternative must not silently discard it.
  await page.locator('.trainer-ration-add').click();
  assert.equal(await page.locator('.trainer-ration-tab').count(),3);
  assert.equal(await page.locator('.meal-editor').count(),4);
+ const blanks=await page.evaluate(()=>nutritionPlanDraft.filter(x=>x.variant_number===3));
+ assert.equal(blanks.length,4);
+ assert.ok(blanks.every(x=>x.content===''&&x.foods.length===0&&x.dish_title===''
+   &&x.recipe_id===null),'New ration inherited a previous dish, recipe or portions');
+ await page.locator('.meal-editor').first().locator('.trainer-meal-recipe button').click();
+ await page.locator('#recipeTemplatePicker').waitFor();
+ assert.equal(await page.locator('.recipe-fit-choices button').count(),1,
+  'Empty meal should only show daily goal strategy');
+ await page.locator('#recipeTemplateList [data-recipe="mock-breakfast-1"]').click();
+ await page.locator('#recipeTemplatePicker').waitFor({state:'detached'});
+ const newlyFilled=await page.evaluate(()=>nutritionPlanDraft.find(x=>x.variant_number===3&&x.meal_number===1));
+ assert.equal(newlyFilled.auto_fit.mode,'day');
+ assert.equal(newlyFilled.auto_fit.unfilled,3,'Unfilled meals must share remaining daily targets');
+ assert.ok(newlyFilled.auto_fit.target.kcal<900,
+  'A new breakfast must not receive the entire remaining day's calories');
+ // Save must still block until the other meals are prepared.
+ const noSave=await page.evaluate(async()=>{await saveTrainerMealPlanDraft(123,null);
+  return window.__requests.filter(x=>x.path==='/client/123/nutrition').length});
+ assert.equal(noSave,0,'Incomplete new ration was silently omitted during save');
+ // Remove the incomplete draft, then test explicit duplication separately.
+ await page.locator('.trainer-ration-remove').click();
+ assert.equal(await page.locator('.trainer-ration-tab').count(),2);
+ await page.locator('.trainer-ration-tab').nth(1).click();
+ await page.locator('.trainer-ration-copy').click();
+ assert.equal(await page.locator('.trainer-ration-tab').count(),3);
+ assert.equal(await page.locator('.meal-editor').count(),4);
+ const copied=await page.evaluate(()=>({
+  source:nutritionPlanDraft.filter(x=>x.variant_number===2),
+  copy:nutritionPlanDraft.filter(x=>x.variant_number===3)
+ }));
+ assert.deepEqual(copied.copy.map(x=>x.foods),copied.source.map(x=>x.foods),
+  'Explicit duplication must preserve recipes, portions and ingredient count');
  await page.locator('.trainer-ration-tab').nth(1).click();
  const payload=await page.evaluate(async()=>{
   await saveTrainerMealPlanDraft(123,null);
