@@ -38,7 +38,7 @@ class TimedPerSideContracts(unittest.TestCase):
         for text in (INDEX,SW):
             self.assertIn("/static/js/program.js?v=192",text)
             self.assertIn("/static/js/timed-workout.js?v=7",text)
-            self.assertIn("/static/js/progress-redesign.js?v=169",text)
+            self.assertIn("/static/js/progress-redesign.js?v=170",text)
         self.assertIn("const VERSION='eplan-v222'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
