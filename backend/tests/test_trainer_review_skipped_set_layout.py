@@ -28,7 +28,7 @@ class TrainerReviewSkippedSetLayoutTests(unittest.TestCase):
     def test_asset_cache_versions(self):
         for shell in (INDEX,SW):
             self.assertIn("/static/js/results.js?v=181",shell)
-            self.assertIn("/static/css/redesign.css?v=262",shell)
+            self.assertIn("/static/css/redesign.css?v=263",shell)
         self.assertIn("const VERSION='eplan-v222'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
