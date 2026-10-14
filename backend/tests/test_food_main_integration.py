@@ -199,7 +199,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertEqual(sum(x["brand"]=="Чумак" for x in batch),22)
         self.assertEqual(sum(x["brand"]=="Pasta Prima" for x in batch),5)
         all_items=manufacturer_label_food_items()
-        self.assertEqual(len(all_items),157)
+        self.assertGreaterEqual(len(all_items),157)
         indexed={x["source_id"]:x for x in all_items}
         codes=set()
         for row in batch:
@@ -230,6 +230,45 @@ class MainFoodIntegrationTests(unittest.TestCase):
                       {**label,"name_uk":label["name_uk"].replace("67%","20%")},
                       {**label,"source_url":"https://other.example/product/393"}):
             with self.assertRaises(ValueError):validate_label_record(wrong)
+
+    def test_v325_exact_dairy_from_producer(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        manifest=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        dairy=[x for x in manifest["records"] if x.get("batch_id")=="2026-10-14-verified-dairy-v325"]
+        self.assertEqual(len(dairy),34)
+        self.assertEqual(len(manufacturer_label_food_items()),191)
+        base={x["id"] for x in manifest["records"] if x.get("batch_id")!="2026-10-14-verified-dairy-v325"}
+        seen=set()
+        products={x["source_id"]:x for x in manufacturer_label_food_items()}
+        for source in dairy:
+            with self.subTest(product=source["id"]):
+                self.assertNotIn(source["id"],base)
+                self.assertNotIn(source["id"],seen)
+                seen.add(source["id"])
+                item=validate_label_record(source)
+                self.assertIn(item["source_id"],products)
+                self.assertEqual(item["source_nutrition_basis"],"per_100g_product")
+                self.assertEqual(item["portion_unit"],"g")
+                self.assertEqual(item["source_kind"],"manufacturer_label")
+                self.assertFalse(item["approximate"])
+                self.assertFalse(item["barcode"])
+                self.assertNotIn("saturated_fat_100",item)
+                self.assertNotIn("sugars_100",item)
+                self.assertIn(item,reference_food_items())
+        self.assertEqual(products["eplan12-manufacturer-nazdorovya-skyr-natural-12-150"]["protein_100"],6.5)
+        self.assertEqual(products["eplan12-manufacturer-selyanske-high-protein-milk-05-1000"]["kcal_100"],41)
+
+    def test_v325_dairy_manufacturer_source_and_fat_class_are_fail_closed(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        manifest=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        sample=next(x for x in manifest["records"] if x["id"]=="selyanske-sour-cream-15-300")
+        for bad in ({**sample,"name_uk":"Сметана 25% 300 г"},
+                    {**sample,"source_url":"https://invalid.example/cream"},
+                    {**sample,"source_url":"http://www.loostdorf.com/ua/our-brands/cream"},
+                    {**sample,"source_nutrition_basis":"per_100ml_product"}):
+            with self.assertRaises(ValueError):validate_label_record(bad)
 
     def test_nutrition_and_sources_are_bounded(self):
         for row in reference_food_items():
