@@ -1923,3 +1923,102 @@ body.eplan-redesign .recipe-fit-settings p{
 @media(max-width:365px){
  body.eplan-redesign .recipe-fit-choices button{font-size:10px!important}
 }
+
+
+/* v318: iPhone trainer nutrition editor — prevent grid min-content from
+   expanding the whole client page when ration controls overflow horizontally. */
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-nutrition-page,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition #nutritionPlanHost,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-nutrition-target-card,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-plan-card,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-plan-body,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-editor,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-variant,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-meal-editor,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-row{
+ box-sizing:border-box!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-nutrition-page{
+ grid-template-columns:minmax(0,1fr)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-ration-tabs{
+ box-sizing:border-box!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ display:flex!important;
+ flex-wrap:nowrap!important;
+ overflow-x:auto!important;
+ overflow-y:hidden!important;
+ -webkit-overflow-scrolling:touch;
+ overscroll-behavior-x:contain;
+ scrollbar-width:none;
+ touch-action:pan-x;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-ration-tabs::-webkit-scrollbar{
+ display:none;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-ration-tabs button{
+ flex:0 0 auto!important;
+ white-space:nowrap!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-editor-head,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-title,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-meal-recipe{
+ max-width:100%;
+ min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-name{
+ min-width:0!important;
+ white-space:normal!important;
+ overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-meal-recipe strong,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-meal-recipe p,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-auto-fit,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-meal-summary{
+ min-width:0!important;
+ max-width:100%!important;
+ overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-details{
+ min-width:0!important;
+ max-width:100%!important;
+ flex-wrap:wrap!important;
+ gap:8px 12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-details label{
+ flex:0 0 auto;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-macro{
+ min-width:0;
+ flex:1 1 130px;
+ max-width:100%;
+ overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-nutrition-target-actions button,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-actions button,
+body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .trainer-meal-recipe button{
+ max-width:100%!important;
+ white-space:normal!important;
+ overflow-wrap:anywhere;
+}
+@media(max-width:390px){
+ body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-plan-body{
+  padding:0 10px 12px!important;
+ }
+ body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .meal-editor{
+  padding:11px!important;
+ }
+ body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-row{
+  padding:10px!important;
+ }
+ body.eplan-redesign.trainer-ui .trainer-client-page #nutrition .structured-food-macro{
+  flex:1 1 100%;
+  text-align:left;
+ }
+}
