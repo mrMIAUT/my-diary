@@ -170,14 +170,14 @@ function nutritionDiaryDayHTML(d,cid){
     const id=Number(item.id);
     return '<div class="nutrition-diary-item"><div><strong>'+esc(item.name)+'</strong>'
       +(item.brand?'<small>'+esc(item.brand)+'</small>':'')
-      +'<small>'+nutritionDiaryNumber(item.grams)+' г · '+nutritionDiaryNumber(item.kcal)+' ккал'
+      +'<small>'+nutritionDiaryNumber(item.portion_amount??item.grams)+' '+(item.portion_unit==='ml'?'мл':'г')+' · '+nutritionDiaryNumber(item.kcal)+' ккал'
       +' · Б '+nutritionDiaryNumber(item.protein)+' · Ж '+nutritionDiaryNumber(item.fat)+' · В '+nutritionDiaryNumber(item.carbs)+'</small>'
       +'</div><div class="nutrition-diary-item-actions">'
       +'<button type="button" aria-label="Змінити порцію" onclick="editNutritionDiaryEntry('+id+')">'+uiIcon('edit')+'</button>'
       +'<button type="button" aria-label="Видалити продукт" onclick="deleteNutritionDiaryEntry('+id+')">×</button>'
       +'</div></div>';
    }).join(''):'')
-   +(items.length?'<button class="nutrition-diary-save-recipe" type="button" onclick="saveDiaryMealAsRecipe(\''+key+'\')">Зберегти як мій рецепт</button>':'')
+   +(items.length&&!items.some(x=>x.portion_unit==='ml')?'<button class="nutrition-diary-save-recipe" type="button" onclick="saveDiaryMealAsRecipe(\''+key+'\')">Зберегти як мій рецепт</button>':'')
    +'<button class="nutrition-diary-add" type="button" onclick="openFoodSearchLazy(\''+key+'\')">+ Додати продукт</button>'
    +'</div></section>';
   }).join('')
@@ -209,7 +209,7 @@ window.editNutritionDiaryEntry=function(id){
  document.getElementById('nutritionDiaryEditModal')?.remove();
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="nutritionDiaryEditModal">'
  +'<div class="card nutrition-diary-edit"><h2>Змінити порцію</h2><strong>'+esc(entry.name)+'</strong>'
- +'<label>Грамовка, г<input type="number" id="nutritionDiaryEditGrams" min="1" max="2000" step="1" inputmode="decimal" value="'+Number(entry.grams)+'"></label>'
+ +'<label>'+(entry.portion_unit==='ml'?'Об’єм, мл':'Грамовка, г')+'<input type="number" id="nutritionDiaryEditGrams" min="1" max="2000" step="1" inputmode="decimal" value="'+Number(entry.portion_amount??entry.grams)+'"></label>'
  +'<label>Прийом їжі<select id="nutritionDiaryEditMeal">'
  +nutritionDiaryMeals.map(([k,t])=>'<option value="'+k+'"'+(entry.meal===k?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'
  +'<div class="nutrition-diary-edit-actions"><button type="button" onclick="nutritionDiaryEditModal.remove()">Скасувати</button>'
@@ -219,11 +219,13 @@ window.editNutritionDiaryEntry=function(id){
 window.saveNutritionDiaryEdit=async function(id,button){
  const grams=Number(document.getElementById('nutritionDiaryEditGrams')?.value);
  const meal=document.getElementById('nutritionDiaryEditMeal')?.value;
- if(!Number.isFinite(grams)||grams<=0||grams>2000)return alert('Вкажи вагу від 1 до 2000 г.');
+ const entry=window.nutritionDiaryState?.items?.find(x=>Number(x.id)===Number(id));
+ const portion_unit=entry?.portion_unit==='ml'?'ml':'g';
+ if(!Number.isFinite(grams)||grams<=0||grams>2000)return alert('Вкажи порцію від 1 до 2000 '+(portion_unit==='ml'?'мл':'г')+'.');
  if(!nutritionDiaryMeals.some(row=>row[0]===meal))return;
  button.disabled=true;
  try{
-  await api('/nutrition/diary/'+id,{method:'PATCH',body:JSON.stringify({grams,meal})});
+  await api('/nutrition/diary/'+id,{method:'PATCH',body:JSON.stringify({grams,meal,portion_unit})});
   document.getElementById('nutritionDiaryEditModal')?.remove();
   await showClientNutrition(session.client_id);
  }catch(e){button.disabled=false;alert(e.message||'Не вдалося зберегти порцію.')}
@@ -278,7 +280,7 @@ window.openFoodSearchLazy = async function(meal=''){
     if(!window.eplanFoodSearchLoader){
       window.eplanFoodSearchLoader=new Promise((resolve,reject)=>{
         const script=document.createElement('script');
-        script.src='/static/js/food-lookup.js?v=7';
+        script.src='/static/js/food-lookup.js?v=8';
         script.onload=()=>resolve();
         script.onerror=()=>reject(new Error('Food search module unavailable'));
         document.head.appendChild(script);
