@@ -30,7 +30,7 @@ class RestTimerCompactControlsTests(unittest.TestCase):
         for source in (INDEX,SW):
             self.assertIn("/static/css/redesign.css?v=263",source)
             self.assertIn("/static/js/timer.js?v=169",source)
-        self.assertIn("const VERSION='eplan-v222'",SW)
+        self.assertIn("const VERSION='eplan-v223'",SW)
 
     def test_clean_single_face_dial(self):
         c=CSS.split("/* v258 — single-face rest dial:",1)[1]
