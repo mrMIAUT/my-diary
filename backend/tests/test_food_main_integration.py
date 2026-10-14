@@ -22,7 +22,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         from food_manufacturer_catalog import validate_label_record
         from json import loads
         manifest=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
-        new=[r for r in manifest["records"] if r["reviewed_on"]=="2026-10-14"]
+        new=[r for r in manifest["records"] if r["reviewed_on"]=="2026-10-14" and not r.get("batch_id")]
         self.assertEqual(len(new),24)
         self.assertEqual(sum(r["brand"]=="BioTechUSA" for r in new),8)
         self.assertEqual(sum(r["brand"]=="Галичина" for r in new),16)
@@ -55,6 +55,55 @@ class MainFoodIntegrationTests(unittest.TestCase):
                           ("sugars_100",-1),("sugars_100","8")):
             with self.subTest(nutrient=key,value=value),self.assertRaises(ValueError):
                 validate_label_record({**natural,key:value})
+
+
+    def test_second_branded_batch_has_exact_sources_and_optional_nutrients(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        data=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        batch=[r for r in data["records"] if r.get("batch_id")=="2026-10-14-brand-expansion-v321"]
+        expected={"Activia":15,"OstroVit":7,"Optimum Nutrition":3,"Myprotein":1}
+        self.assertEqual({brand:sum(r["brand"]==brand for r in batch) for brand in expected},expected)
+        all_labels=manufacturer_label_food_items()
+        self.assertEqual(len(all_labels),68)
+        names={(x["brand"],x["name"]) for x in all_labels}
+        for record in batch:
+            with self.subTest(product=record["id"]):
+                validated=validate_label_record(record)
+                self.assertIn((validated["brand"],validated["name"]),names)
+                self.assertEqual(validated["source_kind"],"manufacturer_label")
+                self.assertFalse(validated["approximate"])
+                self.assertLessEqual(validated["sugars_100"],validated["carbs_100"])
+                self.assertLessEqual(validated["saturated_fat_100"],validated["fat_100"])
+                self.assertEqual(validated["barcode"],record.get("barcode",""))
+                self.assertTrue(validated["source_url"].startswith("https://"))
+        whey=next(r for r in batch if r["id"]=="myprotein-impact-whey-vanilla-900g")
+        self.assertEqual((whey["protein_100"],whey["kcal_100"]), (72,379))
+        self.assertIn("variation=10957802",whey["source_url"])
+        self.assertIn("eplan12-manufacturer-myprotein-impact-whey-vanilla-900g",
+                      {r["source_id"] for r in reference_food_items()})
+
+    def test_manufacturer_variant_urls_and_ean_are_fail_closed(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        data=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        batch=[r for r in data["records"] if r.get("batch_id")=="2026-10-14-brand-expansion-v321"]
+        optimum=next(r for r in batch if r["brand"]=="Optimum Nutrition")
+        ostrovit=next(r for r in batch if r["brand"]=="OstroVit")
+        for url in (optimum["source_url"]+"&discount=free",
+                    optimum["source_url"].replace("variant=","other="),
+                    "https://evil.example/unsafe?variant=12345678901",
+                    "http://www.optimumnutrition.com/products/?variant=52105832562955"):
+            with self.subTest(url=url),self.assertRaises(ValueError):
+                validate_label_record({**optimum,"source_url":url})
+        for barcode in ("5903933910247","1234567890123","not-an-ean",""):
+            # Empty is permitted for brands without verified barcode; bad EAN fails.
+            row={**ostrovit,"barcode":barcode}
+            if barcode=="":
+                self.assertEqual(validate_label_record(row)["barcode"],"")
+            else:
+                with self.subTest(barcode=barcode),self.assertRaises(ValueError):
+                    validate_label_record(row)
 
     def test_nutrition_and_sources_are_bounded(self):
         for row in reference_food_items():
