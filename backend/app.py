@@ -5730,7 +5730,7 @@ def food_diary_add(x:FoodDiaryAddIn,user:AuthUser=Depends(require_client)):
         row=db.execute("""INSERT INTO nutrition_diary_items
           (client_id,day,meal,name,brand,source_label,source_id,approximate,grams,
            portion_unit,kcal_100,protein_100,fat_100,carbs_100)
-          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
           RETURNING *""",(cid,x.day,x.meal,name,x.brand.strip(),x.source_label.strip(),
             x.source_id.strip(),x.approximate,round(x.grams,1),x.portion_unit,
             x.kcal_100,x.protein_100,x.fat_100,x.carbs_100)).fetchone()
