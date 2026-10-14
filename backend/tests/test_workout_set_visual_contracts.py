@@ -12,7 +12,7 @@ SW=(ROOT/"sw.js").read_text(encoding="utf-8")
 class WorkoutSetVisualContracts(unittest.TestCase):
     def test_pwa_uses_updated_workout_css(self):
         for source in (HTML,SW):
-            self.assertIn("/static/css/redesign.css?v=262",source)
+            self.assertIn("/static/css/redesign.css?v=263",source)
             self.assertNotIn("/static/css/redesign.css?v=261",source)
         self.assertIn("const VERSION='eplan-v222'",SW)
 
