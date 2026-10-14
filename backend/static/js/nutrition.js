@@ -817,8 +817,10 @@ window.openTrainerFourWeekAnalysis=function(cid){
  document.body.insertAdjacentHTML('beforeend',
    '<div class="modal trainer-four-week-overlay" id="trainerFourWeekModal" role="dialog" aria-modal="true" aria-labelledby="fourWeekTitle">'
   +'<div class="card trainer-four-week-modal">'
-  +'<div class="trainer-four-week-head"><div><h2 id="fourWeekTitle">Аналіз прогресу за 4 тижні</h2><p class="muted">Порівняння двох половин 28-денного періоду</p></div>'
+  +'<div class="trainer-four-week-head"><div><h2 id="fourWeekTitle">Аналіз прогресу за 4 тижні</h2><p class="muted">Вага — щотижня, обхвати — на 1-му і 4-му тижнях</p></div>'
   +'<button type="button" class="trainer-four-week-close" aria-label="Закрити" onclick="closeTrainerFourWeekAnalysis()">✕</button></div>'
+  +'<label class="trainer-four-week-field">Перший день 4-тижневого періоду'
+  +'<input id="trainerFourWeekStart" type="date" required max="'+new Date().toLocaleDateString('en-CA')+'"></label>'
   +'<label class="trainer-four-week-field">Ціль клієнта'
   +'<select id="trainerFourWeekGoal"><option value="" selected disabled>Обери ціль</option>'
   +'<option value="loss">Зменшення жиру</option><option value="gain">Набір м’язів</option>'
@@ -838,11 +840,12 @@ function trainerFourWeekValue(value,unit,decimals=1){
 window.loadTrainerFourWeekAnalysis=async function(cid){
  const goal=document.getElementById('trainerFourWeekGoal')?.value;
  const host=document.getElementById('trainerFourWeekResult');
- if(!host||!goal)return alert('Обери ціль клієнта.');
+ const start=document.getElementById('trainerFourWeekStart')?.value;
+ if(!host||!goal||!start)return alert('Обери ціль і дату початку чотирьох тижнів.');
  host.innerHTML='<p class="muted">Збираємо записи за 28 днів…</p>';
  window.trainerFourWeekReport=null;
  try{
-  const report=await api('/trainer/client/'+cid+'/nutrition/four-week?goal='+encodeURIComponent(goal));
+  const report=await api('/trainer/client/'+cid+'/nutrition/four-week?goal='+encodeURIComponent(goal)+'&start_date='+encodeURIComponent(start));
   if(!document.getElementById('trainerFourWeekResult')||+window.currentClientData?.client?.id!==+cid)return;
   window.trainerFourWeekReport={cid,report};
   const metric=(title,a,b,d,unit)=>'<div class="trainer-four-week-metric"><strong>'+title+'</strong>'
@@ -850,18 +853,26 @@ window.loadTrainerFourWeekAnalysis=async function(cid){
     +'<small>Зміна: '+(d!==null&&d>0?'+':'')+trainerFourWeekValue(d,unit)+'</small></div>';
   const checklist=rows=>rows?.length?'<ul>'+rows.map(x=>'<li>'+esc(String(x))+'</li>').join('')+'</ul>':'';
   const decision=report.status==='suggested'?'Рекомендація до перевірки'
-    :report.status==='hold'?'Залишити поточну норму':'Замало даних для корекції';
+    :report.status==='hold'?'Залишити поточну норму'
+    :report.status==='in_progress'?'Чотири тижні ще тривають':'Замало даних для корекції';
   const updated=report.recommended;
   const proposed=updated?'<div class="trainer-four-week-proposal"><strong>Пропоноване КБЖУ</strong>'
     +'<p>'+updated.kcal+' ккал · Б '+updated.protein+' г · Ж '+updated.fat+' г · В '+updated.carbs+' г</p>'
     +'<button type="button" onclick="applyTrainerFourWeekDraft('+cid+')">Підставити у форму</button>'
     +'<small>Значення не збережуться, доки тренер не натисне «Зберегти харчування».</small></div>':'';
+  const weekly='<div class="trainer-four-week-weeks">'+(report.weight.weeks||[]).map(w=>
+    '<div><small>Тиждень '+w.week+'</small><strong>'+trainerFourWeekValue(w.weight,'кг')
+      +'</strong><small>'+esc(w.day||'Ще немає запису')+'</small></div>').join('')+'</div>';
+  const other=Object.values(report.circumferences||{}).filter(x=>x.first!==null&&x.last!==null);
+  const otherBlock=other.length?'<p class="trainer-four-week-other">Інші обхвати (тиждень 1 → 4): '
+    +other.map(x=>esc(x.label)+': '+trainerFourWeekValue(x.first,'см')+' → '
+       +trainerFourWeekValue(x.last,'см')).join(' · ')+'</p>':'';
   host.innerHTML='<div class="trainer-four-week-report"><h3>'+decision+'</h3>'
     +'<p class="muted">'+esc(report.period_start)+' — '+esc(report.period_end)+'</p>'
     +'<div class="trainer-four-week-grid">'
-    +metric('Середня вага',report.weight.first,report.weight.last,report.weight.delta,'кг')
-    +metric('Талія',report.waist.first,report.waist.last,report.waist.delta,'см')
-    +'</div><div class="trainer-four-week-notes"><p>Заміри ваги: '+report.weight.entries
+    +metric('Вага: 1-й → 4-й тиждень',report.weight.first,report.weight.last,report.weight.delta,'кг')
+    +metric('Талія: 1-й → 4-й тиждень',report.waist.first,report.waist.last,report.waist.delta,'см')
+    +'</div>'+weekly+otherBlock+'<div class="trainer-four-week-notes"><p>Заміри ваги: '+report.weight.entries
     +' · талії: '+report.waist.entries+'</p><p>Записи харчування: '+report.nutrition.days+'/28 днів'
     +' · середнє: '+trainerFourWeekValue(report.nutrition.average_kcal,'ккал')+'</p>'
     +'<p>Кроки: '+report.activity.days+' днів'
