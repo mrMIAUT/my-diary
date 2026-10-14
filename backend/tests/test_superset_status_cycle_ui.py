@@ -42,7 +42,7 @@ class CompletionUiContracts(unittest.TestCase):
             for name in ("/static/css/redesign.css?v=263", "/static/js/workout.js?v=188",
                          "/static/js/program.js?v=192"):
                 self.assertIn(name,source)
-        self.assertIn("const VERSION='eplan-v222'",SW)
+        self.assertIn("const VERSION='eplan-v223'",SW)
 
     @unittest.skipUnless(shutil.which("node"), "Node is needed for JS behavior tests")
     def test_cycle_subset_and_mixed_superset_behavior(self):
