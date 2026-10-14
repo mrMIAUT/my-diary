@@ -9,7 +9,7 @@ window.openFoodSearchModal=function(meal=''){
  defaultMeal=['breakfast','lunch','snack','dinner'].includes(meal)?meal:'breakfast';
  $('foodSearchModal')?.remove();serial++;chosen=null;
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="foodSearchModal"><div class="card food-lookup-modal">'
-  +'<div class="between"><div><h2>Пошук продуктів</h2><p class="muted">Калорії та БЖВ на 100 г продукту</p></div><button type="button" class="dark" id="foodSearchClose">✕</button></div>'
+  +'<div class="between"><div><h2>Пошук продуктів</h2><p class="muted">Калорії та БЖВ на 100 г або 100 мл</p></div><button type="button" class="dark" id="foodSearchClose">✕</button></div>'
   +'<div class="food-custom-actions"><button type="button" onclick="openMyFoodLibrary()">Мої продукти</button>'
   +'<button type="button" onclick="openPrivateFoodForm()">+ Свій продукт</button>'
   +'<button type="button" onclick="openMyRecipesLibrary()">Мої рецепти</button></div>'
@@ -78,13 +78,15 @@ function renderItems(items){
    +'<strong>'+esc(x.name||'Продукт')+'</strong>'
    +(x.brand?'<small>'+esc(x.brand)+'</small>':'')
    +'<span>'+esc(x.source_label||x.source||'Джерело не вказано')+(x.approximate?' · орієнтовно':'')+'</span>'
-   +'<em>'+fmt(x.kcal_100)+' ккал · Б '+fmt(x.protein_100)+' · Ж '+fmt(x.fat_100)+' · В '+fmt(x.carbs_100)+'</em></button>').join('');
+   +'<em>'+fmt(x.kcal_100)+' ккал · Б '+fmt(x.protein_100)+' · Ж '+fmt(x.fat_100)+' · В '+fmt(x.carbs_100)+' / 100 '+(x.portion_unit==='ml'?'мл':'г')+'</em></button>').join('');
  $('foodLookupResults').querySelectorAll('[data-i]').forEach(btn=>btn.onclick=()=>choose(items[+btn.dataset.i]));
 }
 function choose(x){
  chosen=x;
+ const isLiquid=x.portion_unit==='ml',unit=isLiquid?'мл':'г';
+ const initial=isLiquid&&Number(x.package_size_ml)>0?Math.min(2000,Number(x.package_size_ml)):100;
  $('foodLookupPortion').innerHTML='<div class="food-lookup-portion"><strong>'+esc(x.name||'Продукт')+'</strong>'
-  +'<label>Вага порції, г <input id="foodLookupGrams" type="number" min="1" max="2000" step="1" value="100"></label>'
+  +'<label>'+(isLiquid?'Об’єм, мл':'Вага порції, г')+' <input id="foodLookupGrams" type="number" min="1" max="2000" step="1" value="'+initial+'"></label>'
   +'<label>Прийом їжі <select id="foodLookupMeal">'
   +[['breakfast','Сніданок'],['lunch','Обід'],['snack','Перекус'],['dinner','Вечеря']]
     .map(([k,t])=>'<option value="'+k+'"'+(defaultMeal===k?' selected':'')+'>'+t+'</option>').join('')
@@ -97,7 +99,7 @@ function choose(x){
 function portion(){
  const grams=Number($('foodLookupGrams')?.value);
  if(!chosen||!$('foodLookupMacros'))return;
- if(!Number.isFinite(grams)||grams<=0||grams>2000){$('foodLookupMacros').textContent='Вкажи порцію від 1 до 2000 г.';return}
+ if(!Number.isFinite(grams)||grams<=0||grams>2000){$('foodLookupMacros').textContent='Вкажи порцію від 1 до 2000 '+(chosen.portion_unit==='ml'?'мл':'г')+'.';return}
  const amount=key=>fmt((Number(chosen[key])||0)*grams/100);
  $('foodLookupMacros').innerHTML='<div class="food-lookup-macros">'
   +'<span><b>'+amount('kcal_100')+'</b><small>ккал</small></span>'
@@ -117,7 +119,7 @@ window.addChosenFoodToDiary=async function(button){
  const feedback=$('foodLookupFeedback');
  if(!chosen||!['breakfast','lunch','snack','dinner'].includes(meal))return;
  if(!Number.isFinite(grams)||grams<=0||grams>2000){
-  if(feedback)feedback.textContent='Вкажи коректну вагу від 1 до 2000 г.';
+  if(feedback)feedback.textContent='Вкажи порцію від 1 до 2000 '+(chosen.portion_unit==='ml'?'мл':'г')+'.';
   return;
  }
  const targetDate=window.nutritionDiaryDay||isoToday();
@@ -128,7 +130,7 @@ window.addChosenFoodToDiary=async function(button){
  button.disabled=true;button.textContent='Зберігаємо…';
  try{
   await api('/nutrition/diary',{method:'POST',body:JSON.stringify({
-   day:targetDate,meal,grams,
+   day:targetDate,meal,grams,portion_unit:chosen.portion_unit==='ml'?'ml':'g',
    name:String(chosen.name||'').slice(0,200),
    brand:String(chosen.brand||'').slice(0,120),
    source_label:String(chosen.source_label||chosen.source||'').slice(0,120),
