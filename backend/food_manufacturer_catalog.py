@@ -7,7 +7,7 @@ cannot be silently reused as generic nutrition for other manufacturers.
 """
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,parse_qsl
 import json
 import math
 import re
@@ -18,6 +18,10 @@ ALLOWED_MANUFACTURERS={
     "Галичина":{"galychyna.com.ua","dostavka.galychyna.com.ua"},
     "Яготинське для дітей":{"yagotynkids.com.ua"},
     "BioTechUSA":{"shop.biotechusa.com"},
+    "Activia":{"activia.ua"},
+    "OstroVit":{"ostrovit.com"},
+    "Optimum Nutrition":{"www.optimumnutrition.com"},
+    "Myprotein":{"www.myprotein.com"},
 }
 
 
@@ -41,12 +45,18 @@ def validate_label_record(row):
         raise ValueError("Manufacturer declarations must match product as sold")
     brand=row["brand"]
     parts=urlsplit(row["source_url"])
+    # Some manufacturers identify an exact flavour/size by a variant query.
+    # Only accept that single, digit-only selector for those specific hosts.
+    variation_allowed=(
+        (brand=="Optimum Nutrition" and bool(re.fullmatch(r"variant=\d{8,18}",parts.query)))
+        or (brand=="Myprotein" and bool(re.fullmatch(r"variation=\d{6,15}",parts.query)))
+    )
     if (brand not in ALLOWED_MANUFACTURERS
         or parts.scheme!="https"
         or parts.hostname not in ALLOWED_MANUFACTURERS[brand]
         or parts.username or parts.password
         or not parts.path or parts.path=="/"
-        or parts.query or parts.fragment):
+        or (parts.query and not variation_allowed) or parts.fragment):
         raise ValueError("Untrusted or non-specific manufacturer source URL")
     nutrition={}
     for nutrient in NUTRIENTS:
@@ -79,6 +89,15 @@ def validate_label_record(row):
         if not 0<=value<=nutrition[maximum]:
             raise ValueError("Optional nutrient exceeds its parent: "+field)
         additional[field]=float(value)
+    # EAN is accepted only if it was printed on the manufacturer's own
+    # flavour/size page. Never generate a barcode from a product name.
+    barcode=row.get("barcode","")
+    if barcode:
+        if brand!="OstroVit" or not isinstance(barcode,str) or not re.fullmatch(r"\d{13}",barcode):
+            raise ValueError("Unverified manufacturer barcode")
+        checksum=(10-sum(int(d)*(1 if i%2==0 else 3) for i,d in enumerate(barcode[:12]))%10)%10
+        if checksum!=int(barcode[-1]):
+            raise ValueError("Invalid manufacturer EAN-13 checksum")
     return {
         "source":"reference",     # Local, independent of OFF/USDA request.
         "source_kind":"manufacturer_label",
@@ -86,7 +105,7 @@ def validate_label_record(row):
         "source_id":"eplan12-manufacturer-"+row["id"],
         "name":row["name_uk"],
         "brand":brand,
-        "barcode":"",
+        "barcode":barcode,
         "search_aliases":list(dict.fromkeys((
             row["name_ru"],
             brand+" "+row["name_uk"],
@@ -120,12 +139,17 @@ def manufacturer_label_food_items():
     records=[]
     seen_ids=set()
     seen_products=set()
+    seen_barcodes=set()
     for raw in data["records"]:
         item=validate_label_record(raw)
         sig=(item["brand"].casefold(),item["name"].casefold())
         if item["source_id"] in seen_ids or sig in seen_products:
             raise ValueError("Duplicate manufacturer product record")
+        if item["barcode"] and item["barcode"] in seen_barcodes:
+            raise ValueError("Duplicate manufacturer barcode")
         seen_ids.add(item["source_id"])
         seen_products.add(sig)
+        if item["barcode"]:
+            seen_barcodes.add(item["barcode"])
         records.append(item)
     return tuple(records)
