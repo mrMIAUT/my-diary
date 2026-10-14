@@ -27,6 +27,11 @@ ALLOWED_MANUFACTURERS={
     "AXA":{"axa.ua"},
     "Чумак":{"chumak.com"},
     "Pasta Prima":{"chumak.com"},
+    "Селянське":{"www.loostdorf.com"},
+    "На здоров'я":{"www.loostdorf.com"},
+    "Смачно Шеф":{"www.loostdorf.com"},
+    "Бурьонка":{"www.loostdorf.com"},
+    "Молочна Долина":{"www.loostdorf.com"},
 }
 
 
