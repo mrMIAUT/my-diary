@@ -153,7 +153,7 @@ try{
  assert.equal(newlyFilled.auto_fit.mode,'day');
  assert.equal(newlyFilled.auto_fit.unfilled,3,'Unfilled meals must share remaining daily targets');
  assert.ok(newlyFilled.auto_fit.target.kcal<900,
-  'A new breakfast must not receive the entire remaining day's calories');
+  'A new breakfast must not consume the whole remaining daily calorie budget');
  // Save must still block until the other meals are prepared.
  const noSave=await page.evaluate(async()=>{await saveTrainerMealPlanDraft(123,null);
   return window.__requests.filter(x=>x.path==='/client/123/nutrition').length});
