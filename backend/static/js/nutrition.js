@@ -21,7 +21,8 @@ function trainerRationTabsHTML(){
   +ids.map(v=>'<button type="button" class="trainer-ration-tab '+
       (v===trainerNutritionRation?'active':'')+'" aria-pressed="'+(v===trainerNutritionRation)+
       '" onclick="selectTrainerRation('+v+')">Раціон '+v+'</button>').join('')
-  +(ids.length<7?'<button class="trainer-ration-add" type="button" onclick="addTrainerRation()">＋ Раціон</button>':'')
+  +(ids.length<7?'<button class="trainer-ration-add" type="button" onclick="addTrainerRation()">＋ Раціон</button>'
+    +'<button class="trainer-ration-copy" type="button" onclick="duplicateTrainerRation()">Дублювати поточний</button>':'')
   +(ids.length>1?'<button class="trainer-ration-remove" type="button" onclick="removeTrainerRation()">Видалити поточний</button>':'')
   +'</div>';
 }
@@ -32,12 +33,31 @@ window.selectTrainerRation=function(v){
 };
 window.addTrainerRation=function(){
  if(!trainerCompleteRations()||trainerRationIds().length>=7)return;
+ const nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))].sort((a,b)=>a-b);
+ // Never inherit foods/title/recipe/steps. This is a completely new ration.
+ const next=Math.max(...trainerRationIds())+1;
+ for(const n of nums)nutritionPlanDraft.push({
+  meal_number:n,variant_number:next,sort:n,content:'',foods:[],
+  dish_title:'',preparation:'',recipe_id:null,recipe_source_name:'',
+  recipe_source_url:'',auto_fit:null
+ });
+ trainerNutritionRation=next;
+ rerenderNutritionPlan(true);
+};
+window.duplicateTrainerRation=function(){
+ if(!trainerCompleteRations()||trainerRationIds().length>=7)return;
  const from=trainerNutritionRation,nums=[...new Set(nutritionPlanDraft.map(x=>x.meal_number))];
  const next=Math.max(...trainerRationIds())+1;
  for(const n of nums){
   const item=nutritionPlanDraft.find(x=>x.meal_number===n&&x.variant_number===from);
   if(!item)continue;
-  nutritionPlanDraft.push({...item,variant_number:next,foods:(item.foods||[]).map(f=>({...f})),auto_fit:null});
+  nutritionPlanDraft.push({
+   ...item,variant_number:next,
+   foods:(item.foods||[]).map(row=>({
+    ...row,portion_rules:row.portion_rules?{...row.portion_rules}:undefined
+   })),
+   auto_fit:null
+  });
  }
  trainerNutritionRation=next;
  rerenderNutritionPlan(true);
@@ -104,26 +124,45 @@ function remainingTrainerTargets(meal){
   throw Error('Для автопідбору спочатку заповни решту прийомів продуктами з каталогу.');
  const rest=[0,0,0,0];
  for(const item of others)trainerFoodTotals(item).forEach((n,i)=>{rest[i]+=n});
- return {goal,remaining:goal.map((n,i)=>n-rest[i])};
+ const unfilled=others.filter(x=>!x.foods?.length&&!String(x.content||'').trim()).length;
+ return {goal,remaining:goal.map((n,i)=>n-rest[i]),unfilled};
 }
-window.applyRecipeToRation=function(item,recipe){
+window.applyRecipeToRation=function(item,recipe,requestedMode){
  if(!trainerCompleteRations()||item.variant_number!==trainerNutritionRation)
    throw Error('Обери повний раціон перед заміною страви.');
- const {goal,remaining}=remainingTrainerTargets(item);
- const fit=window.NutritionPortionFitter.fit(recipe,remaining,goal,window.structuredCatalog);
+ const {goal,remaining,unfilled}=remainingTrainerTargets(item);
+ const previous=trainerFoodTotals(item);
+ const hasPrevious=(item.foods||[]).some(row=>row.count_in_targets!==false)&&previous[0]>0;
+ const mode=requestedMode==='previous'&&hasPrevious?'previous':'day';
+ // A new incomplete ration must not receive an entire day's nutrition in one
+ // breakfast. Distribute the unfilled remainder over the unfilled meals.
+ const target=mode==='previous'
+   ?previous
+   :remaining.map(x=>Math.max(0,x)/(unfilled+1));
+ if(target.every(x=>x<=0))
+   throw Error('Добову ціль уже досягнуто. Зміни інші прийоми їжі або обери інший режим.');
+ const desired=Object.fromEntries(['kcal','protein','fat','carbs'].map((key,i)=>[key,target[i]]));
+ const fit=window.NutritionPortionFitter.fit(recipe,target,target,window.structuredCatalog);
+ // Compute and show the *real* daily difference without modifying the rest.
+ const actualDay=fit.meal&&['kcal','protein','fat','carbs'].map((key,i)=>
+   Number(fit.meal[key]||0)+(goal[i]-remaining[i]));
+ const daily=window.NutritionPortionFitter.assess(actualDay,goal);
  item.foods=fit.foods;
  item.dish_title=recipe.title;
  item.preparation=recipe.preparation;
  item.recipe_id=recipe.id;
  item.recipe_source_name=recipe.source_name;
  item.recipe_source_url=recipe.source_url;
- item.auto_fit={within_tolerance:fit.within_tolerance,diff:fit.diff};
+ item.auto_fit={
+  mode,within_tolerance:fit.within_tolerance,diff:fit.diff,
+  day_diff:daily.diff,unfilled,target:desired
+ };
  item.content=item.foods.map(row=>{
   const f=(window.structuredCatalog||[]).find(x=>x.source_id===row.source_id);
   return f?f.name+' — '+(row.count!=null?row.count+' шт.':row.grams+' г'):'';
  }).filter(Boolean).join('\n');
  rerenderNutritionPlan(true);
- return fit;
+ return {...fit,mode,day_diff:daily.diff,unfilled};
 };
 window.rebalanceTrainerRation=function(){
  if(!trainerCompleteRations()||!window.NutritionPortionFitter)return;
@@ -554,8 +593,11 @@ function mealEditorBlock(n,editing){
   const hasFoods=Array.isArray(x.foods)&&x.foods.length>0;
   const auto=x.auto_fit;
   const note=auto?'<div class="trainer-auto-fit '+(auto.within_tolerance?'close':'warn')+'"><strong>'
-      +(auto.within_tolerance?'Порції підібрано':'Порції підібрано, денна ціль має відхилення')
-      +'</strong><small>Ккал '+Number(auto.diff.kcal||0).toFixed(1)+' · Б '+Number(auto.diff.protein||0).toFixed(1)
+      +(auto.mode==='previous'?'БЖВ наближено до попередньої страви'
+        :(auto.unfilled?'Порції під частку залишку добової цілі':'Порції під залишок добової цілі'))
+      +(!auto.within_tolerance?' · перевір відхилення':'')
+      +'</strong><small>Відхилення від обраної цілі: Ккал '+Number(auto.diff.kcal||0).toFixed(1)
+      +' · Б '+Number(auto.diff.protein||0).toFixed(1)
       +' · Ж '+Number(auto.diff.fat||0).toFixed(1)+' · В '+Number(auto.diff.carbs||0).toFixed(1)
       +'</small></div>':'';
   const recipe= rationMode?
@@ -624,6 +666,10 @@ window.openAutoMealPlanBuilder = async function(cid){
 window.saveTrainerMealPlanDraft = async function(cid,button){
  const data=window.currentClientData||{},c=data.client||{};
  if(session?.role!=='trainer'||+c.id!==+cid||!clientAccess(c).features?.meal_plan)return;
+ // A newly added empty ration is a draft, not an instruction to silently
+ // drop or overwrite a client's saved alternatives on the next save.
+ if(trainerCompleteRations()&&nutritionPlanDraft.some(x=>!String(x.content||'').trim()))
+   return alert('Заповни всі прийоми їжі у новому раціоні або видали порожній раціон перед збереженням.');
  const items=(nutritionPlanDraft||[]).filter(x=>String(x.content||'').trim()).map((x,i)=>({
    meal_number:+x.meal_number,variant_number:+x.variant_number,content:String(x.content).trim(),sort:i,
    dish_title:String(x.dish_title||'').slice(0,140),preparation:String(x.preparation||'').slice(0,1500),
