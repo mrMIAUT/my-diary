@@ -22,7 +22,7 @@ ALLOWED_MANUFACTURERS={
     "OstroVit":{"ostrovit.com"},
     "Optimum Nutrition":{"www.optimumnutrition.com"},
     "Myprotein":{"www.myprotein.com"},
-    "Ehrmann":{"www.ehrmann.de"},
+    "Ehrmann":{"www.ehrmann.de","shop.ehrmann.de"},
     "Barebells":{"barebells.com"},
 }
 
@@ -39,8 +39,15 @@ def validate_label_record(row):
         raise ValueError("Invalid manufacturer source record ID")
     if row.get("source_publisher")!="manufacturer":
         raise ValueError("A manufacturer's own page is required")
-    if row.get("source_nutrition_basis")!="per_100g_product":
-        raise ValueError("Nutrition must be declared per 100g, not per portion")
+    basis=row.get("source_nutrition_basis")
+    is_drink=row.get("product_kind")=="ready_to_drink"
+    if basis not in ("per_100g_product","per_100ml_product"):
+        raise ValueError("Manufacturer nutrient basis must be per 100g or 100ml")
+    if (basis=="per_100ml_product") != is_drink:
+        raise ValueError("Liquid nutrition basis requires exact RTD manufacturer record")
+    if is_drink and (type(row.get("package_size_ml")) is not int or
+                     not 30<=row["package_size_ml"]<=2000):
+        raise ValueError("Ready-to-drink products require package volume in ml")
     if row.get("nutrition_status")!="manufacturer_label_reviewed":
         raise ValueError("Unreviewed branded label is not selectable")
     if row.get("preparation_state")!="as_sold":
@@ -103,7 +110,9 @@ def validate_label_record(row):
     return {
         "source":"reference",     # Local, independent of OFF/USDA request.
         "source_kind":"manufacturer_label",
-        "source_label":"Дані виробника · 100 г",
+        "source_label":"Дані виробника · 100 "+("мл" if is_drink else "г"),
+        "source_nutrition_basis":basis,
+        "portion_unit":"ml" if is_drink else "g",
         "source_id":"eplan12-manufacturer-"+row["id"],
         "name":row["name_uk"],
         "brand":brand,
@@ -127,6 +136,7 @@ def validate_label_record(row):
         "source_url":row["source_url"],
         "source_product_heading":row["source_product_heading"],
         "reviewed_on":row["reviewed_on"],
+        **({"package_size_ml":row["package_size_ml"]} if is_drink else {}),
         **additional,
     }
 

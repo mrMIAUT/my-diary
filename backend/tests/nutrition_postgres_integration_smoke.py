@@ -123,6 +123,38 @@ assert app.rows("SELECT * FROM nutrition WHERE client_id=?",(client,))==[], "Dia
 assert app.rows("SELECT content,foods_json,variant_number FROM nutrition_plan_items WHERE client_id=? ORDER BY variant_number",(client,))==snapshot, "Diary write must not alter assigned nutrition plan"
 changed=app.food_diary_edit(saved["id"],app.FoodDiaryEditIn(meal="dinner",grams=100),client_user)["item"]
 assert changed["meal"]=="dinner" and changed["kcal"]==365 and changed["grams"]==100,changed
+# Per-100ml RTD label is stored as millilitres, not inferred mass.
+from food_reference_catalog import reference_food_items
+drink=next(item for item in reference_food_items()
+           if item["source_id"]=="eplan12-manufacturer-ehrmann-high-protein-drink-banana-250ml")
+assert drink["portion_unit"]=="ml" and drink["source_nutrition_basis"]=="per_100ml_product"
+assert any(r["source_id"]==drink["source_id"] for r in app.prototype_food_preview("Ehrmann High Protein Banana",12)["items"])
+drink_input=dict(day=day,meal="snack",name=drink["name"],brand=drink["brand"],
+                source_label=drink["source_label"],source_id=drink["source_id"],
+                approximate=False,grams=250,portion_unit="ml",
+                **{key:drink[key] for key in ("kcal_100","protein_100","fat_100","carbs_100")})
+logged_drink=app.food_diary_add(app.FoodDiaryAddIn(**drink_input),client_user)["item"]
+assert logged_drink["portion_unit"]=="ml" and logged_drink["portion_amount"]==250,logged_drink
+assert logged_drink["kcal"]==137.5 and logged_drink["protein"]==20,logged_drink
+assert app.food_diary_overview(30,client_user)["days"][0]["kcal"]==502.5
+edited_drink=app.food_diary_edit(logged_drink["id"],
+    app.FoodDiaryEditIn(meal="snack",grams=125,portion_unit="ml"),client_user)["item"]
+assert edited_drink["kcal"]==68.8 and edited_drink["portion_amount"]==125,edited_drink
+for invalid in ({**drink_input,"portion_unit":"g"},
+                {**drink_input,"source_id":"not-reviewed"},
+                {**drink_input,"kcal_100":999},
+                {**drink_input,"name":"Other product"}):
+    try:app.food_diary_add(app.FoodDiaryAddIn(**invalid),client_user)
+    except HTTPException as e:assert e.status_code==400,e
+    else:raise AssertionError("Non-authoritative ml drink input was accepted")
+try:app.food_diary_edit(logged_drink["id"],
+    app.FoodDiaryEditIn(meal="snack",grams=250,portion_unit="g"),client_user)
+except HTTPException as e:assert e.status_code==400,e
+else:raise AssertionError("Converting a logged liquid to grams was accepted")
+try:app.create_saved_recipe(app.SavedRecipeCreateIn(
+    name="Неправильний мікс мл і грамів",day=day,meal="snack"),client_user)
+except HTTPException as e:assert e.status_code==400,e
+else:raise AssertionError("Liquid portions were silently summed into a gram recipe")
 other_user=app.AuthUser(role="client",user_id=client+1000,client_id=client+1000,
  session_id=0,expires_at=datetime.now(timezone.utc),name="Other")
 try:app.food_diary_edit(saved["id"],app.FoodDiaryEditIn(meal="lunch",grams=200),other_user)
@@ -218,6 +250,9 @@ assert app.food_diary_delete(logged["id"],client_user)["ok"] is True
 # Idempotent additive schema migration must preserve older and newly filled
 # optional values, with no rewriting of saved diary or assigned plans.
 app.init()
+assert any(i["portion_unit"]=="g" for i in app.food_diary_get(day,client_user)["items"])
+assert any(i["portion_unit"]=="ml" and i["portion_amount"]==125 for i in
+           app.food_diary_get(day,client_user)["items"])
 post=app.rows("SELECT saturated_fat_100,sugars_100 FROM nutrition_private_foods WHERE id=?",
               (private["id"],))[0]
 assert float(post["saturated_fat_100"])==3.2 and float(post["sugars_100"])==1.2
@@ -228,6 +263,7 @@ try:app.FoodDiaryAddIn(
 except Exception:pass
 else:raise AssertionError("NaN portion was accepted")
 assert app.food_diary_delete(saved["id"],client_user)["ok"] is True
+assert app.food_diary_delete(logged_drink["id"],client_user)["ok"] is True
 empty=app.food_diary_get(day,client_user)
 assert empty["active"] is True and empty["items"]==[] and empty["totals"]["kcal"]==0,empty
 app.init()

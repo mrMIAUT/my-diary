@@ -114,7 +114,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         for brand,total in (("Ehrmann",12),("Barebells",8),("Myprotein",4)):
             self.assertEqual(sum(r["brand"]==brand for r in batch),total)
         catalog=manufacturer_label_food_items()
-        self.assertEqual(len(catalog),92)
+        self.assertGreaterEqual(len(catalog),92)
         ids={r["source_id"] for r in catalog}
         for raw in batch:
             with self.subTest(name=raw["name_uk"]):
@@ -146,6 +146,49 @@ class MainFoodIntegrationTests(unittest.TestCase):
             with self.subTest(url=bad),self.assertRaises(ValueError):
                 validate_label_record({**base,"source_url":bad})
 
+    def test_v323_ready_to_drink_brand_labels_and_ml_units(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        manifest=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        drinks=[r for r in manifest["records"] if r.get("batch_id")=="2026-10-14-branded-rtd-ml-v323"]
+        self.assertEqual(len(drinks),11)
+        self.assertEqual(sum(r["brand"]=="Ehrmann" for r in drinks),6)
+        self.assertEqual(sum(r["brand"]=="Barebells" for r in drinks),5)
+        result=manufacturer_label_food_items()
+        self.assertEqual(len(result),103)
+        indexed={i["source_id"]:i for i in result}
+        for raw in drinks:
+            with self.subTest(name=raw["name_uk"]):
+                item=validate_label_record(raw)
+                self.assertEqual(item["source_nutrition_basis"],"per_100ml_product")
+                self.assertEqual(item["portion_unit"],"ml")
+                self.assertEqual(item["package_size_ml"],raw["package_size_ml"])
+                self.assertEqual(item["food_type"],"branded")
+                self.assertIn(item["source_id"],indexed)
+                self.assertLessEqual(item["sugars_100"],item["carbs_100"])
+                self.assertFalse(item["barcode"])
+        chocolate=indexed["eplan12-manufacturer-barebells-milkshake-chocolate-330ml"]
+        self.assertEqual(chocolate["kcal_100"],57)
+        self.assertEqual(chocolate["protein_100"],7.3)
+        self.assertEqual(chocolate["portion_unit"],"ml")
+        solids=[x for x in result if x["source_nutrition_basis"]=="per_100g_product"]
+        self.assertEqual(len(solids),92)
+        self.assertTrue(all(x["portion_unit"]=="g" for x in solids))
+        self.assertIn(chocolate,reference_food_items())
+
+    def test_v323_liquid_basis_does_not_allow_mislabelling_grams(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        rows=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))["records"]
+        liquid=next(x for x in rows if x["id"]=="ehrmann-high-protein-drink-banana-250ml")
+        solid=next(x for x in rows if x["id"]=="barebells-bar-caramel-cashew-55g")
+        for bad in ({**liquid,"source_nutrition_basis":"per_100g_product"},
+                    {**liquid,"product_kind":"protein_powder"},
+                    {**liquid,"package_size_ml":None},
+                    {**solid,"source_nutrition_basis":"per_100ml_product"}):
+            with self.subTest(name=bad["name_uk"]),self.assertRaises(ValueError):
+                validate_label_record(bad)
+
     def test_nutrition_and_sources_are_bounded(self):
         for row in reference_food_items():
             with self.subTest(name=row["name"]):
@@ -172,12 +215,12 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertIn("window.calculateTrainerNutritionTargets = function()", trainer_nutrition)
         self.assertIn("window.pendingTrainerNutritionTargets={kcal,protein,fat,carbs}", trainer_nutrition)
         self.assertNotIn('src="/static/js/food-lookup.js', index)
-        self.assertIn("/static/js/food-lookup.js?v=7", nutrition)
+        self.assertIn("/static/js/food-lookup.js?v=8", nutrition)
         self.assertIn("lookupLocal(", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertIn("/foods/preview", (BACKEND / "static/js/food-lookup.js").read_text(encoding="utf-8"))
         self.assertNotIn("/static/js/food-lookup.js", shell)
-        self.assertIn("nutrition-redesign.js?v=316", index)
-        self.assertIn("nutrition-redesign.js?v=316", shell)
+        self.assertIn("nutrition-redesign.js?v=323", index)
+        self.assertIn("nutrition-redesign.js?v=323", shell)
 
 
 if __name__ == "__main__":

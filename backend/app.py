@@ -905,6 +905,11 @@ def init():
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        # v323: the legacy "grams" column carries portion magnitude; unit is
+        # authoritative. Existing rows default to g, RTD drinks use ml.
+        c.execute("""ALTER TABLE nutrition_diary_items
+            ADD COLUMN IF NOT EXISTS portion_unit TEXT NOT NULL DEFAULT 'g'
+            CHECK(portion_unit IN ('g','ml'))""")
         c.execute("""CREATE INDEX IF NOT EXISTS ix_nutrition_diary_client_day
                      ON nutrition_diary_items(client_id,day,meal,id)""")
         # ЄПЛАН 1.2: private user foods and recipes are NOT shared by default.
@@ -1466,6 +1471,7 @@ class FoodDiaryAddIn(BaseModel):
     source_label:str=Field(default="",max_length=120)
     source_id:str=Field(default="",max_length=200)
     approximate:bool=True
+    portion_unit:str=Field(default="g",pattern="^(g|ml)$")
     grams:float=Field(gt=0,le=2000,allow_inf_nan=False)
     kcal_100:float=Field(ge=0,le=1000,allow_inf_nan=False)
     protein_100:float=Field(ge=0,le=100,allow_inf_nan=False)
@@ -1475,6 +1481,7 @@ class FoodDiaryAddIn(BaseModel):
 class FoodDiaryEditIn(BaseModel):
     meal:str=Field(pattern="^(breakfast|lunch|snack|dinner)$")
     grams:float=Field(gt=0,le=2000,allow_inf_nan=False)
+    portion_unit:str|None=Field(default=None,pattern="^(g|ml)$")
 
 class PrivateFoodIn(BaseModel):
     name:str=Field(min_length=2,max_length=150)
@@ -5413,6 +5420,9 @@ def diary_day_checked(day:date):
 def diary_item_response(row):
     data=dict(row)
     grams=float(data["grams"])
+    # Old consumers retain 'grams'; newer clients must use unit + magnitude.
+    data["portion_unit"]=data.get("portion_unit") or "g"
+    data["portion_amount"]=grams
     for key in ("kcal","protein","fat","carbs"):
         value=float(data[key+"_100"])
         data[key+"_100"]=value
@@ -5420,6 +5430,25 @@ def diary_item_response(row):
     data["grams"]=grams
     data["day"]=str(data["day"])
     return data
+
+def validate_diary_portion_source(x:FoodDiaryAddIn):
+    # Never treat ml as grams without measured density. Only local, exact
+    # manufacturer declarations for 100 ml can be selected as liquid.
+    source=x.source_id.strip()
+    local=(next((f for f in reference_food_items()
+                if f["source_id"]==source),None)
+           if source.startswith("eplan12-manufacturer-") else None)
+    expected_unit=(local or {}).get("portion_unit","g")
+    if x.portion_unit!=expected_unit:
+        raise HTTPException(400,"Одиниця виміру не відповідає даним виробника.")
+    if x.portion_unit=="ml":
+        if not local or local.get("source_nutrition_basis")!="per_100ml_product":
+            raise HTTPException(400,"Мілілітри доступні лише для перевірених напоїв.")
+        if x.name.strip()!=local["name"] or x.brand.strip()!=local["brand"]:
+            raise HTTPException(400,"Некоректні дані напою.")
+        if any(abs(float(getattr(x,key))-float(local[key]))>0.005 for key in
+               ("kcal_100","protein_100","fat_100","carbs_100")):
+            raise HTTPException(400,"БЖВ напою повинні відповідати етикетці виробника.")
 
 def diary_day_payload(client_id:int,day:date):
     with con() as db:
@@ -5593,12 +5622,14 @@ def create_saved_recipe(x:SavedRecipeCreateIn,user:AuthUser=Depends(require_clie
         count=db.execute("SELECT count(*) AS n FROM nutrition_saved_recipes WHERE client_id=%s",
                          (user.client_id,)).fetchone()["n"]
         if count>=100:raise HTTPException(409,"Максимум 100 власних рецептів.")
-        ingredients=db.execute("""SELECT name,brand,grams,kcal_100,protein_100,
+        ingredients=db.execute("""SELECT name,brand,grams,portion_unit,kcal_100,protein_100,
                            fat_100,carbs_100 FROM nutrition_diary_items
                            WHERE client_id=%s AND day=%s AND meal=%s
                            ORDER BY id LIMIT 30""",
                            (user.client_id,x.day,x.meal)).fetchall()
         if not ingredients:raise HTTPException(400,"Спочатку додай продукти до цього прийому їжі.")
+        if any(t["portion_unit"]!="g" for t in ingredients):
+            raise HTTPException(400,"Рецепти з напоями в мл поки не підтримуються. Збережи лише продукти у грамах.")
         if len(ingredients)>=30:raise HTTPException(400,"Забагато складників у рецепті.")
         grams=sum(float(t["grams"]) for t in ingredients)
         if grams<=0 or grams>2000:
@@ -5687,6 +5718,7 @@ def food_diary_add(x:FoodDiaryAddIn,user:AuthUser=Depends(require_client)):
     if not name:raise HTTPException(400,"Вкажи назву продукту")
     if x.kcal_100<=0 and (x.protein_100+x.fat_100+x.carbs_100)<=0:
         raise HTTPException(400,"Цей продукт не має придатних даних БЖВ")
+    validate_diary_portion_source(x)
     with con() as db:
         if not db.execute("SELECT id FROM clients WHERE id=%s FOR UPDATE",(cid,)).fetchone():
             raise HTTPException(404,"Клієнта не знайдено")
@@ -5697,10 +5729,10 @@ def food_diary_add(x:FoodDiaryAddIn,user:AuthUser=Depends(require_client)):
                       VALUES(%s,%s) ON CONFLICT(client_id,day) DO NOTHING""",(cid,x.day))
         row=db.execute("""INSERT INTO nutrition_diary_items
           (client_id,day,meal,name,brand,source_label,source_id,approximate,grams,
-           kcal_100,protein_100,fat_100,carbs_100)
-          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+           portion_unit,kcal_100,protein_100,fat_100,carbs_100)
+          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
           RETURNING *""",(cid,x.day,x.meal,name,x.brand.strip(),x.source_label.strip(),
-            x.source_id.strip(),x.approximate,round(x.grams,1),
+            x.source_id.strip(),x.approximate,round(x.grams,1),x.portion_unit,
             x.kcal_100,x.protein_100,x.fat_100,x.carbs_100)).fetchone()
         db.commit()
     return {"item":diary_item_response(row)}
@@ -5710,11 +5742,15 @@ def food_diary_edit(entry_id:int,x:FoodDiaryEditIn,user:AuthUser=Depends(require
     cid=user.client_id
     require_active_client(cid,"nutrition")
     with con() as db:
+        existing=db.execute("""SELECT portion_unit FROM nutrition_diary_items
+            WHERE id=%s AND client_id=%s FOR UPDATE""",(entry_id,cid)).fetchone()
+        if not existing:raise HTTPException(404,"Запис щоденника не знайдено")
+        if x.portion_unit is not None and x.portion_unit!=existing["portion_unit"]:
+            raise HTTPException(400,"Не можна змінити грами на мілілітри без іншого продукту.")
         row=db.execute("""UPDATE nutrition_diary_items SET meal=%s,grams=%s,
                 updated_at=CURRENT_TIMESTAMP
                 WHERE id=%s AND client_id=%s RETURNING *""",
                 (x.meal,round(x.grams,1),entry_id,cid)).fetchone()
-        if not row:raise HTTPException(404,"Запис щоденника не знайдено")
         db.commit()
     return {"item":diary_item_response(row)}
 
