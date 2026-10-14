@@ -48,11 +48,11 @@ class ClientLoadPhaseContracts(unittest.TestCase):
 
     def test_pwa_cache_consistency(self):
         assets=[
-          "/static/css/redesign.css?v=262",
+          "/static/css/redesign.css?v=263",
           "/static/js/workout.js?v=188",
           "/static/js/workout-lyfta.js?v=173",
           "/static/js/timed-workout.js?v=7",
-          "/static/js/progress-redesign.js?v=169",
+          "/static/js/progress-redesign.js?v=170",
           "/static/js/calendar.js?v=163",
         ]
         for source in (INDEX,SW):
