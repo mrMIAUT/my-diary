@@ -102,10 +102,11 @@ try{
   assert.deepEqual(actual.client.icons,spec.icons,'Client icons mismatch for '+spec.count+' meals');
   assert.equal(actual.editorLabel,spec.labels[2],'Editor category mismatch for '+spec.count+' meals');
  }
- await page.evaluate(()=>{
+ await page.evaluate(catalog=>{
+  window.structuredCatalog=catalog;
   window.nutritionPlanDraft=[1,2,3].map(n=>({meal_number:n,variant_number:1,
    content:'',foods:[]}));
- });
+ },foodCatalog);
  await page.evaluate(()=>openRecipeTemplatePicker(3,1));
  assert.equal(await page.locator('#recipeTemplateFilters [data-cat="dinner"].active').count(),1,
   'Third meal must open dinner recipes for a three-meal day');
