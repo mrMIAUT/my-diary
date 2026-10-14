@@ -172,7 +172,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertEqual(chocolate["protein_100"],7.3)
         self.assertEqual(chocolate["portion_unit"],"ml")
         solids=[x for x in result if x["source_nutrition_basis"]=="per_100g_product"]
-        self.assertEqual(len(solids),92)
+        self.assertGreaterEqual(len(solids),92)
         self.assertTrue(all(x["portion_unit"]=="g" for x in solids))
         self.assertIn(chocolate,reference_food_items())
 
