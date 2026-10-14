@@ -14,7 +14,8 @@ let mealPlanPreviewCalls=0,mealPlanWriteCalls=0;
 let structuredCatalogCalls=0,mealPlanSavedPayload=null;
 let diarySeq=0;const diaryRows=[];const diaryDays=new Set();
 let customFoodSeq=0,recipeSeq=0;const personalFoods=[],personalRecipes=[],publicFoods=[];
-const calculated=(row)=>({...row,...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
+const calculated=(row)=>({...row,portion_unit:row.portion_unit||'g',portion_amount:row.grams,
+  ...Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(Number(row[k+'_100'])*Number(row.grams)/100).toFixed(1)]))});
 const diaryPayload=(day)=>{const items=diaryRows.filter(x=>x.day===day).map(calculated);
  return {day,active:diaryDays.has(day),items,totals:Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,+(items.reduce((sum,x)=>sum+x[k],0)).toFixed(1)]))};};
 const server=http.createServer(async(req,res)=>{
@@ -181,8 +182,17 @@ const server=http.createServer(async(req,res)=>{
   }
   if(pathname==='/api/foods/preview'){
     previewCalls++;
+    const term=new URL(req.url,'http://localhost').searchParams.get('q')||'';
+    const liquid={name:'Напій протеїновий High Protein Banana 250 мл',brand:'Ehrmann',
+      source:'reference',source_label:'Дані виробника · 100 мл',
+      source_id:'eplan12-manufacturer-ehrmann-high-protein-drink-banana-250ml',
+      portion_unit:'ml',source_nutrition_basis:'per_100ml_product',
+      package_size_ml:250,approximate:false,
+      kcal_100:55,protein_100:8,fat_100:.1,carbs_100:5.6,saturated_fat_100:.1,sugars_100:5.3};
+    const solid={name:'Гречка варена',source:'USDA',source_label:'ЄПЛАН · джерело USDA',
+      approximate:false,kcal_100:100,protein_100:4,fat_100:1,carbs_100:20};
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
-    res.end(JSON.stringify({items:[{name:'Гречка варена',source:'USDA',source_label:'ЄПЛАН · джерело USDA',approximate:false,kcal_100:100,protein_100:4,fat_100:1,carbs_100:20}]}));
+    res.end(JSON.stringify({items:[term.toLowerCase().includes('ehrmann')?liquid:solid]}));
     return;
   }
   if(pathname==='/api/foods/search'){
@@ -306,6 +316,35 @@ try{
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).active,true,
     'Deleting last product must keep diary mode instead of restoring old manual totals');
   assert.equal((await page.evaluate(()=>window.nutritionDiaryState)).totals.kcal,0);
+  // Verified RTD is measured in ml, not displayed/stored as an implicit gram weight.
+  await page.locator('.nutrition-food-search-button').click();
+  await page.locator('#foodLookupQuery').fill('Ehrmann');
+  await page.locator('.food-lookup-row').first().waitFor({timeout:5000});
+  assert.match(await page.locator('.food-lookup-row').first().innerText(),/100 мл/);
+  await page.locator('.food-lookup-row').first().click();
+  assert.match(await page.locator('#foodLookupPortion label').first().innerText(),/Об’єм, мл/);
+  assert.equal(await page.locator('#foodLookupGrams').inputValue(),'250');
+  assert.deepEqual((await page.locator('#foodLookupMacros .food-lookup-macros b').allInnerTexts())
+    .map(v=>Number(v.replace(',','.'))),[137.5,20,.3,14]);
+  await page.locator('#foodLookupMeal').selectOption('snack');
+  await page.locator('#foodLookupAddToDiary').click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===1);
+  let liquidState=await page.evaluate(()=>window.nutritionDiaryState);
+  assert.equal(liquidState.items[0].portion_unit,'ml');
+  assert.equal(liquidState.totals.kcal,137.5);
+  assert.match(await page.locator('.nutrition-diary-meal[data-meal=snack] .nutrition-diary-item').innerText(),/250 мл/);
+  assert.equal(await page.locator('.nutrition-diary-meal[data-meal=snack] .nutrition-diary-save-recipe').count(),0);
+  await page.locator('.nutrition-diary-meal[data-meal=snack] .nutrition-diary-item-actions button').first().click();
+  assert.match(await page.locator('#nutritionDiaryEditModal label').first().innerText(),/Об’єм, мл/);
+  await page.locator('#nutritionDiaryEditGrams').fill('125');
+  await page.locator('#nutritionDiaryEditModal button.primary').click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.[0]?.grams===125);
+  liquidState=await page.evaluate(()=>window.nutritionDiaryState);
+  assert.equal(liquidState.items[0].portion_unit,'ml');
+  assert.equal(liquidState.items[0].kcal,68.8);
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('.nutrition-diary-meal[data-meal=snack] .nutrition-diary-item-actions button[aria-label="Видалити продукт"]').click();
+  await page.waitForFunction(()=>window.nutritionDiaryState?.items?.length===0);
   // Custom foods remain private unless deliberately submitted for review.
   await page.locator('.nutrition-food-search-button').click();
   await page.locator('#foodSearchModal').waitFor();
