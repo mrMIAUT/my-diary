@@ -54,7 +54,7 @@ window.duplicateTrainerRation=function(){
   nutritionPlanDraft.push({
    ...item,variant_number:next,
    foods:(item.foods||[]).map(row=>({
-    ...row,portion_rules:row.portion_rules?{...row.portion_rules}:undefined
+    ...row,...(row.portion_rules?{portion_rules:{...row.portion_rules}}:{})
    })),
    auto_fit:null
   });
