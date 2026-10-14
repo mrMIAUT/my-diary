@@ -91,7 +91,10 @@ window.openRecipeTemplatePicker=async function(n,v){
   console.warn('Recipe template load',e);return;
  }
  const hadFood=(item.foods||[]).some(x=>x.count_in_targets!==false);
- state={n:+n,v:+v,recipes:items,category:defaultCategory[n]||'breakfast',
+ const mealCount=new Set((nutritionPlanDraft||[]).map(x=>x.meal_number)).size;
+ const assignedCategory=typeof window.trainerMealCategory==='function'?
+  window.trainerMealCategory(n,mealCount):(defaultCategory[n]||'breakfast');
+ state={n:+n,v:+v,recipes:items,category:assignedCategory==='evening'?'snack':assignedCategory,
   query:'',fitMode:hadFood?'previous':'day',canCompare:hadFood};
  document.body.insertAdjacentHTML('beforeend',
   '<div id="recipeTemplatePicker" class="modal" role="dialog" aria-modal="true" aria-labelledby="recipeTemplateTitle">'

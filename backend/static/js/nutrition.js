@@ -211,8 +211,20 @@ function trainerSavedMacroLine(values){
  const fmt=x=>Number(x).toLocaleString('uk-UA',{maximumFractionDigits:1});
  return fmt(values[0])+' ккал · Б '+fmt(values[1])+' · Ж '+fmt(values[2])+' · В '+fmt(values[3]);
 }
-function trainerSavedMealName(n){
- return ({1:'Сніданок',2:'Обід',3:'Перекус',4:'Вечеря',5:'Другий перекус'})[n]||'Прийом їжі '+n;
+// A three-meal day ends with dinner; four/five-meal days add snack slots.
+// Derive category from the complete day's meal count, not the fixed row index.
+// Both the trainer and client render already-saved plans using this mapping.
+function trainerMealCategory(n,mealCount=4){
+ const schedule=mealCount===3?['breakfast','lunch','dinner']:
+  mealCount===5?['breakfast','lunch','snack','dinner','evening']:
+  ['breakfast','lunch','snack','dinner'];
+ return schedule[Number(n)-1]||'';
+}
+window.trainerMealCategory=trainerMealCategory;
+function trainerSavedMealName(n,mealCount=4){
+ const labels={breakfast:'Сніданок',lunch:'Обід',snack:'Перекус',
+  dinner:'Вечеря',evening:'Другий перекус'};
+ return labels[trainerMealCategory(n,mealCount)]||'Прийом їжі '+n;
 }
 function trainerSavedIngredientRows(text){
  const lines=String(text||'').split('\n').map(line=>line.trim()).filter(Boolean);
@@ -229,9 +241,9 @@ function trainerSavedIngredientRows(text){
 }
 // Uniform, local SVG categories. These are meal-type icons rather than
 // unreliable dish-matching emoji, so the same meal always looks consistent.
-function nutritionMealThumbnail(item,n){
- const category=Number(n)===1?'breakfast':Number(n)===2?'lunch':
-  Number(n)===3||Number(n)===5?'snack':Number(n)===4?'dinner':'lunch';
+function nutritionMealThumbnail(item,n,mealCount=4){
+ const kind=trainerMealCategory(n,mealCount);
+ const category=kind==='evening'?'snack':(kind||'lunch');
  // Exact Lucide v0.456.0 paths used in the approved in-chat preview:
  // breakfast: coffee, lunch: utensils, snack: apple, dinner: moon.
  // Keep these unchanged; do not replace with approximations or illustrations.
@@ -242,7 +254,7 @@ function nutritionMealThumbnail(item,n){
   dinner:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'
  };
  return '<div class="nutrition-menu-photo nutrition-meal-icon nutrition-meal-icon-'+category
-  +'" role="img" aria-label="'+esc(trainerSavedMealName(n))+'">'
+  +'" role="img" aria-label="'+esc(trainerSavedMealName(n,mealCount))+'">'
   +'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none"'
   +' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
   +icons[category]+'</svg></div>';
@@ -277,7 +289,7 @@ function nutritionCookingSteps(input){
   .replaceAll('Оливкова олія використовується лише як заправка.','Заправ салат оливковою олією.');
  return text.replace(/\s+([.,!?])/g,'$1').replace(/ {2,}/g,' ').trim();
 }
-function trainerSavedMealCard(item,n){
+function trainerSavedMealCard(item,n,mealCount=4){
  const raw=String(item.content||'');
  const title=item.dish_title||(/^Страва:\s*([^\n]+)/.exec(raw)||[])[1]||'';
  const preparation=nutritionCookingSteps(item.preparation||(/(?:^|\n)Приготування:\s*([\s\S]*)$/.exec(raw)||[])[1]||'');
@@ -290,10 +302,10 @@ function trainerSavedMealCard(item,n){
  const fmt=value=>Number(value).toLocaleString('uk-UA',{maximumFractionDigits:1});
  return '<article class="trainer-assigned-meal nutrition-menu-meal nutrition-menu-meal-v2">'
   +'<div class="nutrition-menu-v2-layout">'
-   +nutritionMealThumbnail({...item,dish_title:title},n)
+   +nutritionMealThumbnail({...item,dish_title:title},n,mealCount)
    +'<div class="nutrition-menu-v2-copy">'
     +'<div class="nutrition-menu-v2-kicker"><span class="nutrition-menu-number">'+String(n).padStart(2,'0')+'</span>'
-     +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n))+'</span></div>'
+     +'<span class="trainer-assigned-meal-label">'+esc(trainerSavedMealName(n,mealCount))+'</span></div>'
     +(title?'<h3 class="trainer-assigned-dish">'+esc(title)+'</h3>':'')
     +(ingredients?trainerSavedIngredientRows(ingredients):'')
    +'</div>'
@@ -507,7 +519,7 @@ function trainerSavedRationPage(items,nums,variant){
    :'<p class="trainer-assigned-no-totals">Для частини страв БЖВ не вказані — загальний підсумок не розраховується.</p>')
   +'<div class="nutrition-menu-day-intro"><span>Меню на день</span><small>'
   +meals.length+' '+(meals.length===1?'прийом їжі':meals.length<5?'прийоми їжі':'прийомів їжі')+'</small></div>'
-  +meals.map(item=>trainerSavedMealCard(item,item.meal_number)).join('');
+  +meals.map(item=>trainerSavedMealCard(item,item.meal_number,nums.length)).join('');
 }
 
 window.selectTrainerSavedRation=function(ration){
@@ -533,10 +545,10 @@ function trainerAssignedPlanHTML(d){
  if(!complete){
   // Older plans may have independent alternatives for different meals.
   return '<div class="trainer-saved-plan">'
-   +nums.map(n=>'<section class="trainer-saved-legacy"><strong>'+esc(trainerSavedMealName(n))+'</strong>'
+   +nums.map(n=>'<section class="trainer-saved-legacy"><strong>'+esc(trainerSavedMealName(n,nums.length))+'</strong>'
     +items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number)
       .map(x=>'<div class="trainer-saved-legacy-option"><small>Варіант '+x.variant_number+'</small>'
-       +trainerSavedMealCard(x,n)+'</div>').join('')+'</section>').join('')
+       +trainerSavedMealCard(x,n,nums.length)+'</div>').join('')+'</section>').join('')
    +'</div>';
  }
  return '<div class="trainer-saved-plan">'
@@ -581,13 +593,14 @@ function mealPlanEditorHTML(d,editing=false){
 }
 
 function mealEditorBlock(n,editing){
+ const mealCount=new Set((nutritionPlanDraft||[]).map(x=>x.meal_number)).size;
  let xs=nutritionPlanDraft.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
- if(!editing)return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'
+ if(!editing)return '<div class="meal-view"><strong>'+esc(trainerSavedMealName(n,mealCount))+'</strong>'
   +(xs.filter(x=>x.content.trim()).map(x=>'<div class="meal-option"><span class="variant-pill">Раціон '+x.variant_number+'</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+esc(x.content)+'</div></div>').join('')
    ||'<div class="muted" style="margin-top:8px">Ще не заповнено.</div>')+'</div>';
  const rationMode=trainerCompleteRations();
  if(rationMode)xs=xs.filter(x=>x.variant_number===trainerNutritionRation);
- let html='<div class="meal-editor"><div class="meal-editor-head"><strong>Прийом їжі '+n+'</strong>'
+ let html='<div class="meal-editor"><div class="meal-editor-head"><strong>'+esc(trainerSavedMealName(n,mealCount))+'</strong>'
   +(nutritionPlanDraft.some(x=>x.meal_number!==n)?'<button class="dark icon-btn" onclick="removeMealBlock('+n+')">'+uiIcon('trash')+' Видалити</button>':'')+'</div>';
  html+=xs.map(x=>{
   const hasFoods=Array.isArray(x.foods)&&x.foods.length>0;
@@ -708,7 +721,7 @@ window.ensureStructuredMealEditor=async function(){
      await window.loadStructuredMealCatalog();
      for(const [url,test] of [
        ['/static/js/nutrition-portion-fitter.js?v=2',()=>!!window.NutritionPortionFitter],
-       ['/static/js/recipe-template-picker.js?v=5',()=>!!window.openRecipeTemplatePicker]
+       ['/static/js/recipe-template-picker.js?v=6',()=>!!window.openRecipeTemplatePicker]
      ]){
        if(test())continue;
        await new Promise((resolve,reject)=>{
@@ -837,7 +850,7 @@ function clientMealPlanHTML(d){
   nums.every(n=>items.some(x=>x.meal_number===n&&x.variant_number===v)));
  const legacy=nums.map(n=>{
   const xs=items.filter(x=>x.meal_number===n).sort((a,b)=>a.variant_number-b.variant_number);
-  return '<div class="meal-view"><strong>Прийом їжі '+n+'</strong>'+
+  return '<div class="meal-view"><strong>'+esc(trainerSavedMealName(n,nums.length))+'</strong>'+
    xs.map(x=>'<div class="meal-option"><span class="variant-pill">Варіант '+x.variant_number+
     '</span><div style="white-space:pre-wrap;line-height:1.55;margin-top:7px">'+esc(x.content)+'</div></div>').join('')+'</div>';
  }).join('');
