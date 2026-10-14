@@ -155,7 +155,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertEqual(sum(r["brand"]=="Ehrmann" for r in drinks),6)
         self.assertEqual(sum(r["brand"]=="Barebells" for r in drinks),5)
         result=manufacturer_label_food_items()
-        self.assertEqual(len(result),103)
+        self.assertGreaterEqual(len(result),103)
         indexed={i["source_id"]:i for i in result}
         for raw in drinks:
             with self.subTest(name=raw["name_uk"]):
@@ -172,7 +172,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         self.assertEqual(chocolate["protein_100"],7.3)
         self.assertEqual(chocolate["portion_unit"],"ml")
         solids=[x for x in result if x["source_nutrition_basis"]=="per_100g_product"]
-        self.assertEqual(len(solids),92)
+        self.assertGreaterEqual(len(solids),92)
         self.assertTrue(all(x["portion_unit"]=="g" for x in solids))
         self.assertIn(chocolate,reference_food_items())
 
@@ -188,6 +188,48 @@ class MainFoodIntegrationTests(unittest.TestCase):
                     {**solid,"source_nutrition_basis":"per_100ml_product"}):
             with self.subTest(name=bad["name_uk"]),self.assertRaises(ValueError):
                 validate_label_record(bad)
+
+    def test_v324_manufacturer_everyday_foods(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        data=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        batch=[row for row in data["records"] if row.get("batch_id")=="2026-10-14-everyday-axa-chumak-v324"]
+        self.assertEqual(len(batch),54)
+        self.assertEqual(sum(x["brand"]=="AXA" for x in batch),27)
+        self.assertEqual(sum(x["brand"]=="Чумак" for x in batch),22)
+        self.assertEqual(sum(x["brand"]=="Pasta Prima" for x in batch),5)
+        all_items=manufacturer_label_food_items()
+        self.assertEqual(len(all_items),157)
+        indexed={x["source_id"]:x for x in all_items}
+        codes=set()
+        for row in batch:
+            with self.subTest(product=row["id"]):
+                item=validate_label_record(row)
+                self.assertIn(item["source_id"],indexed)
+                self.assertEqual(item["source_url"],row["source_url"])
+                self.assertEqual(item["portion_unit"],"g")
+                self.assertEqual(item["source_nutrition_basis"],"per_100g_product")
+                self.assertEqual(item["food_type"],"branded")
+                self.assertFalse(item["approximate"])
+                self.assertFalse(item["barcode"] if row["brand"]=="AXA" else False)
+                self.assertLessEqual(item["saturated_fat_100"],item["fat_100"]) if "saturated_fat_100" in item else None
+                self.assertLessEqual(item["sugars_100"],item["carbs_100"]) if "sugars_100" in item else None
+                if item["barcode"]:
+                    self.assertNotIn(item["barcode"],codes)
+                    codes.add(item["barcode"])
+        self.assertGreaterEqual(len(codes),20)
+        self.assertIn(indexed["eplan12-manufacturer-axa-granola-choc-nuts"],reference_food_items())
+        self.assertIn(indexed["eplan12-manufacturer-chumak-lagidnyi-250"],reference_food_items())
+
+    def test_v324_rejects_wrong_manufacturer_barcode_and_fat_class(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        data=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))
+        label=next(x for x in data["records"] if x["id"]=="chumak-mayo-provencal-150")
+        for wrong in ({**label,"barcode":"4823096003350"},
+                      {**label,"name_uk":label["name_uk"].replace("67%","20%")},
+                      {**label,"source_url":"https://other.example/product/393"}):
+            with self.assertRaises(ValueError):validate_label_record(wrong)
 
     def test_nutrition_and_sources_are_bounded(self):
         for row in reference_food_items():
