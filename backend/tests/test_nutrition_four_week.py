@@ -114,6 +114,77 @@ class FourWeekNutritionTest(unittest.TestCase):
         result=analyze_four_week(bad,"loss",m,food,[],steps,NOW)
         self.assertEqual(result["status"],"insufficient")
 
+    def test_exactly_one_weight_per_week_is_sufficient(self):
+        result=self.review()
+        self.assertEqual(result["status"],"suggested")
+        self.assertEqual([w["weight"] for w in result["weight"]["weeks"]],[80,80,80,80])
+        self.assertEqual([w["entries"] for w in result["weight"]["weeks"]],[1,1,1,1])
+        self.assertEqual(result["weight"]["method"],"weekly_latest")
+        self.assertEqual(result["waist"]["method"],"week1_to_week4")
+
+    def test_latest_weight_per_week_is_used_not_daily_averaging(self):
+        m,food,steps=inputs()
+        m.extend(({"day":day(1),"weight":95},{"day":day(6),"weight":79.5},
+                  {"day":day(15),"weight":72.0},{"day":day(27),"weight":79.0}))
+        result=self.review(measure=m,manual=food,steps=steps)
+        self.assertEqual(result["weight"]["weekly_counts"],[3,1,2,2])
+        self.assertEqual([w["weight"] for w in result["weight"]["weeks"]],[79.5,80,72,79])
+        self.assertEqual(result["weight"]["first"],79.5)
+        self.assertEqual(result["weight"]["last"],79)
+        self.assertEqual(result["status"],"hold")  # Improvement week 1 to 4
+
+    def test_waist_only_middle_weeks_not_valid_four_week_change(self):
+        m,food,steps=inputs()
+        m=[row for row in m if "waist" not in row]
+        m.extend(({"day":day(7),"waist":85},{"day":day(14),"waist":84}))
+        result=self.review(measure=m,manual=food,steps=steps)
+        self.assertEqual(result["status"],"insufficient")
+        self.assertEqual(result["waist"]["first"],None)
+        self.assertEqual(result["waist"]["last"],None)
+
+    def test_first_and_fourth_week_waist_are_used_not_half_averages(self):
+        m,food,steps=inputs(waists=(86,85))
+        m.extend(({"day":day(10),"waist":99},{"day":day(15),"waist":55},
+                  {"day":day(2),"waist":84},{"day":day(22),"waist":84.5}))
+        result=self.review(measure=m,manual=food,steps=steps)
+        self.assertEqual(result["waist"]["first"],86)
+        self.assertEqual(result["waist"]["last"],85)
+        self.assertEqual(result["status"],"hold")
+
+    def test_start_date_preserves_baseline_beyond_rolling_window(self):
+        m,food,steps=inputs()
+        report=analyze_four_week(TARGET,"loss",m,food,[],steps,
+                                 NOW+timedelta(days=2),START)
+        self.assertEqual(report["period_start"],START.isoformat())
+        self.assertEqual(report["period_end"],NOW.isoformat())
+        self.assertEqual(report["weight"]["entries"],4)
+        self.assertEqual(report["status"],"suggested")
+
+    def test_no_adjustment_while_four_weeks_in_progress(self):
+        m,food,steps=inputs()
+        report=analyze_four_week(TARGET,"loss",m,food,[],steps,
+                                 START+timedelta(days=21),START)
+        self.assertEqual(report["status"],"in_progress")
+        self.assertIsNone(report["recommended"])
+        self.assertFalse(report["complete"])
+        self.assertEqual(report["period_end"],NOW.isoformat())
+        self.assertTrue(any("залишилося" in msg for msg in report["reasons"]))
+
+    def test_circumference_is_optional_context_without_changing_waist_logic(self):
+        m,food,steps=inputs()
+        m.extend(({"day":day(0),"chest":96,"hips":99},
+                  {"day":day(27),"chest":95,"hips":98}))
+        result=self.review(measure=m,manual=food,steps=steps)
+        self.assertEqual(result["circumferences"]["chest"]["delta"],-1)
+        self.assertEqual(result["circumferences"]["hips"]["delta"],-1)
+        self.assertEqual(result["status"],"suggested")
+
+    def test_start_date_rejects_future_or_older_than_year(self):
+        m,food,steps=inputs()
+        for invalid in (NOW+timedelta(days=1),NOW-timedelta(days=366)):
+            with self.assertRaises(ValueError):
+                analyze_four_week(TARGET,"loss",m,food,[],steps,NOW,invalid)
+
     def test_goal_must_be_explicitly_selected(self):
         m,food,steps=inputs()
         for goal in ("",None,"lose_weight","auto"):
