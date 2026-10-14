@@ -35,6 +35,20 @@ const server=http.createServer(async(req,res)=>{
     }));
     return;
   }
+  if(pathname==='/api/trainer/client/999/nutrition/four-week'&&req.method==='GET'){
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({
+      status:'suggested',goal:'loss',period_start:'2026-09-18',period_end:'2026-10-15',
+      weight:{first:80,last:80,delta:0,entries:4,weekly_counts:[1,1,1,1]},
+      waist:{first:85,last:85,delta:0,entries:2},
+      nutrition:{days:28,early_days:14,late_days:14,average_kcal:2500,target_kcal:2500},
+      activity:{days:28,first_steps:8000,last_steps:8000},
+      current:{kcal:2500,protein:160,fat:70,carbs:300},
+      recommended:{kcal:2350,protein:160,fat:70,carbs:270},
+      reasons:['Вага й талія суттєво не змінилися'],
+      warnings:['Тренер повинен підтвердити зміну']
+    }));return;
+  }
   if(pathname==='/api/trainer/foods/catalog'){
     structuredCatalogCalls++;
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
@@ -504,6 +518,22 @@ try{
     window.currentClientData=d;
     app.innerHTML='<div id="nutrition">'+nutritionHTML(d,true)+'</div>';
   });
+  // The four-week analysis is strictly read-only until the trainer uses the
+  // existing explicit Save nutrition action.
+  await page.locator('.trainer-four-week-launch button').click();
+  await page.locator('#trainerFourWeekModal').waitFor({timeout:3000});
+  assert.equal(await page.locator('#trainerFourWeekGoal').inputValue(),'');
+  await page.locator('#trainerFourWeekGoal').selectOption('loss');
+  await page.locator('#trainerFourWeekModal .trainer-four-week-action').click();
+  await page.locator('.trainer-four-week-proposal').waitFor({timeout:3000});
+  assert.equal(mealPlanWriteCalls,0,'Four-week calculation mutated the meal plan');
+  assert.equal(await page.locator('#nkcal').inputValue(),'');
+  await page.locator('.trainer-four-week-proposal button').click();
+  assert.equal(await page.locator('#trainerFourWeekModal').count(),0);
+  assert.equal(await page.locator('#nkcal').inputValue(),'2350');
+  assert.equal(await page.locator('#ncarbs').inputValue(),'270');
+  assert.equal(mealPlanWriteCalls,0,'Four-week draft wrote goals without trainer confirmation');
+  await page.evaluate(()=>editNutritionTargets());
   // Existing assigned goals remain visible as a read-only hint, not input defaults.
   assert.equal(await page.locator('#nkcal').inputValue(),'','Trainer kcal field must start empty');
   assert.equal(await page.locator('#nprotein').inputValue(),'','Trainer protein must start empty');
