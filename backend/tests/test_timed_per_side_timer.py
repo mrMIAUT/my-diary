@@ -39,7 +39,7 @@ class TimedPerSideContracts(unittest.TestCase):
             self.assertIn("/static/js/program.js?v=192",text)
             self.assertIn("/static/js/timed-workout.js?v=7",text)
             self.assertIn("/static/js/progress-redesign.js?v=170",text)
-        self.assertIn("const VERSION='eplan-v223'",SW)
+        self.assertIn("const VERSION='eplan-v224'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
     def test_real_timer_state_transitions_for_leg_arm_side_single_and_superset(self):

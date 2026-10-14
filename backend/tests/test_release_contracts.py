@@ -312,6 +312,20 @@ class ReleaseContracts(unittest.TestCase):
         self.assertNotIn("window.saveNutritionTargets", NUTRITION)
         self.assertIn("window.applyTrainerCalculatedNutritionTargets", NUTRITION_JS)
 
+    def test_trainer_four_week_analysis_is_read_only_and_requires_save(self):
+        self.assertIn('@app.get("/api/trainer/client/{cid}/nutrition/four-week")', APP)
+        block = APP.split('@app.get("/api/trainer/client/{cid}/nutrition/four-week")', 1)[1].split(
+            '@app.patch("/api/client/{cid}/nutrition-targets")',1)[0]
+        self.assertIn("Depends(require_trainer)",block)
+        self.assertIn("authorize_client(user,cid)",block)
+        self.assertIn("analyze_four_week(",block)
+        self.assertNotIn("UPDATE clients",block)
+        self.assertNotIn("INSERT INTO",block)
+        self.assertIn("window.openTrainerFourWeekAnalysis",NUTRITION_JS)
+        self.assertIn("window.applyTrainerFourWeekDraft",NUTRITION_JS)
+        self.assertIn("editNutritionTargets();",NUTRITION_JS)
+        self.assertIn("Зберегти харчування",NUTRITION_JS)
+
     def test_training_day_title_modal_uses_redesign_ui(self):
         self.assertIn("trainer-day-title-modal", PROGRAM)
         self.assertIn("trainer-day-title-card", PROGRAM)

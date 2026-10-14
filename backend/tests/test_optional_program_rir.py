@@ -58,7 +58,7 @@ class ProgramRirTests(unittest.TestCase):
                           '/static/js/workout-lyfta.js?v=173','/static/js/trainer.js?v=316',
                           '/static/js/training-redesign.js?v=170','/static/css/redesign.css?v=263'):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v223'",SW)
+        self.assertIn("const VERSION='eplan-v224'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
     def test_client_set_html_disables_rir_without_breaking_rows(self):
