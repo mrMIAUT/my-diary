@@ -2267,3 +2267,108 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nu
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .nutrition-diary-meal .nutrition-diary-add:focus-visible{
   outline:2px solid #87bfff!important;outline-offset:2px;
 }
+
+/* v36 — dark timed workout controls and nutrition actions surface (client only). */
+/* Active timed exercise plan/history panels must not inherit light-only fills. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-previous,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-plan>div,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-superset-progress{
+  background:#203040!important;
+  border-color:#3b5065!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-previous span,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-plan span,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-superset-progress span{
+  color:#adbed0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-previous strong,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-plan strong{
+  color:#eef5fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-previous em.up{
+  background:#244636!important;color:#9ce4b7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-previous em.down{
+  background:#453426!important;color:#f4bd80!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .workout-timed-superset-progress strong{
+  color:#8dbdff!important;
+}
+/* Dark modal, countdown ring and controls, including during work/rest/pause. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal.workout-timed-modal{
+  background:rgba(4,9,17,.78)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-modal-card{
+  background:#151e27!important;
+  border:1px solid #344557!important;
+  border-bottom:0!important;
+  color:#f1f5fa!important;
+  box-shadow:0 -14px 42px rgba(0,0,0,.32)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-modal-head small{
+  color:#81b7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-modal-head h2{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-close{
+  background:#253749!important;
+  border:1px solid #41566c!important;
+  color:#e9f3fd!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-modal-meta{
+  color:#b5c6d7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-modal-meta b{
+  background:#263b50!important;
+  color:#c9d9ea!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring .track{
+  stroke:#33485d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring .progress{
+  stroke:#448dff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring.rest .progress,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring.done .progress{
+  stroke:#58c891!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring>div{
+  background:#1b2733!important;
+  box-shadow:inset 0 0 0 1px #34495d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring span{
+  color:#81b7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring.rest span,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring.done span{
+  color:#84dcac!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring strong{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring small{
+  color:#adbed0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-primary{
+  background:#307cf0!important;
+  border:0!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal :is(.workout-timed-close,.workout-timed-primary):focus-visible{
+  outline:2px solid #90c1ff!important;
+  outline-offset:2px;
+}
+/* The grey rectangle between 'Додати БЖВ' and 'Додати продукт'
+   came from the wrapper, not the buttons themselves. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .redesign-nutrition-actions{
+  background:transparent!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  gap:9px;
+}
