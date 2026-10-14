@@ -800,8 +800,96 @@ function nutritionHTML(d,editing=false){
  nutritionPlanDraft=planFromData(d);
  let locked=!!(c.kcal||c.protein||c.fat||c.carbs||(d.nutrition_plan||[]).length||c.meal_plan);
  let target=(locked&&!editing)?nutritionTargetSummaryHTML(c):nutritionTargetEditorHTML(c,editing);
- return `<div class="trainer-nutrition-page">${target}${clientAccess(c).features?.meal_plan?`<div id="nutritionPlanHost">${mealPlanEditorHTML(d,editing)}</div>`:''}</div>`;
+ let review=(+c.kcal>0)?`<div class="card trainer-four-week-launch">
+   <div><strong>Аналіз прогресу за 4 тижні</strong><p class="muted">Середня вага, талія, харчування й активність. Без автоматичної зміни норми.</p></div>
+   <button type="button" onclick="openTrainerFourWeekAnalysis(${c.id})">Перевірити прогрес</button>
+ </div>`:'';
+ return `<div class="trainer-nutrition-page">${target}${review}${clientAccess(c).features?.meal_plan?`<div id="nutritionPlanHost">${mealPlanEditorHTML(d,editing)}</div>`:''}</div>`;
 }
+
+
+/* 28-day review runs only when requested by the trainer. No write API. */
+window.openTrainerFourWeekAnalysis=function(cid){
+ const current=window.currentClientData?.client;
+ if(session?.role!=='trainer'||!current||+current.id!==+cid)return;
+ document.getElementById('trainerFourWeekModal')?.remove();
+ window.trainerFourWeekReport=null;
+ document.body.insertAdjacentHTML('beforeend',
+   '<div class="modal trainer-four-week-overlay" id="trainerFourWeekModal" role="dialog" aria-modal="true" aria-labelledby="fourWeekTitle">'
+  +'<div class="card trainer-four-week-modal">'
+  +'<div class="trainer-four-week-head"><div><h2 id="fourWeekTitle">Аналіз прогресу за 4 тижні</h2><p class="muted">Порівняння двох половин 28-денного періоду</p></div>'
+  +'<button type="button" class="trainer-four-week-close" aria-label="Закрити" onclick="closeTrainerFourWeekAnalysis()">✕</button></div>'
+  +'<label class="trainer-four-week-field">Ціль клієнта'
+  +'<select id="trainerFourWeekGoal"><option value="" selected disabled>Обери ціль</option>'
+  +'<option value="loss">Зменшення жиру</option><option value="gain">Набір м’язів</option>'
+  +'<option value="recomp">Рекомпозиція</option><option value="maintain">Підтримання</option></select></label>'
+  +'<button type="button" class="trainer-four-week-action" onclick="loadTrainerFourWeekAnalysis('+cid+')">Проаналізувати</button>'
+  +'<div id="trainerFourWeekResult" role="status" aria-live="polite"><p class="muted">Вибери ціль для оцінки результатів.</p></div>'
+  +'</div></div>');
+};
+window.closeTrainerFourWeekAnalysis=function(){
+ window.trainerFourWeekReport=null;
+ document.getElementById('trainerFourWeekModal')?.remove();
+};
+function trainerFourWeekValue(value,unit,decimals=1){
+ const n=Number(value);
+ return value===null||value===undefined||!Number.isFinite(n)?'—':n.toLocaleString('uk-UA',{maximumFractionDigits:decimals})+(unit?' '+unit:'');
+}
+window.loadTrainerFourWeekAnalysis=async function(cid){
+ const goal=document.getElementById('trainerFourWeekGoal')?.value;
+ const host=document.getElementById('trainerFourWeekResult');
+ if(!host||!goal)return alert('Обери ціль клієнта.');
+ host.innerHTML='<p class="muted">Збираємо записи за 28 днів…</p>';
+ window.trainerFourWeekReport=null;
+ try{
+  const report=await api('/trainer/client/'+cid+'/nutrition/four-week?goal='+encodeURIComponent(goal));
+  if(!document.getElementById('trainerFourWeekResult')||+window.currentClientData?.client?.id!==+cid)return;
+  window.trainerFourWeekReport={cid,report};
+  const metric=(title,a,b,d,unit)=>'<div class="trainer-four-week-metric"><strong>'+title+'</strong>'
+    +'<span>'+trainerFourWeekValue(a,unit)+' → '+trainerFourWeekValue(b,unit)+'</span>'
+    +'<small>Зміна: '+(d!==null&&d>0?'+':'')+trainerFourWeekValue(d,unit)+'</small></div>';
+  const checklist=rows=>rows?.length?'<ul>'+rows.map(x=>'<li>'+esc(String(x))+'</li>').join('')+'</ul>':'';
+  const decision=report.status==='suggested'?'Рекомендація до перевірки'
+    :report.status==='hold'?'Залишити поточну норму':'Замало даних для корекції';
+  const updated=report.recommended;
+  const proposed=updated?'<div class="trainer-four-week-proposal"><strong>Пропоноване КБЖУ</strong>'
+    +'<p>'+updated.kcal+' ккал · Б '+updated.protein+' г · Ж '+updated.fat+' г · В '+updated.carbs+' г</p>'
+    +'<button type="button" onclick="applyTrainerFourWeekDraft('+cid+')">Підставити у форму</button>'
+    +'<small>Значення не збережуться, доки тренер не натисне «Зберегти харчування».</small></div>':'';
+  host.innerHTML='<div class="trainer-four-week-report"><h3>'+decision+'</h3>'
+    +'<p class="muted">'+esc(report.period_start)+' — '+esc(report.period_end)+'</p>'
+    +'<div class="trainer-four-week-grid">'
+    +metric('Середня вага',report.weight.first,report.weight.last,report.weight.delta,'кг')
+    +metric('Талія',report.waist.first,report.waist.last,report.waist.delta,'см')
+    +'</div><div class="trainer-four-week-notes"><p>Заміри ваги: '+report.weight.entries
+    +' · талії: '+report.waist.entries+'</p><p>Записи харчування: '+report.nutrition.days+'/28 днів'
+    +' · середнє: '+trainerFourWeekValue(report.nutrition.average_kcal,'ккал')+'</p>'
+    +'<p>Кроки: '+report.activity.days+' днів'
+    +' · '+trainerFourWeekValue(report.activity.first_steps,'кроків',0)
+    +' → '+trainerFourWeekValue(report.activity.last_steps,'кроків',0)+'</p></div>'
+    +checklist(report.reasons)+checklist(report.warnings)
+    +proposed+'</div>';
+ }catch(e){
+  window.trainerFourWeekReport=null;
+  if(document.getElementById('trainerFourWeekResult'))
+   host.innerHTML='<p class="muted">'+esc(e.message||'Не вдалося виконати аналіз.')+'</p>';
+ }
+};
+window.applyTrainerFourWeekDraft=function(cid){
+ const pending=window.trainerFourWeekReport,cur=window.currentClientData?.client;
+ if(!pending||pending.cid!==cid||!cur||+cur.id!==+cid||pending.report.status!=='suggested')return;
+ const before=pending.report.current,after=pending.report.recommended;
+ if(!after||['kcal','protein','fat','carbs'].some(k=>+cur[k]!==+before[k])){
+  alert('Ціль вже змінилася. Повтори аналіз.');return;
+ }
+ closeTrainerFourWeekAnalysis();
+ editNutritionTargets();
+ const fields={nkcal:after.kcal,nprotein:after.protein,nfat:after.fat,ncarbs:after.carbs};
+ for(const [key,val] of Object.entries(fields)){
+  const input=document.getElementById(key);if(input)input.value=String(val);
+ }
+ document.getElementById('nkcal')?.focus();
+};
 
 function editNutritionTargets(){
  nutritionPlanDraft=planFromData(window.currentClientData);
