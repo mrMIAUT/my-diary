@@ -69,6 +69,47 @@ try{
  await page.addScriptTag({path:'backend/static/js/nutrition-portion-fitter.js'});
  await page.addScriptTag({path:'backend/static/js/structured-meal-editor.js'});
  await page.addScriptTag({path:'backend/static/js/recipe-template-picker.js'});
+ // The selected count controls meal titles, icons and default recipe filters
+ // for both trainer and client. Already-saved plans are not rewritten.
+ const expectedSchedules=[
+  {count:3,labels:['Сніданок','Обід','Вечеря'],icons:['breakfast','lunch','dinner']},
+  {count:4,labels:['Сніданок','Обід','Перекус','Вечеря'],icons:['breakfast','lunch','snack','dinner']},
+  {count:5,labels:['Сніданок','Обід','Перекус','Вечеря','Другий перекус'],icons:['breakfast','lunch','snack','dinner','snack']}
+ ];
+ for(const spec of expectedSchedules){
+  const actual=await page.evaluate(count=>{
+   const meals=Array.from({length:count},(_,i)=>({
+    meal_number:i+1,variant_number:1,sort:i+1,
+    content:'Страва: Тестова страва\\nПродукт — 100 г\\nДо цільових БЖВ: 200 ккал · Б 20 · Ж 5 · В 10',
+    dish_title:'Тестова страва',preparation:'Змішай.',foods:[]
+   }));
+   window.nutritionPlanDraft=meals;
+   const wrap=html=>{const el=document.createElement('div');el.innerHTML=html;return el};
+   const inspect=el=>({
+    labels:[...el.querySelectorAll('.trainer-assigned-meal-label')].map(x=>x.textContent),
+    icons:[...el.querySelectorAll('.nutrition-meal-icon')].map(x=>
+      [...x.classList].find(c=>c.startsWith('nutrition-meal-icon-')).replace('nutrition-meal-icon-',''))
+   });
+   const data={client:{meal_plan:''},nutrition_plan:meals};
+   const editor=wrap(mealEditorBlock(3,true));
+   return {trainer:inspect(wrap(trainerAssignedPlanHTML(data))),
+     client:inspect(wrap(clientMealPlanHTML(data))),
+     editorLabel:editor.querySelector('.meal-editor-head strong')?.textContent};
+  },spec.count);
+  assert.deepEqual(actual.trainer.labels,spec.labels,'Trainer names mismatch for '+spec.count+' meals');
+  assert.deepEqual(actual.client.labels,spec.labels,'Client names mismatch for '+spec.count+' meals');
+  assert.deepEqual(actual.trainer.icons,spec.icons,'Trainer icons mismatch for '+spec.count+' meals');
+  assert.deepEqual(actual.client.icons,spec.icons,'Client icons mismatch for '+spec.count+' meals');
+  assert.equal(actual.editorLabel,spec.labels[2],'Editor category mismatch for '+spec.count+' meals');
+ }
+ await page.evaluate(()=>{
+  window.nutritionPlanDraft=[1,2,3].map(n=>({meal_number:n,variant_number:1,
+   content:'',foods:[]}));
+ });
+ await page.evaluate(()=>openRecipeTemplatePicker(3,1));
+ assert.equal(await page.locator('#recipeTemplateFilters [data-cat="dinner"].active').count(),1,
+  'Third meal must open dinner recipes for a three-meal day');
+ await page.locator('#recipeTemplateClose').click();
  await page.evaluate(catalog=>{
   window.structuredCatalog=catalog;
   const foods=[
