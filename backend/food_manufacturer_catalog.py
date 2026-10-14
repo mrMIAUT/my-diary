@@ -24,6 +24,9 @@ ALLOWED_MANUFACTURERS={
     "Myprotein":{"www.myprotein.com"},
     "Ehrmann":{"www.ehrmann.de","shop.ehrmann.de"},
     "Barebells":{"barebells.com"},
+    "AXA":{"axa.ua"},
+    "Чумак":{"chumak.com"},
+    "Pasta Prima":{"chumak.com"},
 }
 
 
@@ -84,8 +87,12 @@ def validate_label_record(row):
         raise ValueError("Unexplained manufacturer calorie discrepancy")
     label_pct=re.findall(r"(\d+(?:[.,]\d+)?)\s*%",row["name_uk"])
     # In a protein line, '100%' is part of the product name, not fat%.
-    if label_pct and row.get("product_kind")!="protein_powder" and (
-        abs(float(label_pct[-1].replace(",","."))-nutrition["fat_100"])>.1
+    # A concentration of tomato paste is not a fat percentage; mayonnaise
+    # uses a rounded nominal fat class rather than the exact measured value.
+    is_fat_label=row.get("product_kind") not in ("protein_powder","tomato_paste")
+    fat_tolerance=.6 if row.get("product_kind")=="mayonnaise" else .1
+    if label_pct and is_fat_label and (
+        abs(float(label_pct[-1].replace(",","."))-nutrition["fat_100"])>fat_tolerance
     ):
         raise ValueError("Brand fat percentage differs from label fat value")
     additional={}
@@ -102,7 +109,7 @@ def validate_label_record(row):
     # flavour/size page. Never generate a barcode from a product name.
     barcode=row.get("barcode","")
     if barcode:
-        if brand!="OstroVit" or not isinstance(barcode,str) or not re.fullmatch(r"\d{13}",barcode):
+        if brand not in ("OstroVit","Чумак","Pasta Prima") or not isinstance(barcode,str) or not re.fullmatch(r"\d{13}",barcode):
             raise ValueError("Unverified manufacturer barcode")
         checksum=(10-sum(int(d)*(1 if i%2==0 else 3) for i,d in enumerate(barcode[:12]))%10)%10
         if checksum!=int(barcode[-1]):
