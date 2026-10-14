@@ -23,6 +23,7 @@ import base64
 from food_reference_catalog import reference_food_items
 from meal_plan_generator import generate_meal_plan,MEAL_SOURCES,FOODS,approved_plan_catalog
 from nutrition_structured import foods_for_trainer,serialize_structured_foods,structured_meal_summary
+from nutrition_four_week import analyze_four_week
 try:
     from pywebpush import webpush, WebPushException
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -4143,6 +4144,31 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
         c.execute("UPDATE weekly_checkins SET reviewed=%s WHERE id=%s",(x.reviewed,checkin_id))
         c.commit()
     return {"ok":True}
+
+@app.get("/api/trainer/client/{cid}/nutrition/four-week")
+def trainer_four_week_nutrition(cid:int,
+        goal:str=Query(pattern="^(loss|gain|recomp|maintain)$"),
+        user:AuthUser=Depends(require_trainer)):
+    """Read-only review. Never updates calories, assigned meals or measurements."""
+    authorize_client(user,cid)
+    current=one("SELECT id,kcal,protein,fat,carbs FROM clients WHERE id=?",(cid,))
+    if not current:raise HTTPException(404,"Клієнта не знайдено")
+    last=kyiv_today()
+    first=last-timedelta(days=27)
+    dates=(cid,first.isoformat(),last.isoformat())
+    # 'measurements', 'nutrition', 'cardio_log' use ISO text dates. New food
+    # diary uses SQL DATE and is separately summed by calendar day.
+    measures=rows("""SELECT day,weight,waist FROM measurements
+                WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
+    manual=rows("""SELECT day,kcal FROM nutrition
+                WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
+    diary=rows("""SELECT day,SUM(grams*kcal_100/100) AS kcal
+                FROM nutrition_diary_items
+                WHERE client_id=? AND day>=? AND day<=?
+                GROUP BY day ORDER BY day""",dates)
+    cardio=rows("""SELECT day,steps FROM cardio_log
+                WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
+    return analyze_four_week(current,goal,measures,manual,diary,cardio,last)
 
 @app.patch("/api/client/{cid}/nutrition-targets")
 def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_trainer)):
