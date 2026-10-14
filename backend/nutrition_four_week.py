@@ -47,14 +47,19 @@ def _round(value, places=1):
 
 
 def analyze_four_week(target, goal, measurements, manual_food, diary_food,
-                      activity, today):
+                      activity, today, start_date=None):
     if goal not in VALID_GOALS:
         raise ValueError("Trainer must explicitly select a valid goal")
     last = _day(today)
     if last is None:
         raise ValueError("Invalid review date")
-    start = last - timedelta(days=27)
-    middle = start + timedelta(days=14)
+    start = _day(start_date) if start_date is not None else last-timedelta(days=27)
+    if start is None or start > last or start < last-timedelta(days=365):
+        raise ValueError("Review start must be within the last 365 days")
+    planned_end = start+timedelta(days=27)
+    complete = planned_end <= last
+    last = min(last, planned_end)
+    middle = start+timedelta(days=14)
     warnings = []
     reasons = []
     kcal = int(_finite(target.get("kcal"), 0, 7000) or 0)
@@ -105,6 +110,11 @@ def analyze_four_week(target, goal, measurements, manual_food, diary_food,
         reasons.append("Потрібен один запис ваги за кожен із 4 тижнів. Щоденне зважування не потрібне.")
     if waist_first is None or waist_last is None:
         reasons.append("Для корекції потрібні заміри талії на 1-му і 4-му тижнях.")
+    # The four-week span is relative to the trainer-selected start date,
+    # never to whichever calendar date happened to be 'today' at review.
+    if not complete:
+        remaining=(planned_end-last).days
+        reasons.insert(0,f"До завершення 28-денного періоду залишилося {remaining} дн. Корекція поки недоступна.")
 
     # Legacy daily manual BJU and the newer food diary are alternative
     # logging methods, not calories to be added together.
@@ -136,8 +146,26 @@ def analyze_four_week(target, goal, measurements, manual_food, diary_food,
     elif steps_before and abs(steps_after/steps_before-1) > .25:
         reasons.append("Кількість кроків змінилася більш ніж на 25%; спочатку оцінюй зміну активності.")
 
+    # Contextual circumferences supplement waist, without being converted into
+    # pseudo-weight or triggering an independent calorie adjustment.
+    circumferences = {}
+    for key, label in (("chest","Груди"),("hips","Стегна"),
+                       ("shoulders","Плечі"),("arms","Руки"),
+                       ("thighs","Стегна (верхня частина)"),("calves","Гомілки")):
+        series=_series(measurements,key,start,last,15,250)
+        before=[(when,value) for when,value in series.items()
+                if start<=when<start+timedelta(days=7)]
+        after=[(when,value) for when,value in series.items()
+               if start+timedelta(days=21)<=when<=last]
+        initial=min(before,key=lambda pair:pair[0])[1] if before else None
+        final=max(after,key=lambda pair:pair[0])[1] if after else None
+        circumferences[key]={"label":label,"first":_round(initial),
+                             "last":_round(final),
+                             "delta":_round(final-initial) if initial is not None and final is not None else None}
+
     report = {
-        "period_start": start.isoformat(), "period_end": last.isoformat(),
+        "period_start": start.isoformat(), "period_end": planned_end.isoformat(),
+        "as_of": last.isoformat(), "complete": complete,
         "goal": goal, "status": "insufficient",
         "weight": {"first": _round(weight_first, 2), "last": _round(weight_last, 2),
                    "delta": _round(weight_delta, 2), "percent": _round(weight_pct, 2),
@@ -146,6 +174,7 @@ def analyze_four_week(target, goal, measurements, manual_food, diary_food,
         "waist": {"first": _round(waist_first, 1), "last": _round(waist_last, 1),
                   "delta": _round(waist_delta, 1), "entries": len(waists),
                   "method": "week1_to_week4"},
+        "circumferences": circumferences,
         "nutrition": {"days": len(logged), "early_days": len(food_early),
                       "late_days": len(food_late), "average_kcal": _round(food_mean),
                       "target_kcal": kcal},
@@ -154,6 +183,9 @@ def analyze_four_week(target, goal, measurements, manual_food, diary_food,
         "current": {"kcal": kcal, "protein": protein, "fat": fat, "carbs": carbs},
         "recommended": None, "reasons": reasons, "warnings": warnings,
     }
+    if not complete:
+        report["status"] = "in_progress"
+        return report
     if reasons:
         return report
     report["status"] = "hold"
