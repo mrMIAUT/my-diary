@@ -512,6 +512,48 @@ try{
    'Incomplete legacy alternatives were converted to invalid complete rations');
  assert.ok((await page.locator('#clientRationSmoke').innerText()).includes('Варіант 2'),
    'Legacy incomplete variants no longer visible');
+ // Mobile production nesting: nutrition is a grid inside the trainer client page.
+ // Ration tabs must not enlarge target fields or product cards.
+ await page.evaluate(meals=>{
+  document.head.insertAdjacentHTML('beforeend',
+   '<meta name="viewport" content="width=device-width,initial-scale=1">');
+  document.body.className='eplan-redesign trainer-ui';
+  document.body.innerHTML='<main class="trainer-shell"><section class="trainer-client-page">'
+   +'<div id="nutrition"></div></section></main>';
+  window.currentClientData={client:{id:123,kcal:2380,protein:160,fat:60,carbs:300},
+   nutrition_plan:meals.map(item=>({...item,foods_json:JSON.stringify(item.foods),
+    content:'Страва: '+item.dish_title+'\n'+item.foods.map(f=>f.source_id+' — '+f.grams+' г').join('\n')}))};
+  document.querySelector('#nutrition').innerHTML=nutritionHTML(window.currentClientData,true);
+ },saved.meals);
+ for(const width of [320,375,390,430]){
+  await page.setViewportSize({width,height:844});
+  const metrics=await page.evaluate(()=>{
+   const vw=document.documentElement.clientWidth;
+   const selectors=['.trainer-shell','#nutrition','.trainer-nutrition-page',
+    '.trainer-nutrition-target-card','.trainer-nutrition-target-fields',
+    '.meal-plan-card','#nutritionPlanBody','.trainer-ration-tabs',
+    '.meal-editor','.meal-variant','.structured-food-row',
+    '.structured-food-details','.structured-food-macro','.structured-meal-summary'];
+   const outside=selectors.flatMap(selector=>
+    [...document.querySelectorAll(selector)].flatMap(el=>{
+     const r=el.getBoundingClientRect();
+     return r.left< -1||r.right>vw+1
+      ?[{selector,left:+r.left.toFixed(1),right:+r.right.toFixed(1)}]:[];
+    }));
+   const strip=document.querySelector('.trainer-ration-tabs');
+   return {vw,doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,
+    outside,strip:{scrollWidth:strip.scrollWidth,clientWidth:strip.clientWidth}};
+  });
+  assert.ok(metrics.vw<=width+1,'Incorrect mobile viewport');
+  assert.ok(metrics.doc<=width+1&&metrics.body<=width+1,
+   'Horizontal scroll of whole iPhone viewport at '+width+'px: '+JSON.stringify(metrics));
+  assert.deepEqual(metrics.outside,[],
+   'Trainer nutrition card extends past iPhone at '+width+'px');
+  assert.ok(metrics.strip.scrollWidth>metrics.strip.clientWidth,
+   'Ration choices must scroll inside their own strip at '+width+'px');
+  assert.ok(await page.locator('.structured-food-row').count()>0,
+   'Structured food rows did not render on iPhone');
+ }
  assert.equal(errors.length,0,'JS runtime failures '+errors.join(','));
  console.log('TRAINER NUTRITION UI PASS: ration tabs, real edit, recipe library, autosize, isolated state and explicit client save');
 }finally{
