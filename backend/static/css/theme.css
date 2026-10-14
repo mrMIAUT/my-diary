@@ -2386,7 +2386,7 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page 
 .trainer-four-week-head p{font-size:13px;margin:0 0 14px;}
 .trainer-four-week-close{flex:0 0 44px;height:44px;border:1px solid var(--line,#d9e2e9);border-radius:12px;background:transparent;color:inherit;}
 .trainer-four-week-field{display:grid;gap:7px;font-size:13px;font-weight:600;margin-bottom:13px;}
-.trainer-four-week-field select{border:1px solid var(--line,#d9e2e9);border-radius:11px;padding:12px;background:var(--card,#fff);color:inherit;width:100%;}
+.trainer-four-week-field :is(select,input){border:1px solid var(--line,#d9e2e9);border-radius:11px;padding:12px;background:var(--card,#fff);color:inherit;width:100%;box-sizing:border-box;}
 .trainer-four-week-action{width:100%;}
 .trainer-four-week-report{padding-top:16px;}
 .trainer-four-week-report h3{margin:0 0 5px;font-size:18px;}
@@ -2404,6 +2404,12 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page 
 .trainer-four-week-proposal p{margin:0;font-weight:700;}
 .trainer-four-week-proposal small{font-size:12px;line-height:1.5;color:var(--muted,#728296);}
 body.eplan-redesign[data-eplan-theme="dark"] .trainer-four-week-modal{background:#182838;color:#f1f6fb;border:1px solid #3b5269;}
-body.eplan-redesign[data-eplan-theme="dark"] .trainer-four-week-field select{background:#22374a;color:#f1f6fb;border-color:#50677a;}
+body.eplan-redesign[data-eplan-theme="dark"] .trainer-four-week-field :is(select,input){background:#22374a;color:#f1f6fb;border-color:#50677a;color-scheme:dark;}
 body.eplan-redesign[data-eplan-theme="dark"] .trainer-four-week-metric{border-color:#4a6074;}
 @media(max-width:420px){.trainer-four-week-grid{grid-template-columns:1fr}.trainer-four-week-modal{padding:15px}}
+.trainer-four-week-weeks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:12px 0;}
+.trainer-four-week-weeks>div{display:grid;gap:4px;text-align:center;min-width:0;padding:9px 4px;border:1px solid var(--line,#d9e2e9);border-radius:10px;}
+.trainer-four-week-weeks strong{font-size:14px;}
+.trainer-four-week-weeks small{font-size:10px;line-height:1.3;color:var(--muted,#728296);overflow-wrap:anywhere;}
+.trainer-four-week-other{font-size:12px;line-height:1.55;}
+body.eplan-redesign[data-eplan-theme="dark"] .trainer-four-week-weeks>div{border-color:#4a6074;}
