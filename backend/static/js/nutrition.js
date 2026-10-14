@@ -820,7 +820,7 @@ window.openTrainerFourWeekAnalysis=function(cid){
   +'<div class="trainer-four-week-head"><div><h2 id="fourWeekTitle">Аналіз прогресу за 4 тижні</h2><p class="muted">Вага — щотижня, обхвати — на 1-му і 4-му тижнях</p></div>'
   +'<button type="button" class="trainer-four-week-close" aria-label="Закрити" onclick="closeTrainerFourWeekAnalysis()">✕</button></div>'
   +'<label class="trainer-four-week-field">Перший день 4-тижневого періоду'
-  +'<input id="trainerFourWeekStart" type="date" required max="'+new Date().toLocaleDateString('en-CA')+'"></label>'
+  +'<input id="trainerFourWeekStart" type="date" required max="'+new Date().toLocaleDateString('sv-SE')+'"></label>'
   +'<label class="trainer-four-week-field">Ціль клієнта'
   +'<select id="trainerFourWeekGoal"><option value="" selected disabled>Обери ціль</option>'
   +'<option value="loss">Зменшення жиру</option><option value="gain">Набір м’язів</option>'
