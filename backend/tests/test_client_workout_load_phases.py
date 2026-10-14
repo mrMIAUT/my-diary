@@ -57,7 +57,7 @@ class ClientLoadPhaseContracts(unittest.TestCase):
         ]
         for source in (INDEX,SW):
             for asset in assets:self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v222'",SW)
+        self.assertIn("const VERSION='eplan-v223'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required for browser-free JS regression")
     def test_legacy_and_phase_specific_comparisons(self):
