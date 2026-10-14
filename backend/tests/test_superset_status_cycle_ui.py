@@ -39,7 +39,7 @@ class CompletionUiContracts(unittest.TestCase):
 
     def test_cache_consistency(self):
         for source in (INDEX,SW):
-            for name in ("/static/css/redesign.css?v=262", "/static/js/workout.js?v=188",
+            for name in ("/static/css/redesign.css?v=263", "/static/js/workout.js?v=188",
                          "/static/js/program.js?v=192"):
                 self.assertIn(name,source)
         self.assertIn("const VERSION='eplan-v222'",SW)
