@@ -48,8 +48,8 @@ def validate_label_record(row):
     # Some manufacturers identify an exact flavour/size by a variant query.
     # Only accept that single, digit-only selector for those specific hosts.
     variation_allowed=(
-        (brand=="Optimum Nutrition" and bool(re.fullmatch(r"variant=\\d{8,18}",parts.query)))
-        or (brand=="Myprotein" and bool(re.fullmatch(r"variation=\\d{6,15}",parts.query)))
+        (brand=="Optimum Nutrition" and bool(re.fullmatch(r"variant=\d{8,18}",parts.query)))
+        or (brand=="Myprotein" and bool(re.fullmatch(r"variation=\d{6,15}",parts.query)))
     )
     if (brand not in ALLOWED_MANUFACTURERS
         or parts.scheme!="https"
@@ -93,7 +93,7 @@ def validate_label_record(row):
     # flavour/size page. Never generate a barcode from a product name.
     barcode=row.get("barcode","")
     if barcode:
-        if brand!="OstroVit" or not isinstance(barcode,str) or not re.fullmatch(r"\\d{13}",barcode):
+        if brand!="OstroVit" or not isinstance(barcode,str) or not re.fullmatch(r"\d{13}",barcode):
             raise ValueError("Unverified manufacturer barcode")
         checksum=(10-sum(int(d)*(1 if i%2==0 else 3) for i,d in enumerate(barcode[:12]))%10)%10
         if checksum!=int(barcode[-1]):
