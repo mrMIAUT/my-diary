@@ -1887,3 +1887,39 @@ body.eplan-redesign .food-lookup-details{
  margin:7px 0 0;font-size:11px;line-height:1.45;
  color:#7288a6;font-weight:650;
 }
+
+
+/* v317: explicit ration duplication + clear per-meal BJU fitting strategy. */
+body.eplan-redesign .trainer-ration-copy{
+ border:1px solid #d8e4f5!important;background:#fff!important;
+ color:#607fa9!important;font-weight:750!important;border-radius:10px!important;
+ font-size:12px!important;min-height:39px!important;padding:8px 12px!important;
+}
+body.eplan-redesign .recipe-fit-settings{
+ margin:8px 0 13px;padding:11px 12px;
+ border-radius:13px;background:#f4f8ff;border:1px solid #deebfc;
+ display:grid;gap:8px;
+}
+body.eplan-redesign .recipe-fit-settings>strong{
+ font-size:12px;font-weight:850;color:#29496e;
+}
+body.eplan-redesign .recipe-fit-choices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+}
+body.eplan-redesign .recipe-fit-choices button{
+ box-sizing:border-box;margin:0!important;border-radius:9px!important;
+ min-height:40px!important;padding:8px 7px!important;
+ background:#fff!important;color:#6d85a2!important;
+ border:1px solid #dce7f8!important;
+ font-size:11px!important;font-weight:800!important;line-height:1.25!important;
+}
+body.eplan-redesign .recipe-fit-choices button.active{
+ background:#e6f0ff!important;color:#2675ea!important;
+ border-color:#a7c7fa!important;
+}
+body.eplan-redesign .recipe-fit-settings p{
+ margin:0;font-size:11px;color:#7990ae;line-height:1.45;
+}
+@media(max-width:365px){
+ body.eplan-redesign .recipe-fit-choices button{font-size:10px!important}
+}
