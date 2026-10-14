@@ -66,16 +66,17 @@ function choose(id){
  let fitted;
  try{
   if(typeof window.applyRecipeToRation!=='function')throw Error('Auto-fit module unavailable');
-  fitted=window.applyRecipeToRation(item,r);
+  fitted=window.applyRecipeToRation(item,r,state.fitMode);
  }catch(e){
   console.warn('Recipe auto-fit',e);
   alert(e?.message||'Не вдалося підібрати порції. Спробуй інший рецепт.');
   return;
  }
  close();
+ const targetLabel=fitted.mode==='previous'?'БЖВ попередньої страви':'залишок добової цілі';
  const info=fitted.within_tolerance?
-  'Порції підібрано під денну ціль. Перевір перед призначенням.':
-  'Порції підібрано в допустимих межах. Денна ціль ще має відхилення; переглянь підсумки.';
+  'Порції підібрано під '+targetLabel+'. Перевір перед призначенням.':
+  'Порції наближено до '+targetLabel+', але залишилось відхилення. Перевір КБЖУ та грамовки.';
  const status=$('saveDemoStatus');if(status)status.textContent=info;
 }
 window.openRecipeTemplatePicker=async function(n,v){
@@ -89,12 +90,19 @@ window.openRecipeTemplatePicker=async function(n,v){
   if(original)original.textContent='Помилка завантаження рецептів. Спробуй ще раз.';
   console.warn('Recipe template load',e);return;
  }
- state={n:+n,v:+v,recipes:items,category:defaultCategory[n]||'breakfast',query:''};
+ const hadFood=(item.foods||[]).some(x=>x.count_in_targets!==false);
+ state={n:+n,v:+v,recipes:items,category:defaultCategory[n]||'breakfast',
+  query:'',fitMode:hadFood?'previous':'day',canCompare:hadFood};
  document.body.insertAdjacentHTML('beforeend',
   '<div id="recipeTemplatePicker" class="modal" role="dialog" aria-modal="true" aria-labelledby="recipeTemplateTitle">'
   +'<div class="card recipe-template-sheet">'
-  +'<header class="recipe-template-head"><div><h2 id="recipeTemplateTitle">Бібліотека страв</h2><p>60 варіантів, продукти з перевіреної бази · порції під добову ціль</p></div>'
+  +'<header class="recipe-template-head"><div><h2 id="recipeTemplateTitle">Бібліотека страв</h2><p>60 варіантів із перевіреної бази · грамовки добираються автоматично</p></div>'
   +'<button type="button" id="recipeTemplateClose" aria-label="Закрити"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18"/></svg></button></header>'
+  +'<div class="recipe-fit-settings"><strong>Як підбирати порції?</strong>'
+  +'<div class="recipe-fit-choices" role="group" aria-label="Режим підбору БЖВ">'
+  +(hadFood?'<button type="button" data-fit="previous" class="active">Як у попередній страві</button>':'')
+  +'<button type="button" data-fit="day" class="'+(hadFood?'':'active')+'">Під денну ціль</button></div>'
+  +'<p id="recipeFitDescription"></p></div>'
   +'<input id="recipeTemplateSearch" type="search" placeholder="Назва страви або інгредієнт" autocomplete="off">'
   +'<div class="recipe-template-categories" id="recipeTemplateFilters"></div>'
   +'<p id="recipeTemplateCount" class="recipe-template-count"></p>'
@@ -103,6 +111,26 @@ window.openRecipeTemplatePicker=async function(n,v){
   +'</div></div>');
  document.body.classList.add('picker-open');
  $('recipeTemplateClose').onclick=close;
+ const description=$('recipeFitDescription');
+ const describe=()=>{
+  if(!state||!description)return;
+  description.textContent=state.fitMode==='previous'
+   ?'Нова страва наблизиться до КБЖУ цього прийому. Інші прийоми не зміняться.'
+   :'Порції під залишок добової цілі. Якщо інші прийоми ще порожні — залишок розподіляється між ними.';
+ };
+ $('recipeTemplatePicker').querySelectorAll('button[data-fit]').forEach(button=>{
+  button.onclick=()=>{
+   if(!state)return;
+   state.fitMode=button.dataset.fit;
+   $('recipeTemplatePicker').querySelectorAll('button[data-fit]').forEach(el=>{
+    el.classList.toggle('active',el===button);
+    el.setAttribute('aria-pressed',String(el===button));
+   });
+   describe();
+  };
+  button.setAttribute('aria-pressed',String(button.dataset.fit===state.fitMode));
+ });
+ describe();
  $('recipeTemplateSearch').oninput=ev=>{if(!state)return;state.query=ev.target.value;render()};
  render();
  if(original)original.textContent='Бібліотека рецептів завантажена · це лише демоверсія';
