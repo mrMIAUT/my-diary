@@ -4148,17 +4148,21 @@ def review_weekly_checkin(cid:int,checkin_id:int,x:CheckinReviewIn,user:AuthUser
 @app.get("/api/trainer/client/{cid}/nutrition/four-week")
 def trainer_four_week_nutrition(cid:int,
         goal:str=Query(pattern="^(loss|gain|recomp|maintain)$"),
+        start_date:date|None=None,
         user:AuthUser=Depends(require_trainer)):
     """Read-only review. Never updates calories, assigned meals or measurements."""
     authorize_client(user,cid)
     current=one("SELECT id,kcal,protein,fat,carbs FROM clients WHERE id=?",(cid,))
     if not current:raise HTTPException(404,"Клієнта не знайдено")
-    last=kyiv_today()
-    first=last-timedelta(days=27)
+    today=kyiv_today()
+    first=start_date or today-timedelta(days=27)
+    if first>today or first<today-timedelta(days=365):
+        raise HTTPException(400,"Оберіть дату початку за останній рік, не в майбутньому.")
+    last=min(today,first+timedelta(days=27))
     dates=(cid,first.isoformat(),last.isoformat())
     # 'measurements', 'nutrition', 'cardio_log' use ISO text dates. New food
     # diary uses SQL DATE and is separately summed by calendar day.
-    measures=rows("""SELECT day,weight,waist FROM measurements
+    measures=rows("""SELECT day,weight,waist,chest,hips,shoulders,arms,thighs,calves FROM measurements
                 WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
     manual=rows("""SELECT day,kcal FROM nutrition
                 WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
@@ -4168,7 +4172,7 @@ def trainer_four_week_nutrition(cid:int,
                 GROUP BY day ORDER BY day""",dates)
     cardio=rows("""SELECT day,steps FROM cardio_log
                 WHERE client_id=? AND day>=? AND day<=? ORDER BY day,id""",dates)
-    return analyze_four_week(current,goal,measures,manual,diary,cardio,last)
+    return analyze_four_week(current,goal,measures,manual,diary,cardio,today,first)
 
 @app.patch("/api/client/{cid}/nutrition-targets")
 def update_client_nutrition_targets(cid:int,x:ClientNutritionTargetsIn,user:AuthUser=Depends(require_trainer)):
