@@ -36,7 +36,7 @@ class SmoothSupersetRestTests(unittest.TestCase):
             for p in ("/static/js/workout.js?v=188","/static/js/timer.js?v=169",
                       "/static/css/redesign.css?v=263"):
                 self.assertIn(p,doc)
-        self.assertIn("const VERSION='eplan-v223'",SW)
+        self.assertIn("const VERSION='eplan-v224'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node required")
     def test_single_global_panel_for_superset_solo_and_timed_rest(self):
