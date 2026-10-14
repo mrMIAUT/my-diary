@@ -17,6 +17,7 @@ NUTRIENTS=("kcal_100","protein_100","fat_100","carbs_100")
 ALLOWED_MANUFACTURERS={
     "Галичина":{"galychyna.com.ua","dostavka.galychyna.com.ua"},
     "Яготинське для дітей":{"yagotynkids.com.ua"},
+    "BioTechUSA":{"shop.biotechusa.com"},
 }
 
 
@@ -63,9 +64,21 @@ def validate_label_record(row):
     if abs(rough-nutrition["kcal_100"])>max(25,nutrition["kcal_100"]*.25):
         raise ValueError("Unexplained manufacturer calorie discrepancy")
     label_pct=re.findall(r"(\d+(?:[.,]\d+)?)\s*%",row["name_uk"])
-    if label_pct and abs(float(label_pct[-1].replace(",","."))-
-                         nutrition["fat_100"])>.1:
+    # In a protein line, '100%' is part of the product name, not fat%.
+    if label_pct and row.get("product_kind")!="protein_powder" and (
+        abs(float(label_pct[-1].replace(",","."))-nutrition["fat_100"])>.1
+    ):
         raise ValueError("Brand fat percentage differs from label fat value")
+    additional={}
+    for field,maximum in (("saturated_fat_100","fat_100"),("sugars_100","carbs_100")):
+        value=row.get(field)
+        if value is None:
+            continue
+        if type(value) not in (int,float) or not math.isfinite(value):
+            raise ValueError("Invalid optional nutrient: "+field)
+        if not 0<=value<=nutrition[maximum]:
+            raise ValueError("Optional nutrient exceeds its parent: "+field)
+        additional[field]=float(value)
     return {
         "source":"reference",     # Local, independent of OFF/USDA request.
         "source_kind":"manufacturer_label",
@@ -93,6 +106,7 @@ def validate_label_record(row):
         "source_url":row["source_url"],
         "source_product_heading":row["source_product_heading"],
         "reviewed_on":row["reviewed_on"],
+        **additional,
     }
 
 
