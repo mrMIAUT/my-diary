@@ -42,7 +42,7 @@ class ExtraSetRestTimerTests(unittest.TestCase):
         for src in (INDEX,SW):
             for asset in ("/static/js/workout.js?v=188",
                           "/static/js/timer.js?v=169",
-                          "/static/css/redesign.css?v=262"):
+                          "/static/css/redesign.css?v=263"):
                 self.assertIn(asset,src)
         self.assertIn("const VERSION='eplan-v222'",SW)
 
