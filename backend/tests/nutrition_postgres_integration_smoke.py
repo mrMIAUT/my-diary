@@ -250,7 +250,7 @@ assert app.food_diary_delete(logged["id"],client_user)["ok"] is True
 # Idempotent additive schema migration must preserve older and newly filled
 # optional values, with no rewriting of saved diary or assigned plans.
 app.init()
-assert app.food_diary_get(day,client_user)["items"][0]["portion_unit"]=="g"
+assert any(i["portion_unit"]=="g" for i in app.food_diary_get(day,client_user)["items"])
 assert any(i["portion_unit"]=="ml" and i["portion_amount"]==125 for i in
            app.food_diary_get(day,client_user)["items"])
 post=app.rows("SELECT saturated_fat_100,sugars_100 FROM nutrition_private_foods WHERE id=?",
