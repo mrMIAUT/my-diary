@@ -22,6 +22,8 @@ ALLOWED_MANUFACTURERS={
     "OstroVit":{"ostrovit.com"},
     "Optimum Nutrition":{"www.optimumnutrition.com"},
     "Myprotein":{"www.myprotein.com"},
+    "Ehrmann":{"www.ehrmann.de"},
+    "Barebells":{"barebells.com"},
 }
 
 

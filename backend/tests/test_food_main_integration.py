@@ -65,7 +65,7 @@ class MainFoodIntegrationTests(unittest.TestCase):
         expected={"Activia":15,"OstroVit":7,"Optimum Nutrition":3,"Myprotein":1}
         self.assertEqual({brand:sum(r["brand"]==brand for r in batch) for brand in expected},expected)
         all_labels=manufacturer_label_food_items()
-        self.assertEqual(len(all_labels),68)
+        self.assertGreaterEqual(len(all_labels),68)
         names={(x["brand"],x["name"]) for x in all_labels}
         for record in batch:
             with self.subTest(product=record["id"]):
@@ -104,6 +104,47 @@ class MainFoodIntegrationTests(unittest.TestCase):
             else:
                 with self.subTest(barcode=barcode),self.assertRaises(ValueError):
                     validate_label_record(row)
+
+    def test_v322_branded_puddings_bars_and_whey_flavours(self):
+        from json import loads
+        from food_manufacturer_catalog import validate_label_record
+        labels=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))["records"]
+        batch=[r for r in labels if r.get("batch_id")=="2026-10-14-protein-desserts-bars-v322"]
+        self.assertEqual(len(batch),24)
+        for brand,total in (("Ehrmann",12),("Barebells",8),("Myprotein",4)):
+            self.assertEqual(sum(r["brand"]==brand for r in batch),total)
+        catalog=manufacturer_label_food_items()
+        self.assertEqual(len(catalog),92)
+        ids={r["source_id"] for r in catalog}
+        for raw in batch:
+            with self.subTest(name=raw["name_uk"]):
+                item=validate_label_record(raw)
+                self.assertIn(item["source_id"],ids)
+                self.assertEqual(item["food_type"],"branded")
+                self.assertFalse(item["approximate"])
+                self.assertLessEqual(item["saturated_fat_100"],item["fat_100"])
+                self.assertLessEqual(item["sugars_100"],item["carbs_100"])
+                self.assertFalse(item["barcode"])
+                self.assertEqual(item["source_url"],raw["source_url"])
+                self.assertEqual(item["preparation_state"],"as_sold")
+                self.assertEqual(raw["source_nutrition_basis"],"per_100g_product")
+        bar=next(r for r in batch if r["id"]=="barebells-bar-caramel-cashew-55g")
+        self.assertEqual([bar[k] for k in ("kcal_100","protein_100","fat_100","carbs_100")],[367,36,15,30])
+        whey=next(r for r in batch if r["id"]=="myprotein-clear-whey-vimto-remix")
+        self.assertEqual([whey[k] for k in ("kcal_100","protein_100","fat_100","carbs_100")],[340,81,0,3.7])
+        self.assertIn("eplan12-manufacturer-ehrmann-vanilla-200g",
+                      {r["source_id"] for r in reference_food_items()})
+
+    def test_v322_reject_unverified_external_manufacturer(self):
+        from food_manufacturer_catalog import validate_label_record
+        from json import loads
+        labels=loads((BACKEND/"food_manufacturer_labels.json").read_text(encoding="utf-8"))["records"]
+        base=next(r for r in labels if r["id"]=="barebells-bar-caramel-cashew-55g")
+        for bad in ("http://barebells.com/product/caramel-cashew/",
+                    "https://another-website.com/product/caramel-cashew/",
+                    "https://barebells.com/product/caramel-cashew/?unverified=1"):
+            with self.subTest(url=bad),self.assertRaises(ValueError):
+                validate_label_record({**base,"source_url":bad})
 
     def test_nutrition_and_sources_are_bounded(self):
         for row in reference_food_items():
