@@ -36,11 +36,16 @@ const server=http.createServer(async(req,res)=>{
     return;
   }
   if(pathname==='/api/trainer/client/999/nutrition/four-week'&&req.method==='GET'){
+    const params=new URL(req.url,'http://localhost').searchParams;
+    assert.equal(params.get('start_date'),'2026-09-18');
+    assert.equal(params.get('goal'),'loss');
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
     res.end(JSON.stringify({
       status:'suggested',goal:'loss',period_start:'2026-09-18',period_end:'2026-10-15',
-      weight:{first:80,last:80,delta:0,entries:4,weekly_counts:[1,1,1,1]},
-      waist:{first:85,last:85,delta:0,entries:2},
+      weight:{first:80,last:80,delta:0,entries:4,weekly_counts:[1,1,1,1],
+        weeks:[1,2,3,4].map((week,i)=>({week,day:'2026-09-'+String(18+7*i).padStart(2,'0'),
+            weight:80,entries:1})),method:'weekly_latest'},
+      waist:{first:85,last:85,delta:0,entries:2,method:'week1_to_week4'},circumferences:{},
       nutrition:{days:28,early_days:14,late_days:14,average_kcal:2500,target_kcal:2500},
       activity:{days:28,first_steps:8000,last_steps:8000},
       current:{kcal:2500,protein:160,fat:70,carbs:300},
@@ -524,8 +529,11 @@ try{
   await page.locator('#trainerFourWeekModal').waitFor({timeout:3000});
   assert.equal(await page.locator('#trainerFourWeekGoal').inputValue(),'');
   await page.locator('#trainerFourWeekGoal').selectOption('loss');
+  await page.locator('#trainerFourWeekStart').fill('2026-09-18');
   await page.locator('#trainerFourWeekModal .trainer-four-week-action').click();
   await page.locator('.trainer-four-week-proposal').waitFor({timeout:3000});
+  assert.equal(await page.locator('.trainer-four-week-weeks > div').count(),4);
+  assert.match(await page.locator('.trainer-four-week-report').innerText(),/Вага: 1-й → 4-й тиждень/);
   assert.equal(mealPlanWriteCalls,0,'Four-week calculation mutated the meal plan');
   assert.equal(await page.locator('#nkcal').inputValue(),'');
   await page.locator('.trainer-four-week-proposal button').click();
