@@ -530,3 +530,306 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings 
   border:1px solid #3d5874!important;
   color:#badaff!important;
 }
+
+/* v2 — iPhone QA: legacy light styles use strong selectors and !important.
+   Scope every correction to TRAINER + DARK; never modify client theme. */
+
+/* The program, template, client, and nutrition lists are stacks, not parent cards. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-template-list,.trainer-template-list.modern,
+ .trainer-client-list,.trainer-assigned-list,.trainer-assigned-list.modern,
+ .trainer-nutrition-list,.trainer-nutrition-list.modern,
+ .trainer-template-toolbar,.trainer-template-toolbar.modern
+){
+ background:transparent!important;
+ border-color:transparent!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-toolbar.modern :is(strong,span),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-toolbar.modern>div>span{
+ color:#a9bacd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-toolbar.modern strong{
+ color:#f0f6fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-list.modern .trainer-template-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-assigned-row.modern,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-row.modern{
+ background:#151e27!important;
+ border:1px solid #354759!important;
+ color:#edf5fd!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-assigned-row.modern:last-child,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-row.modern:last-child{
+ border-bottom-color:#354759!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-list.modern .trainer-template-actions button:first-child,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-list.modern .trainer-template-actions .dark{
+ background:#263b51!important;
+ color:#bcd9fa!important;
+ border:1px solid #435d77!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-list.modern .trainer-template-actions .dark{
+ background:#223140!important;
+ color:#d0dfed!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-card-main small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-assigned-row.modern small{
+ color:#acbbce!important;
+}
+
+/* Dashboard nutrition tiles must not show dark navy statistics on dark cards. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-summary>div{
+ background:#151e27!important;
+ border-color:#354759!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-summary strong{
+ color:#f0f6fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-summary small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-template-card-main p{
+ color:#a9bacd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-food-review-entry{
+ background:#274563!important;
+ color:#bdddff!important;
+ border:1px solid #3d5f83!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-search{
+ background:#1d2a38!important;
+ color:#aabbd0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-search input{
+ background:transparent!important;
+ color:#edf5fc!important;
+}
+
+/* The overview, questionnaire, notes, check-ins and access cards. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #profile>.card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-overview-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-profile-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-private-note,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-empty{
+ background:#151e27!important;
+ color:#eef5fc!important;
+ border-color:#354759!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+ .trainer-overview-card h2,.trainer-profile-card h2,.access-saved h2,
+ .trainer-private-note h2,.trainer-checkin-card h2,
+ .trainer-checkin-empty h2,.trainer-checkin-history h2
+){color:#edf5fc!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-profile-card :is(
+ strong,div[style*="white-space"]
+){color:#edf5fc!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-profile-card .muted{
+ color:#aabbd0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-profile-card>div[style*="margin-top"],
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-edit-box{
+ border-color:#344759!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-meta-chip{
+ background:#263748!important;color:#c2d0e0!important;border-color:#41556a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-meta-chip.ok,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-pill.ok{
+ background:#233d31!important;color:#98dfb7!important;border-color:#466e55!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-meta-chip.warn,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-pill.warn{
+ background:#403426!important;color:#f5c08c!important;border-color:#775739!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-meta-chip.alert,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-pill.off{
+ background:#422b34!important;color:#f7aab5!important;border-color:#754754!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-pill{
+ background:#243646!important;color:#cbd8e9!important;border-color:#43586e!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-saved>button,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-private-note-save,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-card>button{
+ background:#294767!important;color:#bfdaff!important;border:1px solid #436587!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .access-edit-box :is(input,select){
+ background:#1e2e3d!important;color:#eef5fd!important;border-color:#40576c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-grid span{
+ background:#223243!important;color:#b9c9db!important;border-color:#40566d!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-card p{
+ color:#bfcddd!important;
+}
+
+/* Fixed light fills in nutrition goals and their value tiles. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .trainer-nutrition-target-card{
+ background:#151e27!important;
+ border-color:#354759!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-head h2{
+ color:#f0f6fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-head p{
+ color:#aebfd0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-summary>div{
+ background:#243444!important;
+ border:1px solid #40566c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-summary span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-summary small{
+ color:#aebfd0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-summary strong{
+ color:#f2f7fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-edit,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-actions button.dark{
+ background:#243849!important;border-color:#42596e!important;color:#d4e5f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-fields :is(input,select){
+ background:#203141!important;border-color:#455a70!important;color:#f0f6fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-target-fields label>span{
+ color:#b1c1d3!important;
+}
+
+/* Assigned meal plan: quiet graphite, not white blocks or midnight-blue labels. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-card,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-head,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-body{
+ background:#151e27!important;
+ color:#eff5fc!important;
+ border-color:#354759!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-head strong{
+ color:#eff5fc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-head .muted,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-plan-head .arrow{
+ color:#a9bad0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page :is(
+ .meal-view,.meal-editor,.meal-variant,.structured-meal-editor,.structured-food-row
+){
+ background:#1c2b39!important;
+ border-color:#394f65!important;
+ color:#e8f1fc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page :is(
+ .meal-view>strong,.meal-editor-head strong,.meal-option
+){color:#e5f0fb!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-actions button{
+ background:#243b51!important;border-color:#405d79!important;color:#cbe3fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .meal-variant textarea{
+ background:#213142!important;color:#eef5fc!important;border-color:#43596e!important;
+}
+
+/* Daily ration totals: dark tinted nutrient badges, legible values. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-assigned-day-total{
+ background:#192c3c!important;
+ color:#e8f3ff!important;
+ border:1px solid #405d7c!important;
+ border-left:3px solid #5c9fe9!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-menu-total-heading>span{
+ color:#96bbdf!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-menu-total-heading>strong small{
+ color:#eff7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-total-chip.protein{
+ background:#243b58!important;color:#a1c9ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-total-chip.fat{
+ background:#493b28!important;color:#ffd18b!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-total-chip.carbs{
+ background:#244536!important;color:#99ddb7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-total-v6 .nutrition-total-chip :is(
+ .nutrition-total-value,.nutrition-total-label,.nutrition-total-icon,small,svg
+){
+ color:inherit!important;stroke:currentColor;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-ration-tabs{
+ background:#1e2d3c!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-ration-tab{
+ background:transparent!important;color:#adbed1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-ration-tab.active{
+ background:#315780!important;color:#f4f8fd!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-day-intro>span{
+ color:#c3d4e8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-day-intro small{
+ color:#a2b3c6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .trainer-assigned-meal,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2{
+ background:#151f2a!important;border-color:#385065!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .trainer-assigned-dish,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-assigned-meal .trainer-assigned-dish{
+ color:#edf5fd!important;
+ background:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .trainer-assigned-meal-label,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-kicker .trainer-assigned-meal-label{
+ color:#afc2d6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-ingredient,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-ingredient b,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .trainer-assigned-ingredients{
+ color:#aebed2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-energy{
+ background:#263f5a!important;color:#aad2ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-macro{
+ background:#263f5a!important;color:#a9d0ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-macro.macro-1{
+ background:#443a29!important;color:#f5c67c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-macro.macro-2{
+ background:#244336!important;color:#97dcb8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-macro :is(b,small),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-energy small{
+ color:inherit!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-method,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-v2-method{
+ border-color:#3b5066!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-meal-v2 .nutrition-menu-method summary{
+ color:#83baff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-round-prompt{
+ background:#24384b!important;border-color:#425e77!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-round-prompt span{
+ color:#c0d0e2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-round-prompt button{
+ background:#294c70!important;border-color:#4b7399!important;color:#bfe0ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-plan-actions button{
+ background:#263b51!important;color:#d7e9fc!important;border:1px solid #45617c!important;
+}
