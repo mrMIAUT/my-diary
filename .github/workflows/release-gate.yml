@@ -73,6 +73,8 @@ jobs:
         run: node backend/tests/trainer_dark_structural_clean_browser.mjs
       - name: Trainer access notifications profile graphite and More SVG
         run: node backend/tests/trainer_dark_profile_notifications_browser.mjs
+      - name: Trainer template library graphite colors
+        run: node backend/tests/trainer_dark_template_library_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
