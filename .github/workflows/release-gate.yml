@@ -61,6 +61,8 @@ jobs:
         run: node backend/tests/trainer_nutrition_integration_browser.mjs
       - name: Trainer dark theme regression smoke
         run: node backend/tests/trainer_dark_theme_smoke.mjs
+      - name: Trainer graphite browser contrast
+        run: node backend/tests/trainer_dark_contrast_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
