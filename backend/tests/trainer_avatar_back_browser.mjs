@@ -64,6 +64,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:844},deviceScaleFactor:2});
   await page.setContent(body);
   for(const name of styles)await page.addStyleTag({content:read(name)});
+  await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important}'});
   const check=async(sel,key,value)=>{
    const actual=await page.locator(sel).first().evaluate((el,key)=>getComputedStyle(el)[key],key);
    assert.equal(actual,value,`${width}px ${sel} ${key}`);
