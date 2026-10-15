@@ -2253,3 +2253,301 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #s
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodMatches button small{
   color:#abb9cc!important;
 }
+
+/* v9 — trainer graphite clean-up: access, notification center, More,
+   trainer profile and nutrition action strip (iPhone QA).
+   These selectors require trainer + dark, preserving all client/light styles. */
+
+/* Access card expands inline: legacy light theme was hard-coded on the editor. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox.access-edit-box{
+  background:var(--trainer-dark-surface)!important;
+  border:1px solid var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-head{
+  background:transparent!important;
+  border-color:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-head strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox :is(
+  .access-editor-head small,.access-field label,.access-quick-title
+){
+  color:#aeb9c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox :is(
+  .access-grid,.access-field,.access-editor-actions,.access-quick-actions
+){
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-field :is(input,select){
+  background:var(--trainer-dark-raised)!important;
+  border-color:#474e59!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-field select option{
+  background:#282b31!important;
+  color:#f3f4f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-quick-actions button{
+  background:#293d58!important;
+  border-color:#465d7b!important;
+  color:#d3e5ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-quick-actions button:active{
+  background:#345275!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-actions .access-primary{
+  background:#3478f6!important;
+  border-color:#4787fa!important;
+  color:#fff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-actions .access-secondary{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#d7e7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-actions .access-save-success{
+  background:#213b2d!important;
+  border-color:#436f54!important;
+  color:#94e0b0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-note{
+  background:#252b34!important;
+  border-color:#414c5a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-note>span{
+  background:#293d58!important;
+  color:#a4caff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #accessEditBox .access-editor-note p{
+  color:#b6c3d3!important;
+}
+
+/* Trainer notifications: unread gets a quiet blue tint; read stays graphite.
+   Swipe reveal, unread marker and push-enabled status retain their behavior. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationDetailModal{
+  background:rgba(4,7,12,.74)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-modal-card{
+  background:var(--trainer-dark-surface)!important;
+  border-color:#40454f!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.52)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-modal-head h2{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-modal-head small{
+  color:#aab6c6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-close{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#dce6f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-clear-all{
+  background:#39272e!important;
+  border-color:#674451!important;
+  color:#f1b2be!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-phone-toggle{
+  background:#263a52!important;
+  border-color:#456487!important;
+  color:#bad7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-phone-toggle.push-enabled{
+  background:#213a2e!important;
+  border-color:#426b52!important;
+  color:#a1dfb7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-list,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-swipe{
+  background:transparent!important;
+  border-color:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item{
+  background:#282b31!important;
+  border-color:#454b55!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item.unread{
+  background:#243347!important;
+  border-color:#547295!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item-top strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item-top time{
+  color:#a7b7ca!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item p{
+  color:#e0e6ef!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-dot{
+  background:#78b0ff!important;
+  box-shadow:0 0 0 3px #304c70!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-delete-bg.notification-delete{
+  background:#39272e!important;
+  border-color:#674451!important;
+  color:#f1adbb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-empty,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-message{
+  background:#282d35!important;
+  border-color:#434b56!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-empty strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationDetailModal .notification-detail-message p{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-empty span{
+  color:#abb8c9!important;
+}
+
+/* More list: remove the gray container band, keep individual graphite tiles. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item{
+  background:var(--trainer-dark-surface)!important;
+  border:1px solid var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item:last-child{
+  border-bottom:1px solid var(--trainer-dark-border)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-icon{
+  background:#293d58!important;
+  color:#a3cbff!important;
+  border:1px solid #385776!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-copy strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-copy small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-chevron{
+  color:#a9b5c5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-logout{
+  background:#39272e!important;
+  border-color:#674451!important;
+  color:#f1adbb!important;
+}
+
+/* Public trainer profile: statistics, tags and photo button were light-mode.
+   Do not place rectangular paint behind rows of already bordered tiles. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-preview,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-public-profile-card{
+  background:var(--trainer-dark-surface)!important;
+  color:var(--trainer-dark-text)!important;
+  border-color:var(--trainer-dark-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor :is(
+  .trainer-profile-collapsed-stats,.trainer-profile-collapsed-tags,
+  .trainer-profile-editor-stats,.trainer-profile-editor-preview>div:nth-child(2)
+){
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-stats>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-stats>div{
+  background:var(--trainer-dark-raised)!important;
+  border:1px solid #414852!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-stats strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-stats strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-copy h2,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-preview strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-stats span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-stats span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-copy p,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-preview>div:nth-child(2)>span{
+  color:#aeb9c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapsed-tags>span{
+  background:#293d58!important;
+  color:#b6d5ff!important;
+  border:1px solid #49678c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-avatar-upload>span{
+  background:#293d58!important;
+  color:#bad8ff!important;
+  border:1px solid #49678c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-edit-toggle{
+  background:#293d58!important;
+  border-color:#49678c!important;
+  color:#d5e7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-form-head{
+  background:transparent!important;
+  border-bottom-color:#404750!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-form-head strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-form-head span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-public-profile-card label>span{
+  color:#abb8c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-collapse-btn{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#d5e5f9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-public-profile-card :is(input:not([type="checkbox"]),textarea,select){
+  background:var(--trainer-dark-raised)!important;
+  border-color:#454d57!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-public-profile-card textarea::placeholder{
+  color:#a9b7c8!important;
+  -webkit-text-fill-color:#a9b7c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-public-profile-editor .trainer-profile-editor-avatar:not(.has-photo){
+  background:#303846!important;
+  color:#b7d6ff!important;
+}
+
+/* Assigned meal-plan footer: do not paint a rectangular band behind CTA. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition :is(
+  .trainer-saved-plan-actions,.trainer-assigned-bottom-actions,
+  .trainer-saved-plan-footer,.trainer-assigned-actions
+){
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-saved-plan-actions button{
+  background:#293d58!important;
+  border-color:#49688f!important;
+  color:#d5e7ff!important;
+}
