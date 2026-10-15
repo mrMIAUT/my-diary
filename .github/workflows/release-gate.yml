@@ -71,6 +71,8 @@ jobs:
         run: node backend/tests/trainer_dark_nutrition_modals_browser.mjs
       - name: Trainer calculator, product picker and wrapper graphite contrast
         run: node backend/tests/trainer_dark_structural_clean_browser.mjs
+      - name: Trainer access notifications profile graphite and More SVG
+        run: node backend/tests/trainer_dark_profile_notifications_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
