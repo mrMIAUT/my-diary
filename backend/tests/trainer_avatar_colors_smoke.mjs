@@ -30,7 +30,7 @@ assert.ok(trainer.includes('trainer-client-avatar more'),'The +N counter must re
 for(let i=0;i<8;i++)assert.ok(css.includes('.trainer-avatar-tone-'+i+'{'),'Missing color '+i);
 assert.ok(css.includes('.trainer-client-avatar.more'),'Counter must have a neutral palette override');
 for(const doc of [index,sw]){
- assert.ok(doc.includes('/static/css/trainer-avatars.css?v=1'),'Palette CSS must be loaded');
+ assert.ok(doc.includes('/static/css/trainer-avatars.css?v=2'),'Palette CSS must be loaded');
  assert.ok(doc.includes('/static/js/trainer.js?v=319'),'New trainer script must be used');
 }
 console.log('PASS: stable trainer avatar colors and PWA asset versions');
