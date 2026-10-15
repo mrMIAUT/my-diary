@@ -3112,3 +3112,88 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-moda
   border-color:#82b5ff!important;
   box-shadow:0 0 0 3px rgba(83,145,230,.2)!important;
 }
+
+/* v14 — Library taxonomy admin: dark muscle rows, forms and accessible iPhone status area.
+   The light-theme rules in redesign.css intentionally remain untouched. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-body{
+  background:#252a33!important;
+  color:#f3f4f6!important;
+  border-top-color:#454c58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-section{
+  background:transparent!important;
+  color:#f3f4f6!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-section-head{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-section-head strong{
+  color:#f3f4f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-section-head small{
+  color:#a9b8ca!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-section+.trainer-library-admin-section{
+  border-top-color:#454c58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-form input{
+  background:#282b31!important;
+  border-color:#48515e!important;
+  color:#f3f4f6!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-form input::placeholder{
+  color:#a9b8ca!important;
+  opacity:1;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin-form input:focus{
+  border-color:#82b5ff!important;
+  box-shadow:0 0 0 3px rgba(83,145,230,.2)!important;
+  outline:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-admin-list>div{
+  background:#2d323b!important;
+  border:1px solid #49515e!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-admin-list>div>span{
+  color:#f3f4f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-admin-list>div>.library-delete-btn{
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 36px!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  min-height:36px!important;
+  border:1px solid #674451!important;
+  border-radius:11px!important;
+  background:#39272e!important;
+  color:#f1b5c0!important;
+  box-shadow:none!important;
+  font-size:22px!important;
+  line-height:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-admin-list>div>.library-delete-btn:focus-visible{
+  outline:2px solid #82b5ff!important;
+  outline-offset:2px!important;
+}
+/* During scroll, preserve a solid dark background behind the iPhone status icons;
+   this layer is non-interactive and is limited to installed small-screen PWAs. */
+@media (max-width:700px) and (display-mode:standalone){
+  body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:env(safe-area-inset-top,0px);
+    background:#101114;
+    z-index:950;
+    pointer-events:none;
+  }
+}
