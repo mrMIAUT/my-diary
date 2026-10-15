@@ -34,6 +34,20 @@ assert.ok(style.includes('v6 — trainer iPhone QA'));
 assert.ok(style.includes('v7 — trainer graphite polish'));
 assert.ok(style.includes('v8 — neutralize accidental inherited container paints'));
 assert.ok(style.includes('v9 — trainer graphite clean-up'));
+assert.ok(style.includes('v10 — trainer template editor and library graphite cleanup'));
+for(const selector of [
+  '#programTemplateEditorModal .trainer-template-editor-day-head',
+  '#programTemplateEditorModal .trainer-template-editor-grid',
+  '.trainer-library-page .trainer-library-summary strong',
+  '.trainer-library-page .trainer-library-filter-chip',
+  '.trainer-library-page .trainer-library-toggle-meta',
+  '.trainer-library-page .trainer-library-video .redesign-library-video',
+  '.trainer-library-page .library-edit-btn'
+])assert.ok(style.includes(selector),'Missing v10 graphite selector: '+selector);
+const library=read('js/library.js');
+new vm.Script(library);
+assert.ok(!library.includes('border:1px solid #dce5f1!important;border-radius:999px!important;background:#fff!important;color:#22324c!important;'),'Library chips must not hard-code important white color');
+
 for(const selector of [
   '#accessEditBox.access-edit-box',
   '#notificationModal .notification-item.unread',
@@ -115,7 +129,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=9'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=10'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
