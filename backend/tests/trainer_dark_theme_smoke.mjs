@@ -35,6 +35,19 @@ assert.ok(style.includes('v7 — trainer graphite polish'));
 assert.ok(style.includes('v8 — neutralize accidental inherited container paints'));
 assert.ok(style.includes('v9 — trainer graphite clean-up'));
 assert.ok(style.includes('v10 — trainer template editor and library graphite cleanup'));
+assert.ok(style.includes('v11 — trainer assigned meal icons and client progress graphite polish'));
+for(const selector of [
+  '.nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast',
+  '.nutrition-menu-meal-v2 .nutrition-meal-icon-lunch',
+  '.nutrition-menu-meal-v2 .nutrition-meal-icon-dinner',
+  '.trainer-progress-summary>div',
+  '.trainer-progress-activity-stats>div',
+  '.trainer-progress-activity-list>div',
+  '.trainer-progress-pr-card',
+  '.trainer-workout-calendar-nav>button',
+  '.trainer-volume-muscle-row>div'
+])assert.ok(style.includes(selector),'Missing v11 graphite selector: '+selector);
+
 for(const selector of [
   '.trainer-template-editor-day-head{',
   '.trainer-template-editor-grid>label',
@@ -129,7 +142,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=10'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=11'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }

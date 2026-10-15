@@ -2835,3 +2835,164 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .t
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin > button.trainer-library-admin-toggle.exercise-toggle:hover{
   background:#303846!important;
 }
+
+/* v11 — trainer assigned meal icons and client progress graphite polish.
+   Only trainer dark UI. Keep meal colors meaningful, not white rectangles. */
+
+/* Assigned menus use the same hand-drawn Lucide meal glyphs as client view.
+   Their light tiles persisted because theme.css only targeted client-ui. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-menu-photo.nutrition-meal-icon{
+  box-shadow:none!important;
+  border:1px solid #455363!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast{
+  background:#233951!important;
+  border-color:#385879!important;
+  color:#89baff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-meal-icon-lunch{
+  background:#203e35!important;
+  border-color:#365f4f!important;
+  color:#84d2ab!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-meal-icon-dinner{
+  background:#403328!important;
+  border-color:#665039!important;
+  color:#e8ae71!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-meal-icon-snack{
+  background:#332d46!important;
+  border-color:#54466c!important;
+  color:#bea1f4!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .nutrition-meal-icon>svg{
+  stroke:currentColor!important;
+  fill:none!important;
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-v2-layout,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-v2-copy{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+/* Client progress — remove white metric/activity cards and inherited dark
+   navy text on graphite. Each tile keeps its own subtle outline. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page :is(
+  .trainer-progress-summary,.trainer-progress-activity-stats,
+  .trainer-progress-pr-grid,.trainer-volume-muscles,
+  .trainer-workout-calendar-grid,.trainer-workout-calendar-weekdays
+){
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-summary>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-stats>div{
+  background:#282b31!important;
+  border:1px solid #424a56!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-summary :is(strong,b),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-stats :is(strong,b){
+  color:#f0f3f8!important;
+  -webkit-text-fill-color:#f0f3f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-summary span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-stats span{
+  color:#b2c0d1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-summary small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-stats small{
+  color:#a3b2c5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-list{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-list>div{
+  background:#282b31!important;
+  border:1px solid #424a56!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-list>div :is(strong,b){
+  color:#edf2f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-activity-list>div small{
+  color:#a9b9ca!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-pr-grid{
+  border:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-pr-card{
+  background:#202329!important;
+  border:1px solid #3d4652!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-pr-card :is(strong,b){
+  color:#f1f3f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-pr-card small{
+  color:#a7b4c6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-page .trainer-progress-pr-card>span{
+  background:#493826!important;
+  border:1px solid #73552f!important;
+  color:#ffcd83!important;
+}
+
+/* Training calendar / volume: no white arrows, count bubble, no painted bar
+   behind "Без групи" / other volume muscle labels. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-title>span{
+  background:#293d58!important;
+  border-color:#49678a!important;
+  color:#b8d8ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-nav{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-nav>button{
+  background:#303846!important;
+  border-color:#495464!important;
+  color:#d5e6ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-nav>strong{
+  color:#f1f3f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume>div{
+  background:#282b31!important;
+  border-color:#414957!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-head h3,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-kpis strong{
+  color:#f1f3f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-kpis>div{
+  background:#282b31!important;
+  border-color:#414957!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscles-head span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row strong{
+  color:#edf2f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row>div{
+  background:transparent!important;
+  border:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row span{
+  color:#b2c1d3!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row>i{
+  background:#343c48!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row>i>b{
+  background:#4385f6!important;
+}

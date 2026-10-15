@@ -75,6 +75,8 @@ jobs:
         run: node backend/tests/trainer_dark_profile_notifications_browser.mjs
       - name: Trainer template library graphite colors
         run: node backend/tests/trainer_dark_template_library_browser.mjs
+      - name: Trainer meal glyph and progress graphite iPhone QA
+        run: node backend/tests/trainer_dark_meal_progress_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
