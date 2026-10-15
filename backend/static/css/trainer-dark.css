@@ -1326,7 +1326,7 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is
   background:#22272e!important;
   border-color:#414a56!important;
 }
-body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-alternative-card{
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-alternatives-block .trainer-program-alternative-card.trainer-program-alternative-row{
   background:#292d34!important;
   border-color:#444a54!important;
 }
