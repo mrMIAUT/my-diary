@@ -1026,3 +1026,266 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page 
 }
 /* Explicitly preserve avatar tones, success/warning/risk chips, and current
    action semantics: those are intentionally handled by earlier rules. */
+
+/* v4 — trainer dark contrast repairs from iPhone QA, 2026-10-15.
+   These color-only overrides intentionally follow v3. All rules require BOTH
+   trainer-ui and dark mode: light/client themes and workout logic stay untouched. */
+
+/* Dashboard: icon badges should not look like light-mode tiles. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-home-stats .trainer-stat-icon.orange{
+  background:#403025!important;color:#f0ad72!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-home-stats .trainer-stat-icon.green{
+  background:#213b2d!important;color:#70d79a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-home-stats .trainer-stat-icon.blue{
+  background:#263a56!important;color:#8bbaff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-home-stats>button small{
+  color:var(--trainer-dark-muted)!important;
+}
+
+/* Activity/status cards are independent tiles; remove the surface behind them. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-page .trainer-activity-card,
+  .trainer-home-page .trainer-client-list,
+  .trainer-clients-page .trainer-client-list
+){
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-page .trainer-activity-row,
+  .trainer-home-page .trainer-client-row,
+  .trainer-clients-page .trainer-client-row
+){
+  background:var(--trainer-dark-surface)!important;
+  border:1px solid var(--trainer-dark-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-page .trainer-activity-row:last-child,
+  .trainer-home-page .trainer-client-row:last-child,
+  .trainer-clients-page .trainer-client-row:last-child
+){border-bottom:1px solid var(--trainer-dark-border)!important}
+
+/* Client profile: unify access controls and private notes with graphite. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .access-pill,.trainer-meta-chip
+):not(.ok):not(.warn):not(.alert):not(.off){
+  background:#29333e!important;color:#c3d0e0!important;
+  border-color:#424955!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-private-note textarea{
+  background:var(--trainer-dark-raised)!important;
+  border-color:#454a55!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-private-note-save,.access-saved>button
+){
+  background:#303846!important;color:#d7e7ff!important;border-color:#485363!important;
+}
+
+/* RIR opt-in: remove the bright white switch panel without changing checkbox behavior. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-rir-toggle{
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-rir-toggle strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-rir-toggle small{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-rir-toggle>input[type="checkbox"]{
+  accent-color:#3478f6!important;
+}
+
+/* Program/day editor: dark headers, secondary pick actions and muted labels. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-program-editor,.program-day-card,.trainer-program-editor-grid
+){
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor-grid{
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-program-editor-head h2,.program-day-heading h2,.program-day-head
+){
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-program-editor-head p,.program-day-heading small,
+  .trainer-program-editor-grid label,.trainer-program-editor-grid label>span
+){
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .program-day-title-edit{
+  background:var(--trainer-dark-raised)!important;
+  border-color:#454a55!important;
+  color:#cbd5e1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-program-exercise-field>button,
+  .trainer-program-alternative-pick,
+  .trainer-template-editor-exercise>button
+){
+  background:#293d58!important;
+  border-color:#45658c!important;
+  color:#b5d3ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-add{
+  background:#3478f6!important;color:#fff!important;border-color:#4787fa!important;
+}
+
+/* Alternative prescriptions: distinct but quiet section/card/input layers. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternatives-block{
+  background:#202a35!important;
+  border-color:#3e5165!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternatives-title>span{
+  color:#d5e3f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternatives-title>small{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-program-alternative-card,.trainer-program-alternative-row,.trainer-template-alternative-row
+){
+  background:#282b31!important;border-color:#424852!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-card .trainer-program-alternative-params{
+  background:transparent!important;border-top-color:#434a55!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-params label>span{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-card :is(
+  .trainer-program-alternative-input,.trainer-program-alternative-params input,
+  .trainer-program-alternative-params select
+){
+  background:#202228!important;
+  border-color:#454a55!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-remove{
+  background:#39272e!important;
+  border-color:#65404c!important;
+  color:#f0abb8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-add{
+  background:#2a3949!important;
+  border-color:#53647a!important;
+  color:#c3d8f4!important;
+}
+
+/* The inline superset is an optional secondary action, not a white CTA. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-toggle{
+  background:#293847!important;
+  border-color:#506680!important;
+  color:#c7ddfa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-toggle.active{
+  background:#263b55!important;
+  border-color:#5b80ad!important;
+  color:#d4e7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-fields{
+  background:#202a35!important;
+  border-color:#43576d!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-head{
+  border-bottom-color:#43505f!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-head strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-head span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-grid label>span{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-inline-superset-head>button{
+  background:#303846!important;
+  color:#c5d3e4!important;
+  border-color:#485363!important;
+}
+
+/* Previously added exercises: never render light headers, white pills or pale delete. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .program-block,.program-block.trainer-exercise-card,
+  .program-block.trainer-exercise-card.superset-block
+){
+  background:var(--trainer-dark-surface)!important;
+  color:var(--trainer-dark-text)!important;
+  border-color:var(--trainer-dark-border)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-exercise-shell>.trainer-exercise-head,
+  .superset-inner>.trainer-exercise-head,
+  .superset-block .superset-inner>.trainer-exercise-head
+){
+  background:var(--trainer-dark-raised)!important;
+  color:var(--trainer-dark-text)!important;
+  border-bottom-color:#41454e!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-head .trainer-program-title-line>strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .program-block strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-exercise-body,.superset-block .superset-inner
+){
+  background:var(--trainer-dark-surface)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-body>.muted{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page :is(
+  .trainer-exercise-head-actions button,
+  .trainer-superset-inline-move button,
+  .trainer-superset-move button,
+  .program-block-actions button
+){
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#d2ddec!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .program-extra .badge{
+  background:#2c333d!important;
+  border-color:#495260!important;
+  color:#becde0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .inner-actions button.dark{
+  background:#303846!important;border-color:#485363!important;color:#d6e4f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .inner-actions button.danger{
+  background:#39272e!important;border-color:#65404c!important;color:#f0abb8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .exercise-alternatives{
+  background:#252a32!important;border-color:#414853!important;color:#c1cbd9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .exercise-alternatives>strong{
+  color:#e0e6ef!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .alternative-chip{
+  background:#303741!important;border-color:#4b5360!important;color:#ccd8e8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .superset-block .trainer-superset-head{
+  background:#273a51!important;
+  border-bottom-color:#486381!important;
+  color:#aaccff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .superset-block .superset-inner+.superset-inner{
+  border-top-color:#41454e!important;
+}
