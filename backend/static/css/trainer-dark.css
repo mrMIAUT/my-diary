@@ -3080,3 +3080,35 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
   color:#b4d8ff!important;
   border-color:#3b5671!important;
 }
+
+/* v13 — new-client nutrition targets: the optional macro card was white in dark mode.
+   Scope strictly to the trainer's add-client modal; leave light theme unchanged. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal .trainer-new-client-section{
+  background:#252a33!important;
+  color:#f3f4f6!important;
+  border-color:#424b58!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal .trainer-new-client-section-head strong{
+  color:#f3f4f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal :is(
+  .trainer-new-client-section-head span,
+  .trainer-new-client-macros label>span
+){
+  color:#b6c4d5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal .trainer-new-client-macros input{
+  background:#282b31!important;
+  color:#f3f4f6!important;
+  border-color:#4b5360!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal .trainer-new-client-macros input::placeholder{
+  color:#a9b8c9!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-new-client-modal .trainer-new-client-macros input:focus{
+  border-color:#82b5ff!important;
+  box-shadow:0 0 0 3px rgba(83,145,230,.2)!important;
+}
