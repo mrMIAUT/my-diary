@@ -90,6 +90,13 @@ try {
   await check('.trainer-superset-head>span:first-child','color',rgb(166,203,255));
   await check('.trainer-client-actions-head','backgroundColor','rgba(0, 0, 0, 0)');
   await check('.trainer-client-actions-head>strong','color',rgb(243,244,246));
+  console.log('MODAL_CLOSE_DIAG',JSON.stringify(await page.locator('.trainer-client-actions-head>button').evaluate(el=>({
+    markup:el.outerHTML,
+    body:document.body.outerHTML.slice(0,130),
+    match:el.matches('body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-actions-pop .trainer-client-actions-head>button'),
+    value:getComputedStyle(el).backgroundColor,
+    isEnabled:getComputedStyle(el).display
+  }))));
   await check('.trainer-client-actions-head>button','backgroundColor',rgb(48,52,61));
   await check('.trainer-client-actions-pop .trainer-client-action.danger','backgroundColor',rgb(57,39,46));
   await check('.trainer-program-name-track','animationName','none');
