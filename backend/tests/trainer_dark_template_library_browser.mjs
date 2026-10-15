@@ -46,6 +46,23 @@ const markup=`<!doctype html><html lang="uk"><head>
    </div>
   </div>
  </div>
+ <section class="card trainer-library-admin">
+  <button class="exercise-toggle trainer-library-admin-toggle"><span><strong>Керування бібліотекою</strong></span></button>
+  <div class="trainer-library-admin-body">
+   <div class="trainer-library-admin-section">
+    <div class="trainer-library-admin-section-head"><strong>Групи вправ</strong><small>Наприклад: Ноги, Груди, Спина</small></div>
+    <div class="trainer-library-admin-form"><input placeholder="Назва групи"><button class="trainer-library-primary-btn">+ Додати групу</button></div>
+   </div>
+   <div class="trainer-library-admin-section">
+    <div class="trainer-library-admin-section-head"><strong>Довідник м’язів</strong><small>Використовується для фільтрів та обсягу</small></div>
+    <div class="trainer-library-admin-form"><input placeholder="Назва м’яза"><button class="trainer-library-primary-btn">+ Додати м’яз</button></div>
+    <div class="library-muscle-admin-list">
+     <div><span>Біцепс</span><button class="library-icon-btn library-delete-btn">×</button></div>
+     <div><span>Задня дельта</span><button class="library-icon-btn library-delete-btn">×</button></div>
+    </div>
+   </div>
+  </div>
+ </section>
 </div>
 <div class="modal trainer-template-editor-modal" id="programTemplateEditorModal">
  <div class="card trainer-template-editor-card">
@@ -97,6 +114,18 @@ try{
   await check('#programTemplateEditorModal .trainer-template-editor-day-head button.danger-soft','backgroundColor',rgb(57,39,46));
   await check('#programTemplateEditorModal .trainer-template-editor-actions .trainer-template-primary','backgroundColor',rgb(52,120,246));
 
+  // Screenshot regression: admin muscle rows and nested form are fully graphite.
+  await check('.trainer-library-admin-body','backgroundColor',rgb(37,42,51));
+  await check('.trainer-library-admin-section-head strong','color',rgb(243,244,246));
+  await check('.trainer-library-admin-section-head small','color',rgb(169,184,202));
+  await check('.trainer-library-admin-form input','backgroundColor',rgb(40,43,49));
+  await check('.library-muscle-admin-list>div','backgroundColor',rgb(45,50,59));
+  await check('.library-muscle-admin-list>div>span','color',rgb(243,244,246));
+  await check('.library-muscle-admin-list .library-delete-btn','backgroundColor',rgb(57,39,46));
+  // Light mode must continue to use the existing white rows.
+  await page.evaluate(()=>document.body.dataset.eplanTheme='light');
+  await check('.library-muscle-admin-list>div','backgroundColor',rgb(255,255,255));
+  await page.evaluate(()=>document.body.dataset.eplanTheme='dark');
   // Library: strong counts, dark chips, neutral group, non-tiled video links.
   await check('.trainer-library-page .trainer-library-summary strong','color',rgb(240,243,248));
   await check('.trainer-library-page .trainer-library-summary>div','backgroundColor',paper);
