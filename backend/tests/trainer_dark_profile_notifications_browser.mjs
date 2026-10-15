@@ -130,7 +130,7 @@ try{
   // Evaluate the actual generated SVG source, not just its background box.
   const core=fs.readFileSync(path.join(root,'js/core.js'),'utf8');
   const start=core.indexOf('function uiIcon(name){');
-  const end=core.indexOf('\\n\\nfunction clientInitials',start);
+  const end=core.indexOf('function clientInitials',start);
   assert.ok(start>=0&&end>start,'uiIcon function source not found');
   const sandbox={};vm.createContext(sandbox);
   vm.runInContext(core.slice(start,end),sandbox);
