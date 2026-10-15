@@ -55,10 +55,10 @@ class ProgramRirTests(unittest.TestCase):
     def test_pwa_versions(self):
         for source in (INDEX,SW):
             for asset in ('/static/js/program.js?v=192','/static/js/workout.js?v=188',
-                          '/static/js/workout-lyfta.js?v=173','/static/js/trainer.js?v=317',
+                          '/static/js/workout-lyfta.js?v=173','/static/js/trainer.js?v=318',
                           '/static/js/training-redesign.js?v=170','/static/css/redesign.css?v=263'):
                 self.assertIn(asset,source)
-        self.assertIn("const VERSION='eplan-v224'",SW)
+        self.assertIn("const VERSION='eplan-v225'",SW)
 
     @unittest.skipUnless(shutil.which("node"),"Node.js required")
     def test_client_set_html_disables_rir_without_breaking_rows(self):
