@@ -2821,3 +2821,17 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .t
   color:#bcd6fb!important;
   border:0!important;
 }
+
+/* Legacy grouped :is(.card button.dark, ...) has a more specific selector
+   than the generic toggle override; pin library headers explicitly. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-group > button.trainer-library-group-toggle.redesign-library-group-head,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin > button.trainer-library-admin-toggle.exercise-toggle{
+  background:#28303a!important;
+  border:0!important;
+  color:#f1f3f7!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-group > button.trainer-library-group-toggle.redesign-library-group-head:hover,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-admin > button.trainer-library-admin-toggle.exercise-toggle:hover{
+  background:#303846!important;
+}
