@@ -46,7 +46,7 @@ for(const shell of [index,sw]){
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v227'"));
+assert.ok(sw.includes("const VERSION='eplan-v226'"));
 
 const stored=new Map();
 const media={matches:false,addEventListener(){}};
