@@ -3432,7 +3432,7 @@ CLIENT_RESPONSE_FIELDS=(
     "meal_plan","status","first_name","last_name","age","sex",
     "contraindications","injuries","contact","instagram","telegram","tiktok","avatar","trainer_id",
     "plan_code","access_until","access","live_status","created_at","needs_review_count","show_rir",
-    "finished_workout_count","last_finished_at","review_state",
+    "finished_workout_count","last_finished_at","first_standard_finished_at","review_state",
     "workouts_28d","program_days_count","nutrition_days_7d","checkin_pending_count","last_checkin_at",
 )
 
@@ -3454,6 +3454,7 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
         COALESCE(w.workouts_28d,0) AS workouts_28d,
         COALESCE(pd.program_days_count,0) AS program_days_count,
         w.last_finished_at AS last_finished_at,
+        w.first_standard_finished_at AS first_standard_finished_at,
         COALESCE(n.nutrition_days_7d,0) AS nutrition_days_7d,
         COALESCE(ch.checkin_pending_count,0) AS checkin_pending_count,
         ch.last_checkin_at AS last_checkin_at
@@ -3467,7 +3468,10 @@ def clients(limit:int=Query(API_PAGE_SIZE,ge=1,le=API_PAGE_MAX),
               AND COALESCE(day_kind,'standard')='standard'
               AND COALESCE(finished_at,started_at)>=CURRENT_TIMESTAMP-INTERVAL '28 days'
           ) AS workouts_28d,
-          MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at
+          MAX(finished_at) FILTER (WHERE status='finished') AS last_finished_at,
+          MIN(COALESCE(finished_at,started_at)) FILTER (
+            WHERE status='finished' AND COALESCE(day_kind,'standard')='standard'
+          ) AS first_standard_finished_at
         FROM workout_sessions
         GROUP BY client_id
     ) w ON w.client_id=c.id
