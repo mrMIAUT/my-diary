@@ -91,7 +91,7 @@ try{
    await check('#dayTitleModal #dayTitleInput','backgroundColor',raised);
    await check('.trainer-exercise-head .trainer-exercise-head-actions','backgroundColor',transparent);
    await check('.trainer-exercise-head .trainer-program-title-line','backgroundColor',transparent);
-   await check('.trainer-exercise-head .alternative-tech-link::before','display','none');
+   assert.equal(await page.locator('.trainer-exercise-head .alternative-tech-link').evaluate(el=>getComputedStyle(el,'::before').display),'none',`tech separator visible at ${width}px`);
    await check('#nutrition .trainer-nutrition-target-actions','backgroundColor',transparent);
    await check('#nutrition .trainer-nutrition-target-actions button:not(.dark)','backgroundColor',rgb(52,120,246));
    await check('#nutrition .trainer-nutrition-target-actions button.dark','backgroundColor',rgb(48,56,70));
