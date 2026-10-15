@@ -28,6 +28,21 @@ assert.ok(style.includes('.trainer-theme-settings .eplan-theme-option'));
 assert.ok(style.includes('.trainer-smart-status.risk'));
 assert.ok(style.includes('v2 — iPhone QA'));
 assert.ok(style.includes('v3 — shared graphite system'));
+assert.ok(style.includes('v4 — trainer dark contrast repairs from iPhone QA'));
+for(const selector of [
+  '.trainer-home-stats .trainer-stat-icon.orange',
+  '.trainer-home-page .trainer-activity-card',
+  '.trainer-program-rir-toggle',
+  '.trainer-program-exercise-field>button',
+  '.trainer-program-alternatives-block',
+  '.trainer-inline-superset-toggle',
+  '.trainer-client-page .trainer-exercise-head .trainer-program-title-line>strong',
+  '.trainer-client-page .inner-actions button.danger',
+  '.trainer-client-page .program-extra .badge'
+]){
+  assert.ok(style.includes(selector),'Missing mobile dark contrast repair: '+selector);
+}
+
 for(const token of ['--trainer-dark-bg:#101114','--trainer-dark-surface:#1c1e23','--trainer-dark-raised:#282b31','--trainer-dark-border:#353840','--trainer-dark-text:#f3f4f6']){
   assert.ok(style.includes(token),'Missing graphite palette token: '+token);
 }
@@ -42,7 +57,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=3'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=4'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
