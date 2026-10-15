@@ -62,8 +62,8 @@ try {
   await check('.trainer-program-rir-toggle','backgroundColor',rgb(28,30,35));
   await check('.trainer-program-rir-toggle strong','color',rgb(243,244,246));
   await check('.trainer-program-exercise-field>button','backgroundColor',rgb(41,61,88));
-  await check('.trainer-program-alternatives-block','backgroundColor',rgb(32,42,53));
-  await check('.trainer-program-alternative-card','backgroundColor',rgb(40,43,49));
+  await check('.trainer-program-alternatives-block','backgroundColor',rgb(34,39,46));
+  await check('.trainer-program-alternative-card','backgroundColor',rgb(41,45,52));
   await check('.trainer-program-alternative-remove','backgroundColor',rgb(57,39,46));
   await check('.trainer-inline-superset-toggle','backgroundColor',rgb(41,56,71));
   await check('.trainer-exercise-head','backgroundColor',rgb(40,43,49));
