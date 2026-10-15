@@ -10,10 +10,14 @@ async function goToTrainerHome(){
  if(_btn&&_input)syncPasswordEye(_btn,_input);
 }
 
+/* Early onboarding must not be divided by four full weeks of planned sessions. */
 function trainerCompliance(c){
- let days=+c.program_days_count||0,done=+c.workouts_28d||0;
- if(!days)return null;
- return Math.max(0,Math.min(100,Math.round(done/(days*4)*100)));
+ let planned=+c.program_days_count||0;
+ let elapsed=trainerDaysSince(c.first_standard_finished_at);
+ if(!planned||elapsed===null||elapsed<7)return null;
+ let observedDays=Math.min(28,elapsed+1);
+ let expected=planned*observedDays/7;
+ return Math.max(0,Math.min(100,Math.round((+c.workouts_28d||0)/expected*100)));
 }
 function trainerDaysSince(value){
  if(!value)return null;
@@ -29,19 +33,35 @@ function trainerAttention(c){
  if(c.live_status==='Тренується')return {level:'training',label:'Тренується зараз',reason:'Активне тренування'};
  if(!trainerAccessIsActive(c))return {level:'paused',label:'На паузі',reason:a.plan_code==='free'?'Безкоштовний режим':'Доступ неактивний'};
  if(!a.features?.trainer_review)return {level:'paused',label:'Без супроводу',reason:a.plan_name||'Самостійний тариф'};
- let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0,comp=trainerCompliance(c),days=trainerDaysSince(c.last_finished_at);
- let createdDays=trainerDaysSince(c.created_at),finished=+c.finished_workout_count||0;
- if(finished===0&&(createdDays===null||createdDays<7))return {level:'new',label:'Новий клієнт',reason:'Ще немає завершених тренувань'};
- let reasons=[];
- if(review)reasons.push('Тренування до перевірки: '+review);
- if(check)reasons.push('Щотижневі звіти: '+check);
- if(days!==null&&days>=7)reasons.push('Без тренувань '+days+' дн.');
- if(days===null&&(+c.finished_workout_count||0)===0)reasons.push('Ще немає завершених тренувань');
- if(comp!==null&&comp<60)reasons.push('Дотримання плану '+comp+'%');
- if((+c.kcal||0)>0&&(+c.nutrition_days_7d||0)<3)reasons.push('Харчування заповнюється рідко');
- if((days!==null&&days>=14)||(finished>0&&comp!==null&&comp<40))return {level:'risk',label:'Ризик',reason:reasons[0]||'Потрібна увага'};
- if(reasons.length)return {level:'attention',label:'Потребує уваги',reason:reasons[0]};
- return {level:'ok',label:'Все добре',reason:'План виконується стабільно'};
+ let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0;
+ let comp=trainerCompliance(c),sinceLast=trainerDaysSince(c.last_finished_at);
+ let sinceFirst=trainerDaysSince(c.first_standard_finished_at);
+ let sinceCreated=trainerDaysSince(c.created_at);
+ let hasProgram=(+c.program_days_count||0)>0;
+
+ // A new client can finish their first training today without an invented 28-day deficit.
+ // Genuine prolonged inactivity is a risk only once standard workouts have begun.
+ if(sinceFirst!==null&&sinceLast!==null&&sinceLast>=14)
+   return {level:'risk',label:'Ризик',reason:'Без тренувань '+sinceLast+' дн.'};
+ if(sinceFirst!==null&&sinceFirst>=21&&sinceLast!==null&&sinceLast>=7&&comp!==null&&comp<40)
+   return {level:'risk',label:'Ризик',reason:'Дотримання плану '+comp+'% за період спостереження'};
+
+ // Pending coach actions are worth showing, but cannot turn a first workout into risk.
+ if(review)return {level:'attention',label:'Потребує уваги',reason:'Тренувань до перевірки: '+review};
+ if(check)return {level:'attention',label:'Потребує уваги',reason:'Щотижневих звітів до перегляду: '+check};
+
+ if(sinceFirst===null){
+   if(hasProgram&&sinceCreated!==null&&sinceCreated>=14)
+     return {level:'attention',label:'Потребує уваги',reason:'Ще немає першого тренування (14+ днів)'};
+   return {level:'new',label:'На старті',reason:hasProgram?'Очікує першого тренування':'Очікує програми'};
+ }
+ if(sinceFirst<14)
+   return {level:'new',label:'На старті',reason:'Перші два тижні тренувань'};
+ if(sinceLast!==null&&sinceLast>=7)
+   return {level:'attention',label:'Потребує уваги',reason:'Без тренувань '+sinceLast+' дн.'};
+ if(comp!==null&&comp<60)
+   return {level:'attention',label:'Потребує уваги',reason:'Дотримання плану '+comp+'% за період спостереження'};
+ return {level:'ok',label:'Все добре',reason:hasProgram?'План виконується стабільно':'Немає плану тренувань'};
 }
 function trainerClientInitials(c){
  let p=String(c.name||'').trim().split(/\s+/).filter(Boolean);
@@ -56,7 +76,7 @@ async function trainerHome(){
  let attention=states.filter(x=>x.state.level==='attention'||x.state.level==='risk');
  let checkins=cs.reduce((n,c)=>n+(+c.checkin_pending_count||0),0);
  let comps=active.map(trainerCompliance).filter(x=>x!==null);
- let avgComp=comps.length?Math.round(comps.reduce((a,b)=>a+b,0)/comps.length):0;
+ let avgComp=comps.length?Math.round(comps.reduce((a,b)=>a+b,0)/comps.length):null;
  let avatars=cs.slice(0,4).map(c=>'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>').join('');
  let recent=states.slice().sort((a,b)=>{
    let rank={training:0,risk:1,attention:2,new:3,ok:4,paused:5};return rank[a.state.level]-rank[b.state.level];
@@ -73,7 +93,7 @@ async function trainerHome(){
 
    <div class="trainer-home-stats reference-grid">
      <button onclick="window.trainerHomeFilter='review';showTrainerClientsView()"><span class="trainer-stat-icon orange">${uiIcon('users')}</span><strong>${attention.length}</strong><small>Потребують уваги</small><em>Переглянути ›</em></button>
-     <button onclick="window.trainerHomeFilter='all';showTrainerClientsView()"><span class="trainer-stat-icon green">✓</span><strong>${avgComp}%</strong><small>Дотримання плану</small><em>За 28 днів ›</em></button>
+     <button onclick="window.trainerHomeFilter='all';showTrainerClientsView()"><span class="trainer-stat-icon green">✓</span><strong>${avgComp===null?'—':avgComp+'%'}</strong><small>Дотримання плану</small><em>До 28 днів ›</em></button>
      <button onclick="showTrainerCheckins()"><span class="trainer-stat-icon blue">${uiIcon('calendar')}</span><strong>${checkins}</strong><small>Щотижневі звіти</small><em>Переглянути ›</em></button>
      <button onclick="newClient()"><span class="trainer-stat-icon blue">${uiIcon('plus')}</span><strong>＋</strong><small>Новий клієнт</small><em>Додати ›</em></button>
    </div>
@@ -1007,11 +1027,15 @@ async function openClient(id,activeTab=null){
  let initials=trainerClientInitials(c);
  let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
  let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
+ let standardWorkouts=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&String(x.day_kind||'standard')==='standard');
+ let firstStandard=standardWorkouts.slice().sort((a,b)=>String(a.finished_at||a.started_at||'').localeCompare(String(b.finished_at||b.started_at||'')))[0];
+ let standardProgramDays=new Set((d.program||[]).filter(x=>!(d.program_days||[]).some(day=>String(day.day_name)===String(x.day_name)&&String(day.kind||'standard')==='extra')).map(x=>x.day_name));
  let age=c.age?c.age+' років':'Вік не вказано';
  let localMetrics={
    ...c,
-   workouts_28d:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerDaysSince(x.finished_at||x.started_at)<=28).length,
-   program_days_count:new Set((d.program||[]).map(x=>x.day_name)).size,
+   workouts_28d:standardWorkouts.filter(x=>trainerDaysSince(x.finished_at||x.started_at)<28).length,
+   program_days_count:standardProgramDays.size,
+   first_standard_finished_at:firstStandard?.finished_at||firstStandard?.started_at||null,
    needs_review_count:(d.workout_sessions||[]).filter(x=>x.status==='finished'&&!x.trainer_reviewed).length,
    checkin_pending_count:(d.checkins||[]).filter(x=>!x.reviewed).length,
    nutrition_days_7d:new Set((d.nutrition||[]).filter(x=>trainerDaysSince(x.day+'T12:00:00')<=6).map(x=>x.day)).size,
