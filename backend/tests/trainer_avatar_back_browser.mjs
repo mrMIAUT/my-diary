@@ -17,7 +17,7 @@ assert.ok(library.includes('class="trainer-back-button" onclick="showTrainerMore
 assert.ok(!js.includes('aria-label="До клієнтів">‹'),'Avoid miscentered font glyph in client Back');
 assert.ok(!library.includes('aria-label="Назад">‹'),'Avoid miscentered font glyph in library Back');
 assert.ok(!js.includes('class="trainer-theme-back"'),'Avoid legacy font glyph in theme Back');
-const iconPath=core.match(/chevron-left:'([^']+)'/);
+const iconPath=core.match(/'chevron-left':'([^']+)'/);
 assert.ok(iconPath&&iconPath[1].includes('m15 18-6-6 6-6'),'SVG uses centered 24x24 viewBox path');
 const svg='<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">'+iconPath[1]+'</svg>';
 const body=`<!doctype html><html lang="uk"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
