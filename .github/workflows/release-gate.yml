@@ -67,6 +67,8 @@ jobs:
         run: node backend/tests/trainer_dark_mobile_polish_browser.mjs
       - name: Trainer dark exercise modal and measurement colors
         run: node backend/tests/trainer_dark_measurements_modal_browser.mjs
+      - name: Trainer nutrition and day sheets graphite colors
+        run: node backend/tests/trainer_dark_nutrition_modals_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
