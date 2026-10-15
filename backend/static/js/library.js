@@ -110,7 +110,7 @@ async function showExerciseLibrary({openGroupId=0,openAddForm=false}={}){
  }).join('');
 
  app.innerHTML=shell(`<div class="trainer-library-page">
-   <div class="trainer-client-navline"><button onclick="showTrainerMore()" aria-label="Назад">‹</button></div>
+   <div class="trainer-client-navline"><button type="button" class="trainer-back-button" onclick="showTrainerMore()" aria-label="Назад">${uiIcon('chevron-left')}</button></div>
    <div class="trainer-page-title"><div><h1>Бібліотека вправ</h1><p class="trainer-page-sub">Вправи, м’язи та техніка виконання</p></div></div>
    <div class="trainer-library-summary">
      <div><strong>${L.exercises.filter(x=>x.scope==='platform').length}</strong><small>ЄПЛАН</small></div>

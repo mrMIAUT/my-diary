@@ -2996,3 +2996,87 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volum
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-muscle-row>i>b{
   background:#4385f6!important;
 }
+
+/* v12 — separated home avatars + one optically centered SVG Back button.
+   The Back control is shared across trainer client, library and Theme pages. */
+
+/* The summary strip sits on blue gradient, so the dark perimeter outlines
+   each pastel avatar instead of allowing adjacent pastel fills to merge. */
+body.eplan-redesign.trainer-ui .trainer-home-page .trainer-hero-card .trainer-avatar-stack{
+  display:flex!important;
+  align-items:center!important;
+  padding:2px 3px!important;
+  isolation:isolate;
+}
+body.eplan-redesign.trainer-ui .trainer-home-page .trainer-hero-card .trainer-avatar-stack>.trainer-client-avatar{
+  width:40px!important;
+  height:40px!important;
+  flex:0 0 40px!important;
+  box-sizing:border-box!important;
+  border:3px solid #163c70!important;
+  border-radius:50%!important;
+  box-shadow:0 0 0 1px rgba(238,246,255,.72)!important;
+  margin-left:-3px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-home-page .trainer-hero-card .trainer-avatar-stack>.trainer-client-avatar:first-child{
+  margin-left:0!important;
+}
+
+/* Use a true SVG icon, not the typographic ‹ character with offset metrics. */
+body.eplan-redesign.trainer-ui :is(
+  .trainer-client-navline button.trainer-back-button,
+  .trainer-theme-settings button.trainer-back-button
+){
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 44px!important;
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  min-height:44px!important;
+  padding:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  border:1px solid #c8dbf0!important;
+  border-radius:14px!important;
+  background:#eaf2ff!important;
+  color:#285f9b!important;
+  box-shadow:none!important;
+  font-size:0!important;
+  line-height:0!important;
+  text-indent:0!important;
+  -webkit-tap-highlight-color:transparent;
+}
+body.eplan-redesign.trainer-ui :is(
+  .trainer-client-navline button.trainer-back-button,
+  .trainer-theme-settings button.trainer-back-button
+)>.ui-icon{
+  display:block!important;
+  width:22px!important;
+  height:22px!important;
+  flex:0 0 22px!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2.5!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body.eplan-redesign.trainer-ui :is(
+  .trainer-client-navline button.trainer-back-button,
+  .trainer-theme-settings button.trainer-back-button
+):focus-visible{
+  outline:2px solid #7caff6!important;
+  outline-offset:3px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-client-navline button.trainer-back-button,
+  .trainer-theme-settings button.trainer-back-button
+){
+  background:#253d55!important;
+  color:#b4d8ff!important;
+  border-color:#3b5671!important;
+}

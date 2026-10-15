@@ -916,7 +916,7 @@ function showTrainerMore(){
 function showTrainerThemeSettings(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
  app.innerHTML=shell('<div class="trainer-more-page modern trainer-theme-settings">'
-  +'<div class="trainer-page-title trainer-more-title"><div><h1>Тема оформлення</h1><p class="trainer-page-sub">Обери вигляд робочого кабінету тренера.</p></div><button class="trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">‹</button></div>'
+  +'<div class="trainer-page-title trainer-more-title"><div><h1>Тема оформлення</h1><p class="trainer-page-sub">Обери вигляд робочого кабінету тренера.</p></div><button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">'+uiIcon('chevron-left')+'</button></div>'
   +window.eplanThemeOptionsHTML()
   +'</div>');
 }
@@ -1084,7 +1084,7 @@ async function openClient(id,activeTab=null){
    ${trainerNotesHTML(d,c.id)}
  `;
  app.innerHTML=shell(`<div class="trainer-client-page">
-   <div class="trainer-client-navline"><button onclick="showTrainerClientsView()" aria-label="До клієнтів">‹</button><button class="trainer-client-more" onclick="toggleTrainerClientActions(event)" aria-label="Дії з клієнтом">•••</button></div>
+   <div class="trainer-client-navline"><button type="button" class="trainer-back-button" onclick="showTrainerClientsView()" aria-label="До клієнтів">${uiIcon('chevron-left')}</button><button class="trainer-client-more" onclick="toggleTrainerClientActions(event)" aria-label="Дії з клієнтом">•••</button></div>
    <div id="trainerClientActionsLayer" class="trainer-client-actions-layer hidden" onclick="closeTrainerClientActions()">
      <div id="trainerClientActions" class="trainer-client-actions-pop" onclick="event.stopPropagation()">
        <div class="trainer-client-actions-head"><strong>Дії з клієнтом</strong><button type="button" onclick="closeTrainerClientActions()" aria-label="Закрити">✕</button></div>

@@ -77,6 +77,8 @@ jobs:
         run: node backend/tests/trainer_dark_template_library_browser.mjs
       - name: Trainer meal glyph and progress graphite iPhone QA
         run: node backend/tests/trainer_dark_meal_progress_browser.mjs
+      - name: Trainer avatar separation and unified Back SVG on iPhone
+        run: node backend/tests/trainer_avatar_back_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest

@@ -36,6 +36,14 @@ assert.ok(style.includes('v8 — neutralize accidental inherited container paint
 assert.ok(style.includes('v9 — trainer graphite clean-up'));
 assert.ok(style.includes('v10 — trainer template editor and library graphite cleanup'));
 assert.ok(style.includes('v11 — trainer assigned meal icons and client progress graphite polish'));
+assert.ok(style.includes('v12 — separated home avatars + one optically centered SVG Back button'));
+assert.ok(style.includes('.trainer-home-page .trainer-hero-card .trainer-avatar-stack>.trainer-client-avatar'));
+assert.ok(style.includes('.trainer-client-navline button.trainer-back-button'));
+assert.ok(style.includes('.trainer-theme-settings button.trainer-back-button'));
+assert.ok(read('js/core.js').includes("'chevron-left':'<path"));
+assert.ok(trainer.includes("uiIcon('chevron-left')"));
+assert.ok(read('js/library.js').includes("uiIcon('chevron-left')"));
+
 for(const selector of [
   '.nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast',
   '.nutrition-menu-meal-v2 .nutrition-meal-icon-lunch',
@@ -142,7 +150,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=11'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=12'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
