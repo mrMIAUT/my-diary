@@ -33,6 +33,21 @@ assert.ok(style.includes('v5 — iPhone trainer dark-theme follow-up'));
 assert.ok(style.includes('v6 — trainer iPhone QA'));
 assert.ok(style.includes('v7 — trainer graphite polish'));
 assert.ok(style.includes('v8 — neutralize accidental inherited container paints'));
+assert.ok(style.includes('v9 — trainer graphite clean-up'));
+for(const selector of [
+  '#accessEditBox.access-edit-box',
+  '#notificationModal .notification-item.unread',
+  '.trainer-more-list.modern .trainer-more-item',
+  '.trainer-profile-collapsed-stats>div',
+  '.trainer-profile-editor-stats>div',
+  '.trainer-avatar-upload>span',
+  '.trainer-saved-plan-actions button'
+])assert.ok(style.includes(selector),'Missing v9 dark UI: '+selector);
+const core=read('js/core.js');
+new vm.Script(core);
+assert.ok(core.includes("settings:'<circle cx="), 'Missing settings icon definition');
+assert.ok(trainer.includes("uiIcon('settings')"), 'Theme settings menu icon not used');
+
 for(const selector of [
   '#dayTitleModal .trainer-day-title-card .trainer-day-title-field',
   '.trainer-client-page .trainer-exercise-head :is(',
@@ -100,7 +115,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=8'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=9'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
