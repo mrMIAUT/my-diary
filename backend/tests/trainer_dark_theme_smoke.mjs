@@ -36,8 +36,8 @@ assert.ok(style.includes('v8 — neutralize accidental inherited container paint
 assert.ok(style.includes('v9 — trainer graphite clean-up'));
 assert.ok(style.includes('v10 — trainer template editor and library graphite cleanup'));
 for(const selector of [
-  '#programTemplateEditorModal .trainer-template-editor-day-head',
-  '#programTemplateEditorModal .trainer-template-editor-grid',
+  '.trainer-template-editor-day-head{',
+  '.trainer-template-editor-grid>label',
   '.trainer-library-page .trainer-library-summary strong',
   '.trainer-library-page .trainer-library-filter-chip',
   '.trainer-library-page .trainer-library-toggle-meta',
