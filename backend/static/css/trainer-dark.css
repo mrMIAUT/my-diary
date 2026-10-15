@@ -1768,7 +1768,7 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-extra-day-modal
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-extra-day-modal-card .edit-exercise-head small{
   color:#85b6ff!important;
 }
-body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-extra-day-modal-card .edit-exercise-close{
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-extra-day-modal-card .edit-exercise-head button.edit-exercise-close.dark{
   background:#303846!important;
   border-color:#485363!important;
   color:#dce6f6!important;
