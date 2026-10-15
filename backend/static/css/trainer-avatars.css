@@ -1,0 +1,45 @@
+/* Trainer-only initials palette. The ID determines the tone; no personal data or
+   persisted color setting is needed. Styles are scoped to trainer view so existing
+   client/profile image avatars and status badges are unaffected. */
+body.eplan-redesign.trainer-ui .trainer-client-avatar[class*="trainer-avatar-tone-"]{
+  box-shadow:none;
+  flex-shrink:0;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-0{
+  background:#d8eaff!important;
+  color:#21547e!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-1{
+  background:#d0eee6!important;
+  color:#14685e!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-2{
+  background:#e8dff9!important;
+  color:#63478b!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-3{
+  background:#f8e1d4!important;
+  color:#8a5135!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-4{
+  background:#e0f0d5!important;
+  color:#456a28!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-5{
+  background:#f8dfe9!important;
+  color:#8d4467!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-6{
+  background:#dce3fb!important;
+  color:#354e88!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-avatar.trainer-avatar-tone-7{
+  background:#f8ebc8!important;
+  color:#805b24!important;
+}
+
+/* The summary counter is not a person; keep its neutral appearance. */
+body.eplan-redesign.trainer-ui .trainer-avatar-stack .trainer-client-avatar.more{
+  background:#dce7f5!important;
+  color:#52627a!important;
+}
