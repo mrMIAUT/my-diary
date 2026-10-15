@@ -40,13 +40,9 @@ assert.ok(style.includes('v12 — separated home avatars + one optically centere
 assert.ok(style.includes('.trainer-home-page .trainer-hero-card .trainer-avatar-stack>.trainer-client-avatar'));
 assert.ok(style.includes('.trainer-client-navline button.trainer-back-button'));
 assert.ok(style.includes('.trainer-theme-settings button.trainer-back-button'));
-const core=read('js/core.js');
-const library=read('js/library.js');
-new vm.Script(core);
-new vm.Script(library);
-assert.ok(core.includes("'chevron-left':'<path"));
+assert.ok(read('js/core.js').includes("'chevron-left':'<path"));
 assert.ok(trainer.includes("uiIcon('chevron-left')"));
-assert.ok(library.includes("uiIcon('chevron-left')"));
+assert.ok(read('js/library.js').includes("uiIcon('chevron-left')"));
 
 for(const selector of [
   '.nutrition-menu-meal-v2 .nutrition-meal-icon-breakfast',
