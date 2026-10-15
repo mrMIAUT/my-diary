@@ -26,11 +26,15 @@ assert.ok(style.includes('.trainer-nutrition-target-card'));
 assert.ok(style.includes('.trainer-library-group'));
 assert.ok(style.includes('.trainer-theme-settings .eplan-theme-option'));
 assert.ok(style.includes('.trainer-smart-status.risk'));
+assert.ok(style.includes('v2 — iPhone QA'));
+for(const marker of ['.trainer-template-toolbar.modern','.trainer-nutrition-target-summary>div','.nutrition-menu-total-v6','.trainer-client-page #profile>.card','.trainer-nutrition-summary strong']){
+  assert.ok(style.includes(marker),'Missing contrast repair: '+marker);
+}
 assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cannot leak into client screens');
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=1'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=2'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
