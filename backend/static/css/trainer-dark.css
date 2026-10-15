@@ -1,0 +1,401 @@
+/* Є ПЛАН — trainer dark theme, experimental v1.
+   Everything in this file is scoped to the trainer role AND an explicit dark theme.
+   No geometry, data, timer, or business logic is changed. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+  color-scheme:dark;
+  --trainer-dark-bg:#0b1117;
+  --trainer-dark-surface:#151e27;
+  --trainer-dark-raised:#1c2936;
+  --trainer-dark-muted:#a7b7c9;
+  --trainer-dark-border:#354759;
+  --trainer-dark-text:#eff5fc;
+  --trainer-dark-accent:#79b4ff;
+  --bg:var(--trainer-dark-bg);
+  --card:var(--trainer-dark-surface);
+  --card2:var(--trainer-dark-raised);
+  --line:var(--trainer-dark-border);
+  --text:var(--trainer-dark-text);
+  --muted:var(--trainer-dark-muted);
+  background:var(--trainer-dark-bg)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #app,.trainer-shell,.trainer-home-page,.trainer-clients-page,
+  .trainer-programs-page,.trainer-nutrition-page,.trainer-more-page,
+  .trainer-client-page,.trainer-progress-page,.trainer-library-page
+){
+  background:var(--trainer-dark-bg)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-shell :is(
+  h1,h2,h3,h4
+){color:var(--trainer-dark-text)!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-page-sub,.trainer-empty,.trainer-row-time,
+  .trainer-client-identity p,.trainer-client-copy em,
+  .trainer-assigned-copy small,.trainer-nutrition-copy small,
+  .trainer-more-copy small,.trainer-checkin-empty span,
+  .trainer-library-result-line,.trainer-program-empty p,
+  .trainer-measure-empty,.trainer-progress-empty,.muted
+){color:var(--trainer-dark-muted)!important}
+
+/* Foundation — cards and headers share client-dark graphite surfaces. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .card,.trainer-home-stats>button,
+  .trainer-activity-card,.trainer-client-row,.trainer-activity-row,
+  .trainer-client-kpis>div,.trainer-smart-summary,
+  .trainer-assigned-list,.trainer-assigned-row,.trainer-nutrition-list,.trainer-nutrition-row,
+  .trainer-program-empty,.trainer-template-card,.trainer-template-toolbar,
+  .trainer-template-editor-item,.trainer-template-editor-day,
+  .trainer-more-list,.trainer-more-item,
+  .trainer-nutrition-summary>div,.trainer-nutrition-target-card,
+  .trainer-nutrition-current,.trainer-nutrition-calc-card,
+  .trainer-saved-plan,.trainer-saved-legacy,.trainer-assigned-meal,
+  .trainer-food-review-panel,.trainer-food-review-row,
+  .trainer-library-summary>div,.trainer-library-group,.trainer-library-exercise,
+  .trainer-library-admin,.trainer-library-admin-section,
+  .trainer-checkin-card,.trainer-checkin-empty,.trainer-checkin-history-item,
+  .trainer-review-card,.trainer-review-queue,
+  .trainer-program-editor,.trainer-exercise-card,
+  .trainer-overview-card,.trainer-profile-card,.trainer-private-note,
+  .trainer-workout-calendar-card,.trainer-workout-calendar-details,
+  .trainer-workout-calendar-session,.trainer-volume-panel,
+  .trainer-progress-hero,.trainer-progress-section,.trainer-progress-pr-card,
+  .trainer-measurements-page .measurement-place-card,
+  .trainer-measurements-page .measurement-history-card,
+  .trainer-public-profile-editor .trainer-profile-collapsed,
+  .trainer-public-profile-editor .trainer-profile-editor-preview,
+  .trainer-public-profile-editor .trainer-profile-editor-form,
+  .trainer-coach-request,.trainer-client-actions-pop
+){
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .card :is(h1,h2,h3,h4,strong),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-activity-row,.trainer-client-row,.trainer-nutrition-row,
+  .trainer-assigned-row,.trainer-more-item,.trainer-template-card,
+  .trainer-program-editor,.trainer-checkin-card,.trainer-review-card,
+  .trainer-workout-calendar-card,.trainer-progress-hero,
+  .trainer-library-exercise,.trainer-profile-card
+) :is(strong,b,h2,h3){
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-activity-row,.trainer-client-row,.trainer-nutrition-row,
+  .trainer-assigned-row,.trainer-more-item,.trainer-review-card,
+  .trainer-library-exercise
+){border-bottom-color:var(--trainer-dark-border)!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-client-row,.trainer-assigned-row,.trainer-nutrition-row,
+  .trainer-more-item,.trainer-template-card,.trainer-library-exercise
+):active{
+  background:#202f3e!important;
+}
+
+/* Primary client-count hero is intentionally blue, not a plain dark card. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card{
+  background:linear-gradient(135deg,#0c3865 0%,#0c4e8a 62%,#1466b3 100%)!important;
+  border:1px solid #275c8c!important;
+  color:#f5f9ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card :is(strong,small){
+  color:#f5f9ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-top{
+  background:transparent!important;color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-top :is(strong,span){
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-top span{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-top .notify-btn{
+  background:var(--trainer-dark-raised)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+}
+
+/* Floating nav, search and tabs. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav{
+  background:rgba(21,30,39,.93)!important;
+  border:1px solid #3a4c60!important;
+  box-shadow:0 8px 30px #0006!important;
+  backdrop-filter:blur(20px) saturate(1.1)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(1.1)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button{
+  background:transparent!important;
+  color:#a2b2c5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active{
+  background:#254465!important;
+  color:#81b7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-search,.trainer-segmented,.trainer-client-tabs,
+  .trainer-program-tabs,.trainer-progress-periods,.trainer-volume-tabs,
+  .trainer-ration-tabs,.trainer-saved-ration-tabs,
+  .trainer-filter-chips button,.trainer-template-editor-top
+){
+  background:var(--trainer-dark-raised)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-muted)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-search input{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-filter-chips button,.trainer-client-tabs button,
+  .trainer-program-tabs button,.trainer-segmented button,
+  .trainer-progress-periods button,.trainer-volume-tabs button,
+  .trainer-ration-tabs button,.trainer-saved-ration-tabs button
+):not(.active){
+  background:transparent!important;color:var(--trainer-dark-muted)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-filter-chips button,.trainer-client-tabs button,
+  .trainer-program-tabs button,.trainer-segmented button,
+  .trainer-progress-periods button,.trainer-volume-tabs button,
+  .trainer-ration-tabs button,.trainer-saved-ration-tabs button
+).active{
+  background:#31567f!important;
+  color:#f3f8ff!important;
+  border-color:#436c98!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-round-add,.trainer-page-title button,.trainer-client-navline button,
+  .trainer-more-icon,.trainer-program-empty-icon,.trainer-template-icon,
+  .trainer-library-add,.trainer-library-video
+){
+  background:#253d55!important;
+  color:#a6d0ff!important;
+  border-color:#3b5671!important;
+  box-shadow:none!important;
+}
+
+/* Text inputs: protect readable text, placeholder and iOS controls. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,select
+){
+  background:#1e2d3c!important;
+  border-color:#40576d!important;
+  color:#f0f6fd!important;
+  box-shadow:none!important;
+  -webkit-text-fill-color:#f0f6fd;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(input,textarea)::placeholder{
+  color:#9bacbf!important;
+  -webkit-text-fill-color:#9bacbf!important;
+  opacity:1;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(input,textarea,select):focus-visible{
+  outline:2px solid #7caef2!important;
+  outline-offset:2px;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] input[type="checkbox"]{
+  accent-color:#377fcf;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .card :is(
+  input:not([type="checkbox"]):not([type="radio"]),textarea,select
+){
+  background:#1e2d3c!important;
+  border-color:#40576d!important;
+  color:#f0f6fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-library-filters select,.trainer-private-note textarea,
+  .trainer-program-editor input,.trainer-program-editor select,
+  .trainer-nutrition-target-fields input
+){
+  background:#1e2d3c!important;
+  color:#f0f6fd!important;
+  border-color:#40576d!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .card button.dark,.trainer-client-action.neutral,
+  .trainer-template-actions button.dark,.trainer-checkin-history-toggle,
+  .trainer-library-group-toggle,.trainer-library-admin-toggle
+){
+  background:#263b50!important;
+  color:#dceafa!important;
+  border:1px solid #435a70!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-create,.trainer-public-profile-save,
+  .trainer-new-client-submit,.trainer-program-add
+){
+  background:#2d75c1!important;
+  color:#fff!important;
+  border-color:#3f87d3!important;
+  box-shadow:none!important;
+}
+
+/* Explicit warning/status colors retain their meaning. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.ok,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.training,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-checkin-reviewed{
+  background:#244536!important;color:#94deb2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.new{
+  background:#243d59!important;color:#a1caff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.attention{
+  background:#483526!important;color:#f0bc83!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.risk{
+  background:#4a2933!important;color:#ffa7b2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.paused{
+  background:#293544!important;color:#a6b5c5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-summary.attention{
+  background:#302920!important;border-color:#655039!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-summary.risk{
+  background:#33242d!important;border-color:#6d4251!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-summary.ok{
+  background:#1d302a!important;border-color:#3b624e!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-summary span{
+  color:#b5c5d6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-status.neutral{
+  background:#293849!important;color:#b4c5d7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-status.ok{
+  background:#244536!important;color:#95e0b3!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-status.warn{
+  background:#463722!important;color:#f3bf79!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-status.attention{
+  background:#492b2e!important;color:#f9a5aa!important;
+}
+
+/* Coach reviews, reports, program editor and library panels. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-checkin-grid span,.trainer-review-detail,.trainer-review-exercise,
+  .trainer-review-sets>*,.trainer-review-aux,.trainer-review-comment,
+  .trainer-program-editor-grid,.trainer-program-alternative-card,
+  .trainer-program-alternative-row,.trainer-template-alternative-row,
+  .trainer-template-editor-grid,.trainer-template-editor-items,
+  .trainer-template-editor-meta,.trainer-template-editor-day-head,
+  .trainer-library-admin-body,.trainer-library-add-actions,
+  .trainer-nutrition-target-summary,.trainer-nutrition-calc-head,
+  .trainer-saved-ration-page,.trainer-meal-recipe,.trainer-assigned-dish,
+  .trainer-assigned-ingredients,.trainer-assigned-preparation,
+  .trainer-food-review-extra,.trainer-food-review-inputs,
+  .trainer-progress-summary,.trainer-progress-activity-stats,
+  .trainer-progress-pr-grid,.trainer-progress-compare-list,
+  .trainer-progress-activity-list,.trainer-workout-calendar-grid,
+  .trainer-workout-calendar-exercises,.trainer-workout-calendar-comment
+){
+  background:#1b2937!important;
+  border-color:#364b60!important;
+  color:#e6f0fc!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-checkin-grid b{
+  color:#edf5fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-checkin-card p{
+  color:#c1cfdd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-review-queue-head,.trainer-review-exercise-head,
+  .trainer-checkin-history-head,.trainer-checkin-history-toggle,
+  .trainer-program-editor-head,.trainer-template-editor-day-head,
+  .trainer-library-group-toggle,.trainer-library-admin-toggle,
+  .trainer-workout-calendar-title,.trainer-workout-calendar-nav
+){
+  border-color:#3a5067!important;
+  color:#edf5fd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-review-set-current,.trainer-review-set-previous,
+  .trainer-review-set-block,.trainer-volume-kpis>div,.trainer-volume-muscle-row,
+  .trainer-progress-pr-card,.trainer-workout-calendar-cell
+){
+  background:#223244!important;
+  border-color:#41566c!important;
+  color:#dceaf8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-workout-calendar-cell.active{
+  border-color:#6caeff!important;
+  background:#2a5279!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-review-exercise,.trainer-review-set-block,
+  .trainer-volume-panel,.trainer-progress-section
+) :is(strong,b){
+  color:#f2f7fd!important;
+}
+
+/* Modals — scope to the trainer role and preserve touch sizing. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-new-client-card,.trainer-avatar-crop-modal .card,
+  .trainer-nutrition-calc-card,.trainer-client-actions-pop,
+  .trainer-superset-modal,.trainer-template-editor-modal,
+  .trainer-program-template-modal,
+  .trainer-food-review-panel,.modal>.card,
+  .modal-content
+){
+  background:#17232f!important;
+  color:#f0f6fd!important;
+  border-color:#41566c!important;
+  box-shadow:0 18px 46px #0006!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-new-client-head,.trainer-new-client-section,
+  .trainer-avatar-crop-head,.trainer-avatar-crop-stage,
+  .trainer-nutrition-calc-head
+){border-color:#3d5268!important;color:#f0f6fd!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-action.danger,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-logout{
+  background:#38272e!important;
+  color:#ffabb6!important;
+  border-color:#684452!important;
+  box-shadow:none!important;
+}
+
+/* Trainer theme settings reuse the same tri-state preference as the client. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .redesign-settings-panel{
+  background:#151e27!important;
+  color:#f1f5fa!important;
+  border:1px solid #344557!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .redesign-settings-panel>strong{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .eplan-theme-option{
+  background:#233548!important;
+  border:1px solid #435a71!important;
+  color:#c7d6e7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .eplan-theme-option[aria-checked="true"]{
+  background:#315a86!important;
+  border-color:#79b7ff!important;
+  color:#f5f9ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .eplan-theme-note{
+  color:#aebed0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-theme-back{
+  width:44px;height:44px;min-width:44px;
+  display:grid;place-items:center;
+  padding:0!important;border-radius:13px;
+}
