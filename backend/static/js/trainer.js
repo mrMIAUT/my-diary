@@ -36,7 +36,6 @@ function trainerAttention(c){
  let review=+c.needs_review_count||0,check=+c.checkin_pending_count||0;
  let comp=trainerCompliance(c),sinceLast=trainerDaysSince(c.last_finished_at);
  let sinceFirst=trainerDaysSince(c.first_standard_finished_at);
- let sinceCreated=trainerDaysSince(c.created_at);
  let hasProgram=(+c.program_days_count||0)>0;
 
  // A new client can finish their first training today without an invented 28-day deficit.
@@ -51,8 +50,7 @@ function trainerAttention(c){
  if(check)return {level:'attention',label:'Потребує уваги',reason:'Щотижневих звітів до перегляду: '+check};
 
  if(sinceFirst===null){
-   if(hasProgram&&sinceCreated!==null&&sinceCreated>=14)
-     return {level:'attention',label:'Потребує уваги',reason:'Ще немає першого тренування (14+ днів)'};
+   // Signup age cannot reveal when the program was assigned: no implied missed sessions.
    return {level:'new',label:'На старті',reason:hasProgram?'Очікує першого тренування':'Очікує програми'};
  }
  if(sinceFirst<14)
