@@ -901,9 +901,24 @@ function showTrainerMore(){
        <span class="trainer-more-copy"><strong>Бібліотека вправ</strong><small>Вправи, м’язи та техніка</small></span>
        <span class="trainer-more-chevron">›</span>
      </button>
+     <button class="trainer-more-item" onclick="showTrainerThemeSettings()">
+       <span class="trainer-more-icon">${uiIcon('settings')}</span>
+       <span class="trainer-more-copy"><strong>Тема оформлення</strong><small>Світла, темна або як на пристрої</small></span>
+       <span class="trainer-more-chevron">›</span>
+     </button>
    </div>
    <button class="trainer-more-logout" onclick="logout()">${uiIcon('logout')}<span>Вийти з акаунта</span></button>
  </div>`);
+}
+
+
+
+function showTrainerThemeSettings(){
+ currentTrainerMainView='more';selected=null;window.currentClientData=null;
+ app.innerHTML=shell('<div class="trainer-more-page modern trainer-theme-settings">'
+  +'<div class="trainer-page-title trainer-more-title"><div><h1>Тема оформлення</h1><p class="trainer-page-sub">Обери вигляд робочого кабінету тренера.</p></div><button class="trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">‹</button></div>'
+  +window.eplanThemeOptionsHTML()
+  +'</div>');
 }
 
 
