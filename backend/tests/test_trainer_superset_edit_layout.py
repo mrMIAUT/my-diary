@@ -90,7 +90,7 @@ class TrainerSupersetRegression(unittest.TestCase):
     def test_mobile_css_cache_updated_on_both_shells(self):
         for source in (INDEX,SW):
             self.assertIn("/static/css/redesign.css?v=263",source)
-        self.assertIn("const VERSION='eplan-v224'",SW)
+        self.assertIn("const VERSION='eplan-v226'",SW)
 
 
 if __name__=="__main__":
