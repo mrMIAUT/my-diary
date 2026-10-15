@@ -65,6 +65,8 @@ jobs:
         run: node backend/tests/trainer_dark_contrast_browser.mjs
       - name: Trainer mobile dark theme headings and modal
         run: node backend/tests/trainer_dark_mobile_polish_browser.mjs
+      - name: Trainer dark exercise modal and measurement colors
+        run: node backend/tests/trainer_dark_measurements_modal_browser.mjs
 
   food-api-smoke:
     runs-on: ubuntu-latest
