@@ -20,6 +20,6 @@
  };
  if(media.addEventListener)media.addEventListener('change',apply);else if(media.addListener)media.addListener(apply);
  document.addEventListener('DOMContentLoaded',apply);
- new MutationObserver(()=>{if(document.body.classList.contains('client-ui'))apply()}).observe(document.body,{attributes:true,attributeFilter:['class']});
+ new MutationObserver(()=>{if(document.body.classList.contains('client-ui')||document.body.classList.contains('trainer-ui'))apply()}).observe(document.body,{attributes:true,attributeFilter:['class']});
  apply();
 })();
