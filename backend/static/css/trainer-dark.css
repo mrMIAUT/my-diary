@@ -1459,3 +1459,247 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-actions-
   color:#f2abb8!important;
   border-color:#65414d!important;
 }
+
+/* v6 — trainer iPhone QA: remove stray editor panels and light-only controls.
+   All declarations are role/dark scoped. Client/light presentation unchanged. */
+
+/* Exercise creation: the wrapper between День/Назва/Вправа/Техніка is
+   structural only; don't paint opaque rectangular bands behind its children. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-editor-grid{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-editor-grid>label{
+  min-width:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-exercise-field,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal .trainer-program-exercise-field{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  min-width:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-exercise-field>input,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-editor-grid>label>input{
+  background:var(--trainer-dark-raised)!important;
+  border-color:#454a55!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-editor .trainer-program-exercise-field>button{
+  background:#293d58!important;
+  color:#c1d8fa!important;
+  border-color:#45658c!important;
+}
+
+/* Trainer edit exercise sheet: the old redesign rules force white
+   modal panels and low-contrast white inputs in otherwise dark mode. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal{
+  background:rgba(4,7,12,.76)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal>.edit-exercise-card{
+  background:var(--trainer-dark-surface)!important;
+  border-color:#41454f!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:0 22px 56px rgba(0,0,0,.55)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal .edit-exercise-head h2{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal .edit-exercise-close{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#dce6f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal :is(input:not([type="checkbox"]),select,textarea){
+  background:var(--trainer-dark-raised)!important;
+  border-color:#484e58!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal input::placeholder,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-editor input::placeholder{
+  color:#a9b1be!important;
+  -webkit-text-fill-color:#a9b1be!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal label,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal label>span{
+  color:#b7bfce!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal .trainer-program-exercise-field>button{
+  background:#293d58!important;
+  border-color:#45658c!important;
+  color:#c1d8fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #editExerciseModal .trainer-edit-exercise-primary{
+  background:#3478f6!important;
+  border-color:#4787fa!important;
+  color:#fff!important;
+}
+
+/* Body measurements: labels and values must never inherit navy-on-navy.
+   Source sprites are the same as the client; apply its existing dark artwork
+   technique to trainer only, leaving anatomical highlights intact. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page :is(
+  .measurement-weight-visual,.measurement-place-card,.measurement-compare-card,
+  .measurement-history-calendar-card,.measurement-history-card.redesigned-history
+){
+  background:var(--trainer-dark-surface)!important;
+  color:var(--trainer-dark-text)!important;
+  border-color:var(--trainer-dark-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-weight-visual{
+  background:#202a35!important;
+  border-color:#3f536a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-place-top>span:not(.measurement-generated-art),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-place-card>strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-weight-visual strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page :is(.measurement-visual-overview,.measurement-compare-card) h2{
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page :is(
+  .measurement-place-card,.measurement-weight-visual,.measurement-visual-overview
+) :is(em,small),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-section-title p{
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-side-values>span{
+  background:#2a2e37!important;
+  border-color:#454d59!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-side-values :is(b,strong){
+  color:#f1f4f8!important;
+  -webkit-text-fill-color:#f1f4f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-side-values small{
+  color:#adb9ca!important;
+}
+/* No new image assets or redraw. Use the previously vetted reversible client
+   dark filter only on measurement art, not on the accompanying value text. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-place-top{
+  position:relative;
+  isolation:isolate;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-place-top::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  top:0!important;
+  left:calc((var(--measurement-art-slot) - var(--measurement-art-width)) / 2)!important;
+  width:var(--measurement-art-width)!important;
+  height:var(--measurement-art-height)!important;
+  box-sizing:border-box;
+  border-radius:14px;
+  border:1px solid #424b57;
+  background:#252c36;
+  pointer-events:none;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-place-top>.measurement-generated-art{
+  position:relative;
+  z-index:1;
+  background-color:#fff!important;
+  box-shadow:none!important;
+  filter:invert(1) hue-rotate(180deg) brightness(1.9) saturate(1.25);
+  mix-blend-mode:screen;
+}
+
+/* History: fix the bright white collapsed header and white calendar days. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-calendar-card{
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-calendar-toggle{
+  background:var(--trainer-dark-surface)!important;
+  color:var(--trainer-dark-text)!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-calendar-toggle strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-calendar-toggle :is(small,b){
+  color:var(--trainer-dark-muted)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-calendar-body{
+  background:var(--trainer-dark-surface)!important;
+  border-top-color:var(--trainer-dark-border)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-head>strong{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-head>button{
+  background:#303846!important;
+  color:#c6d8ef!important;
+  border-color:#485363!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-weekdays span{
+  color:#a8b4c3!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-day:not(.empty){
+  background:var(--trainer-dark-raised)!important;
+  color:#c7ced9!important;
+  border-color:#3c434d!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-day.has-data{
+  background:#293d58!important;
+  color:#b8d4ff!important;
+  border-color:#4c6d99!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-day.active{
+  background:#3478f6!important;
+  color:#fff!important;
+  border-color:#6da2ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-day.has-data::after{
+  background:#8dbbff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-day.active::after{
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-hint,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-empty{
+  background:#282d35!important;
+  color:#b9c7d8!important;
+  border-color:#454e5b!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-calendar-selected{
+  border-top-color:#404650!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page .measurement-history-head{
+  border-bottom-color:#424a54!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page :is(
+  .measurement-history-head strong,.measurement-history-metric>strong,
+  .measurement-history-pair-sides b,.measurement-history-section h4
+){
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measurements-page :is(
+  .measurement-history-caption,.measurement-history-pair-sides small,
+  .measurement-history-metric>span
+){
+  color:var(--trainer-dark-muted)!important;
+}
+/* Compact status counters, including the white check-in count circle. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-checkin-history-head>span{
+  background:#2a3e58!important;
+  border:1px solid #456084!important;
+  color:#b9d7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-measure-count{
+  background:#293d58!important;
+  color:#bfd7ff!important;
+  border-color:#486b91!important;
+}
