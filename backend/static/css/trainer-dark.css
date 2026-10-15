@@ -399,3 +399,134 @@ body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-theme-back{
   display:grid;place-items:center;
   padding:0!important;border-radius:13px;
 }
+
+
+/* Second-pass coverage: deep trainer workflows and formerly white subcards.
+   Kept separate from the first layer to make QA corrections localized. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-client-list,.trainer-template-list,.trainer-template-editor-card,
+  .trainer-template-editor-exercise,.trainer-template-editor-item-head,
+  .trainer-template-alternatives,.trainer-template-alternatives-empty,
+  .trainer-program-picker-card,.trainer-program-picker-search,
+  .trainer-program-alternatives-block,.trainer-program-alternative-params,
+  .trainer-day-title-card,.trainer-day-title-field,.trainer-inline-superset-fields,
+  .trainer-inline-superset-grid,.trainer-inline-superset-head,
+  .trainer-program-exercise-field,.trainer-program-superset-field,
+  .trainer-extra-day-modal-card,.trainer-extra-day-form,.trainer-extra-day-empty,
+  .trainer-extra-manager-empty,.trainer-extra-manager-item,
+  .trainer-nutrition-edit,.trainer-ration-accuracy,.trainer-auto-fit,
+  .trainer-assigned-day-total,.trainer-measure-count,.trainer-exercise-shell,
+  .trainer-exercise-body,.trainer-exercise-head,.trainer-superset-head,
+  .trainer-checkin-history-detail,.trainer-checkin-history-empty,
+  .trainer-review-client-comment,.trainer-review-drop-list,
+  .trainer-review-empty-detail,.trainer-review-complete-card,
+  .trainer-workout-calendar-empty,.trainer-calendar-day-volume,
+  .trainer-library-group-footer,.trainer-library-input-stack,
+  .trainer-library-admin-form,.trainer-profile-editor-stats,
+  .trainer-profile-collapsed-stats,.trainer-profile-collapsed-tags,
+  .trainer-superset-round-note,
+  .meal-plan-card,.meal-plan-head,.meal-plan-body,.meal-view,.meal-option,
+  .nutrition-menu-meal-v2,.nutrition-menu-total-v6,.nutrition-diary-meal,
+  .measurement-place-card,.measurement-history-card,.measurement-weight-visual,
+  .measurement-metric,.exercise-card,.program-exercise-card
+){
+  background:#192633!important;
+  color:#edf4fc!important;
+  border-color:#394e64!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-program-picker-modes,.trainer-program-picker-muscles,
+  .trainer-program-picker-scope,.trainer-program-picker-groups,
+  .trainer-program-picker-fav,.trainer-template-editor-actions,
+  .trainer-review-actions,.trainer-nutrition-target-actions,
+  .trainer-workout-calendar-nav,.trainer-checkin-history-more,
+  .trainer-template-editor-add-day,.trainer-template-editor-add-exercise,
+  .trainer-program-alternative-add,.trainer-template-alternative-add,
+  .trainer-library-add-toggle,.trainer-library-filter-chip,
+  .trainer-library-toggle-meta,.trainer-extra-manager-actions,
+  .trainer-extra-day-badges,.trainer-saved-plan-actions,
+  .trainer-superset-inline-move,.trainer-superset-move
+){
+  background:#243749!important;
+  border-color:#425a72!important;
+  color:#dceaf8!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-editor-exercise,.trainer-review-client-comment,
+  .trainer-program-alternative-params,.trainer-library-admin-form,
+  .trainer-checkin-history-detail,.trainer-assigned-day-total,
+  .trainer-progress-summary,.trainer-profile-collapsed-stats
+) :is(strong,b,h2,h3,small,p,label){
+  color:#dfe9f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-alternative-remove,.trainer-program-alternative-remove,
+  .trainer-library-danger-btn,.trainer-extra-action.danger
+){
+  background:#382730!important;
+  border-color:#784453!important;
+  color:#ffabb5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-library-primary-btn,.trainer-program-picker-pick,
+  .trainer-program-alternative-pick,.trainer-template-alternative-pick,
+  .trainer-nutrition-calc-apply,.trainer-extra-day-create,
+  .trainer-extra-manager-create
+){
+  background:#2d5c8b!important;
+  border-color:#477bad!important;
+  color:#e9f4ff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-client-actions-head,.trainer-workout-calendar-review-link,
+  .trainer-review-complete-next,.trainer-review-complete-secondary,
+  .trainer-review-complete-close,.trainer-nutrition-calc-close,
+  .trainer-new-client-close,.trainer-profile-collapse-btn,
+  .trainer-profile-edit-toggle,.trainer-program-picker-close
+){
+  background:#263b4d!important;
+  border-color:#456178!important;
+  color:#e7f2fc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-meta-chip,.trainer-status-pill,.trainer-checkin-history-status,
+  .trainer-assigned-meta,.trainer-workout-calendar-status,
+  .trainer-profile-collapsed-status,.trainer-review-badge,
+  .trainer-review-skipped-badge,.trainer-review-set-deltas,
+  .trainer-calendar-duration,.trainer-history-duration
+){
+  background:#293c4f!important;
+  border-color:#425a73!important;
+  color:#c3dcf7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-coach-request-status.accepted,.trainer-assigned-meta.active,
+  .trainer-profile-collapsed-status.open
+){background:#264637!important;color:#9ee5b9!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-coach-request-status.pending,.trainer-nutrition-status.warn
+){background:#483923!important;color:#f4c388!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-coach-request-status.declined,.trainer-review-skipped-badge
+){background:#493038!important;color:#f4adb7!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card :is(.trainer-client-avatar,.trainer-client-avatar.more){
+  border-color:#dfeafa!important;
+}
+/* Trainer assets and accent colors must not be inverted or recolored.
+   Avatar palette is owned by trainer-avatars.css. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-avatar-stack .trainer-client-avatar.more{
+  background:#dce7f5!important;
+  color:#52627a!important;
+}
+/* This is also a theme selector when opened in light mode. */
+body.eplan-redesign.trainer-ui .trainer-theme-settings .eplan-theme-options{
+  display:grid;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-theme-settings .trainer-theme-back{
+  background:#243b52!important;
+  border:1px solid #3d5874!important;
+  color:#badaff!important;
+}
