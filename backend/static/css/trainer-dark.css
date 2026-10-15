@@ -2020,3 +2020,236 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nu
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .meal-editor :is(
   .meal-variant .muted,.trainer-meal-recipe p,.structured-food-macro
 ){color:#aebacc!important}
+
+/* v8 — neutralize accidental inherited container paints and complete dark
+   calculator/product picker. Trainer + dark only, no workout/nutrition logic. */
+
+/* Structural fields should never form colored rectangles behind the real input. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #dayTitleModal .trainer-day-title-card .trainer-day-title-field{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #dayTitleModal .trainer-day-title-card .trainer-day-title-field>span{
+  background:transparent!important;
+  color:#b3bdcb!important;
+}
+
+/* Exercise headings: display full titles but no block behind the arrow set
+   or stray separator when the technique link wraps under a long name. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-head :is(
+  .trainer-program-title-line,.trainer-program-name-marquee,
+  .trainer-program-name-track,.trainer-exercise-head-actions,
+  .trainer-superset-inline-move
+){
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-head .trainer-program-title-line>.alternative-tech-link{
+  margin:2px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  text-decoration:underline!important;
+  text-underline-offset:2px!important;
+  color:#8ebcff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-head .trainer-program-title-line>.alternative-tech-link::before{
+  display:none!important;
+  content:none!important;
+  border:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-exercise-head-actions button{
+  background:#303846!important;
+  border-color:#485363!important;
+}
+
+/* Assigned meal plan: wrappers and headings are not separate tiles. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition :is(
+  .trainer-saved-ration-page,.nutrition-menu-v2-layout,
+  .nutrition-menu-v2-copy,.nutrition-menu-v2-kicker,
+  .trainer-assigned-ingredients,.trainer-assigned-preparation,
+  .nutrition-menu-day-intro
+){
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-meal-v2 .trainer-assigned-dish{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#f1f4f8!important;
+  -webkit-text-fill-color:#f1f4f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-v2-kicker .trainer-assigned-meal-label{
+  background:transparent!important;
+  color:#b4c3d5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-menu-v2-kicker .nutrition-menu-number{
+  background:#293d58!important;
+  color:#a5cbff!important;
+}
+
+/* Nutrition goal edit footer was receiving a navy full-width paint. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-actions{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-actions button:not(.dark){
+  background:#3478f6!important;
+  border-color:#4787fa!important;
+  color:#fff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-actions button.dark{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#d7e7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .nutrition-calc-button.trainer-nutrition-calc-launch{
+  background:#293d58!important;
+  border:1px solid #4b6b95!important;
+  color:#c3dcff!important;
+  box-shadow:none!important;
+}
+
+/* Calculator uses a separate body-level modal, not the trainer client page.
+   Legacy refinements styles had forced white surfaces and white selects. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal{
+  background:rgba(5,8,13,.79)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-card{
+  background:var(--trainer-dark-surface)!important;
+  border-color:#424954!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:0 22px 64px rgba(0,0,0,.56)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-head{
+  background:var(--trainer-dark-surface)!important;
+  border-bottom-color:#424954!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-head h2{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-head p{
+  color:#afbdcc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-close{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#dce6f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid{
+  background:transparent!important;
+  border:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid label{
+  color:#b7c4d4!important;
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid label small{
+  color:#a9b6c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid :is(input,select){
+  background-color:var(--trainer-dark-raised)!important;
+  border-color:#48525f!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text)!important;
+  color-scheme:dark;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid input::placeholder{
+  color:#9eafc3!important;
+  -webkit-text-fill-color:#9eafc3!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid select:invalid{
+  color:#9eafc3!important;
+  -webkit-text-fill-color:#9eafc3!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid select option{
+  background:#282b31!important;
+  color:#f3f4f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-grid input:disabled{
+  background:#23262d!important;
+  color:#aeb4bf!important;
+  -webkit-text-fill-color:#aeb4bf!important;
+  opacity:.7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-result{
+  background:#242b34!important;
+  border-color:#465363!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-kcal{
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .nutrition-calc-macros span{
+  background:#303640!important;
+  border-color:#4b5564!important;
+  color:#e8f0fc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-apply{
+  background:#293d58!important;
+  color:#c3dcff!important;
+  border-color:#4b6b95!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerNutritionCalcModal .trainer-nutrition-calc-submit{
+  background:#3478f6!important;
+  color:#fff!important;
+  border-color:#4787fa!important;
+}
+
+/* Food selector is also mounted directly under body. The old white picker
+   rendered inherited light/white text against a white background. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker{
+  background:rgba(5,8,13,.78)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker .structured-picker{
+  background:var(--trainer-dark-surface)!important;
+  border-color:#424954!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:0 22px 64px rgba(0,0,0,.5)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker .structured-picker-head,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker .structured-picker-head strong{
+  background:transparent!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker .structured-picker-head button{
+  background:#303846!important;
+  border-color:#485363!important;
+  color:#dce6f6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodSearch{
+  background:#282b31!important;
+  border-color:#4c5562!important;
+  color:#f3f4f6!important;
+  -webkit-text-fill-color:#f3f4f6!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodSearch::placeholder{
+  color:#a8b6c9!important;
+  -webkit-text-fill-color:#a8b6c9!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodMatches{
+  background:transparent!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodMatches button{
+  background:#282b31!important;
+  border-color:#444c58!important;
+  color:#f0f3f7!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodMatches button strong{
+  color:#f0f3f7!important;
+  -webkit-text-fill-color:#f0f3f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #structuredFoodPicker #structuredFoodMatches button small{
+  color:#abb9cc!important;
+}
