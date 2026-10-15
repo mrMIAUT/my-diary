@@ -29,6 +29,17 @@ assert.ok(style.includes('.trainer-smart-status.risk'));
 assert.ok(style.includes('v2 — iPhone QA'));
 assert.ok(style.includes('v3 — shared graphite system'));
 assert.ok(style.includes('v4 — trainer dark contrast repairs from iPhone QA'));
+assert.ok(style.includes('v5 — iPhone trainer dark-theme follow-up'));
+for(const selector of [
+  '.trainer-extra-manager-empty>span',
+  '.trainer-superset-head>span:first-child',
+  '.trainer-program-name-marquee',
+  '.trainer-program-name-track>strong[aria-hidden="true"]',
+  '.trainer-client-actions-pop .trainer-client-actions-head>button'
+]){
+  assert.ok(style.includes(selector),'Missing dark-mode mobile polish: '+selector);
+}
+
 for(const selector of [
   '.trainer-home-stats .trainer-stat-icon.orange',
   '.trainer-home-page .trainer-activity-card',
@@ -57,7 +68,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=4'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=5'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
