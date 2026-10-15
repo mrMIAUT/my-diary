@@ -32,6 +32,16 @@ assert.ok(style.includes('v4 — trainer dark contrast repairs from iPhone QA'))
 assert.ok(style.includes('v5 — iPhone trainer dark-theme follow-up'));
 assert.ok(style.includes('v6 — trainer iPhone QA'));
 assert.ok(style.includes('v7 — trainer graphite polish'));
+assert.ok(style.includes('v8 — neutralize accidental inherited container paints'));
+for(const selector of [
+  '#dayTitleModal .trainer-day-title-card .trainer-day-title-field',
+  '.trainer-client-page .trainer-exercise-head :is(',
+  '.trainer-client-page #nutrition .trainer-nutrition-target-actions',
+  '#trainerNutritionCalcModal .trainer-nutrition-calc-card',
+  '#structuredFoodPicker .structured-picker',
+  '#structuredFoodPicker #structuredFoodMatches button'
+])assert.ok(style.includes(selector),'Missing graphite v8: '+selector);
+
 for(const selector of [
   '#dayTitleModal>.trainer-day-title-card',
   '.trainer-extra-day-modal-card .trainer-extra-day-note',
@@ -90,7 +100,7 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=7'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=8'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
