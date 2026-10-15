@@ -129,9 +129,11 @@ try{
   }
   // Evaluate the actual generated SVG source, not just its background box.
   const core=fs.readFileSync(path.join(root,'js/core.js'),'utf8');
-  const m=core.match(/function uiIcon\(name\)\{const p=\{[\s\S]*?\};return \x60<svg[\s\S]*?\}/);
-  assert.ok(m,'uiIcon source not found');
-  const sandbox={};vm.createContext(sandbox);vm.runInContext(m[0],sandbox);
+  const start=core.indexOf('function uiIcon(name){');
+  const end=core.indexOf('\\n\\nfunction clientInitials',start);
+  assert.ok(start>=0&&end>start,'uiIcon function source not found');
+  const sandbox={};vm.createContext(sandbox);
+  vm.runInContext(core.slice(start,end),sandbox);
   const svg=vm.runInContext("uiIcon('settings')",sandbox);
   assert.ok(svg.includes('<circle')&&svg.includes('<path'),'Theme settings SVG must contain visible strokes');
   console.log('PASS: trainer dark v9 cards, notifications, profiles, access, menu icon and light isolation at 320/390px');
