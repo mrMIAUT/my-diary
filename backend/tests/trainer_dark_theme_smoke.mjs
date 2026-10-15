@@ -44,7 +44,7 @@ const core=read('js/core.js');
 const library=read('js/library.js');
 new vm.Script(core);
 new vm.Script(library);
-assert.ok(core.includes("chevron-left:'<path"));
+assert.ok(core.includes("'chevron-left':'<path"));
 assert.ok(trainer.includes("uiIcon('chevron-left')"));
 assert.ok(library.includes("uiIcon('chevron-left')"));
 
