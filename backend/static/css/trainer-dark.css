@@ -833,3 +833,196 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .nutrition-menu-round-pr
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-plan-actions button{
  background:#263b51!important;color:#d7e9fc!important;border:1px solid #45617c!important;
 }
+
+/* v3 — shared graphite system for trainer screens.
+   Keep this block after v2: legacy dark overrides deliberately use !important.
+   No changes to client styles, trainer layout, avatar tones, or semantic statuses. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+  --trainer-dark-bg:#101114;
+  --trainer-dark-surface:#1c1e23;
+  --trainer-dark-raised:#282b31;
+  --trainer-dark-muted:#aeb4bf;
+  --trainer-dark-border:#353840;
+  --trainer-dark-text:#f3f4f6;
+  --trainer-dark-accent:#78aaff;
+  --bg:var(--trainer-dark-bg);
+  --card:var(--trainer-dark-surface);
+  --card2:var(--trainer-dark-raised);
+  --line:var(--trainer-dark-border);
+  --text:var(--trainer-dark-text);
+  --muted:var(--trainer-dark-muted);
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .card,.trainer-home-stats>button,.trainer-activity-card,.trainer-client-row,
+  .trainer-activity-row,.trainer-client-kpis>div,.trainer-smart-summary,
+  .trainer-assigned-row,.trainer-nutrition-row,.trainer-program-empty,
+  .trainer-template-card,.trainer-template-editor-item,.trainer-template-editor-day,
+  .trainer-more-item,.trainer-nutrition-summary>div,.trainer-nutrition-target-card,
+  .trainer-nutrition-current,.trainer-nutrition-calc-card,.trainer-saved-plan,
+  .trainer-saved-legacy,.trainer-assigned-meal,.trainer-food-review-panel,
+  .trainer-food-review-row,.trainer-library-summary>div,.trainer-library-group,
+  .trainer-library-exercise,.trainer-library-admin,.trainer-library-admin-section,
+  .trainer-checkin-card,.trainer-checkin-empty,.trainer-checkin-history-item,
+  .trainer-review-card,.trainer-review-queue,.trainer-program-editor,
+  .trainer-exercise-card,.trainer-overview-card,.trainer-profile-card,
+  .trainer-private-note,.trainer-workout-calendar-card,
+  .trainer-workout-calendar-details,.trainer-workout-calendar-session,
+  .trainer-volume-panel,.trainer-progress-hero,.trainer-progress-section,
+  .trainer-progress-pr-card,.trainer-measurements-page .measurement-place-card,
+  .trainer-measurements-page .measurement-history-card,
+  .trainer-public-profile-editor .trainer-profile-collapsed,
+  .trainer-public-profile-editor .trainer-profile-editor-preview,
+  .trainer-public-profile-editor .trainer-profile-editor-form,
+  .trainer-coach-request,.trainer-client-actions-pop
+){
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+  box-shadow:none!important;
+}
+/* Stronger v2 selectors: cards remain separate from transparent list wrappers. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-list.modern .trainer-template-card,
+  .trainer-assigned-row.modern,.trainer-nutrition-row.modern,
+  .trainer-client-page #profile>.card,
+  .trainer-client-page .trainer-overview-card,
+  .trainer-client-page .trainer-profile-card,
+  .trainer-client-page .access-card,
+  .trainer-client-page .trainer-private-note,
+  .trainer-client-page .trainer-checkin-card,
+  .trainer-client-page .trainer-checkin-empty,
+  .trainer-nutrition-page .trainer-nutrition-target-card,
+  .trainer-nutrition-page .meal-plan-card,
+  .trainer-nutrition-page .meal-plan-head,
+  .trainer-nutrition-page .meal-plan-body,
+  .trainer-nutrition-page .trainer-assigned-meal,
+  .nutrition-menu-meal-v2
+){
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-checkin-grid span,.trainer-review-detail,.trainer-review-exercise,
+  .trainer-review-sets>*,.trainer-review-aux,.trainer-review-comment,
+  .trainer-review-set-current,.trainer-review-set-previous,
+  .trainer-review-set-block,.trainer-program-editor-grid,
+  .trainer-program-alternative-card,.trainer-program-alternative-row,
+  .trainer-template-alternative-row,.trainer-template-editor-grid,
+  .trainer-template-editor-items,.trainer-template-editor-meta,
+  .trainer-template-editor-day-head,.trainer-library-admin-body,
+  .trainer-library-add-actions,.trainer-nutrition-target-summary>div,
+  .trainer-nutrition-calc-head,.trainer-saved-ration-page,.trainer-meal-recipe,
+  .trainer-assigned-dish,.trainer-assigned-ingredients,
+  .trainer-assigned-preparation,.trainer-food-review-extra,
+  .trainer-food-review-inputs,.trainer-progress-summary,
+  .trainer-progress-activity-stats,.trainer-progress-pr-grid,
+  .trainer-progress-compare-list,.trainer-progress-activity-list,
+  .trainer-workout-calendar-grid,.trainer-workout-calendar-exercises,
+  .trainer-workout-calendar-comment,.trainer-volume-kpis>div,
+  .trainer-volume-muscle-row,.trainer-workout-calendar-cell,
+  .trainer-nutrition-page .meal-view,.trainer-nutrition-page .meal-editor,
+  .trainer-nutrition-page .meal-variant,
+  .trainer-nutrition-page .structured-meal-editor,
+  .trainer-nutrition-page .structured-food-row,
+  .trainer-client-page .trainer-checkin-grid span
+){
+  background:var(--trainer-dark-raised)!important;
+  border-color:var(--trainer-dark-border)!important;
+  color:var(--trainer-dark-text)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-nutrition-target-summary span,.trainer-nutrition-target-summary small,
+  .trainer-nutrition-target-head p,.trainer-checkin-card p,
+  .trainer-client-page .trainer-checkin-card p,.trainer-nutrition-summary small,
+  .trainer-template-card-main p,.trainer-template-card-main small,
+  .trainer-assigned-row.modern small,.trainer-template-toolbar.modern>div>span,
+  .trainer-nutrition-target-fields label>span,
+  .trainer-client-page .trainer-profile-card .muted
+){color:var(--trainer-dark-muted)!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-nutrition-summary strong,.trainer-nutrition-target-summary strong,
+  .trainer-nutrition-target-head h2,.trainer-template-toolbar.modern strong
+){color:var(--trainer-dark-text)!important}
+
+/* Fields and selectors: one quiet level above their parent cards. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  input:not([type="checkbox"]):not([type="radio"]),textarea,select,
+  .card input:not([type="checkbox"]):not([type="radio"]),.card textarea,.card select,
+  .trainer-client-page .access-edit-box input,
+  .trainer-client-page .access-edit-box select,
+  .trainer-nutrition-target-fields input,.trainer-nutrition-target-fields select,
+  .trainer-nutrition-page .meal-variant textarea
+){
+  background:var(--trainer-dark-raised)!important;
+  border-color:#454a55!important;
+  color:var(--trainer-dark-text)!important;
+  -webkit-text-fill-color:var(--trainer-dark-text);
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-search,.trainer-segmented,.trainer-client-tabs,.trainer-program-tabs,
+  .trainer-progress-periods,.trainer-volume-tabs,.trainer-ration-tabs,
+  .trainer-saved-ration-tabs,.trainer-template-editor-top
+){
+  background:var(--trainer-dark-raised)!important;
+  border-color:var(--trainer-dark-border)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-search input{
+  background:transparent!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-list.modern .trainer-template-actions button:first-child,
+  .trainer-template-list.modern .trainer-template-actions .dark,
+  .trainer-client-page .access-saved>button,
+  .trainer-private-note-save,.trainer-client-page .trainer-checkin-card>button,
+  .trainer-nutrition-edit,.trainer-nutrition-target-actions button.dark,
+  .trainer-saved-plan-actions button,.trainer-nutrition-page .meal-actions button
+){
+  background:#303846!important;
+  color:#d7e7ff!important;
+  border-color:#485363!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-template-create,.trainer-public-profile-save,
+  .trainer-new-client-submit,.trainer-program-add
+){background:#3478f6!important;border-color:#4787fa!important;color:#fff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav{
+  background:rgba(28,30,35,.94)!important;
+  border-color:#3b3e47!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button{
+  color:#adb3bd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active{
+  background:#263954!important;
+  color:#96beff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-filter-chips button,.trainer-client-tabs button,
+  .trainer-program-tabs button,.trainer-segmented button,
+  .trainer-progress-periods button,.trainer-volume-tabs button,
+  .trainer-ration-tabs button,.trainer-saved-ration-tabs button
+).active{
+  background:#293d58!important;color:#e9f2ff!important;border-color:#43658f!important;
+}
+/* Progress and meal totals are softly blue-tinted, never white or navy blocks. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .nutrition-menu-total-v6,.trainer-assigned-day-total
+){
+  background:#202c3b!important;
+  border-color:#3d526b!important;
+  border-left-color:#579bf5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-ration-tabs{
+  background:var(--trainer-dark-raised)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-ration-tab.active{
+  background:#293d58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .nutrition-menu-meal-v2{
+  background:var(--trainer-dark-surface)!important;
+  border-color:var(--trainer-dark-border)!important;
+}
+/* Explicitly preserve avatar tones, success/warning/risk chips, and current
+   action semantics: those are intentionally handled by earlier rules. */
