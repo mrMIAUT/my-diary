@@ -1,4 +1,4 @@
-const VERSION='eplan-v227';
+const VERSION='eplan-v226';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
