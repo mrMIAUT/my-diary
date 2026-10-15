@@ -66,6 +66,19 @@ function trainerClientInitials(c){
  return (p.slice(0,2).map(x=>x[0]).join('')||'К').toUpperCase();
 }
 
+// Stable colors across trainer screens; name fallback is for unsaved preview data.
+function trainerClientAvatarTone(c){
+ const id=Number(c?.id);
+ if(Number.isSafeInteger(id)&&id>0)return id%8;
+ let hash=0;
+ for(const ch of String(c?.name||''))hash=(Math.imul(hash,31)+ch.codePointAt(0))>>>0;
+ return hash%8;
+}
+function trainerClientAvatarHTML(c,extraClass=''){
+ const extra=extraClass?' '+extraClass:'';
+ return '<span class="trainer-client-avatar trainer-avatar-tone-'+trainerClientAvatarTone(c)+extra+'">'+esc(trainerClientInitials(c))+'</span>';
+}
+
 async function trainerHome(){
  currentTrainerMainView='home';selected=null;window.currentClientData=null;
  let cs=(await loadClients()).filter(c=>c.status!=='Видалений');
@@ -75,11 +88,11 @@ async function trainerHome(){
  let checkins=cs.reduce((n,c)=>n+(+c.checkin_pending_count||0),0);
  let comps=active.map(trainerCompliance).filter(x=>x!==null);
  let avgComp=comps.length?Math.round(comps.reduce((a,b)=>a+b,0)/comps.length):null;
- let avatars=cs.slice(0,4).map(c=>'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>').join('');
+ let avatars=cs.slice(0,4).map(c=>trainerClientAvatarHTML(c)).join('');
  let recent=states.slice().sort((a,b)=>{
    let rank={training:0,risk:1,attention:2,new:3,ok:4,paused:5};return rank[a.state.level]-rank[b.state.level];
  }).slice(0,5).map(({c,state})=>{
-   return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span><strong>'+esc(c.name)+'</strong><small>'+esc(state.reason)+'</small></span><span class="trainer-smart-status '+state.level+'">'+esc(state.label)+'</span><span class="more-chevron">›</span></button>'
+   return '<button class="trainer-activity-row" onclick="navigateToClient('+c.id+')">'+trainerClientAvatarHTML(c)+'<span><strong>'+esc(c.name)+'</strong><small>'+esc(state.reason)+'</small></span><span class="trainer-smart-status '+state.level+'">'+esc(state.label)+'</span><span class="more-chevron">›</span></button>'
  }).join('');
  app.innerHTML=shell(`<div class="trainer-home-page">
    <button class="trainer-hero-card" onclick="showTrainerClientsView()">
@@ -119,7 +132,7 @@ async function showTrainerClientsView(){
    </div>
    <div class="trainer-client-list">${shown.map(c=>{
      let st=trainerAttention(c),comp=trainerCompliance(c),goal=c.goal||'Без цілі';
-     return '<button type="button" class="trainer-client-row" data-client="'+(+c.id||0)+'" onclick="navigateToClient(+this.dataset.client)"><span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span><span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(comp!==null?' · '+comp+'% дотримання':'')+'</small><span class="trainer-smart-status '+st.level+'">'+esc(st.label)+'</span><em>'+esc(st.reason)+'</em></span><span class="more-chevron">›</span></button>'
+     return '<button type="button" class="trainer-client-row" data-client="'+(+c.id||0)+'" onclick="navigateToClient(+this.dataset.client)">'+trainerClientAvatarHTML(c)+'<span class="trainer-client-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(goal)+(comp!==null?' · '+comp+'% дотримання':'')+'</small><span class="trainer-smart-status '+st.level+'">'+esc(st.label)+'</span><em>'+esc(st.reason)+'</em></span><span class="more-chevron">›</span></button>'
    }).join('')||'<div class="trainer-empty">У цій категорії клієнтів немає.</div>'}</div>
  </div>`);
  refreshTrainerGlobalBadge()
@@ -163,7 +176,7 @@ async function showTrainerPrograms(){
       let countLabel=days===1?'1 день':days>=2&&days<=4?days+' дні':days+' днів';
       let label=hasProgram?'Призначено '+countLabel:'Програму ще не призначено';
       return '<button class="trainer-assigned-row modern" onclick="openClient('+c.id+',\'program\')">'
-        +'<span class="trainer-client-avatar">'+esc(trainerClientInitials(c))+'</span>'
+        +trainerClientAvatarHTML(c)
         +'<span class="trainer-assigned-copy"><strong>'+esc(c.name)+'</strong><small>'+esc(label)+'</small></span>'
         +'<span class="trainer-assigned-meta '+(hasProgram?'active':'empty')+'">'+esc(hasProgram?countLabel:'Без програми')+'</span>'
         +'<span class="trainer-assigned-chevron">›</span>'
@@ -538,9 +551,9 @@ async function showTrainerNutrition(){
  let avg=tracked.length?Math.round(tracked.reduce((n,c)=>n+Math.min(7,+c.nutrition_days_7d||0),0)/tracked.length):0;
  let chip=(key,label,n)=>'<button class="'+(filter===key?'active':'')+'" onclick="window.trainerNutritionFilter=\''+key+'\';showTrainerNutrition()">'+label+' <span>'+n+'</span></button>';
  let rows=shown.map(c=>{
-   let initials=trainerClientInitials(c),days=Math.min(7,+c.nutrition_days_7d||0),kcal=+c.kcal||0,hasTargets=kcal>0;
+   let days=Math.min(7,+c.nutrition_days_7d||0),kcal=+c.kcal||0,hasTargets=kcal>0;
    let status=!hasTargets?'<span class="trainer-nutrition-status neutral">Без цілей</span>':days>=5?'<span class="trainer-nutrition-status ok">'+days+'/7 днів</span>':days>=3?'<span class="trainer-nutrition-status warn">'+days+'/7 днів</span>':'<span class="trainer-nutrition-status attention">'+days+'/7 днів</span>';
-   return '<button class="trainer-nutrition-row modern" onclick="openClient('+c.id+',\'nutrition\')"><span class="trainer-client-avatar">'+esc(initials)+'</span><span class="trainer-nutrition-copy"><strong>'+esc(c.name)+'</strong><small>'+(hasTargets?esc(kcal)+' ккал · Б '+esc(c.protein||0)+' · Ж '+esc(c.fat||0)+' · В '+esc(c.carbs||0):'Цілі харчування ще не задані')+'</small>'+status+'</span><span class="more-chevron">›</span></button>';
+   return '<button class="trainer-nutrition-row modern" onclick="openClient('+c.id+',\'nutrition\')">'+trainerClientAvatarHTML(c)+'<span class="trainer-nutrition-copy"><strong>'+esc(c.name)+'</strong><small>'+(hasTargets?esc(kcal)+' ккал · Б '+esc(c.protein||0)+' · Ж '+esc(c.fat||0)+' · В '+esc(c.carbs||0):'Цілі харчування ще не задані')+'</small>'+status+'</span><span class="more-chevron">›</span></button>';
  }).join('');
  app.innerHTML=shell(`<div class="trainer-nutrition-page">
    <div class="trainer-page-title"><div><h1>Харчування</h1><p class="trainer-page-sub">Контроль цілей, БЖВ і заповнення щоденника</p></div></div>
@@ -1022,7 +1035,6 @@ async function openClient(id,activeTab=null){
  let c=d.client;
  if(!c)throw new Error('client data missing');
  window.currentClientData=d;
- let initials=trainerClientInitials(c);
  let lastM=(d.measurements||[]).slice().sort((a,b)=>String(b.day||'').localeCompare(String(a.day||'')))[0]||{};
  let lastWorkout=(d.workout_sessions||[]).filter(x=>x.status==='finished').sort((a,b)=>String(b.finished_at||b.started_at||'').localeCompare(String(a.finished_at||a.started_at||'')))[0];
  let standardWorkouts=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&String(x.day_kind||'standard')==='standard');
@@ -1066,7 +1078,7 @@ async function openClient(id,activeTab=null){
      </div>
    </div>
    <div class="trainer-client-identity">
-     <span class="trainer-client-avatar large">${esc(initials)}</span>
+     ${trainerClientAvatarHTML(c,'large')}
      <div><h1>${esc(c.name)}</h1><p>${esc(age)} · ${esc(c.goal||'Без цілі')}</p><span class="trainer-smart-status ${smart.level}">${esc(smart.label)}</span></div>
    </div>
    <div class="trainer-client-tabs">
