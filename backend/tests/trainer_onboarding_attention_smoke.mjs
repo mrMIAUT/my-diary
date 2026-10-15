@@ -39,7 +39,7 @@ assert.equal(compliance(client()),null,'First training must not be measured agai
 assert.equal(status(client({created_at:daysAgo(90)})),'new','Old signup does not imply an old training history');
 assert.equal(status(client({needs_review_count:1})),'attention','An unreviewed first workout is a coach task, not a risk');
 assert.equal(status(client({first_standard_finished_at:null,last_finished_at:null,finished_workout_count:0,workouts_28d:0})),'new');
-assert.equal(status(client({created_at:daysAgo(20),first_standard_finished_at:null,last_finished_at:null,finished_workout_count:0,workouts_28d:0})),'attention');
+assert.equal(status(client({created_at:daysAgo(20),first_standard_finished_at:null,last_finished_at:null,finished_workout_count:0,workouts_28d:0})),'new','Signup date cannot determine when a plan was assigned');
 assert.equal(status(client({first_standard_finished_at:daysAgo(10),last_finished_at:daysAgo(1)})),'new');
 assert.equal(compliance(client({first_standard_finished_at:daysAgo(10),last_finished_at:daysAgo(1)})),null,'The first two weeks are onboarding');
 const active=client({created_at:daysAgo(90),first_standard_finished_at:daysAgo(15),
