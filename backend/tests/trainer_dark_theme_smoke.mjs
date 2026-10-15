@@ -38,6 +38,17 @@ assert.ok(style.includes('v10 — trainer template editor and library graphite c
 assert.ok(style.includes('v11 — trainer assigned meal icons and client progress graphite polish'));
 assert.ok(style.includes('v12 — separated home avatars + one optically centered SVG Back button'));
 assert.ok(style.includes('v13 — new-client nutrition targets'));
+assert.ok(style.includes('v14 — Library taxonomy admin'));
+for(const selector of [
+  '.trainer-library-page .trainer-library-admin-body{',
+  '.trainer-library-page .trainer-library-admin-section-head strong{',
+  '.trainer-library-page .trainer-library-admin-form input{',
+  '.trainer-library-page .library-muscle-admin-list>div{',
+  '.trainer-library-page .library-muscle-admin-list>div>span{',
+  '.trainer-library-page .library-muscle-admin-list>div>.library-delete-btn{'
+])assert.ok(style.includes(selector),'Missing dark library taxonomy styling: '+selector);
+assert.ok(style.includes('pointer-events:none;'));
+
 for(const selector of [
   '.trainer-new-client-modal .trainer-new-client-section{',
   '.trainer-new-client-modal .trainer-new-client-section-head strong{',
@@ -159,11 +170,11 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=13'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=14'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v227'"));
+assert.ok(sw.includes("const VERSION='eplan-v228'"));
 
 const stored=new Map();
 const media={matches:false,addEventListener(){}};
