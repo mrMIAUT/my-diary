@@ -14,7 +14,7 @@ async function goToTrainerHome(){
 function trainerCompliance(c){
  let planned=+c.program_days_count||0;
  let elapsed=trainerDaysSince(c.first_standard_finished_at);
- if(!planned||elapsed===null||elapsed<7)return null;
+ if(!planned||elapsed===null||elapsed<14)return null;
  let observedDays=Math.min(28,elapsed+1);
  let expected=planned*observedDays/7;
  return Math.max(0,Math.min(100,Math.round((+c.workouts_28d||0)/expected*100)));
