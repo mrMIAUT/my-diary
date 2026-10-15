@@ -1178,7 +1178,7 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alterna
   color:var(--trainer-dark-text)!important;
   -webkit-text-fill-color:var(--trainer-dark-text)!important;
 }
-body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-remove{
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-alternative-card .trainer-program-alternative-remove{
   background:#39272e!important;
   border-color:#65404c!important;
   color:#f0abb8!important;
