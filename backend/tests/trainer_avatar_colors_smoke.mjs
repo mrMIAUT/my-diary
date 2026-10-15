@@ -24,7 +24,7 @@ assert.equal(context.trainerClientAvatarTone({id:2,name:'Олена'}),context.t
 assert.equal(context.trainerClientAvatarTone({name:'Гість'}),context.trainerClientAvatarTone({name:'Гість'}));
 assert.match(context.trainerClientAvatarHTML({id:2,name:'Олена Коваль'}),/trainer-avatar-tone-2/);
 assert.match(context.trainerClientAvatarHTML({id:2,name:'Олена Коваль'},'large'),/trainer-client-avatar trainer-avatar-tone-2 large/);
-assert.match(context.trainerClientAvatarHTML({id:2,name:'<TEST>'}),/&lt;TEST>/);
+assert.match(context.trainerClientAvatarHTML({id:2,name:'<TEST>'}),/&lt;/,'Initials must be HTML-escaped');
 assert.ok((trainer.match(/trainerClientAvatarHTML\(c/g)||[]).length>=7,'All trainer list/profile screens use the shared helper');
 assert.ok(trainer.includes('trainer-client-avatar more'),'The +N counter must remain a neutral avatar');
 for(let i=0;i<8;i++)assert.ok(css.includes('.trainer-avatar-tone-'+i+'{'),'Missing color '+i);
