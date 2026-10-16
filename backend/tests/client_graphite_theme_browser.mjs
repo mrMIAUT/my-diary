@@ -51,7 +51,8 @@ try{
   const dark=await getStyles();
   assert.equal(dark.body.background,rgb(16,17,20),'graphite page background');
   for(const [key,value] of Object.entries(dark.sections)){
-   assert.equal(value.background,rgb(28,30,35),`${width}px graphite surface for ${key}`);
+   const expected=key==='nutrition-diary-item'?rgb(40,43,49):rgb(28,30,35);
+   assert.equal(value.background,expected,`${width}px graphite layer for ${key}`);
   }
   assert.equal(dark.input.background,rgb(40,43,49),'graphite form control');
   assert.equal(dark.top.background,rgb(16,17,20),'client top uses graphite');
