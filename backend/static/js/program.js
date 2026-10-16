@@ -859,6 +859,7 @@ async function addExercise(button=null){
     await api('/program',{method:'POST',body:JSON.stringify(first)});
   }
   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
+  closeTrainerProgramExerciseForm();
   await openClient(selected,'program');
   reopenTrainerProgramDay(day);
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
