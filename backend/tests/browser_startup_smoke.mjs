@@ -669,3 +669,6 @@ try{
   if(browser)await browser.close();
   await new Promise(resolve=>server.close(resolve));
 }
+
+// Keep the trainer UI smoke in the existing browser CI lane.
+await import('./trainer_program_overview_browser.mjs');
