@@ -3447,3 +3447,83 @@ body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-page-sub{
   margin:5px 0 0!important;
   font-size:12px;
 }
+
+
+/* v22 — trainer progress calendar: selected date and contrast, no rectangular
+   inherited paint around the session exercises. Dark trainer only. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.selected,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.has-workout.selected{
+  background:#3267a3!important;
+  border:2px solid #8fc3ff!important;
+  color:#fff!important;
+  box-shadow:0 0 0 2px rgba(84,150,229,.27)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.selected i{
+  background:#fff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell:not(.selected):not(.has-workout):not(.empty){
+  color:#ccd6e3!important;
+  background:#272b33!important;
+  border-color:#393f4a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell:focus-visible{
+  outline:2px solid #91c5ff!important;
+  outline-offset:2px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-session{
+  background:#1d2026!important;
+  border-color:#424954!important;
+  border-radius:18px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-sessions{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-session-head>div:first-child strong{
+  color:#f2f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-session-head>div:first-child span{
+  color:#aab9ca!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise{
+  background:#292d35!important;
+  border:1px solid #424a56!important;
+  border-radius:15px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise-head strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-sets b{
+  color:#f3f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise-head span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-sets :is(small,em){
+  color:#a7b5c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-sets>div{
+  background:#2e333c!important;
+  border-color:#414954!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-status.reviewed{
+  background:#213f34!important;
+  color:#95e4bd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-status.pending{
+  background:#453526!important;
+  color:#f8c188!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-day-head strong{
+  color:#f2f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-empty{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:5px!important;
+  background:#222b36!important;
+  border-color:#4a6078!important;
+  color:#bdcee2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-empty strong{
+  color:#f2f5fa!important;
+}
