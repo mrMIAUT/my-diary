@@ -3527,3 +3527,113 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-worko
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-empty strong{
   color:#f2f5fa!important;
 }
+
+
+/* v23 — trainer read-only actual calorie/macros per day, both themes. */
+body.eplan-redesign.trainer-ui .trainer-actual-diary{
+  margin:12px 0!important;
+  padding:18px!important;
+  border-radius:20px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-head small{
+  display:block;color:#7c91ac;font-size:10px;font-weight:850;letter-spacing:.055em;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-head h3{
+  margin:5px 0;color:inherit;font-size:20px;font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-head p{
+  margin:0;color:#7d8da3;font-size:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-date{
+  display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:end;
+  gap:9px;margin:16px 0 12px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-date>button{
+  width:42px;height:46px;border-radius:12px;padding:0!important;
+  font-size:25px;font-weight:750;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-date>button:disabled{
+  opacity:.4;cursor:default;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-date label{
+  display:grid;gap:4px;min-width:0;font-size:11px;color:#7b8da6;font-weight:750;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-date input{
+  width:100%!important;min-width:0!important;height:46px!important;
+  border-radius:12px!important;margin:0!important;padding:0 10px!important;
+  font-size:15px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-source{
+  margin-bottom:9px;font-size:11px;font-weight:800;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-metrics{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-metrics>div{
+  padding:12px;border:1px solid #dce5ef;border-radius:14px;
+  background:#f6f9fc;min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-metrics span,
+body.eplan-redesign.trainer-ui .trainer-actual-diary-metrics small{
+  display:block;font-size:11px;color:#71829b;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-metrics strong{
+  display:block;font-size:22px;margin:4px 0;color:#122645;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meals{
+  display:grid;gap:8px;margin-top:14px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal{
+  padding:12px;border:1px solid #dce5ef;border-radius:14px;background:#f6f9fc;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal>strong{
+  display:block;margin-bottom:7px;font-size:13px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal>div{
+  display:flex;align-items:center;justify-content:space-between;gap:9px;
+  padding:6px 0;font-size:12px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal>div+div{border-top:1px solid #dce5ef}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal>div>span{
+  flex:1;min-width:0;overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal small{
+  display:block;margin-top:2px;font-size:11px;color:#7589a0;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-meal b{
+  white-space:nowrap;font-size:11px;
+}
+body.eplan-redesign.trainer-ui .trainer-actual-diary-no-data{
+  margin:12px 0 0;color:#7388a0;font-size:12px;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary{
+  background:#1d2026!important;border-color:#424954!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-head small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-source{
+  color:#a8c8ed!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-head h3{
+  color:#f3f6fb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-head p,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-date label,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-metrics span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-metrics small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-no-data{
+  color:#b0bfd0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-metrics>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal{
+  background:#282d35!important;border-color:#454d5a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-metrics strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal>strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal b,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal>div>span{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal>div+div{
+  border-top-color:#444e5a!important;
+}
