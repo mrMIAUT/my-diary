@@ -86,7 +86,7 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
 /* The active workout (sets, supersets, timers) should match the same graphite
    hierarchy. Existing success, rest-ring, completion and skipped states win. */
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
-  .lyfta-exercise-card,.lyfta-workout-exercise,.lyfta-set-row,
+  .lyfta-exercise-card,.lyfta-workout-exercise,
   .workout-exercise-card,.workout-exercise,.workout-rest-panel,
   .workout-timer-panel,.workout-timed-modal-card,
   .workout-timed-ring>div,.lyfta-warmup-row,
