@@ -242,11 +242,11 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .al
 }
 
 /* Higher specificity than legacy link color rules; links meet WCAG AA. */
-body.eplan-redesign.trainer-ui .trainer-client-page .exercise-alternatives
+body.eplan-redesign.trainer-ui .trainer-client-page #program .exercise-alternatives
 .alternative-chip.alternative-chip-detailed .alternative-chip-top a.alternative-tech-link{
   color:#155595!important;
 }
-body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .exercise-alternatives
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .exercise-alternatives
 .alternative-chip.alternative-chip-detailed .alternative-chip-top a.alternative-tech-link{
   color:#a6cbff!important;
 }
