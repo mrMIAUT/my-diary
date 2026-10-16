@@ -676,3 +676,4 @@ await import('./trainer_nav_theme_parity_browser.mjs');
 await import('./client_graphite_theme_browser.mjs');
 await import('./client_graphite_polish_browser.mjs');
 await import('./client_graphite_deep_qa_browser.mjs');
+await import('./client_graphite_inner_panels_browser.mjs');
