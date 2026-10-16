@@ -219,11 +219,30 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=23'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=24'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v241'"));
+assert.ok(sw.includes("const VERSION='eplan-v242'"));
+
+const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
+assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
+assert.ok(refined.includes('background:#2b3b4d!important;'),'Date controls need dark graphite rather than inherited yellow');
+assert.ok(refined.includes('max-width:44px!important;'),'Date arrows must never overlap date input');
+assert.ok(refined.includes('#progress .trainer-workout-calendar-cell.has-workout.selected{'));
+assert.ok(refined.includes('background:#30435c!important;'),'Selected dark date should be quiet steel blue');
+assert.ok(refined.includes('#progress .trainer-volume-panel .trainer-progress-empty.compact{'));
+assert.ok(refined.includes('background:#282d35!important;'),'Empty volume should not have a white background');
+assert.ok(refined.includes('#progress .trainer-workout-calendar-comment p{'));
+assert.ok(refined.includes('color:#edf8f1!important;'),'Review comment text must be readable');
+assert.ok(refined.includes('#progress .trainer-calendar-day-volume,'));
+assert.ok(refined.includes('background:transparent!important;'),'Progress KPI backdrop must be transparent');
+for(const macro of ['kcal','protein','fat','carbs']){
+ assert.ok(refined.includes('#nutrition .trainer-nutrition-target-summary .'+macro+'{'),
+  'Dark nutrition targets missing '+macro+' accent');
+}
+assert.ok(refined.includes('trainer-ui:not([data-eplan-theme="dark"])'),'Light palette must stay isolated');
+
 
 const nutritionSrc=read('js/nutrition.js');
 const apiSource=read('../app.py');
