@@ -5718,6 +5718,16 @@ def delete_saved_recipe(recipe_id:int,user:AuthUser=Depends(require_client)):
         db.commit()
     return {"ok":True}
 
+# Read-only trainer view of the client's actual daily food diary.
+# A trainer must authenticate and pass the same client ownership guard as
+# other trainer client details; never reuse the client-only endpoint.
+@app.get("/api/trainer/clients/{cid}/nutrition/diary")
+def trainer_food_diary_get(cid:int,day:date,user:AuthUser=Depends(require_trainer)):
+    authorize_client(user,cid)
+    diary_view_client(cid)
+    return diary_day_payload(cid,diary_day_checked(day))
+
+
 @app.get("/api/nutrition/diary")
 def food_diary_get(day:date,user:AuthUser=Depends(require_client)):
     diary_view_client(user.client_id)
