@@ -37,6 +37,17 @@ const markup=`<!doctype html><html lang="uk"><head><meta name="viewport" content
       </div>
     </article>
   </div>
+ <div class="trainer-nutrition-target-summary">
+  <div class="kcal"><span>Ккал</span><strong>1660</strong></div>
+  <div class="protein"><span>Білки</span><strong>111 г</strong></div>
+  <div class="fat"><span>Жири</span><strong>50 г</strong></div>
+  <div class="carbs"><span>Вуглеводи</span><strong>192 г</strong></div>
+ </div>
+ <section class="trainer-actual-diary"><div class="trainer-actual-diary-date">
+  <button type="button" aria-label="Попередній день">‹</button>
+  <label><span>Дата</span><input type="date" value="2026-10-15"></label>
+  <button type="button" aria-label="Наступний день" disabled>›</button>
+ </div></section>
 </section>
 <section id="progress">
  <div class="trainer-progress-page">
@@ -48,14 +59,15 @@ const markup=`<!doctype html><html lang="uk"><head><meta name="viewport" content
   <section class="trainer-workout-calendar-card">
    <div class="trainer-workout-calendar-title"><h2>Календар тренувань</h2><span>1</span></div>
    <div class="trainer-workout-calendar-nav"><button>‹</button><strong>Жовтень 2026 р.</strong><button>›</button></div>
-   <div class="trainer-workout-calendar-grid"><div class="trainer-workout-calendar-cell">1</div></div>
+   <div class="trainer-workout-calendar-grid"><button class="trainer-workout-calendar-cell has-workout selected">15<i></i></button><button class="trainer-workout-calendar-cell">14</button></div>
    <section class="trainer-volume-panel">
     <div class="trainer-volume-head"><small>ТРЕНУВАЛЬНИЙ ОБСЯГ</small><h3>15 жовт.</h3></div>
     <div class="trainer-calendar-day-volume"><div><small>Обсяг</small><strong>192 кг</strong></div></div>
     <div class="trainer-volume-kpis"><div><span>Загальний обсяг</span><strong>192 кг</strong></div></div>
     <div class="trainer-volume-muscles-head"><span>Обсяг за м’язами</span></div>
-    <div class="trainer-volume-muscles"><div class="trainer-volume-muscle-row"><div><span>Без групи</span><strong>192 кг</strong></div><i><b style="width:100%"></b></i></div></div>
+    <div class="trainer-volume-muscles"><div class="trainer-volume-muscle-row"><div><span>Без групи</span><strong>192 кг</strong></div><i><b style="width:100%"></b></i></div><div class="trainer-progress-empty compact">Немає даних</div></div>
    </section>
+   <div class="trainer-workout-calendar-comment"><small>Коментар тренера</small><p>Молодець!</p></div>
   </section>
   <section class="trainer-progress-section"><h3>Активність</h3>
     <div class="trainer-progress-activity-stats">
@@ -103,12 +115,34 @@ try{
   await check('#progress .trainer-volume-muscle-row>div','backgroundColor','rgba(0, 0, 0, 0)');
   await check('#progress .trainer-volume-muscle-row strong','color',rgb(237,242,248));
 
+
+  // Regression: v24 dark-mode follow-up to real trainer screenshots.
+  await check('#nutrition .trainer-actual-diary-date>button','backgroundColor',rgb(43,59,77));
+  const arrowWidths=await page.locator('#nutrition .trainer-actual-diary-date>button').evaluateAll(
+    list=>list.map(el=>el.getBoundingClientRect().width));
+  assert.ok(arrowWidths.every(w=>w===44),'Date arrows must remain 44px, without overlapping the input');
+  await check('#progress .trainer-workout-calendar-cell.selected','backgroundColor',rgb(48,67,92));
+  await check('#progress .trainer-volume-panel .trainer-progress-empty.compact','backgroundColor',rgb(40,45,53));
+  await check('#progress .trainer-workout-calendar-comment p','color',rgb(237,248,241));
+  await check('#progress .trainer-calendar-day-volume','backgroundColor','rgba(0, 0, 0, 0)');
+  await check('#progress .trainer-volume-kpis','backgroundColor','rgba(0, 0, 0, 0)');
+  await check('#nutrition .trainer-nutrition-target-summary .protein>span','color',rgb(165,205,255));
+  await check('#nutrition .trainer-nutrition-target-summary .fat>span','color',rgb(243,201,140));
+  await check('#nutrition .trainer-nutrition-target-summary .carbs>span','color',rgb(160,219,182));
+
   // Light mode must remain the existing UI after switching the root flag.
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='light');
   await check('#progress .trainer-progress-summary>div','backgroundColor',rgb(255,255,255));
   await check('#progress .trainer-progress-summary strong','color',rgb(10,23,56));
   await check('#progress .trainer-progress-activity-stats>div','backgroundColor',rgb(255,255,255));
   await check('#progress .trainer-workout-calendar-nav>button','backgroundColor',rgb(245,248,252));
+
+  await check('#nutrition .trainer-actual-diary-date>button','backgroundColor',rgb(231,238,248));
+  await check('#progress .trainer-workout-calendar-cell.selected','backgroundColor',rgb(61,127,242));
+  await check('#nutrition .trainer-nutrition-target-summary .protein>span','color',rgb(56,107,180));
+  await check('#nutrition .trainer-nutrition-target-summary .fat>span','color',rgb(156,103,31));
+  await check('#nutrition .trainer-nutrition-target-summary .carbs>span','color',rgb(46,128,80));
+
   assert.notEqual(await get('#nutrition .nutrition-meal-icon-breakfast','backgroundColor'),rgb(35,57,81),'Breakfast icon stayed dark in light mode');
   await page.close();
  }
