@@ -3197,3 +3197,193 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .l
     pointer-events:none;
   }
 }
+
+
+/* v15 — final trainer dark QA: exercise library editor, nutrition KPI icons
+   and pending workout reviews. All overrides require trainer + explicit dark. */
+
+/* Structural form wrappers must not paint square blue rectangles behind inputs. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page :is(
+  .trainer-library-admin-form,
+  .trainer-library-input-stack,
+  .trainer-library-add-actions
+){
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-input-stack input{
+  background:#282b31!important;
+  color:#f1f3f7!important;
+  border-color:#495260!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-input-stack input::placeholder{
+  color:#a7b7c9!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .trainer-library-input-stack input:focus-visible{
+  border-color:#83b7ff!important;
+  box-shadow:0 0 0 3px #578ce83d!important;
+  outline:none!important;
+}
+
+/* Both main and secondary muscle selectors in add/edit exercise forms. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-picker{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-picker>div{
+  background:#2b3039!important;
+  border-color:#454e5a!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-muscle-picker>div>strong{
+  color:#e8edf5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-check-grid label{
+  background:#343a45!important;
+  border-color:#505b6b!important;
+  color:#dae4ef!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-check-grid label:has(input:checked){
+  background:#293e58!important;
+  border-color:#76a7ec!important;
+  color:#d2e7ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-check-grid input[type="checkbox"]{
+  background:#242b36!important;
+  border:1px solid #7890aa!important;
+  accent-color:#4386ee!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-check-grid input[type="checkbox"]:checked{
+  background:#4386ee!important;
+  border-color:#4386ee!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .library-check-grid input[type="checkbox"]:checked::after{
+  color:#fff!important;
+}
+
+/* KPI glyphs on the trainer's nutrition overview, not the client diary. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.green{
+  background:#233d31!important;
+  color:#80d4a4!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.orange{
+  background:#463626!important;
+  color:#f1b777!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.blue{
+  background:#293d5a!important;
+  color:#9fc5ff!important;
+}
+
+/* Pending workout cards have their own legacy !important white backgrounds;
+   darkening the queue alone cannot reach the toggle, badges or buttons. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-card{
+  background:#1c1e23!important;
+  border-color:#424751!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-toggle{
+  background:#272b33!important;
+  color:#f1f3f7!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-main strong{
+  color:#f1f3f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-main small{
+  color:#bac7d9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-duration{
+  background:#333c49!important;
+  color:#d6e3f2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-badge{
+  background:#263c52!important;
+  color:#b5d8ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-arrow{
+  color:#b1c1d1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-detail{
+  background:#242830!important;
+  color:#e6edf5!important;
+  border-top-color:#434b58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-exercise{
+  background:#292d35!important;
+  border-color:#444c58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-exercise-head strong,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-sets b{
+  color:#f0f4fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-exercise-head span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-sets :is(small,em){
+  color:#a6b6c9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-sets>div{
+  background:#2e333c!important;
+  border-color:#444c58!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-aux,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-client-comment{
+  background:#2c3440!important;
+  border-color:#455568!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-client-comment p{
+  color:#e9f2fb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-aux span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-drop-list>div{
+  background:#333c47!important;
+  color:#e5eef7!important;
+  border-color:#536174!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-drop-list strong{
+  color:#e6eff8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-comment>span{
+  color:#cedaea!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-comment>span small{
+  color:#a7b6c8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-comment textarea{
+  background:#282b31!important;
+  color:#f1f3f7!important;
+  border-color:#495260!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-comment textarea::placeholder{
+  color:#9fb0c4!important;
+  opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-actions{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-actions button{
+  background:#294669!important;
+  color:#cbe2ff!important;
+  border-color:#4c719d!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-actions button.dark{
+  background:#333943!important;
+  color:#d9e2ef!important;
+  border-color:#4b5563!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-actions button:focus-visible,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-toggle:focus-visible{
+  outline:2px solid #82b5ff!important;
+  outline-offset:2px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-queue-head>span{
+  background:#463326!important;
+  color:#f5bd80!important;
+}
