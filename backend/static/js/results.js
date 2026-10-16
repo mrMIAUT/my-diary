@@ -186,20 +186,20 @@ function trainerWorkoutCalendarState(d){
  let cid=+d?.client?.id||0,st=window.trainerWorkoutCalendarViewState;
  if(!st||+st.cid!==cid){
    let dates=trainerWorkoutCalendarDates(d),latest=dates[0]||isoToday();
-   st={cid,month:String(latest).slice(0,7),day:'',sid:0};
+   st={cid,month:String(latest).slice(0,7),day:String(latest),sid:0};
    window.trainerWorkoutCalendarViewState=st;
  }
  return st;
 }
 
 function trainerWorkoutCalendarDayHTML(d,day,targetSid=0){
- if(!day)return '<div class="trainer-workout-calendar-empty">Обери дату з позначкою, щоб переглянути тренування.</div>';
+ if(!day)return '<div class="trainer-workout-calendar-empty">Обери будь-який день календаря, щоб переглянути тренування.</div>';
  let canReview=!!clientAccess(d.client).features?.trainer_review;
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&sessionDay(x)===day).slice().sort((a,b)=>(+b.id||0)-(+a.id||0));
  if(targetSid)sessions.sort((a,b)=>(+b.id===+targetSid)-(+a.id===+targetSid));
  if(!sessions.length){
    let hasSets=(d.result_sets||[]).some(x=>x.day===day)||(d.timed_result_sets||[]).some(x=>x.day===day);
-   if(!hasSets)return '<div class="trainer-workout-calendar-empty">На цю дату тренування не знайдено.</div>';
+   if(!hasSets)return '<div class="trainer-workout-calendar-empty"><strong>'+esc(formatProgressDate(day))+'</strong><span>У цей день завершених тренувань немає.</span></div>';
    sessions=[{id:0,day_name:'Тренування',workout_day:day,status:'finished',trainer_reviewed:true}];
  }
  return '<div class="trainer-workout-calendar-day-head"><div><small>ОБРАНА ДАТА</small><strong>'+esc(formatProgressDate(day))+'</strong></div><span>'+sessions.length+' '+(sessions.length===1?'тренування':'тренування')+'</span></div>'
@@ -231,7 +231,7 @@ function trainerWorkoutCalendarHTML(d){
  for(let i=0;i<start;i++)cells+='<span class="trainer-workout-calendar-cell empty"></span>';
  for(let n=1;n<=count;n++){
    let day=st.month+'-'+String(n).padStart(2,'0'),has=dateSet.has(day),selected=st.day===day;
-   cells+='<button type="button" class="trainer-workout-calendar-cell '+(has?'has-workout ':'')+(selected?'selected':'')+'" '+(has?'data-day="'+esc(day)+'" onclick="selectTrainerWorkoutCalendarDay(this.dataset.day)"':'disabled')+'><span>'+n+'</span>'+(has?'<i></i>':'')+'</button>';
+   cells+='<button type="button" class="trainer-workout-calendar-cell '+(has?'has-workout ':'')+(selected?'selected':'')+'" data-day="'+esc(day)+'" aria-pressed="'+(selected?'true':'false')+'" '+(day>isoToday()?'disabled':'onclick="selectTrainerWorkoutCalendarDay(this.dataset.day)"')+'><span>'+n+'</span>'+(has?'<i></i>':'')+'</button>';
  }
  let monthNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
  return '<section class="trainer-workout-calendar-card">'
@@ -256,13 +256,13 @@ function changeTrainerWorkoutCalendarMonth(delta){
 
 function selectTrainerWorkoutCalendarDay(day,sid=0){
  let d=window.currentClientData||{},st=trainerWorkoutCalendarState(d);
- let same=st.day===day&&(!sid||+st.sid===+sid);
- st.day=same?'':(day||'');
- st.sid=same?0:(+sid||0);
- if(day)st.month=String(day).slice(0,7);
- if(!same)window.trainerProgressVolumeRange='day';
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(day||''))||day>isoToday())return;
+ st.day=day;
+ st.sid=+sid||0;
+ st.month=day.slice(0,7);
+ window.trainerProgressVolumeRange='day';
  renderTrainerWorkoutCalendar();
- if(!same)requestAnimationFrame(()=>document.getElementById('trainerWorkoutCalendarDetails')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+ requestAnimationFrame(()=>document.getElementById('trainerWorkoutCalendarDetails')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
 
 function openTrainerWorkoutCalendar(day,sid=0){
