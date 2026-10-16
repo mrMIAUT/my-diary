@@ -1,0 +1,208 @@
+/* Client graphite 251: active workouts, distinct but quiet supersets,
+   seamless diary meals and blue/green/orange home icons.
+   Visual only; affects dark client theme, never the trainer or light theme. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ --cg-workout-bg:#1c1e23;
+ --cg-workout-card:#22252b;
+ --cg-workout-raised:#2d3138;
+ --cg-workout-line:#424850;
+ --cg-workout-muted:#b8c4d2;
+}
+/* Active workout: remove residual full-size navy tiles but preserve
+   completed exercise/sets (green), chosen workout phase and primary finish. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout :is(
+ .workout-live-exercise:not(.is-exercise-complete),
+ .workout-live-toggle,.workout-live-exercise-inner,
+ .workout-live-body,.workout-live-grouped-body,
+ .workout-duration-strip,.workout-duration-card
+){
+ background-color:var(--cg-workout-card)!important;
+ border-color:var(--cg-workout-line)!important;
+ color:#f2f4f8!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise:not(.is-exercise-complete)>.workout-live-toggle.open{
+ background:var(--cg-workout-card)!important;
+ border-color:var(--cg-workout-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise:not(.is-exercise-complete)>.workout-live-body{
+ background:var(--cg-workout-card)!important;
+ border-color:var(--cg-workout-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout :is(
+ .lyfta-set-wrap:not(.is-complete) .lyfta-set-swipe-content,
+ .workout-live-body .set-card,.workout-live-body .workout-set-card,
+ .workout-live-body .previous-set-row
+){
+ background:var(--cg-workout-raised)!important;
+ border-color:#4b515b!important;
+ color:#eaf0f8!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout :is(
+ .lyfta-set-row input,
+ .lyfta-aux-row input,
+ .workout-live-body input,
+ .workout-live-body select
+){
+ background:#292c33!important;
+ border-color:#474e57!important;
+ color:#f1f4f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout .workout-live-body :is(
+ .lyfta-prev-line button,.lyfta-add-set,.lyfta-add-drop,
+ .lyfta-warmup-toggle,.lyfta-history-button,
+ .btn-secondary,.secondary
+){
+ background:#313740!important;
+ border-color:#4a5664!important;
+ color:#d2e1f3!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise.is-exercise-complete,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise.is-exercise-complete>.workout-live-toggle{
+ background:#1f372c!important;
+ border-color:#436552!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-swipe-content{
+ background:#243c31!important;
+ border-color:#466a56!important;
+}
+/* Superset has one graphite container with a short blue side accent, rather
+   than a solid navy-filled rectangle. Collapsed and expanded use same styling. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset{
+ background:#252a30!important;
+ border:1px solid #52647a!important;
+ border-left:3px solid #75aee9!important;
+ border-radius:19px!important;
+ box-shadow:none!important;
+ overflow:hidden!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout :is(
+ .workout-live-superset-head,.workout-live-superset-toggle,
+ .workout-live-superset-head.has-timed,
+ .workout-live-superset.has-timed .workout-live-superset-head
+){
+ background:#30363e!important;
+ background-color:#30363e!important;
+ border-color:#4d5967!important;
+ color:#e9f1fa!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset-copy strong,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset-head strong{
+ color:#acd4ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset-copy>span{
+ color:#bac8d8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset .workout-live-superset-body{
+ background:#252a30!important;
+ border-color:#414b56!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset .workout-live-exercise-inner:not(.is-exercise-complete),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset .workout-live-grouped-body{
+ background:#252a30!important;
+ border-color:#434b54!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-superset-divider{
+ background:#454d57!important;
+ border-color:#454d57!important;
+}
+/* Match active periodization chooser with graphite, keep its three semantic
+   load-colored dots and selected radio indicator. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal>.workout-start-confirm{
+ background:#23262d!important;
+ border:1px solid #454d57!important;
+ box-shadow:0 20px 54px rgba(0,0,0,.38)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-phase-option{
+ background:#30353e!important;
+ border-color:#566171!important;
+ color:#edf2fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-phase-check{
+ background:#292f36!important;
+ border-color:#78879a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #workoutStartConfirmModal .workout-phase-option input[type="radio"]:checked + .workout-phase-check{
+ background:#3476c5!important;
+ border-color:#79b4f7!important;
+ color:#fff!important;
+}
+/* Diary meals: single surface throughout; no square footer behind the
+   Add product button or a separate rectangle around existing food items. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal{
+ background:#22252b!important;
+ background-image:none!important;
+ border:1px solid #424850!important;
+ border-radius:18px!important;
+ overflow:hidden!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal :is(
+ .nutrition-diary-meal-head,.nutrition-diary-meal-body
+){
+ background:#22252b!important;
+ background-color:#22252b!important;
+ background-image:none!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-body{
+ padding:0 13px 13px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-add{
+ display:block!important;
+ width:100%!important;
+ margin:0!important;
+ background:#30353c!important;
+ border:1px solid #4e5865!important;
+ border-radius:13px!important;
+ color:#d5e7fd!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-save-recipe{
+ background:#292f36!important;
+ border:1px dashed #4f647a!important;
+ color:#bcd7f4!important;
+ border-radius:12px!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-item{
+ background:transparent!important;
+ border:0!important;
+ border-top:1px solid #3f464e!important;
+ padding:11px 0!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-item-actions button{
+ background:#30363d!important;
+ border-color:#4b5765!important;
+ color:#d0e0f4!important;
+}
+/* Home palette: user's chosen blue + green + orange; no violet. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:first-child .client-home-today-icon,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:first-child .client-home-metric-icon{
+ background:#283d59!important;
+ color:#94beff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:first-child .client-home-today-icon svg,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:first-child .client-home-metric-icon svg{
+ color:#94beff!important;
+ stroke:#94beff!important;
+}
