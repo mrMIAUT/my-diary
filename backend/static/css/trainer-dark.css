@@ -3418,3 +3418,33 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav butt
   fill:#7cde9d!important;
   stroke:#7cde9d!important;
 }
+
+
+/* v20 — trainer theme preferences: back chevron belongs before the title,
+   just like other back-navigation headers. Applies in light and dark modes. */
+body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-page-title.trainer-more-title{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-page-title.trainer-more-title>.trainer-theme-back{
+  order:0!important;
+  flex:0 0 44px!important;
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-page-title.trainer-more-title>div{
+  min-width:0!important;
+  flex:1 1 0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-theme-settings .trainer-page-title.trainer-more-title>div h1{
+  margin:0 0 5px!important;
+  overflow-wrap:normal!important;
+}
