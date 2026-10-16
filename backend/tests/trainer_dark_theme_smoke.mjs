@@ -201,25 +201,29 @@ for(const marker of ['.trainer-template-toolbar.modern','.trainer-nutrition-targ
   assert.ok(style.includes(marker),'Missing contrast repair: '+marker);
 }
 assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cannot leak into client screens');
-const themeBackButton='<button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">';
-const themeTitleMarkup='<div><h1>Тема оформлення</h1>';
+const themeBackButton='<div class="trainer-client-navline"><button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">';
+const themeTitleMarkup='<div class="trainer-page-title"><div><h1>Тема оформлення</h1>';
 const themeSettingsPos=trainer.indexOf('function showTrainerThemeSettings(){');
 const themeSettingsEnd=trainer.indexOf('async function openPendingWorkoutForClient',themeSettingsPos);
 const themeSettingsSource=trainer.slice(themeSettingsPos,themeSettingsEnd);
+const library=read('js/library.js');
+assert.ok(library.includes('<div class="trainer-client-navline"><button type="button" class="trainer-back-button"'));
 assert.ok(themeSettingsSource.includes(themeBackButton));
+assert.ok(themeSettingsSource.includes(themeTitleMarkup));
 assert.ok(themeSettingsSource.indexOf(themeBackButton)<themeSettingsSource.indexOf(themeTitleMarkup),
-  'Trainer theme Back button must precede the heading in DOM order');
-assert.ok(style.includes('v20 — trainer theme preferences'));
-assert.ok(style.includes('.trainer-theme-settings .trainer-page-title.trainer-more-title>.trainer-theme-back{'));
-assert.ok(style.includes('justify-content:flex-start!important;'));
+  'Theme Back button must be in a separate row above the heading like Exercise Library');
+assert.ok(!themeSettingsSource.includes('trainer-page-title trainer-more-title'));
+assert.ok(style.includes('v21 — trainer theme screen uses exactly the library back-button layout'));
+assert.ok(style.includes('.trainer-theme-settings .trainer-client-navline{'));
+assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=20'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=21'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
-  assert.ok(shell.includes('/static/js/trainer.js?v=320'));
+  assert.ok(shell.includes('/static/js/trainer.js?v=321'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v237'"));
+assert.ok(sw.includes("const VERSION='eplan-v238'"));
 const authTheme=read('css/theme.css');
 const authMarkup=read('js/auth.js');
 assert.ok(index.includes('/static/css/theme.css?v=38'));
