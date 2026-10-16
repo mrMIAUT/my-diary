@@ -1,0 +1,73 @@
+/* ЄПЛАН trainer bottom navigation — one geometry for light and dark themes.
+   Colors remain theme-specific; do not duplicate the v19 dark layout. */
+body.eplan-redesign.trainer-ui .trainer-bottom-nav,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav{
+  width:min(398px,calc(100% - 34px))!important;
+  bottom:calc(19px + env(safe-area-inset-bottom, 0px))!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:2px!important;
+  align-items:stretch!important;
+  padding:5px 6px!important;
+  border-radius:22px!important;
+  box-sizing:border-box!important;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:50px!important;
+  margin:0!important;
+  padding:4px 2px!important;
+  gap:2px!important;
+  border:0!important;
+  border-radius:17px!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button>span,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button>span{
+  display:block!important;
+  max-width:100%!important;
+  font-size:10.5px!important;
+  line-height:1.1!important;
+  font-weight:800!important;
+  text-align:center!important;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav .trainer-nav-icon,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav .trainer-nav-icon{
+  width:22px!important;
+  height:22px!important;
+  flex:0 0 22px!important;
+  stroke-width:1.85!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav .trainer-nav-leaf{
+  fill:#55c27a!important;
+  stroke:#55c27a!important;
+  stroke-width:1.3!important;
+}
+body.eplan-redesign.trainer-ui .trainer-bottom-nav button.active .trainer-nav-leaf{
+  fill:#4bc780!important;
+  stroke:#4bc780!important;
+}
+/* Light theme changes only the color palette, never padding or size. */
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) .trainer-bottom-nav{
+  background:rgba(255,255,255,.86)!important;
+  border:1px solid rgba(187,201,223,.76)!important;
+  box-shadow:0 8px 30px rgba(31,65,106,.10)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(1.1)!important;
+  backdrop-filter:blur(20px) saturate(1.1)!important;
+}
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) .trainer-bottom-nav button{
+  background:transparent!important;
+  color:#74829a!important;
+}
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) .trainer-bottom-nav button.active{
+  background:#e4efff!important;
+  color:#2c70d7!important;
+}
