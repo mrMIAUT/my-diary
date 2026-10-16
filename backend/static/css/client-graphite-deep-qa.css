@@ -174,47 +174,47 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-m
  box-shadow:none!important;
 }
 /* Meal plan: preserve blue/amber/green BJU semantics, neutralize large backplates. */
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .meal-plan-card{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .meal-plan-card{
  background:#22252b!important;border-color:#424750!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
  .meal-plan-card>button.meal-plan-head{
  background:#292d34!important;color:#f2f5fa!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
  .meal-plan-card>.meal-plan-body{
  background:#22252b!important;border-top-color:#424750!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .client-ration-tabs{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs{
  background:#2b3038!important;border-color:#444c56!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .client-ration-tabs button:not(.active){
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs button:not(.active){
  color:#b6c3d3!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .client-ration-tabs button.active{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs button.active{
  background:#364c69!important;color:#daeaff!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
  .client-ration-page .nutrition-menu-total-v6{
  background:#282c33!important;background-image:none!important;
  border-color:#4a5768!important;border-left-color:#7aaafa!important;
  box-shadow:none!important;color:#eff3f9!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2{
  background:#202329!important;border-color:#414954!important;
  color:#eef2f8!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page :is(
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page :is(
  .nutrition-menu-meal-v2 .nutrition-menu-v2-layout,
  .nutrition-menu-meal-v2 .nutrition-menu-meal-body
 ){
  background:transparent!important;border-color:#3f4752!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-number{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-number{
  background:#344c69!important;color:#c6deff!important;
  border-color:#557ba7!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-ingredient{
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-ingredient{
  color:#b7c5d4!important;
 }
 /* Compact weekly-checkin surfaces; same graphite level as other modal windows. */
