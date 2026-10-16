@@ -916,7 +916,7 @@ function showTrainerMore(){
 function showTrainerThemeSettings(){
  currentTrainerMainView='more';selected=null;window.currentClientData=null;
  app.innerHTML=shell('<div class="trainer-more-page modern trainer-theme-settings">'
-  +'<div class="trainer-page-title trainer-more-title"><div><h1>Тема оформлення</h1><p class="trainer-page-sub">Обери вигляд робочого кабінету тренера.</p></div><button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">'+uiIcon('chevron-left')+'</button></div>'
+  +'<div class="trainer-page-title trainer-more-title"><button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">'+uiIcon('chevron-left')+'</button><div><h1>Тема оформлення</h1><p class="trainer-page-sub">Обери вигляд робочого кабінету тренера.</p></div></div>'
   +window.eplanThemeOptionsHTML()
   +'</div>');
 }
