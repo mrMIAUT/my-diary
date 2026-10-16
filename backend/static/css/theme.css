@@ -2473,3 +2473,118 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav button
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav button.active .client-nav-icon{
   color:#96beff!important;
 }
+
+
+/* v38 — auth screens follow the saved EPLAN theme preference.
+   Login, forgot-password and reset-password share the same markup. Do not
+   style by the OS preference alone: theme.js resolves light/dark/system. */
+body.eplan-auth-page[data-eplan-theme="dark"]{
+  color-scheme:dark!important;
+  background:#101114!important;
+  color:#f3f4f6!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] #app,
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-shell{
+  background:#101114!important;
+  color:#f3f4f6!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-card{
+  background:#1c1e23!important;
+  border:1px solid #3b3e47!important;
+  color:#f3f4f6!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.23)!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-heading h1{
+  color:#f3f4f6!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-heading p{
+  color:#adb7c5!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field>span{
+  color:#c9d4e2!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input{
+  background:#282b31!important;
+  border:1px solid #4a505d!important;
+  color:#f3f4f6!important;
+  caret-color:#b6d4ff;
+  color-scheme:dark;
+  box-shadow:none!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input::placeholder{
+  color:#9daebf!important;
+  opacity:1!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input:focus{
+  border-color:#76acfb!important;
+  outline:none!important;
+  box-shadow:0 0 0 3px rgba(97,151,233,.22)!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input:-webkit-autofill,
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#f3f4f6!important;
+  box-shadow:inset 0 0 0 1000px #282b31!important;
+  transition:background-color 9999s ease-out 0s;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .password-eye-btn{
+  color:#aebed1!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .remember-row{
+  color:#b1bfd0!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .remember-row input[type="checkbox"]{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  flex:0 0 18px!important;
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  padding:0!important;
+  margin:0!important;
+  background:#282b31!important;
+  border:1.5px solid #8190a3!important;
+  border-radius:5px!important;
+  cursor:pointer;
+  vertical-align:middle;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .remember-row input[type="checkbox"]:checked{
+  background:#3478f6!important;
+  border-color:#6aa4ff!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .remember-row input[type="checkbox"]:checked::after{
+  content:"";
+  width:4px;
+  height:8px;
+  border:solid #fff;
+  border-width:0 2px 2px 0;
+  transform:translateY(-1px) rotate(45deg);
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .remember-row input[type="checkbox"]:focus-visible{
+  outline:2px solid #96c2ff!important;
+  outline-offset:2px!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-forgot{
+  color:#8dbdff!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-status{
+  color:#b7c5d5!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-error{
+  color:#ff9da7!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-secondary{
+  background:#303744!important;
+  border-color:#4a576a!important;
+  color:#e1eaf7!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-logo-name{
+  color:#e6ecf5!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .auth-logo{
+  box-shadow:0 12px 34px rgba(0,0,0,.18)!important;
+}
+body.eplan-auth-page[data-eplan-theme="dark"] .eplan-splash{
+  background:#101114!important;
+}
