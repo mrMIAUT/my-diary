@@ -182,3 +182,61 @@ body.trainer-program-modal-open{overflow:hidden!important}
    max-height:calc(100dvh - 24px);padding:18px 13px!important;
  }
 }
+
+/* Trainer exercise alternatives: restore hierarchy and contrast in both themes.
+   The older redesign sheet used a light-theme title color even in dark mode. */
+body.eplan-redesign.trainer-ui .trainer-client-page .exercise-alternatives{
+  border-radius:15px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip.alternative-chip-detailed{
+  padding:11px 12px!important;
+  gap:6px!important;
+  border-radius:12px!important;
+  border:1px solid #cfdbea!important;
+  background:#f2f6fb!important;
+  color:#21324b!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip-detailed .alternative-chip-top{
+  align-items:flex-start!important;
+  gap:10px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip-detailed .alternative-name{
+  display:block!important;
+  min-width:0!important;
+  flex:1 1 auto!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.35!important;
+  font-size:13px!important;
+  font-weight:750!important;
+  color:#1a2c48!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip-detailed small{
+  line-height:1.4!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  color:#526781!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .alternative-chip-detailed .alternative-tech-link{
+  color:#2469be!important;
+  font-size:11px!important;
+  line-height:1.4!important;
+  font-weight:700!important;
+  text-underline-offset:2px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .alternative-chip.alternative-chip-detailed{
+  background:#303842!important;
+  border-color:#525e6d!important;
+  color:#edf2f9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .alternative-chip-detailed .alternative-name{
+  color:#f0f3f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .alternative-chip-detailed small{
+  color:#c2cddd!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .alternative-chip-detailed .alternative-tech-link{
+  color:#94c1ff!important;
+}
