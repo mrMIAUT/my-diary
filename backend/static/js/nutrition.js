@@ -795,6 +795,101 @@ function nutritionTargetEditorHTML(c,editing=false){
  </div>`;
 }
 
+/* Read-only daily food log for the trainer: client diary snapshots take
+   priority over the older manually entered nutrition row. No save controls. */
+function trainerActualDiaryState(cid){
+ const stored=window.trainerActualDiarySelection;
+ if(!stored||+stored.cid!==+cid){
+   window.trainerActualDiarySelection={cid:+cid,day:isoToday()};
+ }
+ return window.trainerActualDiarySelection;
+}
+function trainerActualDiaryDateShift(delta){
+ const data=window.currentClientData||{},cid=+data.client?.id||0;
+ if(!cid)return;
+ const day=trainerActualDiaryState(cid).day;
+ const [y,m,d]=day.split('-').map(Number);
+ const at=new Date(Date.UTC(y,m-1,d+delta)).toISOString().slice(0,10);
+ selectTrainerActualDiaryDate(at);
+}
+function selectTrainerActualDiaryDate(value){
+ const data=window.currentClientData||{},cid=+data.client?.id||0;
+ const date=String(value||'');
+ if(!cid||!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||date>isoToday())return;
+ window.trainerActualDiarySelection={cid,day:date};
+ const panel=document.getElementById('trainerActualDiaryCard');
+ if(panel){
+   panel.outerHTML=trainerActualDiaryHTML(data);
+   loadTrainerActualDiary();
+ }
+}
+function trainerActualDiaryHTML(d){
+ const cid=+d?.client?.id||0,day=trainerActualDiaryState(cid).day;
+ const today=isoToday(),locked=day>=today;
+ return '<section class="card trainer-actual-diary" id="trainerActualDiaryCard">'
+  +'<div class="trainer-actual-diary-head"><div><small>ФАКТИЧНЕ ХАРЧУВАННЯ</small>'
+  +'<h3>Щоденне КБЖУ клієнта</h3><p>Записи клієнта за обраний день — тільки перегляд.</p></div></div>'
+  +'<div class="trainer-actual-diary-date">'
+  +'<button type="button" aria-label="Попередній день" onclick="trainerActualDiaryDateShift(-1)">‹</button>'
+  +'<label><span>Дата</span><input type="date" max="'+esc(today)+'" value="'+esc(day)+'"'
+  +' aria-label="Дата фактичного харчування" onchange="selectTrainerActualDiaryDate(this.value)"></label>'
+  +'<button type="button" aria-label="Наступний день" '+(locked?'disabled ':'')+'onclick="trainerActualDiaryDateShift(1)">›</button></div>'
+  +'<div id="trainerActualDiaryContent" class="trainer-actual-diary-content" role="status" aria-live="polite">'
+  +'Завантаження фактичного харчування…</div>'
+  +'</section>';
+}
+function trainerActualDiaryNumber(value){
+ const n=Number(value);
+ return (Number.isFinite(n)?n:0).toLocaleString('uk-UA',{maximumFractionDigits:1});
+}
+function trainerActualDiaryDetails(payload,client,manual){
+ const items=Array.isArray(payload?.items)?payload.items:[];
+ const fromDiary=items.length>0;
+ const fromManual=!fromDiary&&manual;
+ const totals=fromDiary?payload.totals||{}:fromManual?manual:{};
+ const status=fromDiary?'Продукти зі щоденника':fromManual?'Внесено вручну':payload?.active?'День позначено, але продукти не внесені':'Записів за цей день немає';
+ const hasData=fromDiary||fromManual;
+ const keys=[['kcal','Калорії','ккал'],['protein','Білки','г'],['fat','Жири','г'],['carbs','Вуглеводи','г']];
+ const metrics='<div class="trainer-actual-diary-metrics">'+keys.map(([key,title,unit])=>{
+   const target=+client?.[key]||0;
+   return '<div><span>'+title+'</span><strong>'+(hasData?trainerActualDiaryNumber(totals[key]):'—')
+    +'</strong><small>'+(target>0?'Ціль '+trainerActualDiaryNumber(target)+' '+unit:'Ціль не задана')+'</small></div>';
+ }).join('')+'</div>';
+ const byMeal=[['breakfast','Сніданок'],['lunch','Обід'],['snack','Перекус'],['dinner','Вечеря']];
+ const meals=fromDiary?'<div class="trainer-actual-diary-meals">'+byMeal.map(([key,label])=>{
+   const entries=items.filter(x=>x.meal===key);
+   if(!entries.length)return '';
+   return '<div class="trainer-actual-diary-meal"><strong>'+label+'</strong>'
+     +entries.map(x=>'<div><span>'+esc(x.name||'Продукт')+(x.brand?' · '+esc(x.brand):'')
+       +'<small>'+trainerActualDiaryNumber(x.grams||x.portion_amount||0)+' '+(x.portion_unit==='ml'?'мл':'г')+'</small></span>'
+       +'<b>'+trainerActualDiaryNumber(x.kcal)+' ккал</b></div>').join('')+'</div>';
+ }).join('')+'</div>':'';
+ return '<div class="trainer-actual-diary-source">'+esc(status)+'</div>'
+   +metrics+(hasData?meals:'<p class="trainer-actual-diary-no-data">Клієнт поки не додав продуктів або записів за цю дату.</p>');
+}
+async function loadTrainerActualDiary(){
+ const d=window.currentClientData||{},cid=+d.client?.id||0;
+ if(session?.role!=='trainer'||!cid)return;
+ const host=document.getElementById('trainerActualDiaryContent');
+ if(!host||!document.getElementById('nutrition')||document.getElementById('nutrition')?.classList.contains('hidden'))return;
+ const day=trainerActualDiaryState(cid).day,req=(window.trainerActualDiaryRequestSeq||0)+1;
+ window.trainerActualDiaryRequestSeq=req;
+ host.textContent='Завантаження фактичного харчування…';
+ try{
+   const result=await api('/trainer/clients/'+cid+'/nutrition/diary?day='+encodeURIComponent(day));
+   const now=window.trainerActualDiarySelection,current=window.currentClientData||{};
+   if(req!==window.trainerActualDiaryRequestSeq||+current.client?.id!==cid||now?.day!==day)return;
+   const target=document.getElementById('trainerActualDiaryContent');
+   if(!target)return;
+   const manual=(current.nutrition||[]).filter(x=>x.day===day).slice().sort((a,b)=>(+b.id||0)-(+a.id||0))[0];
+   target.innerHTML=trainerActualDiaryDetails(result,current.client,manual);
+ }catch(error){
+   if(req!==window.trainerActualDiaryRequestSeq)return;
+   const target=document.getElementById('trainerActualDiaryContent');
+   if(target)target.textContent='Не вдалося завантажити щоденник. Перевір з’єднання та спробуй змінити дату.';
+ }
+}
+
 function nutritionHTML(d,editing=false){
  let c=d.client;
  nutritionPlanDraft=planFromData(d);
@@ -804,7 +899,7 @@ function nutritionHTML(d,editing=false){
    <div><strong>Аналіз прогресу за 4 тижні</strong><p class="muted">Середня вага, талія, харчування й активність. Без автоматичної зміни норми.</p></div>
    <button type="button" onclick="openTrainerFourWeekAnalysis(${c.id})">Перевірити прогрес</button>
  </div>`:'';
- return `<div class="trainer-nutrition-page">${target}${review}${clientAccess(c).features?.meal_plan?`<div id="nutritionPlanHost">${mealPlanEditorHTML(d,editing)}</div>`:''}</div>`;
+ return `<div class="trainer-nutrition-page">${target}${trainerActualDiaryHTML(d)}${review}${clientAccess(c).features?.meal_plan?`<div id="nutritionPlanHost">${mealPlanEditorHTML(d,editing)}</div>`:''}</div>`;
 }
 
 
