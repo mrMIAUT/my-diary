@@ -482,16 +482,25 @@ async function goClientHome(cid){
  }
 }
 
+/* Client bottom nav: shared concept 3 SVG family and a distinct trend icon. */
+function clientNavIcon(name){
+ if(name==='progress')return '<svg class="ui-icon client-nav-icon" viewBox="0 0 24 24" aria-hidden="true">'
+  +'<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4.1"/>'
+  +'<path d="m6.7 15.7 4.1-4.2 3.2 2.4 3.5-4.6"/><path d="M14.7 9.3h2.8v2.8"/>'
+  +'</svg>';
+ return trainerNavIcon(name).replace('class="ui-icon trainer-nav-icon"','class="ui-icon client-nav-icon"');
+}
+
 function clientBottomNavHTML(){
  if(!session||session.role!=='client'||!session.client_id)return '';
  let cid=session.client_id,active=clientNavGroup(),features=clientAccess().features||{};
- let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${clientNavIcon(icon)}<span>${label}</span></button>`;
  let items=[
    item('home','Головна','home',`goClientHome(${cid})`),
-   features.workouts?item('training','Тренування','dumbbell',`showClientTraining(${cid})`):'',
-   item('progress','Прогрес','chart',`showClientSection('progress')`),
-   item('nutrition','Харчування','food',`showClientNutrition(${cid})`),
-   item('more','Більше','menu',`showClientMore(${cid})`)
+   features.workouts?item('training','Тренування','programs',`showClientTraining(${cid})`):'',
+   item('progress','Прогрес','progress',`showClientSection('progress')`),
+   item('nutrition','Харчування','nutrition',`showClientNutrition(${cid})`),
+   item('more','Більше','more',`showClientMore(${cid})`)
  ].filter(Boolean);
  return `<nav class="client-bottom-nav" aria-label="Основна навігація" style="grid-template-columns:repeat(${items.length},1fr)">${items.join('')}</nav>`;
 }
