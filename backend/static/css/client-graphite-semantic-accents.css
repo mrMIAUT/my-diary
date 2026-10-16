@@ -1,0 +1,204 @@
+/* ЄПЛАН client graphite: semantic accents, clean supersets and legacy navy screens.
+ * Dark mode only. CSS-only: workout and nutrition behavior is unchanged. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+  --cg-neutral:#23262c;
+  --cg-neutral-raised:#2b2f36;
+  --cg-neutral-border:#414751;
+  --cg-soft-blue:#a7caff;
+  --cg-mint:#97ddc4;
+  --cg-violet:#cab7f3;
+  --cg-amber:#f0c38a;
+}
+/* Superset's old 10px horizontal padding + negative-margin header created
+   two squared side strips inside the rounded shell. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset{
+  padding:0!important;
+  margin:9px 0!important;
+  background:#26292f!important;
+  border:0!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset .redesign-training-superset-label{
+  margin:0!important;
+  padding:10px 13px!important;
+  background:#30343b!important;
+  border:0!important;
+  border-bottom:1px solid #434a54!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset .redesign-training-exercise{
+  padding:15px 12px!important;
+  margin:0!important;
+  background:#23262c!important;
+  border:0!important;
+  border-bottom:1px solid #3d434c!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset .redesign-training-exercise:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset :is(
+  .redesign-training-exercise-copy,.redesign-training-main-title-row
+){min-width:0!important;}
+/* Stat icons: calendar amber, performed exercises turquoise, cycle violet.
+   The legacy theme enforced a single blue SVG color on all three. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(1)>span{
+  background:#41352b!important;color:var(--cg-amber)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(2)>span{
+  background:#244037!important;color:var(--cg-mint)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(3)>span{
+  background:#383148!important;color:var(--cg-violet)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(1)>span svg{
+  stroke:var(--cg-amber)!important;color:var(--cg-amber)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(2)>span svg{
+  stroke:var(--cg-mint)!important;color:var(--cg-mint)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div:nth-child(3)>span svg{
+  stroke:var(--cg-violet)!important;color:var(--cg-violet)!important;
+}
+/* Home: keep training identifiable, but avoid blue for nutrition,
+   weight, waist and completion counters. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:nth-child(1) .client-home-today-icon{
+  background:#34354a!important;color:#c6b8ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:nth-child(2) .client-home-today-icon{
+  background:#264038!important;color:#a6e2bf!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:nth-child(1) .client-home-today-icon svg{
+  stroke:#c6b8ff!important;color:#c6b8ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-today-card:nth-child(2) .client-home-today-icon svg{
+  stroke:#a6e2bf!important;color:#a6e2bf!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(1) .client-home-metric-icon{
+  background:#39324c!important;color:#c8b4fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(2) .client-home-metric-icon{
+  background:#254039!important;color:#9bdec4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(3) .client-home-metric-icon{
+  background:#453829!important;color:#ecc58f!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(1) .client-home-metric-icon svg{
+  stroke:#c8b4fa!important;color:#c8b4fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(2) .client-home-metric-icon svg{
+  stroke:#9bdec4!important;color:#9bdec4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-home-metric:nth-child(3) .client-home-metric-icon svg{
+  stroke:#ecc58f!important;color:#ecc58f!important;
+}
+/* Diary: one neutral daily total and no navy footers/buttons per meal.
+   Meal icons stay breakfast blue / lunch mint / snack lilac / dinner amber. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-day-total{
+  background:#292d34!important;
+  border:1px solid #454b55!important;
+  border-radius:16px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-day-total strong{
+  color:#f0f3f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-day-total :is(small,span){
+  color:#b8c9db!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-add,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-head button{
+  background:#313943!important;
+  border:1px solid #4b596b!important;
+  color:#d7e5f5!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal{
+  overflow:hidden!important;
+  background:#22252b!important;
+  border-color:#414750!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-body{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-add{
+  margin:0!important;
+}
+/* Marketplace trainers card: the selected trainer keeps a green relationship
+   badge; the large navy card is neutral graphite. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .trainer-market-card.trainer-card-v3.marketplace,
+  .client-home-trainer-card.trainer-card-v3
+){
+  background:#22252b!important;
+  background-image:none!important;
+  border:1px solid #434b56!important;
+  color:#eef3f9!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .trainer-card-v3-tags>i{
+  background:#303640!important;
+  border-color:#4a5665!important;
+  color:#cbd8e9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .trainer-card-v3-footer{
+  border-top-color:#414852!important;
+}
+/* Exercise library: neutral containers, mild dividers, meaningful blue video link. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-group{
+  background:#22252b!important;
+  border-color:#454c55!important;
+  box-shadow:none!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-group-head{
+  background:#2b2e35!important;
+  border-color:#454c55!important;
+  color:#f0f3f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-group-body{
+  background:#22252b!important;
+  border-color:#454c55!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-row{
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid #3e444e!important;
+  color:#eef2f8!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-row:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library .redesign-library-group-meta b{
+  background:#373d47!important;
+  border-color:#505a68!important;
+  color:#c7d5e7!important;
+}
+/* Help accordions become graphite, not solid navy blocks. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-help-item{
+  background:#22252b!important;
+  border:1px solid #404750!important;
+  border-radius:17px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-help-item>button{
+  background:#292d34!important;
+  color:#f0f4fa!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-help-item>div{
+  background:#22252b!important;
+  color:#c4ceda!important;
+  border:0!important;
+}
