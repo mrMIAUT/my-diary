@@ -1,0 +1,206 @@
+/* Client graphite — inner panels and food dialogs.
+   Keep layout/behavior unchanged; dark theme only. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] {
+  --cg-popup:#22252b;
+  --cg-elevated:#2c3038;
+  --cg-field:#30353d;
+  --cg-line:#444b55;
+  --cg-subtle:#bcc6d2;
+  --cg-action:#a9caff;
+}
+/* Weekly report: do not paint a square background behind the comment label.
+   Only the textarea should have a field background. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-comment{
+  display:block!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  color:var(--cg-subtle)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-comment textarea{
+  display:block!important;
+  width:100%!important;
+  background:var(--cg-field)!important;
+  border:1px solid var(--cg-line)!important;
+  border-radius:16px!important;
+  color:#f3f5fa!important;
+  padding:12px 13px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-comment textarea::placeholder{
+  color:#acb6c5!important;
+  opacity:1!important;
+}
+/* The completed-workout editor has a single exercise card. Individual
+   work sets shouldn't turn into squared panels below their input row. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-set-group{
+  background:transparent!important;
+  background-color:transparent!important;
+  border:0!important;
+  border-bottom:1px solid #3b4149!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:9px 0 12px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-set-group:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-set{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-drop-holder{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-aux-row{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal
+  .completed-workout-edit-exercise .completed-workout-edit-aux-section{
+  background:var(--cg-elevated)!important;
+  border:1px solid var(--cg-line)!important;
+  border-radius:15px!important;
+}
+/* Supersets: keep only a rounded outer surface and understated exercise
+   separators; no hard-edged inner blue rectangles. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset{
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:#292c32!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-superset .redesign-training-exercise{
+  background:#22252b!important;
+  border:0!important;
+  border-bottom:1px solid #41464f!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-superset .redesign-training-exercise:last-child{
+  border-bottom:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-superset-label{
+  background:#303741!important;
+  border:0!important;
+  border-bottom:1px solid #474f59!important;
+}
+/* Product and recipe overlays: graphite like the rest of ЄПЛАН.
+   These are appended directly to body, outside #app. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+ #myProductModal,#myFoodsModal,#myRecipesModal
+) .my-foods-panel{
+  background:var(--cg-popup)!important;
+  background-image:none!important;
+  border:1px solid var(--cg-line)!important;
+  color:#f2f5f9!important;
+  border-radius:22px!important;
+  box-shadow:0 20px 55px rgba(0,0,0,.32)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal :is(h2,strong),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myProductModal,#myFoodsModal,#myRecipesModal)
+  .my-foods-panel :is(h2,strong){
+  color:#f0f3f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal :is(.muted,.food-lookup-status,.food-lookup-note,.food-lookup-details),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myProductModal,#myFoodsModal,#myRecipesModal)
+  .my-foods-panel :is(.muted,.my-food-hint,.my-food-extra>small){
+  color:var(--cg-subtle)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal input,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal select,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myProductModal,#myFoodsModal,#myRecipesModal)
+  .my-foods-panel input:not([type="checkbox"]){
+  background:var(--cg-field)!important;
+  border:1px solid #515965!important;
+  border-radius:13px!important;
+  box-shadow:none!important;
+  color:#eff3fa!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal input::placeholder,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel input::placeholder{
+  color:#aebbc9!important;
+  opacity:1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal input:focus,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel input:not([type="checkbox"]):focus{
+  border-color:#6f9bdb!important;
+  outline:2px solid rgba(106,157,228,.5)!important;
+  outline-offset:1px!important;
+}
+/* Search tiles, macros and saved recipes use quiet raised surfaces. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal :is(
+ .food-lookup-row,.food-lookup-portion,.food-lookup-macros>span
+),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myProductModal,#myFoodsModal,#myRecipesModal)
+  :is(.my-food-extra,.my-food-row){
+  background:var(--cg-elevated)!important;
+  border:1px solid var(--cg-line)!important;
+  color:#edf2f8!important;
+  box-shadow:none!important;
+  border-radius:14px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal .food-lookup-row :is(small,span),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myFoodsModal,#myRecipesModal) .my-food-row small{
+  color:#b7c2d0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal .food-lookup-row em{
+  color:#b9d7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal .food-lookup-portion label,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-foods-panel label{
+  color:#ced8e5!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal .food-lookup-macros :is(b,small){
+  color:#e9eef7!important;
+}
+/* Neutral secondary actions and dismiss buttons. Retain blue for the actual
+   submit action rather than for every button and large container. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #foodSearchModal .food-lookup-modal :is(
+ .food-custom-actions button,.food-lookup-more,#foodSearchClose
+),
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myProductModal,#myFoodsModal,#myRecipesModal)
+ .my-foods-panel .between>button.dark,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#myFoodsModal,#myRecipesModal)
+ .my-food-row-actions button{
+  background:#343a43!important;
+  color:#d5e2f1!important;
+  border:1px solid #53606f!important;
+  box-shadow:none!important;
+  border-radius:13px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-extra>span{
+  color:#e0e7f2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-review{
+  background:transparent!important;
+  color:#d4deea!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-review input[type="checkbox"]{
+  accent-color:#5595e1!important;
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #myProductModal .my-food-primary{
+  background:#315f9d!important;
+  border:1px solid #578ac9!important;
+  color:#f5f8ff!important;
+}
