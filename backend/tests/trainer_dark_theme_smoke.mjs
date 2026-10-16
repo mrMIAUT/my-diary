@@ -189,22 +189,40 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=17'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=18'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v231'"));
+assert.ok(sw.includes("const VERSION='eplan-v232'"));
 
 const core=read('js/core.js');
 new vm.Script(core);
-assert.ok(index.includes('/static/js/core.js?v=171'));
-assert.ok(sw.includes('/static/js/core.js?v=171'));
+assert.ok(index.includes('/static/js/core.js?v=172'));
+assert.ok(sw.includes('/static/js/core.js?v=172'));
 assert.ok(core.includes('function trainerNavIcon(name)'));
 assert.ok(core.includes('trainerNavIcon(icon)'));
 assert.ok(core.includes("item('programs','Програми','programs'"));
 assert.ok(core.includes("item('nutrition','Харчування','nutrition'"));
-assert.ok(style.includes('v17 — concept 3'));
-assert.ok(style.includes('.trainer-bottom-nav .trainer-nav-accent'));
+assert.ok(style.includes('v18 — refined trainer concept 3'));
+assert.ok(style.includes('min-height:50px!important;'));
+assert.ok(style.includes('padding:5px 6px!important;'));
+assert.ok(style.includes('fill:#55c27a!important;'));
+assert.ok(!style.includes('.trainer-bottom-nav .trainer-nav-accent'));
+assert.ok(!core.includes('trainer-nav-accent'));
+const iconStart=core.indexOf('function trainerNavIcon(name){');
+const iconEnd=core.indexOf('function trainerBottomNavHTML(){',iconStart);
+assert.ok(iconStart>=0&&iconEnd>iconStart);
+const navIcons={};
+vm.createContext(navIcons);
+vm.runInContext(core.slice(iconStart,iconEnd),navIcons,{timeout:1000});
+for(const key of ['home','clients','programs','nutrition','more']){
+  const icon=navIcons.trainerNavIcon(key);
+  assert.ok(icon.startsWith('<svg')&&icon.endsWith('</svg>'));
+  assert.ok(!icon.includes('trainer-nav-accent'));
+}
+assert.ok(navIcons.trainerNavIcon('nutrition').includes('fill="#55c27a"'));
+assert.equal((navIcons.trainerNavIcon('more').match(/<circle/g)||[]).length,3);
+
 const trainerNavIndex=core.indexOf('function trainerBottomNavHTML(){');
 const clientNavIndex=core.indexOf('function clientBottomNavHTML(){');
 assert.ok(clientNavIndex>=0&&clientNavIndex<trainerNavIndex);
