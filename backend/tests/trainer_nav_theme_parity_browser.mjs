@@ -23,6 +23,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:850},deviceScaleFactor:2});
   await page.setContent(html);
   for(const file of styles)await page.addStyleTag({content:fs.readFileSync(path.join(root,file),'utf8')});
+  await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important}'});
   const measure=()=>page.evaluate(()=>{
    const bar=document.querySelector('.trainer-bottom-nav'),active=bar.querySelector('button.active'),
     icon=active.querySelector('svg'),label=active.querySelector('span');
@@ -37,6 +38,7 @@ try{
   });
   const light=await measure();
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='dark');
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const dark=await measure();
   for(const k of ['bar','active','icon','label']){
    assert.deepEqual(light[k].map(rounded),dark[k].map(rounded),`${width}px geometry mismatch ${k}`);
