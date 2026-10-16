@@ -1,0 +1,252 @@
+/* ЄПЛАН client graphite theme v1.
+ * Deliberately dark-mode-only. Mirrors the trainer's graphite tokens, without
+ * moving client controls or changing semantic macro/success/danger colors.
+ * Loaded after theme.css; keep new refinements here rather than duplicating
+ * the legacy navy theme across hundreds of rules. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+  color-scheme:dark;
+  --client-graphite-bg:#101114;
+  --client-graphite-surface:#1c1e23;
+  --client-graphite-raised:#282b31;
+  --client-graphite-border:#353840;
+  --client-graphite-border-strong:#444954;
+  --client-graphite-text:#f3f4f6;
+  --client-graphite-muted:#aeb4bf;
+  --client-graphite-accent:#96beff;
+  --client-graphite-blue-surface:#263954;
+  --bg:var(--client-graphite-bg);
+  --card:var(--client-graphite-surface);
+  --card2:var(--client-graphite-raised);
+  --line:var(--client-graphite-border);
+  --text:var(--client-graphite-text);
+  --muted:var(--client-graphite-muted);
+  --eplan-surface:var(--client-graphite-surface);
+  --eplan-raised:var(--client-graphite-raised);
+  --eplan-ink:var(--client-graphite-text);
+  --eplan-subtle:var(--client-graphite-muted);
+  background:var(--client-graphite-bg)!important;
+  color:var(--client-graphite-text)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  #app,.wrap.client-shell,.client-section-page,.redesign-training-page,
+  .redesign-progress-page,.redesign-progress-shell,.redesign-nutrition-page,
+  .redesign-more-page,.redesign-more-subpage,.redesign-bju-page,.measurements-page
+){
+  background-color:var(--client-graphite-bg)!important;
+  color:var(--client-graphite-text)!important;
+}
+/* Shared main surface: dashboard, programs, progress, nutrition and measurements. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .card,.exercise,.client-home-today-card,.client-home-metric,
+  .client-home-trainer-card,.client-weekly-checkin,
+  .redesign-training-summary,.redesign-training-day,.redesign-training-help,
+  .redesign-training-exercise,.redesign-training-last,.redesign-training-details,
+  .redesign-training-stat-grid>div,.redesign-training-today-done,
+  .redesign-progress-kpi,.redesign-progress-week,.redesign-progress-chart-card,
+  .redesign-progress-training-row,.redesign-progress-achievements>div,
+  .redesign-progress-workout-detail,.progress-workout-stat,
+  .redesign-calorie-card,.redesign-macro-ring-card,
+  .redesign-nutrition-summary-grid>div,.redesign-nutrition-day-row,
+  .redesign-bju-summary,.redesign-empty-panel,
+  .activity-field-card,.activity-steps-card,.activity-saved-card,
+  .measurement-next,.measurement-metric,.measurement-place-card,
+  .measurement-weight-visual,.measurement-history-card,
+  .measurement-history-calendar-card,.meal-plan-card,.meal-view,.meal-option,
+  .meal-variant,.redesign-more-settings-card,.redesign-settings-panel,
+  .redesign-more-list,.redesign-more-item,.redesign-help-item,.calendar-day,
+  .progress-workout-detail-hero,.progress-workout-detail-section,
+  .progress-workout-exercise,.progress-workout-muscles,
+  .redesign-progress-achievements,.nutrition-diary-meal,.nutrition-diary-day,
+  .nutrition-diary-summary,.trainer-profile-public .trainer-profile-stats>div
+){
+  background:var(--client-graphite-surface)!important;
+  background-image:none!important;
+  border-color:var(--client-graphite-border)!important;
+  color:var(--client-graphite-text)!important;
+  box-shadow:none!important;
+}
+/* Grouped smaller elevated surfaces, but never blanket-override macro rings. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-training-tabs,.redesign-progress-tabs,.redesign-nutrition-tabs,
+  .redesign-bju-detail-grid,.redesign-training-day-status,
+  .redesign-training-day-index,.training-row-icon,.client-home-today-icon,
+  .client-home-metric-icon,.activity-field-icon,.activity-metric-cards>*,
+  .activity-steps-progress,.redesign-more-icon,.progress-workout-sets>*,
+  .progress-workout-set-group,.progress-workout-muscle-row,
+  .redesign-progress-workout-detail .progress-workout-stat,
+  .nutrition-diary-food,.nutrition-diary-item,
+  .meal-plan-head,.meal-plan-body,.measurement-history-calendar-card .calendar-day,
+  .workout-timed-previous,.workout-timed-plan>div,.workout-timed-superset-progress,
+  .redesign-rule-item>b
+){
+  background-color:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  box-shadow:none!important;
+}
+/* The active workout (sets, supersets, timers) should match the same graphite
+   hierarchy. Existing success, rest-ring, completion and skipped states win. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .lyfta-exercise-card,.lyfta-workout-exercise,
+  .workout-exercise-card,.workout-exercise,.workout-rest-panel,
+  .workout-timer-panel,.workout-timed-modal-card,
+  .workout-timed-ring>div,.lyfta-warmup-row,
+  .lyfta-drop-set,.workout-superset-card
+){
+  background-color:var(--client-graphite-surface)!important;
+  border-color:var(--client-graphite-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .lyfta-set-input,.lyfta-reps-input,.lyfta-weight-input,
+  .workout-timed-modal input,.workout-timed-modal select,
+  .redesign-nutrition-page input,.redesign-nutrition-page textarea,
+  .redesign-nutrition-page select
+){
+  background-color:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+}
+/* Forms and secondary buttons across all client screens. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,select
+){
+  background-color:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+  color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(input,textarea)::placeholder{
+  color:#a0a8b6!important;opacity:1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-back-title button,.client-top .notify-btn,
+  .redesign-training-help>button,.redesign-training-day-main,
+  .redesign-more-item button,.workout-timed-close,
+  .measurement-history-action,.measurement-calendar-nav button,
+  .activity-custom-cardio button
+){
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-back-title button,.client-top .notify-btn,
+  .workout-timed-close
+){
+  background-color:var(--client-graphite-raised)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  h1,h2,h3,h4,.redesign-training-day-main strong,
+  .redesign-progress-workout-detail h2,.client-home-metric strong,
+  .measurement-next h2,.progress-workout-detail-section-head strong,
+  .redesign-more-copy strong
+){color:var(--client-graphite-text)!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .muted,.redesign-more-copy small,.measurement-history-card small,
+  .client-home-today-card small,.redesign-training-summary small,
+  .progress-workout-detail-section-head span,.workout-timed-modal-meta,
+  .nutrition-diary-meal small
+){color:var(--client-graphite-muted)!important}
+/* Tabs, highlighted training days, and the main client navigation use trainer blue. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-training-tabs,.redesign-progress-tabs,.redesign-nutrition-tabs
+) button.active{
+  background:var(--client-graphite-blue-surface)!important;
+  color:var(--client-graphite-accent)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .redesign-training-day.is-next{
+  border-color:#4b6b96!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav{
+  background:rgba(28,30,35,.94)!important;
+  border-color:#3b3e47!important;
+  box-shadow:0 8px 30px rgba(0,0,0,.4)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav button.active{
+  background:#263954!important;color:#96beff!important;
+}
+/* Nutrition rings, colored proteins/fats/carbs, completed exercises and
+   status badges retain their existing semantic colors and SVG fills. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-nutrition-actions,.nutrition-diary-actions
+){
+  background:transparent!important;border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .weekly-checkin-modal,.redesign-edit-modal,.redesign-modal-card,
+  .workout-timed-modal-card,.measurement-modal-card,
+  .nutrition-food-picker,.nutrition-search-modal
+){
+  background-color:var(--client-graphite-surface)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+  box-shadow:0 16px 45px rgba(0,0,0,.28)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModal .workout-timed-ring>div{
+  background:var(--client-graphite-raised)!important;
+  box-shadow:inset 0 0 0 1px var(--client-graphite-border-strong)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-stats>div{
+  background-color:var(--client-graphite-raised)!important;
+}
+
+/* Nested client sub-screens: eliminate remaining legacy navy backplates. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top:not(.client-top-compact){
+  background:var(--client-graphite-bg)!important;
+  border-color:var(--client-graphite-border)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-training-day-main,.redesign-training-help-body,
+  .nutrition-diary-card,.nutrition-diary-meal-body,.nutrition-diary-item,
+  .nutrition-diary-meal-head,.progress-workout-detail-hero,
+  .progress-workout-detail-section,.progress-workout-exercise,
+  .measurement-history-card,.measurement-place-card,
+  .activity-always-open,.redesign-more-list,.trainer-four-week-modal
+){
+  background-color:var(--client-graphite-surface)!important;
+  border-color:var(--client-graphite-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .workout-live-body .lyfta-set-swipe,.workout-live-body .lyfta-set-swipe-content,
+  .workout-live-body .lyfta-prev-line button,
+  .workout-live-body .lyfta-set-done:not(.done),
+  .workout-timed-modal .workout-timed-modal-meta b
+){
+  background:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+}
+/* Checked workout sets retain the stronger green done state. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-swipe-content{
+  background:#243e33!important;
+  border-color:#456c56!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.workout-live-body .lyfta-set-done.done{
+  background:#235746!important;
+  color:#d9f6e7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .trainer-four-week-field input,.trainer-four-week-field select,
+  .workout-timed-modal input,.workout-timed-modal select
+){
+  background:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+}
+
+/* Training-day innards carried a legacy navy fill. Keep completed days green. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .redesign-training-day-main,.redesign-training-day-body,
+  .redesign-training-exercises
+){
+  background:#1c1e23!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done .redesign-training-day-main{
+  background:#162921!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset{
+  background:#282b31!important;
+}
