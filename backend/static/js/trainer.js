@@ -1211,6 +1211,7 @@ function showTrainerClientTab(id,btn,push=true){
  document.querySelectorAll('.trainer-client-tabs button').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));
  currentTrainerTab=id;
  if(session?.role==='trainer'&&selected&&history.state?.eplanPage==='client') history.replaceState({...history.state,eplanTab:id},'',location.href);
+ if(id==='nutrition'&&typeof loadTrainerActualDiary==='function')loadTrainerActualDiary();
 }
 
 
