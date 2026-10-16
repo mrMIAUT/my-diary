@@ -40,6 +40,12 @@ assert.ok(style.includes('v12 — separated home avatars + one optically centere
 assert.ok(style.includes('v13 — new-client nutrition targets'));
 assert.ok(style.includes('v14 — Library taxonomy admin'));
 assert.ok(style.includes('v15 — final trainer dark QA'));
+assert.ok(style.includes('v16 — Native iPhone safe area'));
+assert.ok(style.includes('padding-top:calc(8px + env(safe-area-inset-top, 0px))!important;'));
+assert.ok(!style.includes('height:max(44px, env(safe-area-inset-top,0px))'));
+assert.ok(!/body\.eplan-redesign\.trainer-ui\[data-eplan-theme="dark"\]::before/.test(style),
+  'Fixed overlay must never cover the trainer PWA status bar');
+
 for(const selector of [
   '.trainer-library-page .library-muscle-picker>div{',
   '.trainer-library-page .library-check-grid label:has(input:checked){',
@@ -183,11 +189,11 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=15'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=16'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v229'"));
+assert.ok(sw.includes("const VERSION='eplan-v230'"));
 
 const stored=new Map();
 const media={matches:false,addEventListener(){}};
