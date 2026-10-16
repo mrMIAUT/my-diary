@@ -1,0 +1,232 @@
+/* Client graphite deep QA: list details, progress history, completed workout
+ * editor and assigned nutrition. Scoped to dark client UI: light mode unchanged. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ --client-qa-surface:#22252b;
+ --client-qa-raised:#2b2f37;
+ --client-qa-line:#424750;
+ --client-qa-muted:#b6c0cc;
+ --client-qa-link:#a6c9ff;
+}
+/* Expanded workout day: prevent a thick navy/blue nested border.
+ * Completion and upcoming states remain indicated in day headers. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body{
+ background:#202227!important;
+ border-top-color:#40444e!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-exercises{
+ background:transparent!important;
+ border-color:#40444e!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-exercise{
+ background:transparent!important;
+ border-color:#3b4049!important;
+ color:#edf1f7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset{
+ background:#292c32!important;
+ border:0!important;
+ outline:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset-label{
+ background:#313943!important;
+ border:0!important;
+ border-bottom:1px solid #454f5b!important;
+ color:#c4d6ed!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset-label span{
+ color:#b9d6fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset-label small{
+ color:#b7c3d3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset .redesign-training-exercise{
+ background:#202227!important;
+ border-color:#3b4049!important;
+ color:#eff3f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-exercise > span:first-child{
+ background:#303d4d!important;
+ border-color:#526781!important;
+ color:#d4e6ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+ .redesign-training-technique>.redesign-training-tech-link,
+ .redesign-training-alt-chip .redesign-training-alt-tech
+){
+ color:var(--client-qa-link)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-alt-chip{
+ background:#303942!important;
+ border-color:#4f5d6d!important;
+ color:#f1f4f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-alt-chip :is(i,strong){
+ color:#f1f4f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-alt-chip small{
+ color:#b9c6d6!important;
+}
+/* Progress history: neutral rows instead of rectangles inside rectangles.
+ * Preserve text/time labels, skipped indicators and original layout. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+ .progress-workout-sets,.progress-workout-set-group
+){
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set{
+ background:#2a2d34!important;
+ border:1px solid #3c424d!important;
+ color:#e9eff6!important;
+ box-shadow:none!important;
+ border-radius:12px!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set.progress-workout-timed-set{
+ background:#29323d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set :is(span,strong,b){
+ color:#ecf2fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set :is(small,.progress-workout-timed-meta){
+ color:#b9c8d9!important;
+}
+/* Completed session editor: the modal was still entirely light in dark mode. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal{
+ background:rgba(4,6,9,.78)!important;
+ color:#f0f3f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-card{
+ background:#1d1f24!important;
+ color:#f0f3f8!important;
+ border:1px solid #41454d!important;
+ box-shadow:0 18px 50px rgba(0,0,0,.4)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-head :is(h2,strong){
+ color:#f2f4f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-head small{
+ color:#9bbff8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-head p{
+ color:#b4becc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-head>button{
+ background:#2d343d!important;border:1px solid #4a5562!important;color:#e8f0fc!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal
+ .completed-workout-edit-exercise{
+ background:#24272d!important;border-color:#434952!important;color:#eef3f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal
+ .completed-workout-edit-exercise.timed-readonly{
+ background:#24272d!important;border-color:#434952!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-exercise-head strong{
+ color:#f1f4fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-exercise-head small{
+ color:#b8c5d6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal .completed-workout-edit-exercise-head>span{
+ background:#303f55!important;color:#c5dcff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal :is(
+ .completed-workout-timed-readonly>div,.completed-workout-edit-aux-section,
+ .completed-workout-edit-aux-row,.completed-workout-edit-set-group
+){
+ background:#2b2f37!important;
+ border-color:#444d59!important;
+ color:#edf2fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal :is(
+ .completed-workout-timed-readonly span,.completed-workout-timed-readonly small,
+ .completed-workout-edit-labels,.completed-workout-edit-set-number,
+ .completed-workout-edit-aux-title>small,.completed-workout-edit-aux-title>span,
+ .completed-workout-edit-aux-row>span
+){
+ color:#bcc7d6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal :is(
+ .completed-workout-timed-readonly strong,.completed-workout-edit-exercise-head strong
+){
+ color:#f1f4f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal :is(
+ .completed-workout-edit-set input,.completed-workout-edit-aux-row input
+){
+ background:#343941!important;background-color:#343941!important;border:1px solid #505864!important;
+ color:#f0f4fb!important;color-scheme:dark;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal :is(
+ .completed-workout-add-warmup,.completed-workout-add-drop,.completed-workout-add-set,
+ .completed-workout-edit-aux-row>button
+){
+ background:#334358!important;
+ border:1px solid #506989!important;
+ color:#d1e4ff!important;
+ box-shadow:none!important;
+}
+/* Meal plan: preserve blue/amber/green BJU semantics, neutralize large backplates. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .meal-plan-card{
+ background:#22252b!important;border-color:#424750!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
+ .meal-plan-card>button.meal-plan-head{
+ background:#292d34!important;color:#f2f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
+ .meal-plan-card>.meal-plan-body{
+ background:#22252b!important;border-top-color:#424750!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs{
+ background:#2b3038!important;border-color:#444c56!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs button:not(.active){
+ color:#b6c3d3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .client-ration-tabs button.active{
+ background:#364c69!important;color:#daeaff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page
+ .client-ration-page .nutrition-menu-total-v6{
+ background:#282c33!important;background-image:none!important;
+ border-color:#4a5768!important;border-left-color:#7aaafa!important;
+ box-shadow:none!important;color:#eff3f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2{
+ background:#202329!important;border-color:#414954!important;
+ color:#eef2f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page :is(
+ .nutrition-menu-meal-v2 .nutrition-menu-v2-layout,
+ .nutrition-menu-meal-v2 .nutrition-menu-meal-body
+){
+ background:transparent!important;border-color:#3f4752!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-number{
+ background:#344c69!important;color:#c6deff!important;
+ border-color:#557ba7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-nutrition-page .nutrition-menu-meal-v2 .nutrition-menu-ingredient{
+ color:#b7c5d4!important;
+}
+/* Compact weekly-checkin surfaces; same graphite level as other modal windows. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-modal{
+ background:#22252b!important;border-color:#444953!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-scale span{
+ background:#2b3038!important;border-color:#4c5969!important;color:#d9e4f2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-scale input:checked+span{
+ background:#326bba!important;border-color:#326bba!important;color:#fff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #weeklyCheckinModal .weekly-checkin-comment{
+ background:#2d3138!important;border-color:#4b525e!important;color:#f2f5fa!important;
+}
