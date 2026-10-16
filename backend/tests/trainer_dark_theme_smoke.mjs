@@ -39,6 +39,19 @@ assert.ok(style.includes('v11 — trainer assigned meal icons and client progres
 assert.ok(style.includes('v12 — separated home avatars + one optically centered SVG Back button'));
 assert.ok(style.includes('v13 — new-client nutrition targets'));
 assert.ok(style.includes('v14 — Library taxonomy admin'));
+assert.ok(style.includes('v15 — final trainer dark QA'));
+for(const selector of [
+  '.trainer-library-page .library-muscle-picker>div{',
+  '.trainer-library-page .library-check-grid label:has(input:checked){',
+  '.trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.green{',
+  '.trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.orange{',
+  '.trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.blue{',
+  '#trainerPendingReviewQueue .trainer-review-toggle{',
+  '#trainerPendingReviewQueue .trainer-review-main strong{',
+  '#trainerPendingReviewQueue .trainer-review-comment textarea{',
+  '#trainerPendingReviewQueue .trainer-review-actions button.dark{'
+])assert.ok(style.includes(selector),'Missing trainer dark QA style: '+selector);
+
 for(const selector of [
   '.trainer-library-page .trainer-library-admin-body{',
   '.trainer-library-page .trainer-library-admin-section-head strong{',
@@ -170,11 +183,11 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=14'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=15'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v228'"));
+assert.ok(sw.includes("const VERSION='eplan-v229'"));
 
 const stored=new Map();
 const media={matches:false,addEventListener(){}};
