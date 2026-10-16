@@ -3637,3 +3637,176 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-me
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-actual-diary-meal>div+div{
   border-top-color:#444e5a!important;
 }
+
+
+/* v24 — follow-up dark trainer polish: soft selected date, legible comment,
+   graphite empty states, no rectangular volume backdrop, matched nutrition
+   macro accents, and stable compact date arrows. Light styling isolated. */
+
+/* Date arrows must never inherit legacy primary/yellow button paint. */
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date{
+  grid-template-columns:44px minmax(0,1fr) 44px!important;
+  gap:10px!important;
+}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date>button{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  min-width:44px!important;
+  max-width:44px!important;
+  width:44px!important;
+  height:46px!important;
+  min-height:46px!important;
+  padding:0!important;
+  margin:0!important;
+  border:1px solid #c6d7ee!important;
+  border-radius:13px!important;
+  background:#e7eef8!important;
+  color:#345c88!important;
+  font-size:25px!important;
+  line-height:1!important;
+  font-weight:750!important;
+  box-shadow:none!important;
+  flex:none!important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date>button:disabled{
+  opacity:.46!important;
+  cursor:default!important;
+}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date>button:focus-visible{
+  outline:2px solid #6897d6!important;
+  outline-offset:2px!important;
+}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date label,
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date input{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-date input{
+  overflow:hidden!important;
+  background:#f4f7fb!important;
+  border-color:#c9d7e7!important;
+  color:#264667!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-actual-diary-date>button{
+  background:#2b3b4d!important;
+  border-color:#475c74!important;
+  color:#bfd8f2!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-actual-diary-date input{
+  background:#282c34!important;
+  border-color:#46505f!important;
+  color:#edf3fa!important;
+  color-scheme:dark!important;
+}
+
+/* Quiet selected date: the same graphite/steel-blue family as the active tabs. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.selected,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.has-workout.selected{
+  background:#30435c!important;
+  border:1.5px solid #7491b6!important;
+  color:#ecf2fc!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-cell.selected i{
+  background:#9ebfe8!important;
+}
+
+/* The older light empty-component styling must not leak into dark progress. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-panel .trainer-progress-empty.compact{
+  background:#282d35!important;
+  border:1px dashed #495564!important;
+  border-radius:14px!important;
+  color:#b9c5d3!important;
+  padding:13px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-panel .trainer-progress-empty.compact :is(strong,span){
+  color:#c8d5e5!important;
+}
+
+/* Remove the solid tinted rectangular strip behind daily volume/work sets. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-kpis,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-details{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-kpis>div{
+  background:#272b33!important;
+  border:1px solid #424956!important;
+  border-radius:15px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume small,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-volume-kpis span{
+  color:#a9b7c8!important;
+}
+
+/* Green comment card: keep accent but never dark-green-on-dark-green text. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-comment{
+  background:#22372f!important;
+  border:1px solid #416753!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-comment small{
+  color:#a2ddbc!important;
+  font-size:11px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-comment p{
+  color:#edf8f1!important;
+  font-size:13px!important;
+  line-height:1.5!important;
+}
+
+/* Preserve a comfortable offset for automatic scroll to selected details
+   without resurrecting the old fixed status-bar strip. */
+body.eplan-redesign.trainer-ui #progress .trainer-workout-calendar-details,
+body.eplan-redesign.trainer-ui #progress .trainer-workout-calendar-card,
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary{
+  scroll-margin-top:calc(52px + env(safe-area-inset-top, 0px))!important;
+}
+
+/* Same calorie/protein/fat/carbs palette as the client nutrition interface.
+   Dark: colored edge + tinted graphite, high-contrast values. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary>div{
+  border-radius:15px!important;
+  border:1px solid #404956!important;
+  border-top-width:3px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .kcal{
+  background:#293544!important;
+  border-top-color:#85aad6!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .protein{
+  background:#263648!important;
+  border-top-color:#72afff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .fat{
+  background:#3a332a!important;
+  border-top-color:#e9b461!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .carbs{
+  background:#28392f!important;
+  border-top-color:#78c79b!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary :is(.kcal,.protein,.fat,.carbs) strong{
+  color:#f2f5fa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .kcal>span{color:#b4cceb!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .protein>span{color:#a5cdff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .fat>span{color:#f3c98c!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-nutrition-target-summary .carbs>span{color:#a0dbb6!important}
+
+/* Mirror those accents for the fact vs target figures. */
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-metrics>div:nth-child(1){border-top:3px solid #85aad6!important}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-metrics>div:nth-child(2){border-top:3px solid #72afff!important}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-metrics>div:nth-child(3){border-top:3px solid #e9b461!important}
+body.eplan-redesign.trainer-ui #nutrition .trainer-actual-diary-metrics>div:nth-child(4){border-top:3px solid #78c79b!important}
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) #nutrition .trainer-nutrition-target-summary .protein>span{color:#386bb4!important}
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) #nutrition .trainer-nutrition-target-summary .fat>span{color:#9c671f!important}
+body.eplan-redesign.trainer-ui:not([data-eplan-theme="dark"]) #nutrition .trainer-nutrition-target-summary .carbs>span{color:#2e8050!important}
