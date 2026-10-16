@@ -193,7 +193,24 @@ for(const shell of [index,sw]){
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v234'"));
+assert.ok(sw.includes("const VERSION='eplan-v235'"));
+const authTheme=read('css/theme.css');
+const authMarkup=read('js/auth.js');
+assert.ok(index.includes('/static/css/theme.css?v=38'));
+assert.ok(sw.includes('/static/css/theme.css?v=38'));
+assert.ok(authTheme.includes('v38 — auth screens follow'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .auth-card{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .auth-heading h1{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .auth-field input{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .remember-row input[type="checkbox"]:checked::after{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .auth-secondary{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .auth-logo-name{'));
+assert.ok(authTheme.includes('body.eplan-auth-page[data-eplan-theme="dark"] .eplan-splash{'));
+assert.ok(!/body\.eplan-redesign\.(?:client-ui|trainer-ui)\[data-eplan-theme="dark"\]/.test(authTheme.slice(authTheme.indexOf('/* v38 — auth screens follow'))),
+  'Auth overrides must not affect signed-in trainer/client pages');
+for(const fn of ['function renderLogin(){','function renderForgotPassword(){','function renderResetPassword(token){'])
+  assert.ok(authMarkup.includes(fn),'Auth view missing: '+fn);
+
 
 const clientTheme=read('css/theme.css');
 assert.ok(index.includes('/static/css/theme.css?v=37'));
