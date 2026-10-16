@@ -1,0 +1,184 @@
+/* Trainer client program: overview first, editing on demand. */
+body.eplan-redesign.trainer-ui .trainer-program-root{
+  --tpo-panel:#fff;--tpo-raised:#f5f8fd;--tpo-text:#0a1738;
+  --tpo-muted:#75839a;--tpo-border:#dce5f1;--tpo-blue:#3478f6;
+  --tpo-blue-surface:#eaf2ff;--tpo-blue-border:#bdd3f8;
+  display:flex;flex-direction:column;gap:12px;min-width:0;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-program-root{
+  --tpo-panel:#22252b;--tpo-raised:#2a2e36;--tpo-text:#f1f3f8;
+  --tpo-muted:#a8b0bf;--tpo-border:#414752;--tpo-blue:#72aaff;
+  --tpo-blue-surface:#293c56;--tpo-blue-border:#496a99;
+}
+body.eplan-redesign.trainer-ui .trainer-program-overview-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:18px;border:1px solid var(--tpo-border);border-radius:20px;
+  background:var(--tpo-panel);color:var(--tpo-text);
+}
+body.eplan-redesign.trainer-ui .trainer-program-overview-head>div{min-width:0}
+body.eplan-redesign.trainer-ui .trainer-program-overview-kicker{
+  display:block;margin-bottom:6px;color:var(--tpo-muted);font-size:10px;
+  font-weight:800;letter-spacing:.09em;
+}
+body.eplan-redesign.trainer-ui .trainer-program-overview-head h2{
+  margin:0!important;color:var(--tpo-text)!important;font-size:21px!important;
+  line-height:1.2!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-overview-head p{
+  margin:5px 0 0;color:var(--tpo-muted);font-size:13px;font-weight:600;
+}
+body.eplan-redesign.trainer-ui :is(.trainer-program-mode-toggle,.trainer-program-new-day){
+  flex:0 0 auto;min-height:41px;width:auto;padding:0 14px;
+  border:1px solid var(--tpo-blue-border);border-radius:12px;
+  background:var(--tpo-blue-surface);color:var(--tpo-blue);
+  font-weight:800;font-size:13px;box-shadow:none;
+}
+body.eplan-redesign.trainer-ui .trainer-program-mode-toggle[aria-pressed="true"]{
+  background:#3478f6;border-color:#3478f6;color:white;
+}
+body.eplan-redesign.trainer-ui .trainer-program-edit-toolbar{
+  display:none;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;padding:0 2px;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root.is-editing .trainer-program-edit-toolbar{display:flex}
+body.eplan-redesign.trainer-ui .trainer-program-edit-toolbar .trainer-program-rir-toggle{
+  flex:1 1 180px;min-width:0;margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-days{display:grid;gap:11px;min-width:0}
+body.eplan-redesign.trainer-ui .trainer-program-empty{
+  margin:0!important;padding:20px!important;border-radius:18px;
+  background:var(--tpo-panel)!important;color:var(--tpo-muted)!important;
+  border:1px solid var(--tpo-border)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root .trainer-program-day-card{
+  overflow:hidden!important;margin:0!important;padding:0!important;
+  border-radius:18px!important;background:var(--tpo-panel)!important;
+  border:1px solid var(--tpo-border)!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root .program-day-header-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:8px!important;padding:13px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root.is-editing .program-day-header-row{
+  grid-template-columns:minmax(0,1fr) 42px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root .program-day-head{
+  display:flex!important;align-items:center!important;gap:12px!important;
+  width:100%!important;min-width:0!important;padding:0!important;
+  background:transparent!important;border:0!important;
+  color:var(--tpo-text)!important;box-shadow:none!important;text-align:left!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-day-number{
+  flex:0 0 42px;width:42px;height:42px;display:grid;place-items:center;
+  border-radius:12px;background:var(--tpo-blue-surface);color:var(--tpo-blue);
+  border:1px solid var(--tpo-blue-border);font-size:18px;font-weight:850;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root .program-day-heading{
+  flex:1 1 auto;min-width:0;display:flex!important;align-items:flex-start;
+  flex-direction:column!important;gap:4px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root .program-day-heading h2{
+  color:var(--tpo-text)!important;font-size:17px!important;
+  line-height:1.2!important;margin:0!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root .program-day-heading small{
+  color:var(--tpo-muted)!important;font-size:12px!important;
+  line-height:1.35!important;overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-program-day-count{
+  flex:0 0 auto;color:var(--tpo-muted);white-space:nowrap;
+  font-weight:700;font-size:11px;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root .program-day-arrow{
+  flex:0 0 auto;margin:0 0 0 2px!important;color:var(--tpo-muted)!important;
+  font-size:19px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-root .program-day-title-edit{display:none!important}
+body.eplan-redesign.trainer-ui .trainer-program-root.is-editing .program-day-title-edit{display:grid!important;place-items:center}
+body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root .trainer-program-day-card>div[id^="programDay_"]{
+  margin:0!important;padding:0 14px 14px!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-view-body{
+  border-top:1px solid var(--tpo-border);padding-top:6px;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-row{
+  display:flex;align-items:flex-start;gap:11px;padding:10px 4px;
+  border-bottom:1px solid var(--tpo-border);
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-row:last-child{border-bottom:0}
+body.eplan-redesign.trainer-ui .trainer-program-preview-index{
+  display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;
+  border-radius:8px;background:var(--tpo-raised);color:var(--tpo-muted);
+  font-size:11px;font-weight:750;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-copy{
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-copy strong{
+  color:var(--tpo-text)!important;font-size:13px;line-height:1.35;overflow-wrap:anywhere;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-copy small{
+  color:var(--tpo-muted);font-size:12px;line-height:1.3;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-empty{
+  color:var(--tpo-muted);font-size:13px;padding:8px 2px;margin:0;
+}
+body.eplan-redesign.trainer-ui .trainer-program-preview-extra{display:none}
+body.eplan-redesign.trainer-ui .trainer-program-show-all .trainer-program-preview-extra{display:flex}
+body.eplan-redesign.trainer-ui .trainer-program-preview-more{
+  width:100%;min-height:38px;margin-top:6px;border:0;border-radius:10px;
+  background:var(--tpo-raised);color:var(--tpo-blue);font-size:12px;font-weight:800;
+  box-shadow:none;
+}
+body.eplan-redesign.trainer-ui .trainer-program-edit-body,
+body.eplan-redesign.trainer-ui .trainer-program-day-add{display:none}
+body.eplan-redesign.trainer-ui .trainer-program-root.is-editing .trainer-program-view-body{display:none}
+body.eplan-redesign.trainer-ui .trainer-program-root.is-editing .trainer-program-edit-body{display:block}
+body.eplan-redesign.trainer-ui .trainer-program-root.is-editing .trainer-program-day-add{display:block}
+body.eplan-redesign.trainer-ui .trainer-program-day-add button{
+  width:100%;min-height:42px;margin-top:10px;border-radius:12px;
+  border:1px dashed var(--tpo-blue-border);background:var(--tpo-blue-surface);
+  color:var(--tpo-blue);font-weight:800;font-size:13px;box-shadow:none;
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay{
+  display:none!important;position:fixed;inset:0;z-index:11000;
+  align-items:center;justify-content:center;overflow-y:auto;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 14px calc(env(safe-area-inset-bottom,0px) + 16px);
+  background:rgba(7,11,18,.76);backdrop-filter:blur(5px);
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay.is-open{display:flex!important}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay .trainer-program-editor{
+  position:relative;flex:0 1 720px;width:100%;max-height:calc(100dvh - 36px);
+  overflow-y:auto;overscroll-behavior:contain;margin:auto!important;
+  padding:22px 18px 20px!important;border:1px solid var(--tpo-border)!important;
+  border-radius:20px!important;background:var(--tpo-panel)!important;
+  color:var(--tpo-text)!important;box-shadow:0 18px 55px rgba(0,0,0,.28)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay .trainer-program-editor-head{
+  padding-right:45px;
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay .trainer-program-editor-head h2{
+  color:var(--tpo-text)!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-overlay .trainer-program-editor-head p{
+  color:var(--tpo-muted)!important;line-height:1.45!important;
+}
+body.eplan-redesign.trainer-ui .trainer-program-form-close{
+  position:absolute;top:16px;right:15px;width:36px;height:36px;
+  display:grid;place-items:center;padding:0;border:1px solid var(--tpo-border);
+  border-radius:11px;background:var(--tpo-raised);color:var(--tpo-text);
+  box-shadow:none;font-size:23px;line-height:1;
+}
+body.trainer-program-modal-open{overflow:hidden!important}
+@media(max-width:560px){
+ body.eplan-redesign.trainer-ui .trainer-program-overview-head{padding:14px;gap:8px}
+ body.eplan-redesign.trainer-ui .trainer-program-overview-head h2{font-size:19px!important}
+ body.eplan-redesign.trainer-ui .trainer-program-mode-toggle{padding:0 10px;font-size:12px}
+ body.eplan-redesign.trainer-ui .trainer-program-day-number{flex-basis:36px;width:36px;height:36px;font-size:16px}
+ body.eplan-redesign.trainer-ui .trainer-program-day-count{font-size:10px}
+ body.eplan-redesign.trainer-ui .trainer-client-page .trainer-program-root .program-day-head{gap:9px!important}
+ body.eplan-redesign.trainer-ui .trainer-program-form-overlay{align-items:flex-start;padding:12px 8px}
+ body.eplan-redesign.trainer-ui .trainer-program-form-overlay .trainer-program-editor{
+   max-height:calc(100dvh - 24px);padding:18px 13px!important;
+ }
+}

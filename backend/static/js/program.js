@@ -490,17 +490,41 @@ function trainerProgramBlocksHTML(xs,day){
  }).join('');
 }
 
+function trainerProgramPreviewHTML(xs){
+ let rows=(xs||[]).map((x,i)=>{
+  let kind=isTimedProgramExercise(x)?programExecutionPlanText(x):repeatPlanText(x);
+  let parts=[String(x.sets||0)+' × '+kind];
+  if(x.superset_group)parts.push('суперсет');
+  return '<div class="trainer-program-preview-row'+(i>=4?' trainer-program-preview-extra':'')+'"><span class="trainer-program-preview-index">'+(i+1)+'</span><span class="trainer-program-preview-copy"><strong>'+esc(x.exercise)+'</strong><small>'+esc(parts.join(' · '))+'</small></span></div>';
+ }).join('');
+ if(!rows)return '<p class="trainer-program-preview-empty">У цьому дні ще немає вправ. Перейди в редагування, щоб додати першу.</p>';
+ return '<div class="trainer-program-preview-list">'+rows+'</div>'+
+  ((xs||[]).length>4?'<button type="button" class="trainer-program-preview-more" onclick="toggleTrainerProgramPreviewMore(this)" data-count="'+xs.length+'">Показати всі '+xs.length+' вправ ↓</button>':'');
+}
+function toggleTrainerProgramPreviewMore(button){
+ let card=button?.closest('.program-day-card');if(!card)return;
+ let expanded=card.classList.toggle('trainer-program-show-all');
+ button.textContent=expanded?'Згорнути вправи ↑':'Показати всі '+(button.dataset.count||'')+' вправ ↓';
+}
+
 function trainerStandardProgramDayCardHTML(d,day,xs,index){
  let bodyId='programDay_'+index,title=programDayTitle(d,day),rows=trainerProgramBlocksHTML(xs,day);
- return `<div class="card program-day-card" data-program-day="${esc(day)}">
+ let count=(xs||[]).length,first=index===0;
+ return `<div class="card program-day-card trainer-program-day-card" data-program-day="${esc(day)}">
    <div class="program-day-header-row">
-     <button class="program-day-head" data-day="${esc(day)}" onclick="toggleProgramDay('${bodyId}',this)">
-       <span class="program-day-heading"><h2>${esc(day)}</h2>${title?`<small>${esc(title)}</small>`:''}</span>
-       <span class="program-day-arrow">⌄</span>
+     <button type="button" class="program-day-head" data-day="${esc(day)}" aria-expanded="${first?'true':'false'}" aria-controls="${bodyId}" onclick="toggleProgramDay('${bodyId}',this)">
+       <span class="trainer-program-day-number">${index+1}</span>
+       <span class="program-day-heading"><h2>${esc(day)}</h2><small>${title?esc(title):'Тренувальний день'}</small></span>
+       <span class="trainer-program-day-count">${count} ${count===1?'вправа':count>=2&&count<=4?'вправи':'вправ'}</span>
+       <span class="program-day-arrow">${first?'⌃':'⌄'}</span>
      </button>
-     <button class="dark program-day-title-edit" title="Назва дня" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
+     <button type="button" class="dark program-day-title-edit" title="Редагувати назву дня" aria-label="Редагувати назву ${esc(day)}" data-day="${esc(day)}" onclick="event.stopPropagation();editProgramDayTitle(this.dataset.day)">✎</button>
    </div>
-   <div id="${bodyId}" data-program-day-body="${esc(day)}" class="hidden" style="margin-top:18px">${rows}</div>
+   <div id="${bodyId}" data-program-day-body="${esc(day)}" class="${first?'':'hidden'}">
+     <div class="trainer-program-view-body">${trainerProgramPreviewHTML(xs)}</div>
+     <div class="trainer-program-edit-body">${rows}</div>
+     <div class="trainer-program-day-add"><button type="button" data-day="${esc(day)}" onclick="openTrainerProgramExerciseForm(this.dataset.day)">＋ Додати вправу</button></div>
+   </div>
  </div>`;
 }
 
@@ -548,8 +572,10 @@ function programHTML(d){
  let groups={}; (d.program||[]).forEach(x=>(groups[x.day_name]??=[]).push(x));
  (d.program_days||[]).forEach(m=>{if(String(m.kind||'standard').toLowerCase()==='extra'&&!groups[m.day_name])groups[m.day_name]=[]});
  let extraPanel=trainerExtraTrainingPanelHTML(d,groups);
- let form=`<div class="card trainer-program-editor">
-   <div class="trainer-program-editor-head"><div><h2>Програма тренувань</h2><p>Додай вправу до потрібного тренувального дня.</p></div></div>
+ let form=`<div class="trainer-program-form-overlay" id="trainerProgramFormOverlay" aria-hidden="true" onclick="if(event.target===this)closeTrainerProgramExerciseForm()">
+ <div class="card trainer-program-editor" role="dialog" aria-modal="true" aria-labelledby="trainerProgramFormTitle">
+   <button class="trainer-program-form-close" type="button" onclick="closeTrainerProgramExerciseForm()" aria-label="Закрити">×</button>
+   <div class="trainer-program-editor-head"><div><h2 id="trainerProgramFormTitle">Додати вправу</h2><p>Обери день і заповни параметри вправи. Суперсети та альтернативи працюють як раніше.</p></div></div>
    <div class="trainer-program-editor-grid">
      <label class="wide"><span>День</span><input id="dn" placeholder="Напр. День 1"></label>
      <label class="wide"><span>Назва дня</span><input id="dntitle" placeholder="Напр. Ноги або Плечі + руки"></label>
@@ -583,22 +609,59 @@ function programHTML(d){
    </div>
    <datalist id="exerciseLibraryNames">${[...new Map((window.exerciseLibrary?.exercises||[]).map(x=>[String(x.name||'').trim().toLowerCase(),x])).values()].map(x=>`<option value="${esc(x.name)}"></option>`).join('')}</datalist>
    <button class="trainer-program-add" onclick="addExercise(event.currentTarget)">Зберегти вправу</button>
- </div>`;
+ </div></div>`;
  let standardEntries=Object.entries(groups).filter(([day])=>!programDayIsExtra(d,day));
- let list=standardEntries.length?standardEntries.map(([day,xs],di)=>trainerStandardProgramDayCardHTML(d,day,xs,di)).join(''):'<div class="card muted">Основна програма ще порожня.</div>';
- return '<div class="trainer-program-root'+(showRir?'':' program-rir-disabled')+'">'
-   +'<label class="trainer-program-rir-toggle"><span><strong>Відображати RIR</strong><small>Для досвідчених клієнтів. Коли вимкнено, RIR зникає з редактора та тренування.</small></span>'
+ let count=standardEntries.reduce((total,[,xs])=>total+xs.length,0),cid=+d?.client?.id||0;
+ if(window.__trainerProgramEditClientId!==cid){window.__trainerProgramEditClientId=cid;window.__trainerProgramEditMode=false}
+ let editing=!!window.__trainerProgramEditMode;
+ let list=standardEntries.length?standardEntries.map(([day,xs],di)=>trainerStandardProgramDayCardHTML(d,day,xs,di)).join(''):'<div class="card trainer-program-empty">Основна програма ще порожня. Натисни «Редагувати», щоб додати перший день.</div>';
+ return '<div class="trainer-program-root'+(showRir?'':' program-rir-disabled')+(editing?' is-editing':'')+'">'
+   +'<section class="trainer-program-overview-head"><div><span class="trainer-program-overview-kicker">ПРОГРАМА КЛІЄНТА</span><h2>План тренувань</h2><p>'+standardEntries.length+' дн. · '+count+' вправ</p></div>'
+   +'<button type="button" class="trainer-program-mode-toggle" aria-pressed="'+editing+'" onclick="toggleTrainerProgramEditMode()">'+(editing?'✓ Готово':'✎ Редагувати')+'</button></section>'
+   +'<div class="trainer-program-edit-toolbar">'
+   +'<label class="trainer-program-rir-toggle"><span><strong>Відображати RIR</strong><small>За бажанням тренера</small></span>'
    +'<input type="checkbox" '+(showRir?'checked':'')+' onchange="toggleClientProgramRir(this)" aria-label="Відображати RIR"></label>'
-   +extraPanel+form+list+'</div>';
+   +'<button type="button" class="trainer-program-new-day" onclick="openTrainerProgramExerciseForm(null)">＋ Новий день</button></div>'
+   +'<div class="trainer-program-days">'+list+'</div>'
+   +extraPanel+form+'</div>';
 }
 
+function toggleTrainerProgramEditMode(force=null){
+ let root=document.querySelector('#program .trainer-program-root');if(!root)return;
+ let editing=force===null?!root.classList.contains('is-editing'):!!force;
+ root.classList.toggle('is-editing',editing);
+ window.__trainerProgramEditMode=editing;
+ let button=root.querySelector('.trainer-program-mode-toggle');
+ if(button){button.textContent=editing?'✓ Готово':'✎ Редагувати';button.setAttribute('aria-pressed',String(editing))}
+ if(!editing)closeTrainerProgramExerciseForm();
+}
+function trainerProgramFormKeydown(event){if(event.key==='Escape')closeTrainerProgramExerciseForm()}
+function openTrainerProgramExerciseForm(day){
+ let d=window.currentClientData||{},root=document.querySelector('#program .trainer-program-root');
+ let overlay=root?.querySelector('#trainerProgramFormOverlay');if(!overlay)return;
+ let chosen=day,existing=(d.program||[]).map(x=>String(x.day_name||''));
+ if(chosen===null||chosen===undefined){
+  let n=1;while(existing.includes('День '+n))n++;
+  chosen='День '+n;
+ }
+ let dayInput=overlay.querySelector('#dn'),titleInput=overlay.querySelector('#dntitle');
+ if(dayInput)dayInput.value=chosen||'';
+ if(titleInput)titleInput.value=programDayTitle(d,chosen)||'';
+ overlay.classList.add('is-open');overlay.setAttribute('aria-hidden','false');
+ document.body.classList.add('trainer-program-modal-open');
+ document.removeEventListener('keydown',trainerProgramFormKeydown);
+ document.addEventListener('keydown',trainerProgramFormKeydown);
+ setTimeout(()=>overlay.querySelector('#ex')?.focus(),25);
+}
+function closeTrainerProgramExerciseForm(){
+ let overlay=document.getElementById('trainerProgramFormOverlay');
+ if(overlay){overlay.classList.remove('is-open');overlay.setAttribute('aria-hidden','true')}
+ document.body.classList.remove('trainer-program-modal-open');
+ document.removeEventListener('keydown',trainerProgramFormKeydown);
+}
 function useProgramDayInEditor(day){
- let d=window.currentClientData||{},meta=programDayMeta(d,day);
- let dayInput=document.getElementById('dn'),titleInput=document.getElementById('dntitle');
- if(dayInput)dayInput.value=day;
- if(titleInput)titleInput.value=meta?.title||'';
- document.querySelector('.trainer-program-editor')?.scrollIntoView({behavior:'smooth',block:'start'});
- setTimeout(()=>document.getElementById('ex')?.focus(),250);
+ toggleTrainerProgramEditMode(true);
+ openTrainerProgramExerciseForm(day);
 }
 
 function extraTrainingDayFormModeChanged(){
@@ -687,6 +750,7 @@ function toggleNewExerciseSupersetBuilder(force=null){
 
 function toggleProgramDay(id,btn){
  let el=$('#'+id);if(!el)return;el.classList.toggle('hidden');
+ btn?.setAttribute('aria-expanded',String(!el.classList.contains('hidden')));
  let a=btn.querySelector('.program-day-arrow');if(a)a.textContent=el.classList.contains('hidden')?'⌄':'⌃';
 }
 
@@ -698,6 +762,7 @@ function reopenTrainerProgramDay(dayName){
  let body=card.querySelector('[data-program-day-body]');
  let btn=card.querySelector('.program-day-head,.trainer-extra-manager-main');
  if(body)body.classList.remove('hidden');
+ btn?.setAttribute('aria-expanded','true');
  let arrow=btn?.querySelector('.program-day-arrow');
  if(arrow)arrow.textContent='⌃';
 }
@@ -794,6 +859,7 @@ async function addExercise(button=null){
     await api('/program',{method:'POST',body:JSON.stringify(first)});
   }
   if(libraryExerciseByName(exercise))rememberProgramExercise(exercise);
+  closeTrainerProgramExerciseForm();
   await openClient(selected,'program');
   reopenTrainerProgramDay(day);
  }catch(e){restore();alert(e.message||'Не вдалося додати вправу')}
