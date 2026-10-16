@@ -3182,22 +3182,6 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-library-page .l
   outline:2px solid #82b5ff!important;
   outline-offset:2px!important;
 }
-/* During scroll, preserve a solid dark background behind iPhone status icons.
-   iOS may report a zero env inset without viewport-fit=cover: keep a 44px minimum
-   only for the trainer's installed standalone PWA. */
-@media (max-width:700px) and (display-mode:standalone){
-  body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]::before{
-    content:"";
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    height:max(44px, env(safe-area-inset-top,0px));
-    background:#101114;
-    z-index:950;
-    pointer-events:none;
-  }
-}
 
 
 /* v15 — final trainer dark QA: exercise library editor, nutrition KPI icons
@@ -3387,4 +3371,15 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQue
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQueue .trainer-review-queue-head>span{
   background:#463326!important;
   color:#f5bd80!important;
+}
+
+
+/* v16 — Native iPhone safe area, no fixed overlay that hides scrolled content.
+   The trainer shell already controls its spacing in redesign.css. Only extend
+   that spacing by the reported inset when the PWA is installed; never force
+   a 44px fixed pseudo-element across screens. */
+@media (max-width:700px) and (display-mode:standalone){
+  body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-shell{
+    padding-top:calc(8px + env(safe-area-inset-top, 0px))!important;
+  }
 }
