@@ -193,12 +193,22 @@ for(const shell of [index,sw]){
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v233'"));
+assert.ok(sw.includes("const VERSION='eplan-v234'"));
+
+const clientTheme=read('css/theme.css');
+assert.ok(index.includes('/static/css/theme.css?v=37'));
+assert.ok(sw.includes('/static/css/theme.css?v=37'));
+assert.ok(clientTheme.includes('v37 — client third-concept navigation'));
+assert.ok(clientTheme.includes('bottom:calc(19px + env(safe-area-inset-bottom, 0px))!important;'));
+assert.ok(clientTheme.includes('min-height:50px!important;'));
+assert.ok(clientTheme.includes('fill:#55c27a!important;'));
+assert.ok(clientTheme.includes('client-ui[data-eplan-theme="dark"] .client-bottom-nav'));
+
 
 const core=read('js/core.js');
 new vm.Script(core);
-assert.ok(index.includes('/static/js/core.js?v=172'));
-assert.ok(sw.includes('/static/js/core.js?v=172'));
+assert.ok(index.includes('/static/js/core.js?v=173'));
+assert.ok(sw.includes('/static/js/core.js?v=173'));
 assert.ok(core.includes('function trainerNavIcon(name)'));
 assert.ok(core.includes('trainerNavIcon(icon)'));
 assert.ok(core.includes("item('programs','Програми','programs'"));
@@ -225,11 +235,24 @@ for(const key of ['home','clients','programs','nutrition','more']){
 assert.ok(navIcons.trainerNavIcon('nutrition').includes('fill="#55c27a"'));
 assert.equal((navIcons.trainerNavIcon('more').match(/<circle/g)||[]).length,3);
 
+const clientIconStart=core.indexOf('function clientNavIcon(name){');
+const clientIconEnd=core.indexOf('function clientBottomNavHTML(){',clientIconStart);
+assert.ok(clientIconStart>=0&&clientIconEnd>clientIconStart);
+vm.runInContext(core.slice(clientIconStart,clientIconEnd),navIcons,{timeout:1000});
+for(const key of ['home','programs','progress','nutrition','more']){
+ const svg=navIcons.clientNavIcon(key);
+ assert.ok(svg.includes('client-nav-icon'),'Bad client SVG icon: '+key);
+ assert.ok(!svg.includes('trainer-nav-accent'),'Blue dots returned: '+key);
+}
+assert.ok(navIcons.clientNavIcon('progress').includes('m6.7 15.7 4.1-4.2'));
+assert.ok(navIcons.clientNavIcon('nutrition').includes('fill="#55c27a"'));
+
+
 const trainerNavIndex=core.indexOf('function trainerBottomNavHTML(){');
 const clientNavIndex=core.indexOf('function clientBottomNavHTML(){');
 assert.ok(clientNavIndex>=0&&clientNavIndex<trainerNavIndex);
-assert.ok(core.slice(clientNavIndex,core.indexOf('function trainerNavIcon(',clientNavIndex)).includes('uiIcon(icon)'),
-  'The client navigation must retain its original icons');
+assert.ok(core.slice(clientNavIndex,core.indexOf('function trainerNavIcon(',clientNavIndex)).includes('clientNavIcon(icon)'),
+  'The client navigation must use new matching icons');
 
 
 const stored=new Map();
