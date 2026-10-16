@@ -189,11 +189,28 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=16'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=17'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v230'"));
+assert.ok(sw.includes("const VERSION='eplan-v231'"));
+
+const core=read('js/core.js');
+new vm.Script(core);
+assert.ok(index.includes('/static/js/core.js?v=171'));
+assert.ok(sw.includes('/static/js/core.js?v=171'));
+assert.ok(core.includes('function trainerNavIcon(name)'));
+assert.ok(core.includes('trainerNavIcon(icon)'));
+assert.ok(core.includes("item('programs','Програми','programs'"));
+assert.ok(core.includes("item('nutrition','Харчування','nutrition'"));
+assert.ok(style.includes('v17 — concept 3'));
+assert.ok(style.includes('.trainer-bottom-nav .trainer-nav-accent'));
+const trainerNavIndex=core.indexOf('function trainerBottomNavHTML(){');
+const clientNavIndex=core.indexOf('function clientBottomNavHTML(){');
+assert.ok(clientNavIndex>=0&&clientNavIndex<trainerNavIndex);
+assert.ok(core.slice(clientNavIndex,core.indexOf('function trainerNavIcon(',clientNavIndex)).includes('uiIcon(icon)'),
+  'The client navigation must retain its original icons');
+
 
 const stored=new Map();
 const media={matches:false,addEventListener(){}};
