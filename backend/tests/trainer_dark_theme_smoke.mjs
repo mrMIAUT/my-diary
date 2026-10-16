@@ -189,11 +189,11 @@ assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cann
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=18'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=19'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v232'"));
+assert.ok(sw.includes("const VERSION='eplan-v233'"));
 
 const core=read('js/core.js');
 new vm.Script(core);
@@ -203,7 +203,9 @@ assert.ok(core.includes('function trainerNavIcon(name)'));
 assert.ok(core.includes('trainerNavIcon(icon)'));
 assert.ok(core.includes("item('programs','Програми','programs'"));
 assert.ok(core.includes("item('nutrition','Харчування','nutrition'"));
-assert.ok(style.includes('v18 — refined trainer concept 3'));
+assert.ok(style.includes('v19 — raised trainer nav 10px'));
+assert.ok(style.includes('bottom:calc(19px + env(safe-area-inset-bottom, 0px))!important;'));
+assert.ok(!style.includes('bottom:calc(9px + env(safe-area-inset-bottom, 0px))!important;'));
 assert.ok(style.includes('min-height:50px!important;'));
 assert.ok(style.includes('padding:5px 6px!important;'));
 assert.ok(style.includes('fill:#55c27a!important;'));
