@@ -236,3 +236,17 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
   border-color:var(--client-graphite-border-strong)!important;
   color:var(--client-graphite-text)!important;
 }
+
+/* Training-day innards carried a legacy navy fill. Keep completed days green. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .redesign-training-day-main,.redesign-training-day-body,
+  .redesign-training-exercises
+){
+  background:#1c1e23!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done .redesign-training-day-main{
+  background:#162921!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-superset{
+  background:#282b31!important;
+}
