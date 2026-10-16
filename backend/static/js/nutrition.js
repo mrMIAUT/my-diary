@@ -815,7 +815,7 @@ function trainerActualDiaryDateShift(delta){
 function selectTrainerActualDiaryDate(value){
  const data=window.currentClientData||{},cid=+data.client?.id||0;
  const date=String(value||'');
- if(!cid||!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||date>isoToday())return;
+ if(!cid||!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>isoToday())return;
  window.trainerActualDiarySelection={cid,day:date};
  const panel=document.getElementById('trainerActualDiaryCard');
  if(panel){
