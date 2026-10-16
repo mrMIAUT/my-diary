@@ -23,7 +23,7 @@ const sample=`<div id="app" class="wrap client-shell">
 <div class="nutrition-total-chip protein">Білки</div><div class="nutrition-total-chip fat">Жири</div><div class="nutrition-total-chip carbs">Вуглеводи</div></div>
 <div class="nutrition-menu-meal-v2"><div class="nutrition-menu-v2-layout"><div class="nutrition-menu-number">01</div><div class="nutrition-menu-ingredient">Вівсянка</div></div></div>
 </div></div></div></div></div>
-<div class="modal completed-workout-edit-modal"><div class="completed-workout-edit-card">
+<div id="completedWorkoutEditModal" class="modal completed-workout-edit-modal"><div class="completed-workout-edit-card">
 <div class="completed-workout-edit-head"><div><small>14 жовт.</small><h2>Редагувати тренування</h2><p>Історія тренувань</p></div><button>×</button></div>
 <div class="completed-workout-edit-list"><div class="completed-workout-edit-exercise timed-readonly">
 <div class="completed-workout-edit-exercise-head"><div><strong>Присідання з резинкою</strong><small>Вправа за часом</small></div><span>2 підх.</span></div>
