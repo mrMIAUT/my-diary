@@ -219,11 +219,23 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=21'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=22'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=321'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v238'"));
+assert.ok(sw.includes("const VERSION='eplan-v239'"));
+
+const resultsSource=read('js/results.js');
+assert.ok(index.includes('/static/js/results.js?v=182'));
+assert.ok(sw.includes('/static/js/results.js?v=182'));
+assert.ok(resultsSource.includes("st={cid,month:String(latest).slice(0,7),day:String(latest),sid:0};"));
+assert.ok(resultsSource.includes('aria-pressed="'+(selected?'true':'false')+'"'));
+assert.ok(resultsSource.includes('У цей день завершених тренувань немає.'));
+assert.ok(resultsSource.includes('st.day=day;'));
+assert.ok(style.includes('v22 — trainer progress calendar'));
+assert.ok(style.includes('#progress .trainer-workout-calendar-cell.has-workout.selected'));
+assert.ok(style.includes('#progress .trainer-workout-calendar-exercises .trainer-review-exercise{'));
+
 const authTheme=read('css/theme.css');
 const authMarkup=read('js/auth.js');
 assert.ok(index.includes('/static/css/theme.css?v=38'));
