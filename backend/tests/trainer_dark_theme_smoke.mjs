@@ -201,14 +201,25 @@ for(const marker of ['.trainer-template-toolbar.modern','.trainer-nutrition-targ
   assert.ok(style.includes(marker),'Missing contrast repair: '+marker);
 }
 assert.ok(!/body\.eplan-redesign\.client-ui/.test(style),'Trainer overrides cannot leak into client screens');
+const themeBackButton='<button type="button" class="trainer-back-button trainer-theme-back" onclick="showTrainerMore()" aria-label="Назад">';
+const themeTitleMarkup='<div><h1>Тема оформлення</h1>';
+const themeSettingsPos=trainer.indexOf('function showTrainerThemeSettings(){');
+const themeSettingsEnd=trainer.indexOf('async function openPendingWorkoutForClient',themeSettingsPos);
+const themeSettingsSource=trainer.slice(themeSettingsPos,themeSettingsEnd);
+assert.ok(themeSettingsSource.includes(themeBackButton));
+assert.ok(themeSettingsSource.indexOf(themeBackButton)<themeSettingsSource.indexOf(themeTitleMarkup),
+  'Trainer theme Back button must precede the heading in DOM order');
+assert.ok(style.includes('v20 — trainer theme preferences'));
+assert.ok(style.includes('.trainer-theme-settings .trainer-page-title.trainer-more-title>.trainer-theme-back{'));
+assert.ok(style.includes('justify-content:flex-start!important;'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=19'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=20'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
-  assert.ok(shell.includes('/static/js/trainer.js?v=319'));
+  assert.ok(shell.includes('/static/js/trainer.js?v=320'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v236'"));
+assert.ok(sw.includes("const VERSION='eplan-v237'"));
 const authTheme=read('css/theme.css');
 const authMarkup=read('js/auth.js');
 assert.ok(index.includes('/static/css/theme.css?v=38'));
