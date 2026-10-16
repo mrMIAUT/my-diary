@@ -158,7 +158,7 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-m
 ){
  color:#f1f4f9!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] .completed-workout-edit-modal :is(
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #completedWorkoutEditModal :is(
  .completed-workout-edit-set input,.completed-workout-edit-aux-row input
 ){
  background:#343941!important;background-color:#343941!important;border:1px solid #505864!important;
