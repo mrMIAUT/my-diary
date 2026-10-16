@@ -672,3 +672,4 @@ try{
 
 // Keep the trainer UI smoke in the existing browser CI lane.
 await import('./trainer_program_overview_browser.mjs');
+await import('./trainer_nav_theme_parity_browser.mjs');
