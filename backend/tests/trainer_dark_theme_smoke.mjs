@@ -223,17 +223,35 @@ for(const shell of [index,sw]){
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v240'"));
+assert.ok(sw.includes("const VERSION='eplan-v241'"));
 
 const nutritionSrc=read('js/nutrition.js');
 const apiSource=read('../app.py');
-assert.ok(index.includes('/static/js/nutrition.js?v=327'));
-assert.ok(sw.includes('/static/js/nutrition.js?v=327'));
+assert.ok(index.includes('/static/js/nutrition.js?v=328'));
+assert.ok(sw.includes('/static/js/nutrition.js?v=328'));
 assert.ok(index.includes('/static/js/trainer.js?v=322'));
 assert.ok(sw.includes('/static/js/trainer.js?v=322'));
 assert.ok(apiSource.includes('@app.get("/api/trainer/clients/{cid}/nutrition/diary")'));
 assert.ok(apiSource.includes('def trainer_food_diary_get(cid:int,day:date,user:AuthUser=Depends(require_trainer)):'));
 assert.match(apiSource,/authorize_client\(user,cid\)\s+diary_view_client\(cid\)\s+return diary_day_payload\(cid,diary_day_checked\(day\)\)/);
+
+assert.ok(/if\(!cid\|\|!\/\^\\d\{4\}/.test(nutritionSrc),'Trainer date control must validate ISO dates');
+const actualHelper=nutritionSrc.slice(nutritionSrc.indexOf('function trainerActualDiaryNumber('),
+  nutritionSrc.indexOf('function nutritionHTML('));
+const diaryVM={esc:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')};
+vm.createContext(diaryVM);
+vm.runInContext(actualHelper,diaryVM,{timeout:1000});
+const actualHTML=diaryVM.trainerActualDiaryDetails(
+ {active:true,items:[{meal:'breakfast',name:'Вівсянка',grams:100,portion_unit:'g',kcal:250}],
+  totals:{kcal:250,protein:8,fat:5,carbs:40}},
+ {kcal:1800,protein:110,fat:60,carbs:190},null);
+assert.ok(actualHTML.includes('Продукти зі щоденника'));
+assert.ok(actualHTML.includes('Вівсянка'));
+assert.ok(actualHTML.includes('Ціль 1'));
+const manualHTML=diaryVM.trainerActualDiaryDetails({active:false,items:[]},
+ {kcal:1800},{kcal:1500,protein:100,fat:50,carbs:200});
+assert.ok(manualHTML.includes('Внесено вручну'));
+assert.ok(!manualHTML.includes('Вівсянка'));
 assert.ok(nutritionSrc.includes('function trainerActualDiaryHTML(d){'));
 assert.ok(nutritionSrc.includes('function trainerActualDiaryDetails(payload,client,manual){'));
 assert.ok(nutritionSrc.includes('function loadTrainerActualDiary()'));
