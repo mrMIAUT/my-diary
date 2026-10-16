@@ -219,11 +219,28 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=22'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=23'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
-  assert.ok(shell.includes('/static/js/trainer.js?v=321'));
+  assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v239'"));
+assert.ok(sw.includes("const VERSION='eplan-v240'"));
+
+const nutritionSrc=read('js/nutrition.js');
+const apiSource=read('../app.py');
+assert.ok(index.includes('/static/js/nutrition.js?v=327'));
+assert.ok(sw.includes('/static/js/nutrition.js?v=327'));
+assert.ok(index.includes('/static/js/trainer.js?v=322'));
+assert.ok(sw.includes('/static/js/trainer.js?v=322'));
+assert.ok(apiSource.includes('@app.get("/api/trainer/clients/{cid}/nutrition/diary")'));
+assert.ok(apiSource.includes('def trainer_food_diary_get(cid:int,day:date,user:AuthUser=Depends(require_trainer)):'));
+assert.ok(apiSource.includes('authorize_client(user,cid)\\n    diary_view_client(cid)\\n    return diary_day_payload(cid,diary_day_checked(day))'.replaceAll('\\\\n','\\n')));
+assert.ok(nutritionSrc.includes('function trainerActualDiaryHTML(d){'));
+assert.ok(nutritionSrc.includes('function trainerActualDiaryDetails(payload,client,manual){'));
+assert.ok(nutritionSrc.includes('function loadTrainerActualDiary()'));
+assert.ok(nutritionSrc.includes('trainerActualDiaryHTML(d)}'));
+assert.ok(trainer.includes("if(id==='nutrition'&&typeof loadTrainerActualDiary==='function')loadTrainerActualDiary();"));
+assert.ok(style.includes('v23 — trainer read-only actual calorie/macros per day'));
+
 
 const resultsSource=read('js/results.js');
 assert.ok(index.includes('/static/js/results.js?v=182'));
