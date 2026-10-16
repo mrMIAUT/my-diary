@@ -1,0 +1,193 @@
+/* Client graphite QA v2: training hierarchy, activity icons, measurement calendar,
+   and nutrition diary accents. Dark-only and visual-only. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+  --client-q-card:#22252b;
+  --client-q-raised:#2b3038;
+  --client-q-line:#434850;
+  --client-q-muted:#b6c0cd;
+  --client-q-blue:#a8caff;
+}
+/* The program list needs hierarchy, not a louder background everywhere. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day:not(.is-done):not(.is-next){
+  background:var(--client-q-card)!important;
+  border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day:not(.is-done):not(.is-next) .redesign-training-day-main{
+  background:var(--client-q-card)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-next{
+  background:#222c3a!important;
+  border-color:#5a7caa!important;
+  box-shadow:inset 3px 0 0 #75aaff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-next .redesign-training-day-main{
+  background:#222c3a!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done{
+  background:#1b2b23!important;
+  border-color:#3d5b49!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done .redesign-training-day-main{
+  background:#1b2b23!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-copy strong{
+  color:#f6f7fa!important;
+  font-weight:850!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-copy small{
+  color:#c3cbd7!important;
+  font-weight:750!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-copy em{
+  color:#aeb9c8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-index{
+  background:#303946!important;
+  border:1px solid #455366!important;
+  color:#c2d7f6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-next .redesign-training-day-index{
+  background:#304b6a!important;border-color:#567aa7!important;color:#d8eaff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done .redesign-training-day-index{
+  background:#294437!important;border-color:#456954!important;color:#b2e9c5!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day:not(.is-done) .redesign-training-day-status{
+  background:#31353d!important;
+  color:#c7cfda!important;
+  border:1px solid #464c57!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-next .redesign-training-day-status{
+  background:#304563!important;color:#b9d8ff!important;border-color:#52769d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-chevron{
+  color:#c3cbd7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-exercises{
+  background:transparent!important;
+  border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-summary{
+  background:#22252b!important;border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-summary span{
+  color:var(--client-q-muted)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-cycle{
+  background:#3b414b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-help{
+  background:#22252b!important;border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-help>button{
+  background:transparent!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-help-body{
+  background:#22252b!important;border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid>div{
+  background:var(--client-q-card)!important;border-color:var(--client-q-line)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid span{
+  background:#303b4b!important;color:#a8caff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-stat-grid small{
+  color:var(--client-q-muted)!important;
+}
+/* Activity: neutral graphite cards, recognizable visible artwork. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-entry-card{
+  background:#282d35!important;
+  color:#edf2fa!important;
+  border-color:#47505c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-entry-card.selected{
+  background:#2b3849!important;
+  border-color:#698bb6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-entry-card strong{
+  color:#f1f4f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-entry-card small,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-entry-card>b{
+  color:#b6c2d2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .cardio-entry-icon,.activity-field-icon
+):has(.activity-approved-icon){
+  background:#354252!important;
+  border:1px solid #4b6481!important;
+  color:#b6d4ff!important;
+}
+/* Approved SVG files were navy strokes on pale tiles; brighten their line art on graphite. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .activity-approved-icon{
+  filter:brightness(0) saturate(100%) invert(83%) sepia(15%) saturate(920%) hue-rotate(182deg) brightness(101%) contrast(97%)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .activity-steps-card,.cardio-metric-inputs .activity-field-card
+){
+  background:#282d35!important;border-color:#47505c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .activity-field-card label{
+  color:#c0cbd9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .activity-steps-card input,.cardio-metric-inputs .activity-field-card input
+){
+  background:transparent!important;color:#f5f6f9!important;border:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .activity-section-label{
+  color:#b6c1cf!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .cardio-save-neutral{
+  background:#315f9d!important;border:1px solid #517fc0!important;
+  color:#f3f7ff!important;
+  box-shadow:none!important;
+}
+/* Progress: dark graphite calendar, a visible but restrained selected date. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .measurement-history-calendar-card,.measurement-history-calendar-toggle,
+  .measurement-history-calendar-body
+){
+  background:#22252b!important;border-color:#424850!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .measurement-calendar-head>button{
+  background:#303741!important;border-color:#4d5868!important;color:#d5e3f3!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .measurement-calendar-day{
+  background:#30343c!important;border-color:#424950!important;color:#bec7d4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .measurement-calendar-day.has-data:not(.active){
+  background:#313f50!important;border-color:#526a88!important;color:#d2e5fd!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .measurement-calendar-day.active{
+  background:#344f70!important;border-color:#779dd0!important;color:#f2f7ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .measurement-calendar-hint,.measurement-calendar-empty
+){
+  background:#303741!important;border-color:#424c5a!important;color:#c2ccd9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .measurement-calendar-weekdays span{
+  color:#aeb9c8!important;
+}
+/* Nutrition: gentle actions instead of glowing solid blue strips. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal{
+  background:#22252b!important;border-color:#3e444d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-body{
+  background:#22252b!important;border-color:#3e444d!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-add{
+  background:#324259!important;border:1px solid #536a88!important;
+  color:#cfe3ff!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal .nutrition-diary-add:active{
+  background:#3b5271!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-title strong{
+  color:#f2f5f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .nutrition-diary-meal-calories{
+  color:#c2d2e8!important;
+}
