@@ -3383,3 +3383,25 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQue
     padding-top:calc(8px + env(safe-area-inset-top, 0px))!important;
   }
 }
+
+
+/* v17 — concept 3: trainer-only soft monoline bottom nav icons with blue details. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav .trainer-nav-icon{
+ width:24px!important;height:24px!important;flex:0 0 24px!important;
+ stroke-width:1.85!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav .trainer-nav-accent{
+ fill:#438bfa!important;stroke:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active .trainer-nav-accent{
+ fill:#84c2ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav .trainer-nav-regular-dot{
+ fill:currentColor!important;stroke:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav .trainer-nav-leaf{
+ fill:#438bfa!important;stroke:#438bfa!important;stroke-width:1.3!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active .trainer-nav-leaf{
+ fill:#84c2ff!important;stroke:#84c2ff!important;
+}
