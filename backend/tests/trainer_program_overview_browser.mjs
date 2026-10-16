@@ -64,6 +64,10 @@ window.selected=15;
        name:ratio(getComputedStyle(name).color,surface),
        meta:ratio(getComputedStyle(meta).color,surface),
        tech:ratio(getComputedStyle(tech).color,surface),
+       techColor:getComputedStyle(tech).color,
+       techTag:tech.tagName,
+       surface,
+       matched:tech.matches('body.eplan-redesign.trainer-ui .trainer-client-page .exercise-alternatives .alternative-chip.alternative-chip-detailed .alternative-chip-top a.alternative-tech-link'),
        nameSize:parseFloat(getComputedStyle(name).fontSize),
        metaSize:parseFloat(getComputedStyle(meta).fontSize),
        nameWrap:getComputedStyle(name).whiteSpace
