@@ -119,8 +119,23 @@ for(const selector of [
 ])assert.ok(style.includes(selector),'Missing v9 dark UI: '+selector);
 const core=read('js/core.js');
 new vm.Script(core);
-assert.ok(core.includes("settings:'<circle cx="), 'Missing settings icon definition');
+assert.ok(core.includes("settings:'<path d=\"M "), 'Missing symmetric settings gear icon');
 assert.ok(trainer.includes("uiIcon('settings')"), 'Theme settings menu icon not used');
+
+const sharedIconStart=core.indexOf('function uiIcon(name){');
+const sharedIconEnd=core.indexOf('function clientInitials(',sharedIconStart);
+assert.ok(sharedIconStart>=0&&sharedIconEnd>sharedIconStart);
+const iconContext={};
+vm.createContext(iconContext);
+vm.runInContext(core.slice(sharedIconStart,sharedIconEnd),iconContext,{timeout:1000});
+const settingsGear=iconContext.uiIcon('settings');
+assert.ok(settingsGear.startsWith('<svg class="ui-icon" viewBox="0 0 24 24"'), 'Expected shared 24px SVG');
+assert.ok(settingsGear.includes('<circle cx="12" cy="12" r="3"/>'), 'Gear hub must be centered');
+const gearOutline=settingsGear.match(/<path d="([^"]+)"/)?.[1]||'';
+assert.ok(gearOutline.startsWith('M ')&&gearOutline.endsWith(' Z'));
+assert.equal((gearOutline.match(/ L /g)||[]).length,31,'Symmetric eight-tooth gear needs 32 outline points');
+assert.ok(read('js/more-redesign.js').includes("redesignMoreItem('settings'"),'Client settings must use shared SVG');
+
 
 for(const selector of [
   '#dayTitleModal .trainer-day-title-card .trainer-day-title-field',
@@ -193,7 +208,7 @@ for(const shell of [index,sw]){
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=319'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v235'"));
+assert.ok(sw.includes("const VERSION='eplan-v236'"));
 const authTheme=read('css/theme.css');
 const authMarkup=read('js/auth.js');
 assert.ok(index.includes('/static/css/theme.css?v=38'));
@@ -222,10 +237,9 @@ assert.ok(clientTheme.includes('fill:#55c27a!important;'));
 assert.ok(clientTheme.includes('client-ui[data-eplan-theme="dark"] .client-bottom-nav'));
 
 
-const core=read('js/core.js');
-new vm.Script(core);
-assert.ok(index.includes('/static/js/core.js?v=173'));
-assert.ok(sw.includes('/static/js/core.js?v=173'));
+// Reuse parsed core from the earlier smoke assertions.
+assert.ok(index.includes('/static/js/core.js?v=174'));
+assert.ok(sw.includes('/static/js/core.js?v=174'));
 assert.ok(core.includes('function trainerNavIcon(name)'));
 assert.ok(core.includes('trainerNavIcon(icon)'));
 assert.ok(core.includes("item('programs','Програми','programs'"));
