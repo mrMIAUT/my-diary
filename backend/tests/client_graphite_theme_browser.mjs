@@ -13,7 +13,8 @@ const oldSheets=['css/base.css','css/components.css','css/refinements.css',
 const fixtures=[
  'client-home-today-card','redesign-training-day','redesign-progress-kpi',
  'redesign-nutrition-day-row','nutrition-diary-meal','measurement-place-card',
- 'activity-field-card','workout-timed-modal-card','redesign-more-item'
+ 'activity-field-card','workout-timed-modal-card','redesign-more-item',
+ 'nutrition-diary-item','redesign-training-day-main','progress-workout-exercise'
 ];
 const cssBlock='<div class="wrap client-shell"><div class="client-top"><button class="notify-btn">!</button></div>'+
  fixtures.map(cls=>'<div class="'+cls+'"><h2>Тест графітної теми</h2><small>Другорядний підпис</small></div>').join('')+
@@ -34,8 +35,9 @@ try{
    return {
     body:pick('body'),card:pick('.client-home-today-card'),nav:pick('.client-bottom-nav'),
     navActive:pick('.client-bottom-nav .active'),
-    sections:Object.fromEntries(['client-home-today-card','redesign-training-day','redesign-progress-kpi','redesign-nutrition-day-row','nutrition-diary-meal','measurement-place-card','activity-field-card','workout-timed-modal-card','redesign-more-item'].map(x=>[x,pick('.'+x)])),
+    sections:Object.fromEntries(['client-home-today-card','redesign-training-day','redesign-progress-kpi','redesign-nutrition-day-row','nutrition-diary-meal','measurement-place-card','activity-field-card','workout-timed-modal-card','redesign-more-item','nutrition-diary-item','redesign-training-day-main','progress-workout-exercise'].map(x=>[x,pick('.'+x)])),
     input:pick('.redesign-nutrition-page input'),
+    top:pick('.client-top'),
     complete:pick('.lyfta-set-wrap.is-complete .lyfta-set-swipe-content'),
     setRow:pick('.lyfta-set-row'),
     horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2
@@ -52,6 +54,7 @@ try{
    assert.equal(value.background,rgb(28,30,35),`${width}px graphite surface for ${key}`);
   }
   assert.equal(dark.input.background,rgb(40,43,49),'graphite form control');
+  assert.equal(dark.top.background,rgb(16,17,20),'client top uses graphite');
   assert.equal(dark.nav.background,'rgba(28, 30, 35, 0.94)','nav matches trainer');
   assert.equal(dark.navActive.background,rgb(38,57,84),'active tab matches trainer');
   assert.equal(dark.setRow.background,'rgba(0, 0, 0, 0)','transparent workout set rows preserved');
