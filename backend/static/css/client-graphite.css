@@ -190,3 +190,49 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] #timedExerciseWorkoutModa
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] .trainer-profile-public .trainer-profile-stats>div{
   background-color:var(--client-graphite-raised)!important;
 }
+
+/* Nested client sub-screens: eliminate remaining legacy navy backplates. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-top:not(.client-top-compact){
+  background:var(--client-graphite-bg)!important;
+  border-color:var(--client-graphite-border)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .redesign-training-day-main,.redesign-training-help-body,
+  .nutrition-diary-card,.nutrition-diary-meal-body,.nutrition-diary-item,
+  .nutrition-diary-meal-head,.progress-workout-detail-hero,
+  .progress-workout-detail-section,.progress-workout-exercise,
+  .measurement-history-card,.measurement-place-card,
+  .activity-always-open,.redesign-more-list,.trainer-four-week-modal
+){
+  background-color:var(--client-graphite-surface)!important;
+  border-color:var(--client-graphite-border)!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .workout-live-body .lyfta-set-swipe,.workout-live-body .lyfta-set-swipe-content,
+  .workout-live-body .lyfta-prev-line button,
+  .workout-live-body .lyfta-set-done:not(.done),
+  .workout-timed-modal .workout-timed-modal-meta b
+){
+  background:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+}
+/* Checked workout sets retain the stronger green done state. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-swipe-content{
+  background:#243e33!important;
+  border-color:#456c56!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+.workout-live-body .lyfta-set-done.done{
+  background:#235746!important;
+  color:#d9f6e7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(
+  .trainer-four-week-field input,.trainer-four-week-field select,
+  .workout-timed-modal input,.workout-timed-modal select
+){
+  background:var(--client-graphite-raised)!important;
+  border-color:var(--client-graphite-border-strong)!important;
+  color:var(--client-graphite-text)!important;
+}
