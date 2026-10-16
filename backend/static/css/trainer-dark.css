@@ -3385,9 +3385,10 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #trainerPendingReviewQue
 }
 
 
-/* v18 — refined trainer concept 3: no blue dots, green nutrition leaf, slimmer bar.
-   Preserve the active tab background and a >=50px touch target. */
+/* v19 — raised trainer nav 10px above the previous offset.
+   Preserve the slim concept 3 bar, iPhone safe-area and tap targets. */
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav{
+  bottom:calc(19px + env(safe-area-inset-bottom, 0px))!important;
   padding:5px 6px!important;
   border-radius:22px!important;
 }
