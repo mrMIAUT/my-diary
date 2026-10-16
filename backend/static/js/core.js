@@ -496,16 +496,28 @@ function clientBottomNavHTML(){
  return `<nav class="client-bottom-nav" aria-label="Основна навігація" style="grid-template-columns:repeat(${items.length},1fr)">${items.join('')}</nav>`;
 }
 
+/* Trainer nav concept 3: friendly custom monoline SVGs with small blue accents. */
+function trainerNavIcon(name){
+ const art={
+  home:'<path d="M3.8 10.2 12 3.7l8.2 6.5v9a1.5 1.5 0 0 1-1.5 1.5H5.3a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M9.5 20.7v-5.8h5v5.8"/><circle class="trainer-nav-accent" cx="12" cy="11.1" r="1.35" fill="#438bfa" stroke="none"/>',
+  clients:'<circle cx="9.1" cy="8" r="2.8"/><path d="M3.4 19.5c.3-3.7 2.5-5.6 5.7-5.6s5.4 1.9 5.7 5.6"/><path d="M16.3 6.3a2.7 2.7 0 0 1 0 5.3M17 14.2c2.4.5 3.8 2.2 4.1 5.3"/><circle class="trainer-nav-accent" cx="20" cy="6" r="1.2" fill="#438bfa" stroke="none"/>',
+  programs:'<path d="M3.6 9.1v5.8M6.4 6.8v10.4M9 12h6M17.6 6.8v10.4M20.4 9.1v5.8"/><circle class="trainer-nav-accent" cx="20" cy="19.5" r="1.45" fill="#438bfa" stroke="none"/>',
+  nutrition:'<path d="M4 10.5h16c0 5.4-3.1 8.4-8 8.4s-8-3-8-8.4Z"/><path d="M6.4 21h11.2"/><path class="trainer-nav-leaf" d="M13.9 9.3c.4-3.1 2.8-5.5 6.7-5.8-.1 3.5-2.3 6-5.8 6.2" fill="#438bfa" stroke="#438bfa"/><path d="m13.9 9.3 4.6-3.8"/>',
+  more:'<circle class="trainer-nav-regular-dot" cx="5.1" cy="12" r="1.65" fill="currentColor" stroke="none"/><circle class="trainer-nav-regular-dot" cx="12" cy="12" r="1.65" fill="currentColor" stroke="none"/><circle class="trainer-nav-accent" cx="18.9" cy="12" r="1.65" fill="#438bfa" stroke="none"/>'
+ };
+ return '<svg class="ui-icon trainer-nav-icon" viewBox="0 0 24 24" aria-hidden="true">'+(art[name]||'')+'</svg>';
+}
+
 function trainerBottomNavHTML(){
  if(!session||session.role!=='trainer')return '';
  let active=currentTrainerMainView||'home';
- let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${uiIcon(icon)}<span>${label}</span></button>`;
+ let item=(key,label,icon,action)=>`<button type="button" class="${active===key?'active':''}" onclick="${action}" aria-label="${label}">${trainerNavIcon(icon)}<span>${label}</span></button>`;
  return `<nav class="trainer-bottom-nav" aria-label="Навігація тренера">
    ${item('home','Головна','home','trainerHome()')}
-   ${item('clients','Клієнти','users','showTrainerClientsView()')}
-   ${item('programs','Програми','chart','showTrainerPrograms()')}
-   ${item('nutrition','Харчування','food','showTrainerNutrition()')}
-   ${item('more','Більше','menu','showTrainerMore()')}
+   ${item('clients','Клієнти','clients','showTrainerClientsView()')}
+   ${item('programs','Програми','programs','showTrainerPrograms()')}
+   ${item('nutrition','Харчування','nutrition','showTrainerNutrition()')}
+   ${item('more','Більше','more','showTrainerMore()')}
  </nav>`;
 }
 
