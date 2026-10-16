@@ -1,0 +1,193 @@
+/* ЄПЛАН client v252 — clean nested backgrounds, graphite rest timers,
+   timed-history sets and semantic macro rings.
+   Dark client mode only; no workout, timing or nutrition behavior changes. */
+
+/* The progress "Achievements" grid has its own square backing layer in the
+   legacy theme. Remove the BACKING, not the separate rounded achievement tiles. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-achievements{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-achievements>div{
+  background:#22252b!important;
+  border:1px solid #383e47!important;
+  border-radius:16px!important;
+  box-shadow:none!important;
+}
+/* Same square backing behind progress muscle rows: retain the outside card
+   and an unobtrusive separator for each muscle, not a solid inner panel. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-muscles .progress-workout-muscle-row{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  border-top:1px solid #3c424b!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-muscles .progress-workout-muscle-row:first-of-type{
+  border-top:0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-muscles .progress-workout-muscle-row>i{
+  background:#333943!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-muscles .progress-workout-muscle-row>i>b{
+  background:#5797e8!important;
+}
+/* Remove the opaque rectangle beneath the rounded More menu items.
+   Keep each row's radius and faint separation; keep logout rose. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-more-page .redesign-more-list{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-more-page .redesign-more-item{
+  background:#21242a!important;
+  border:1px solid #393e47!important;
+  box-shadow:none!important;
+}
+/* Graphite the actual rest timer, not its progress indication.
+   The clock/timer accent stays blue for recognition, while a full bright
+   navy surface or floating widget no longer dominates the workout. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest{
+  background:#252930!important;
+  background-image:none!important;
+  border:1px solid #505864!important;
+  border-radius:18px!important;
+  box-shadow:none!important;
+  color:#eff3f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest :is(
+  .workout-featured-rest-heading,.workout-featured-rest-value
+ ){color:#edf3fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest :is(
+  .workout-featured-rest-next,.workout-featured-rest-status
+ ){color:#bac6d4!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest .workout-featured-rest-actions>button,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest .workout-featured-rest-actions>.workout-featured-rest-pause,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest .workout-featured-rest-actions>.workout-featured-rest-stop,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest.is-paused .workout-featured-rest-actions>.workout-featured-rest-pause{
+  background:#323842!important;
+  border:1px solid #535f6d!important;
+  box-shadow:none!important;
+  color:#dce6f2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest .workout-featured-rest-actions>.workout-featured-rest-pause{
+  background:#334459!important;
+  border-color:#59789c!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest .workout-featured-rest-settings{
+  background:transparent!important;
+  border:0!important;
+  color:#c2ccd8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest-ring .workout-featured-rest-track{
+  stroke:#4a515b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .workout-featured-rest-ring .workout-featured-rest-progress{
+  stroke:#649eec!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-floating-rest-timer{
+  background:rgba(40,44,51,.97)!important;
+  background-image:none!important;
+  border:1px solid #505c6b!important;
+  color:#f0f4fa!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.3)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-floating-rest-timer #floatingRestTimerValue{
+  color:#f0f4fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-floating-rest-timer-copy small{
+  color:#b9c8db!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-floating-rest-timer-icon svg{
+  stroke:#75aaf1!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .redesign-rest-timer-icon,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .redesign-rest-timer-play{
+  background:#313740!important;
+  border-color:#56616e!important;
+  color:#c2d5ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .redesign-rest-timer-icon.running,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ .redesign-active-workout .redesign-rest-timer-play.running{
+  background:#34455a!important;
+  border-color:#6685aa!important;
+  color:#e2efff!important;
+}
+/* Timed set history: remove the old navy stripe/pill, retain 2-column
+   wrapping and avoid changing saved values, labels or duration. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set.progress-workout-timed-set{
+  background:#2c3036!important;
+  background-color:#2c3036!important;
+  border:1px solid #464e58!important;
+  box-shadow:none!important;
+  color:#eaf0f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set.progress-workout-timed-set :is(
+  span,strong,b
+ ){color:#edf2fa!important}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .progress-workout-sets .calendar-workout-set.progress-workout-timed-set
+ .progress-workout-timed-meta{
+  background:transparent!important;
+  color:#becbd8!important;
+}
+/* 0% BJU rings should not all look navy: each empty track is mildly tinted
+   according to its original macro. Filled arcs keep stronger semantic color.
+   Do not change percent or nutrition calculations. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring.blue{
+ --ring:#5c9feb;
+ --ring-track:#2b435f;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring.orange{
+ --ring:#e9b351;
+ --ring-track:#534632;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring.green{
+ --ring:#74cfa3;
+ --ring-track:#2c4e40;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring{
+ background:conic-gradient(var(--ring) calc(var(--pct)*1%),var(--ring-track) 0)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring::after{
+ background:#22252b!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-macro-ring>span{
+ color:#f0f4fa!important;
+}
