@@ -13,7 +13,7 @@ const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"
 const context={
  window:{addEventListener(){},clientTrainingTab:'program',workoutExerciseChoices:{},exerciseLibrary:{exercises:[],muscles:[]}},
  esc,uiIcon:()=>'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 3L20 20"></path></svg>',
- programRirEnabled:()=>false,isTimedWorkoutExercise:()=>false,
+ programRirEnabled:()=>false,isTimedWorkoutExercise:()=>false,uniqueResultSets:xs=>xs,
  timedRestLabel:()=>'',restLabel:()=> '2 хв',rirPlan:()=>[2],exerciseAlternativeConfigs:()=>[],
  exerciseTechniqueUrl:()=>'',techniqueLinkHTML:()=>'',repeatPlanText:x=>x.reps,
  exerciseAlternatives:()=>[],workoutEffectiveExercise:x=>x,
