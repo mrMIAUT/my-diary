@@ -4572,3 +4572,157 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nu
     gap:6px!important;
   }
 }
+
+/* v34 — brighter nutrition accents and scannable client workout history.
+   Trainer dark only. Do not alter workout values, layouts or logic. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition{
+  --trainer-kcal-v34:#6ebcff;
+  --trainer-protein-v34:#638fff;
+  --trainer-fat-v34:#ffbf52;
+  --trainer-carbs-v34:#55dda0;
+}
+/* Keep the approved top-edge treatment, but increase chroma and give the
+   remaining thin edges a matching tint so the four metrics read at a glance. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-actual-diary-metrics>div{
+  background-color:#282e38!important;
+  border-radius:14px!important;
+  border-width:1px!important;
+  border-top-width:4px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.kcal,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-actual-diary-metrics>div:nth-child(1){
+  border-top-color:var(--trainer-kcal-v34)!important;
+  border-right-color:#46668a!important;
+  border-bottom-color:#46668a!important;
+  border-left-color:#46668a!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.protein,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-actual-diary-metrics>div:nth-child(2){
+  border-top-color:var(--trainer-protein-v34)!important;
+  border-right-color:#485d95!important;
+  border-bottom-color:#485d95!important;
+  border-left-color:#485d95!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.fat,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-actual-diary-metrics>div:nth-child(3){
+  border-top-color:var(--trainer-fat-v34)!important;
+  border-right-color:#765d39!important;
+  border-bottom-color:#765d39!important;
+  border-left-color:#765d39!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.carbs,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-actual-diary-metrics>div:nth-child(4){
+  border-top-color:var(--trainer-carbs-v34)!important;
+  border-right-color:#426c55!important;
+  border-bottom-color:#426c55!important;
+  border-left-color:#426c55!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.kcal>span{color:#a7d9ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.protein>span{color:#afc5ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.fat>span{color:#ffcf7d!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #nutrition .trainer-nutrition-target-summary>.carbs>span{color:#9be9bf!important}
+
+/* Client Progress > history > selected workout: separate three depth levels
+   (session / exercise / recorded set), without inserting any markup. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-session{
+  background-color:#1d252f!important;
+  border-color:#506079!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-session-head>div:first-child strong{
+  color:#f7faff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-duration{
+  background:#284968!important;
+  color:#c2e2ff!important;
+  border:1px solid #3e6487!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise{
+  background:#253141!important;
+  border:1px solid #50698a!important;
+  border-left:4px solid #67abff!important;
+  border-radius:15px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 8px rgba(0,0,0,.1)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise:nth-child(3n+2){
+  border-left-color:#62d5bb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise:nth-child(3n+3){
+  border-left-color:#b99afa!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise-head strong{
+  color:#f8fbff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise-head>span{
+  color:#c3dcff!important;
+  background:#314963!important;
+  border:1px solid #456487!important;
+  border-radius:9px!important;
+  padding:4px 6px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-exercise-head>div>small{
+  color:#a8bed6!important;
+}
+/* A completed set has a distinctly visible green-gray row, not a flat gray
+   rectangle. Skipped sets are handled separately below. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block:not(.skipped)>.trainer-review-set-current{
+  background:#254035!important;
+  border:1px solid #427b5c!important;
+  box-shadow:inset 3px 0 0 #69c997!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-current>small{
+  color:#b1dbcb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-current>b{
+  color:#f5fff9!important;
+  -webkit-text-fill-color:#f5fff9!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-current .trainer-review-set-meta :is(.trainer-review-rir,.trainer-review-rest){
+  color:#c4dbd1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous{
+  background:#28303b!important;
+  border:1px solid #3e4e61!important;
+  border-radius:9px!important;
+  color:#b1c3d8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous>span{
+  color:#a7b9cb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous>strong{
+  color:#dfecfc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous .trainer-review-set-meta :is(.trainer-review-rir,.trainer-review-rest){
+  color:#a6b7cb!important;
+}
+/* Keep comparison chips dark in dark mode; the old light reset made '0 сек'
+   look like a white input and obscured which row was the result. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-review-set-deltas>.delta-up{
+  background:#20513b!important;
+  color:#9ff0bc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-review-set-deltas>.delta-down{
+  background:#5b333c!important;
+  color:#ffc0c5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-review-set-deltas>.delta-same{
+  background:#35465c!important;
+  color:#d0e2f7!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block.skipped>.trainer-review-set-current.skipped{
+  background:#373127!important;
+  border:1px solid #6c5940!important;
+  box-shadow:inset 3px 0 0 #c99751!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block.skipped .trainer-review-skipped-badge{
+  background:#59462b!important;
+  color:#ffd28a!important;
+  border:1px solid #896439!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume>div:first-child{
+  border-top:3px solid #68aaff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume>div:nth-child(2){
+  border-top:3px solid #6dcca1!important;
+}
