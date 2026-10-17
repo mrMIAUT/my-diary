@@ -23,7 +23,8 @@ const context={
  programDayTitle:()=> 'Руки + Плечі',workoutCycleState:()=>({done:[],next:'День 2'}),
  isoToday:()=> '2026-10-18',programDayIsExtra:()=>false,programDayIsAvailable:()=>true,
  sessionDay:x=>x.workout_day||'',formatProgressDate:()=> '18 жовт.',
- loadExerciseLibrary:async()=>{},document:{body:{classList:{add(){},remove(){}}}},
+ loadExerciseLibrary:async()=>{},setInterval:()=>0,clearInterval:()=>{},setTimeout:()=>0,requestAnimationFrame:()=>0,
+ document:{body:{classList:{add(){},remove(){}}}},
 };
 vm.createContext(context);
 vm.runInContext(workoutSource,context,{filename:'workout.js'});
