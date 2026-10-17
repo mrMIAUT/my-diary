@@ -683,3 +683,4 @@ await import('./client_graphite_finishing_v252_browser.mjs');
 await import('./client_graphite_components_v253_browser.mjs');
 await import('./client_active_workout_outer_seams_v254_browser.mjs');
 await import('./trainer_diary_date_ios_overlap_v255_browser.mjs');
+await import('./client_training_v2_dual_theme_browser.mjs');
