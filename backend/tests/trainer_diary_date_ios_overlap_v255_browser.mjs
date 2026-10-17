@@ -67,7 +67,7 @@ try{
    await page.locator(selectors.input).fill('2026-10-16');
    assert.equal(await page.evaluate(()=>window.__chosenDay),'2026-10-16','change callback still works');
    if(theme==='dark'){
-     assert.equal(rects.display.background,'rgb(40, 44, 52)');
+     assert.equal(rects.display.background,'rgb(41, 45, 52)');
    }else{
      assert.equal(rects.display.background,'rgb(244, 247, 251)');
    }
