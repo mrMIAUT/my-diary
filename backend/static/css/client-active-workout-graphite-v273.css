@@ -1,0 +1,110 @@
+/* v273: active workout follows ЄПЛАН's graphite dark theme.
+   Only the LIVE client workout is affected; light theme, trainer, nutrition and
+   plan-selection screens retain their existing semantic colors.
+   Changes are presentational: exercise/session/rest/set handlers are untouched. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-page:has(.eplan-training-v2-live){
+  background:#0e1013!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live{
+  --ept-page:#0e1013;
+  --ept-surface:#1e2126;
+  --ept-raised:#282c33;
+  --ept-input:#252a31;
+  --ept-border:#444b55;
+  --ept-subtle-border:#363d46;
+  --ept-text:#f0f3f7;
+  --ept-muted:#aeb9c7;
+  --ept-blue:#c5d1de;
+  --ept-blue-light:#313740;
+  --ept-control:#30363e;
+  --ept-rail:#596675;
+  --ept-row:#25282e;
+  --ept-soft-row:#2b3037;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live :is(
+  .redesign-active-workout-head,.eplan-training-v2-live-summary
+){
+  background:transparent!important;
+  border-color:transparent!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live :is(
+  .workout-live-exercise:not(.workout-live-exercise-inner),
+  .workout-duration-strip,.workout-featured-rest
+){
+  background:#1e2126!important;
+  border-color:#444b55!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise>.workout-live-toggle,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise>.workout-live-toggle.open{
+  background:#1e2126!important;
+  color:#f0f3f7!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-v2-exercise-index{
+  background:#363c45!important;
+  color:#dce5ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-v2-exercise-icon{
+  background:#2a2e35!important;
+  border-color:#484f59!important;
+  color:#bec9d4!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise.is-exercise-complete .eplan-v2-exercise-index{
+  background:#2a8459!important;
+  color:#fff!important;
+}
+/* No blue-on-blue superset border, header, badge or focus button. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset{
+  background:#1e2126!important;
+  border:1px solid #515862!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset :is(
+  .workout-live-superset-head,.workout-live-superset-toggle
+){
+  background:#292d34!important;
+  color:#f0f3f7!important;
+  border-bottom-color:#414852!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-superset-copy strong{
+  color:#e1e7ef!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset :is(
+  .workout-live-superset-body,.workout-live-exercise-inner,
+  .workout-live-grouped-exercise-head,.workout-live-grouped-body
+){
+  background:#1e2126!important;
+  color:#eff3f8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-v2-superset-focus-open,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live :is(
+  .lyfta-workout-tools button,.swap-exercise-btn,.lyfta-add-set
+){
+  background:#30363e!important;
+  color:#d9e1eb!important;
+  border-color:#4b535f!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head{
+  background:#292d34!important;
+  border-color:#454b55!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row input{
+  background:#252a31!important;
+  color:#f0f3f7!important;
+  border-color:#49515b!important;
+}
+/* Neutralize blue for the live timer controls, not its timing behavior. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .workout-featured-rest :is(button:not(.danger),.workout-featured-rest-ring){
+  border-color:#555e69!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]:has(#app .eplan-training-v2-live) .client-bottom-nav button.active{
+  background:#353a42!important;
+  color:#e3e8f0!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]:has(#app .eplan-training-v2-live) .client-bottom-nav button.active :is(span,svg){
+  color:#e3e8f0!important;
+}
