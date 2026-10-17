@@ -138,6 +138,10 @@ try{
   assert.ok(darkCardShadow.includes('inset'),width+'px dark card needs an inner rim');
   await check('body','backgroundColor',rgb(0,0,0));
 
+  // Trainer-only v28 contrast palette. The existing card HTML and metrics remain untouched.
+  await check('body','backgroundColor',rgb(0,0,0));
+  await check('#progress .trainer-workout-calendar-card','backgroundColor',rgb(23,28,36));
+
   // Light mode must remain the existing UI after switching the root flag.
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='light');
   const lightCardImage=await get('#progress .trainer-workout-calendar-card','backgroundImage');
