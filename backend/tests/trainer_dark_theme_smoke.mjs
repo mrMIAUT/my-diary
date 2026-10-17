@@ -190,7 +190,7 @@ for(const selector of [
   assert.ok(style.includes(selector),'Missing mobile dark contrast repair: '+selector);
 }
 
-for(const token of ['--trainer-dark-bg:#101114','--trainer-dark-surface:#1c1e23','--trainer-dark-raised:#282b31','--trainer-dark-border:#353840','--trainer-dark-text:#f3f4f6']){
+for(const token of ['--trainer-dark-bg:#000000','--trainer-dark-surface:#1c1e23','--trainer-dark-raised:#282b31','--trainer-dark-border:#353840','--trainer-dark-text:#f3f4f6']){
   assert.ok(style.includes(token),'Missing graphite palette token: '+token);
 }
 assert.ok(style.includes('.trainer-bottom-nav button.active'));
@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=25'));
-  assert.ok(shell.includes('/static/js/theme.js?v=2'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=26'));
+  assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v242'"));
+assert.ok(sw.includes("const VERSION='eplan-v256'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -383,7 +383,7 @@ vm.runInContext(theme,ctx,{timeout:1500});
 assert.equal(body.dataset.eplanTheme,'light');
 ctx.window.eplanSetTheme('dark');
 assert.equal(body.dataset.eplanTheme,'dark');
-assert.equal(meta.content,'#0b1117');
+assert.equal(meta.content,'#000000');
 assert.equal(els[1]['aria-checked'],'true');
 ctx.window.eplanSetTheme('light');
 assert.equal(body.dataset.eplanTheme,'light');
@@ -391,4 +391,20 @@ ctx.window.eplanSetTheme('system');
 media.matches=true;
 ctx.window.eplanSetTheme('system');
 assert.equal(body.dataset.eplanTheme,'dark');
+assert.equal(meta.content,'#000000');
+body.classList.contains=name=>name==='client-ui';
+ctx.window.eplanSetTheme('dark');
+assert.equal(meta.content,'#0b1117'); // Client dark system color stays unchanged.
+body.classList.contains=name=>name==='trainer-ui';
+ctx.window.eplanSetTheme('dark');
+assert.equal(meta.content,'#000000');
+assert.ok(style.includes('v26 — black canvas'));
+assert.ok(style.includes('html:has(> body.eplan-redesign.trainer-ui[data-eplan-theme="dark"])'));
+assert.ok(style.includes('.wrap.trainer-shell,'));
+assert.ok(style.includes('.trainer-measurements-page,'));
+assert.ok(style.includes('.trainer-theme-settings'));
+assert.ok(style.includes('background-color:#000000!important;'));
+assert.ok(style.includes('--trainer-dark-surface:#1c1e23;'));
+assert.ok(!style.includes('--trainer-dark-bg:#101114;'));
+assert.ok(!style.includes('--trainer-dark-bg:#0b1117;'));
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
