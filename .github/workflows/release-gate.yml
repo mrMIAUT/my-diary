@@ -59,6 +59,8 @@ jobs:
         run: node backend/tests/client_unified_dark_v268_browser.mjs
       - name: Client soft card borders and secondary button on iPhone
         run: node backend/tests/client_dark_border_polish_v269_browser.mjs
+      - name: Client workout history exercise cards on iPhone
+        run: node backend/tests/client_progress_exercise_cards_v270_browser.mjs
       - name: Launch and calculator smoke in Chromium
         run: node backend/tests/browser_startup_smoke.mjs
       - name: Test integrated nutrition UI
