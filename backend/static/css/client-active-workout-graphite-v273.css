@@ -62,10 +62,10 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-wor
   border:1px solid #515862!important;
   box-shadow:none!important;
 }
-body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset :is(
-  .workout-live-superset-head,.workout-live-superset-toggle
-){
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset > button.workout-live-superset-head.workout-live-superset-toggle{
   background:#292d34!important;
+  background-color:#292d34!important;
+  background-image:none!important;
   color:#f0f3f7!important;
   border-bottom-color:#414852!important;
 }
