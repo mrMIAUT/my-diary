@@ -3959,3 +3959,170 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card{
     linear-gradient(135deg,#0c3865 0%,#0c4e8a 62%,#1466b3 100%)!important;
   box-shadow:inset 0 1px 0 rgba(250,252,255,.16),0 8px 20px rgba(0,0,0,.17)!important;
 }
+
+
+/* v28 — trainer premium-contrast palette (COLORS ONLY).
+   Keep all existing layout, icons, interactions, black canvas and subtle v27
+   reflections. Nothing here applies to client UI or trainer light mode. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+  --trainer-dark-bg:#000000;
+  --trainer-dark-surface:#171c24;
+  --trainer-dark-raised:#1c2330;
+  --trainer-dark-muted:#b7c0cf;
+  --trainer-dark-border:#354353;
+  --trainer-dark-text:#f4f7fb;
+  --trainer-dark-accent:#4a86ff;
+  --bg:#000000;
+  --card:var(--trainer-dark-surface);
+  --card2:var(--trainer-dark-raised);
+  --line:var(--trainer-dark-border);
+  --text:var(--trainer-dark-text);
+  --muted:var(--trainer-dark-muted);
+}
+/* Black is a page color, NOT the content card color. Preserve v27 reflection
+   background-image and use only background-color for graphite cards. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .card,.trainer-home-stats>button,.trainer-client-row,
+  .trainer-activity-row,.trainer-activity-card,
+  .trainer-nutrition-summary>div,.trainer-nutrition-row,
+  .trainer-template-card,.trainer-library-group,.trainer-library-admin,
+  .trainer-library-summary>div,.trainer-library-exercise,
+  .trainer-program-empty,.trainer-assigned-row,.trainer-saved-plan,
+  .trainer-review-card,.trainer-checkin-card,
+  .trainer-progress-section,.trainer-workout-calendar-card,
+  .trainer-measurements-page .measurement-place-card,
+  .trainer-measurements-page .measurement-history-card
+){
+  background-color:#171c24!important;
+  border-color:#354353!important;
+}
+/* Higher-specificity legacy paint for these lists needs a corresponding rule. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-page .trainer-client-row,
+  .trainer-clients-page .trainer-client-row,
+  .trainer-home-page .trainer-activity-row,
+  .trainer-library-page .trainer-library-summary>div,
+  .trainer-more-page .trainer-more-list.modern .trainer-more-item,
+  .trainer-nutrition-page .trainer-nutrition-summary>div,
+  .trainer-client-page .trainer-program-root .trainer-program-day-card
+){
+  background-color:#171c24!important;
+  border-color:#354353!important;
+}
+/* Extra depth is achieved with colored surfaces, not extra glow or geometry. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-search,.trainer-segmented,.trainer-client-tabs,
+  .trainer-program-tabs,.trainer-progress-periods,.trainer-volume-tabs,
+  .trainer-ration-tabs,.trainer-saved-ration-tabs,.trainer-template-editor-top
+){
+  background-color:#1c2330!important;
+  border-color:#354353!important;
+}
+/* Brighter blue hero: keep its existing very quiet glass reflection. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card{
+  background-image:
+    radial-gradient(ellipse 105% 73% at 72% -20%,rgba(255,255,255,.085) 0%,transparent 66%),
+    radial-gradient(ellipse 75% 85% at 111% 108%,rgba(120,178,255,.065) 0%,transparent 68%),
+    linear-gradient(132deg,#123e7a 0%,#204f92 55%,#2d63b3 100%)!important;
+  border-color:#4779b7!important;
+  color:#f4f7fb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card :is(strong,small),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-home-stats>button strong{
+  color:#f4f7fb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-stats>button small,.trainer-client-copy em,
+  .trainer-more-copy small,.trainer-nutrition-copy small,
+  .trainer-page-sub,.trainer-top span
+){
+  color:#b7c0cf!important;
+}
+/* Clean vivid action/selection blue, without any change in sizes or position. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-stats>button em,
+  .trainer-home-section-head>button,
+  .trainer-hero-card .more-chevron
+){
+  color:#4a86ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-round-add,.trainer-page-title button,
+  .trainer-library-add,.trainer-program-add
+){
+  background-color:#24549a!important;
+  border-color:#417bce!important;
+  color:#f4f7fb!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-filter-chips button,.trainer-client-tabs button,
+  .trainer-program-tabs button,.trainer-segmented button,
+  .trainer-progress-periods button,.trainer-volume-tabs button,
+  .trainer-ration-tabs button,.trainer-saved-ration-tabs button
+).active{
+  background-color:#2859a1!important;
+  color:#f4f7fb!important;
+  border-color:#417bce!important;
+}
+/* Icon tiles keep their semantic meaning, but are no longer washed-out. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-stats .trainer-stat-icon.orange,
+  .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.orange
+){background-color:#58351d!important;color:#ffb672!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-stats .trainer-stat-icon.green,
+  .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.green
+){background-color:#17472e!important;color:#6bebaa!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-home-stats .trainer-stat-icon.blue,
+  .trainer-nutrition-page .trainer-nutrition-summary .trainer-stat-icon.blue
+){background-color:#21477f!important;color:#9ec5ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item:nth-child(1) .trainer-more-icon{
+  background-color:#1853a0!important;color:#d5eaff!important;border-color:#326cba!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item:nth-child(2) .trainer-more-icon{
+  background-color:#145e40!important;color:#9df5c4!important;border-color:#2a7859!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item:nth-child(3) .trainer-more-icon{
+  background-color:#51307b!important;color:#e1bcff!important;border-color:#72529c!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-more-page .trainer-more-list.modern .trainer-more-item:nth-child(4) .trainer-more-icon{
+  background-color:#7e411f!important;color:#ffd5a9!important;border-color:#a36137!important;
+}
+/* Semantic status badges: improve contrast without reclassifying clients. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(.trainer-smart-status.training,.trainer-smart-status.ok){
+  background-color:#17472e!important;color:#85e8ae!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(.trainer-smart-status.attention,.trainer-nutrition-status.warn){
+  background-color:#48311d!important;color:#f4bb72!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-smart-status.risk{
+  background-color:#4b2632!important;color:#ff9fac!important;
+}
+/* Floating nav and quiet glass stay the same shape, but with clearer contrast. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav{
+  background-color:rgba(18,25,36,.95)!important;
+  border-color:#354353!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button:not(.active){
+  color:#c0cbda!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active{
+  background-color:#2859a1!important;
+  color:#e1efff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-bottom-nav button.active :is(span,svg){
+  color:#e1efff!important;
+}
+/* Trainer program overview stylesheet is loaded later: theme-scoped tokens
+   carry the same new palette into its existing cards without changing layout. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page .trainer-program-root{
+  --tpo-panel:#171c24;
+  --tpo-raised:#1c2330;
+  --tpo-text:#f4f7fb;
+  --tpo-muted:#b7c0cf;
+  --tpo-border:#354353;
+  --tpo-blue:#93baff;
+  --tpo-blue-surface:#243b63;
+  --tpo-blue-border:#417bce;
+}
