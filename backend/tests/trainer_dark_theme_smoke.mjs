@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=26'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=27'));
   assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v256'"));
+assert.ok(sw.includes("const VERSION='eplan-v257'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -407,4 +407,22 @@ assert.ok(style.includes('background-color:#000000!important;'));
 assert.ok(style.includes('--trainer-dark-surface:#1c1e23;'));
 assert.ok(!style.includes('--trainer-dark-bg:#101114;'));
 assert.ok(!style.includes('--trainer-dark-bg:#0b1117;'));
+
+const glass=style.slice(style.indexOf('/* v27 — quiet curved-glass'));
+assert.ok(glass.includes('body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is('));
+for(const card of ['.card,','.trainer-home-stats>button,','.trainer-client-row,',
+ '.trainer-nutrition-target-card,','.trainer-workout-calendar-card,',
+ '.trainer-measurements-page .measurement-place-card,',
+ '.trainer-client-page .trainer-program-root .trainer-program-day-card']){
+ assert.ok(glass.includes(card),'Trainer curved glass omitted card '+card);
+}
+assert.ok(glass.includes('.trainer-more-page .trainer-more-list.modern .trainer-more-item{'));
+assert.ok(glass.includes('.trainer-hero-card{'));
+assert.ok(glass.includes('linear-gradient(135deg,#0c3865 0%,#0c4e8a 62%,#1466b3 100%)'));
+assert.ok(glass.includes('radial-gradient(ellipse 115% 70%'));
+assert.ok(glass.includes('inset 0 1px 0 rgba(245,250,255,.10)'));
+assert.ok(!glass.includes('backdrop-filter:')&&!glass.includes('transform:')&&!glass.includes('::after'),'Glass highlights must not distort text or overlay controls');
+assert.ok(!glass.includes('client-ui')&&!glass.includes('[data-eplan-theme="light"]'),'Glass accents must be trainer dark only');
+assert.ok(style.includes('--trainer-dark-bg:#000000;'),'Page canvas must stay black');
+assert.ok(style.includes('--trainer-dark-surface:#1c1e23;'),'Graphite card fill must remain');
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
