@@ -485,6 +485,7 @@ function eplanWorkoutFinishMuscleRows(sets,d){
 }
 
 async function finishWorkout(cid,sid,button=null){
+ closeEplanSupersetFocus();
  if(button?.dataset.finishing==='1')return;
  if(!confirm('Завершити тренування?'))return;
  if(button){button.dataset.finishing='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Завершуємо…'}
@@ -743,6 +744,24 @@ function workoutSupersetIsLast(x,d=window.currentClientData||{}){
  let peers=workoutSupersetPeers(x,d);
  return peers.length>1&&+peers[peers.length-1].id===+x.id;
 }
+// Optional focused A1/A2 screen — preserves every existing set input/action.
+window.eplanV2SupersetFocusId=window.eplanV2SupersetFocusId||'';
+function closeEplanSupersetFocus(){
+ document.querySelectorAll('.eplan-superset-focus').forEach(el=>el.classList.remove('eplan-superset-focus'));
+ document.body.classList.remove('eplan-v2-superset-on');
+ window.eplanV2SupersetFocusId='';
+}
+function openEplanSupersetFocus(groupId){
+ const body=document.getElementById(groupId),group=body?.closest('.workout-live-superset');
+ if(!body||!group)return;
+ document.querySelectorAll('.eplan-superset-focus').forEach(el=>el.classList.remove('eplan-superset-focus'));
+ group.classList.add('eplan-superset-focus');
+ document.body.classList.add('eplan-v2-superset-on');
+ window.eplanV2SupersetFocusId=groupId;
+ body.classList.remove('hidden');
+ group.querySelector('.workout-live-superset-toggle')?.classList.add('open');
+ group.scrollTop=0;
+}
 function toggleWorkoutSuperset(id,btn){
  let body=document.getElementById(id);if(!body)return;
  let open=body.classList.contains('hidden');
@@ -824,7 +843,7 @@ function activeExercisesHTML(items,d,cid){
        hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1),
        groupBodyId='workoutSupersetBody'+pair[0].id,
        groupDone=workoutSupersetAllExercisesDone(pair,d,activeDay);
-   html+=`<div class="workout-live-superset eplan-training-v2-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true,i)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+   html+=`<div class="workout-live-superset eplan-training-v2-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div class="eplan-v2-superset-focus-bar"><button type="button" onclick="closeEplanSupersetFocus()" aria-label="Повернутися до тренування">‹ Назад</button><strong>Суперсет A</strong></div><button type="button" class="eplan-v2-superset-focus-open" onclick="openEplanSupersetFocus('${groupBodyId}')">↗ Відкрити суперсет</button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true,i)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true,false)}
  }
  return html;
