@@ -1,4 +1,4 @@
-const VERSION='eplan-v273';
+const VERSION='eplan-v274';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -27,6 +27,7 @@ const APP_SHELL_URLS=[
   '/static/css/client-training-v2.css?v=1',
   '/static/css/client-training-v2-parity-v272.css?v=1',
   '/static/css/client-active-workout-graphite-v273.css?v=1',
+  '/static/css/client-superset-scroll-v274.css?v=1',
   '/static/js/theme.js?v=4',
   '/static/js/core.js?v=174',
   '/static/js/auth.js?v=160',
