@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=27'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=28'));
   assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v257'"));
+assert.ok(sw.includes("const VERSION='eplan-v258'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -425,4 +425,29 @@ assert.ok(!glass.includes('backdrop-filter:')&&!glass.includes('transform:')&&!g
 assert.ok(!glass.includes('client-ui')&&!glass.includes('[data-eplan-theme="light"]'),'Glass accents must be trainer dark only');
 assert.ok(style.includes('--trainer-dark-bg:#000000;'),'Page canvas must stay black');
 assert.ok(style.includes('--trainer-dark-surface:#1c1e23;'),'Graphite card fill must remain');
+
+const premium=style.slice(style.indexOf('/* v28 — trainer premium-contrast palette'));
+assert.ok(premium.startsWith('/* v28 — trainer premium-contrast palette'));
+assert.ok(premium.includes('--trainer-dark-bg:#000000;'));
+assert.ok(premium.includes('--trainer-dark-surface:#171c24;'));
+assert.ok(premium.includes('--trainer-dark-raised:#1c2330;'));
+assert.ok(premium.includes('--trainer-dark-text:#f4f7fb;'));
+assert.ok(premium.includes('--trainer-dark-accent:#4a86ff;'));
+assert.ok(premium.includes('linear-gradient(132deg,#123e7a 0%,#204f92 55%,#2d63b3 100%)'));
+for(const klass of ['.trainer-client-row,','.trainer-nutrition-summary>div,','.trainer-template-card,',
+ '.trainer-library-group,','.trainer-progress-section,','.trainer-measurements-page .measurement-place-card']){
+ assert.ok(premium.includes(klass),'Missing premium card palette: '+klass);
+}
+for(const type of ['orange','green','blue']){
+ assert.ok(premium.includes('.trainer-stat-icon.'+type),'Missing premium colored glyph: '+type);
+}
+for(const index of [1,2,3,4]){
+ assert.ok(premium.includes('.trainer-more-item:nth-child('+index+') .trainer-more-icon'));
+}
+assert.ok(premium.includes('.trainer-smart-status.risk'),'Risk still requires a semantic red');
+assert.ok(premium.includes('.trainer-bottom-nav button.active'));
+assert.ok(premium.includes('--tpo-panel:#171c24'),'Program page should match the palette');
+assert.ok(!premium.includes('body.eplan-redesign.client-ui'),'Client UI must remain unchanged');
+assert.ok(!premium.includes('data-eplan-theme="light"'),'Trainer light UI must remain unchanged');
+assert.ok(!premium.includes('position:')&&!premium.includes('padding:')&&!premium.includes('width:')&&!premium.includes('transform:'),'Palette must not alter geometry');
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
