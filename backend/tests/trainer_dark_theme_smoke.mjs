@@ -219,7 +219,7 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=24'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=25'));
   assert.ok(shell.includes('/static/js/theme.js?v=2'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
@@ -246,8 +246,8 @@ assert.ok(refined.includes('trainer-ui:not([data-eplan-theme="dark"])'),'Light p
 
 const nutritionSrc=read('js/nutrition.js');
 const apiSource=read('../app.py');
-assert.ok(index.includes('/static/js/nutrition.js?v=328'));
-assert.ok(sw.includes('/static/js/nutrition.js?v=328'));
+assert.ok(index.includes('/static/js/nutrition.js?v=329'));
+assert.ok(sw.includes('/static/js/nutrition.js?v=329'));
 assert.ok(index.includes('/static/js/trainer.js?v=322'));
 assert.ok(sw.includes('/static/js/trainer.js?v=322'));
 assert.ok(apiSource.includes('@app.get("/api/trainer/clients/{cid}/nutrition/diary")'));

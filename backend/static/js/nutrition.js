@@ -831,7 +831,9 @@ function trainerActualDiaryHTML(d){
   +'<h3>Щоденне КБЖУ клієнта</h3><p>Записи клієнта за обраний день — тільки перегляд.</p></div></div>'
   +'<div class="trainer-actual-diary-date">'
   +'<button type="button" aria-label="Попередній день" onclick="trainerActualDiaryDateShift(-1)">‹</button>'
-  +'<label><span>Дата</span><input type="date" max="'+esc(today)+'" value="'+esc(day)+'"'
+  +'<label><span>Дата</span><span class="trainer-actual-diary-date-display" aria-hidden="true">'
+  +esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))
+  +'</span><input type="date" max="'+esc(today)+'" value="'+esc(day)+'"'
   +' aria-label="Дата фактичного харчування" onchange="selectTrainerActualDiaryDate(this.value)"></label>'
   +'<button type="button" aria-label="Наступний день" '+(locked?'disabled ':'')+'onclick="trainerActualDiaryDateShift(1)">›</button></div>'
   +'<div id="trainerActualDiaryContent" class="trainer-actual-diary-content" role="status" aria-live="polite">'
