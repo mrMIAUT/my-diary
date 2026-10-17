@@ -732,7 +732,7 @@ function activeExercisesHTML(items,d,cid){
  let html=active?'<div class="workout-duration-strip"><span>Тривалість тренування</span>'+workoutDurationBadgeHTML(active)+'</div>':'';
  let phaseLabel=active?workoutLoadPhaseLabel(active.load_phase):'';
  if(phaseLabel)html='<div class="workout-current-phase" data-phase="'+esc(active.load_phase)+'"><span class="workout-phase-dot"></span><div><strong>'+esc(phaseLabel)+'</strong><small>Порівняння з попереднім '+(active.load_phase==='heavy'?'важким':active.load_phase==='medium'?'середнім':'легким')+' тижнем</small></div></div>'+html;
- function card(x,inner=false,showRest=true,grouped=false){
+ function card(x,inner=false,showRest=true,grouped=false,groupPosition=0){
   let effective=workoutEffectiveExercise(x),timed=isTimedWorkoutExercise(effective),
       timedDoneCount=timed?(d.timed_result_sets||[]).filter(function(r){return +r.program_id===+x.id&&r.day===activeDay}).length:0,
       doneToday=timed?timedDoneCount>=Math.max(1,+effective.sets||1):(d.result_sets||[]).some(function(r){return +r.program_id===+x.id&&r.day===activeDay}),
@@ -741,11 +741,13 @@ function activeExercisesHTML(items,d,cid){
       rir=timed||!programRirEnabled(d)?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
       swap=!timed&&exerciseAlternatives(x).length&&!todaySets(d,x.id).length?'<button class="swap-exercise-btn" onclick="chooseWorkoutExercise('+x.id+','+cid+')">⇄ Замінити вправу</button>':'',
       content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid),
-      title='<span><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
+      number=items.findIndex(v=>+v.id===+x.id)+1,
+      label=grouped?'A'+(groupPosition+1):String(number),
+      title='<span class="eplan-v2-title-content"><span class="eplan-v2-exercise-index">'+esc(label)+'</span><span class="eplan-v2-exercise-icon" aria-hidden="true">'+uiIcon('dumbbell')+'</span><span class="eplan-v2-exercise-text"><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
         +(shownTech?'<span class="workout-technique-row">'+techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')+'</span>':'')
         +(shownName!==x.exercise?'<span class="muted workout-replacement-note">Замість: '+esc(x.exercise)+'</span>':'')
         +'<span class="muted workout-plan-line"><span class="workout-plan-meta">'+effective.sets+' × '+esc(plan)+'</span>'
-        +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span>',
+        +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span></span>',
       side='<span class="workout-live-toggle-side">'+(grouped?'':'<span class="arrow">⌄</span>')+(doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':'')+'</span>';
   // The large rest display is presentation-only; never attached to timed exercises.
   if(grouped){
@@ -765,7 +767,7 @@ function activeExercisesHTML(items,d,cid){
        hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1),
        groupBodyId='workoutSupersetBody'+pair[0].id,
        groupDone=workoutSupersetAllExercisesDone(pair,d,activeDay);
-   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+   html+=`<div class="workout-live-superset eplan-training-v2-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true,i)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true,false)}
  }
  return html;
