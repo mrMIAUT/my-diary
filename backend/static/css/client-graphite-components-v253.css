@@ -236,7 +236,7 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-lib
    The active workout is a layout container, NOT another full-size card.
    Child timers/exercises retain their own rounded boundaries. */
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
- .redesign-training-page > .card.redesign-active-workout{
+ .redesign-training-page > .redesign-active-workout{
   background:transparent!important;
   background-color:transparent!important;
   background-image:none!important;
