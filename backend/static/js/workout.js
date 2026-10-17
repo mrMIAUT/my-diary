@@ -453,6 +453,37 @@ async function saveFinishWorkoutComment(cid,day,button=null){
  }
 }
 
+/* Training v2 summary shows only values recorded in the finished session.
+   No fabricated PRs, muscle percentages, coach reviews or goals. */
+function eplanWorkoutFinishMuscleRows(sets,d){
+ let lib=window.exerciseLibrary,exercises=lib?.exercises||[],muscles=lib?.muscles||[];
+ if(!exercises.length||!muscles.length)return '';
+ let byName=new Map(exercises.map(e=>[String(e.name||'').trim().toLocaleLowerCase('uk-UA'),e]));
+ let byId=new Map(muscles.map(m=>[+m.id,m.name]));
+ let totals=new Map(),identified=0;
+ const program=new Map((d.program||[]).map(p=>[+p.id,p]));
+ sets.forEach(row=>{
+  let w=+row.weight||0,reps=+row.reps||0,factor=['per_leg','per_arm','per_side'].includes(String(row.repeat_mode||''))?2:1;
+  let volume=Math.max(0,w)*Math.max(0,reps)*factor;
+  if(!volume)return;
+  let name=row.exercise||program.get(+row.program_id)?.exercise||'';
+  let matched=byName.get(String(name).trim().toLocaleLowerCase('uk-UA'))
+    ||byName.get(String(program.get(+row.program_id)?.exercise||'').trim().toLocaleLowerCase('uk-UA'));
+  let ids=[...new Set((matched?.primary_muscle_ids||[]).map(Number).filter(id=>byId.has(id)))];
+  if(!ids.length)return;
+  identified+=volume;
+  ids.forEach(id=>totals.set(byId.get(id),(totals.get(byId.get(id))||0)+volume/ids.length));
+ });
+ if(!identified)return '';
+ let ordered=[...totals].sort((a,b)=>b[1]-a[1]).slice(0,5);
+ return '<div class="eplan-v2-finish-muscles"><strong>Обсяг за групами м’язів</strong>'
+  +ordered.map(([name,volume])=>{
+   let pct=Math.round(volume/identified*100);
+   return '<div class="eplan-v2-finish-muscle"><span>'+esc(name)+'</span><i><b style="width:'+pct+'%"></b></i><em>'+pct+'%</em></div>';
+  }).join('')
+  +'</div>';
+}
+
 async function finishWorkout(cid,sid,button=null){
  if(button?.dataset.finishing==='1')return;
  if(!confirm('Завершити тренування?'))return;
@@ -469,7 +500,33 @@ async function finishWorkout(cid,sid,button=null){
      totalSets=sets.length+timedSets.length,
      cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{})),canComment=!!clientAccess(d.client).features?.trainer_review;
  let workoutDay=sessionDay(s)||isoToday();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p>${workoutLoadPhaseLabel(s.load_phase)?'<div class="workout-finish-phase">'+esc(workoutLoadPhaseLabel(s.load_phase))+'</div>':''}<div class="finish-summary-grid workout-finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Підходів</span><div class="summary-number">${totalSets}</div></div><div><span class="muted">Тривалість</span><div class="summary-number duration">${formatWorkoutDuration(s.duration_seconds||0)}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}${canComment?`<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування? Щось боліло, було занадто легко або важко?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment(${cid},'${esc(workoutDay)}',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary(${cid})">Без коментаря</button></div></div>`:`<button style="width:100%" onclick="closeFinishWorkoutSummary(${cid})">Готово</button>`}<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById('finishSummaryModal')?.remove();openCompletedWorkoutEditor(${sid})">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout(${sid},this)">Скасувати завершення</button></div></div></div>`);
+ let totalVolume=sets.reduce((sum,row)=>{
+   let factor=['per_leg','per_arm','per_side'].includes(String(row.repeat_mode||''))?2:1;
+   return sum+Math.max(0,+row.weight||0)*Math.max(0,+row.reps||0)*factor;
+ },0);
+ let actualDate=workoutDay||isoToday(),actualDuration=formatWorkoutDuration(s.duration_seconds||0);
+ let muscleRows=eplanWorkoutFinishMuscleRows(sets,d);
+ let summaryComment=canComment
+  ?'<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment('+cid+',\''+esc(workoutDay)+'\',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary('+cid+')">Без коментаря</button></div></div>'
+  :'';
+ let metric=(label,value)=>'<div class="eplan-v2-finish-metric"><span>'+label+'</span><strong>'+value+'</strong></div>';
+ document.body.insertAdjacentHTML('beforeend',
+  '<div class="modal" id="finishSummaryModal"><div class="card finish-summary eplan-training-v2-finish">'
+  +'<div class="eplan-v2-finish-title"><span class="eplan-v2-finish-trophy" aria-hidden="true">🏆</span><div><h2>Тренування завершено!</h2><small>'+esc(s.day_name||'Тренування')+' · '+esc(formatProgressDate(actualDate))+'</small></div></div>'
+  +'<div class="eplan-v2-finish-metrics">'
+   +metric('Тривалість',esc(actualDuration))
+   +metric('Виконано вправ',exercises)
+   +metric('Загальний обсяг',esc(Math.round(totalVolume).toLocaleString('uk-UA'))+' кг')
+   +metric('Робочих підходів',totalSets)
+  +'</div>'
+  +muscleRows
+  +(workoutLoadPhaseLabel(s.load_phase)?'<div class="workout-finish-phase">'+esc(workoutLoadPhaseLabel(s.load_phase))+'</div>':'')
+  +(cycle.next?'<p class="muted">Наступне за планом: <strong>'+esc(cycle.next)+'</strong></p>':'')
+  +summaryComment
+  +'<div class="eplan-v2-finish-actions"><button type="button" class="workout-confirm-primary" onclick="closeFinishWorkoutSummary('+cid+')">На головну тренувань</button><button type="button" class="dark" onclick="document.getElementById(\'finishSummaryModal\')?.remove();openProgressWorkout('+sid+')">Переглянути деталі</button></div>'
+  +'<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById(\'finishSummaryModal\')?.remove();openCompletedWorkoutEditor('+sid+')">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout('+sid+',this)">Скасувати завершення</button></div>'
+  +'</div></div>'
+ );
  }catch(e){
   alert(e?.message||'Не вдалося завершити тренування. Перевір інтернет і спробуй ще раз.');
   if(button){button.dataset.finishing='0';button.disabled=false;button.textContent=button.dataset.oldText||'Завершити тренування'}
