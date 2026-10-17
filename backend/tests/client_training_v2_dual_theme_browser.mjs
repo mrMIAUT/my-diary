@@ -29,6 +29,9 @@ const context={
 vm.createContext(context);
 vm.runInContext(workoutSource,context,{filename:'workout.js'});
 vm.runInContext(trainingSource,context,{filename:'training-redesign.js'});
+// The active-card layout is under test here; legacy set persistence has dedicated tests.
+context.completedExerciseHTML=()=>context.setRows();
+context.timedExerciseHTML=()=>context.setRows();
 const xs=[
  {id:1,exercise:'Згинання гантелей сидячи на лаві',sets:3,reps:'8-12',day_name:'День 2'},
  {id:2,exercise:'Підйом гантелей в сторони',sets:3,reps:'12-15',superset_group:'A',superset_order:1,day_name:'День 2'},
