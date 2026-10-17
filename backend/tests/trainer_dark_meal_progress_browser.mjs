@@ -130,8 +130,18 @@ try{
   await check('#nutrition .trainer-nutrition-target-summary .fat>span','color',rgb(243,201,140));
   await check('#nutrition .trainer-nutrition-target-summary .carbs>span','color',rgb(160,219,182));
 
+
+  // Subtle iOS-like curved reflections: no translucent overlay on any text.
+  const darkCardImage=await get('#progress .trainer-workout-calendar-card','backgroundImage');
+  assert.ok(darkCardImage.includes('radial-gradient'),width+'px dark card needs a curved light edge');
+  const darkCardShadow=await get('#progress .trainer-workout-calendar-card','boxShadow');
+  assert.ok(darkCardShadow.includes('inset'),width+'px dark card needs an inner rim');
+  await check('body','backgroundColor',rgb(0,0,0));
+
   // Light mode must remain the existing UI after switching the root flag.
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='light');
+  const lightCardImage=await get('#progress .trainer-workout-calendar-card','backgroundImage');
+  assert.ok(!lightCardImage.includes('radial-gradient'),width+'px light trainer must not inherit dark glass sheen');
   await check('#progress .trainer-progress-summary>div','backgroundColor',rgb(255,255,255));
   await check('#progress .trainer-progress-summary strong','color',rgb(10,23,56));
   await check('#progress .trainer-progress-activity-stats>div','backgroundColor',rgb(255,255,255));
