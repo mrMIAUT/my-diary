@@ -4407,3 +4407,62 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
   .trainer-client-page .trainer-program-editor strong,
   #trainerPendingReviewQueue .trainer-review-main strong
 ){color:#f5f6f8!important}
+
+
+/* v32 — finish white-theme-parity dark palette for notifications and overlays.
+   Color-only: leave modal dimensions, scrolling, swipe actions, timers and data
+   untouched; trainer dark only, client and trainer light unchanged. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-modal-card{
+  background-color:#1d2025!important;
+  background-image:none!important;
+  border-color:#383d46!important;
+  color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item{
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+  color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #notificationModal .notification-item.unread{
+  background-color:#263449!important;
+  border-color:#476184!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal .notification-empty,
+  #notificationDetailModal .notification-detail-message
+){
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-close{
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+  color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #notificationModal,#notificationDetailModal
+) .notification-modal-head small{
+  color:#b6bdc8!important;
+}
+/* Individual editor sheets often have their own legacy background declarations. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-superset-modal,.trainer-template-editor-modal,
+  .trainer-program-template-modal,.trainer-new-client-modal,
+  .trainer-food-review-panel,.trainer-client-actions-pop,
+  .modal>.card,.modal-content
+){
+  background-color:#1d2025!important;
+  border-color:#383d46!important;
+  color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-new-client-head,.trainer-template-editor-meta,
+  .trainer-new-client-macros,.trainer-library-admin-body
+){
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+}
