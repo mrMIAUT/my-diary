@@ -7,7 +7,7 @@
   const mode=choice(),dark=mode==='dark'||(mode==='system'&&media.matches);
   document.body.dataset.eplanTheme=dark?'dark':'light';
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.content=dark?(document.body.classList.contains('trainer-ui')?'#000000':'#0b1117'):'#f7faff';
+  if(meta)meta.content=dark?'#000000':'#f7faff';
   document.querySelectorAll('.eplan-theme-option').forEach(el=>el.setAttribute('aria-checked',String(el.dataset.mode===mode)));
  }
  window.eplanThemeChoice=choice;
