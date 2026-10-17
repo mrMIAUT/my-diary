@@ -1,0 +1,74 @@
+/* v274 — mobile active workout: restore native vertical scroll in the focused
+   superset and remove the visible rectangular backdrop in graphite dark mode.
+   Scope to the client; do not alter workout state, set swipe, timers or light colors. */
+
+/* The v273 dark page (#0e1013) sat on the black app shell as a hard-edged
+   rectangle. Blend its background into the app canvas instead. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .client-section-page.redesign-training-page:has(.redesign-active-workout.eplan-training-v2-live){
+  background:#000!important;
+  background-color:#000!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+
+/* A focused group is a FULL-SCREEN scroll container, not the small clipped
+   accordion in the program. Higher specificity deliberately overrides
+   .eplan-training-v2-superset { overflow:hidden!important } from v272. */
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app
+ .redesign-active-workout.eplan-training-v2-live
+ .eplan-training-v2-superset.eplan-superset-focus{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2200!important;
+  width:100%!important;
+  max-width:580px!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0 auto!important;
+  padding:calc(12px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom))!important;
+  box-sizing:border-box!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  -webkit-overflow-scrolling:touch;
+  background:var(--ept-page)!important;
+}
+
+/* The focus bar already identifies "Суперсет A". Do not repeat an accordion
+   header above it; this also removes its inner rectangular separator. */
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app
+ .redesign-active-workout.eplan-training-v2-live
+ .eplan-training-v2-superset.eplan-superset-focus>.workout-live-superset-head{
+  display:none!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app
+ .redesign-active-workout.eplan-training-v2-live
+ .eplan-training-v2-superset.eplan-superset-focus>.eplan-v2-superset-focus-bar{
+  position:relative!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+/* Let A1/A2 and all their set rows contribute to the PARENT's scroll height.
+   The previous bordered, overflow-clipped inset prevented scrolling on iOS. */
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app
+ .redesign-active-workout.eplan-training-v2-live
+ .eplan-training-v2-superset.eplan-superset-focus>.workout-live-superset-body{
+  display:block!important;
+  position:relative!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
