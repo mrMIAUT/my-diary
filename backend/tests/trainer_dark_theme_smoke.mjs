@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=31'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=32'));
   assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v261'"));
+assert.ok(sw.includes("const VERSION='eplan-v262'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -489,4 +489,18 @@ for(const s of [
  assert.ok(editors.includes(s),'Nested dark trainer screen missing '+s);
 }
 assert.ok(!editors.includes('body.eplan-redesign.client-ui'));
+
+const overlays=style.slice(style.indexOf('/* v32 — finish white-theme-parity'));
+assert.ok(overlays.startsWith('/* v32 — finish white-theme-parity'));
+for(const selector of ['#notificationModal,#notificationDetailModal','.notification-modal-card{',
+ '#notificationModal .notification-item{','#notificationModal .notification-item.unread{',
+ '.notification-detail-message','.trainer-superset-modal','.trainer-new-client-modal',
+ '.trainer-food-review-panel','.modal>.card,.modal-content']){
+ assert.ok(overlays.includes(selector),'Unstyled nested trainer overlay '+selector);
+}
+assert.ok(overlays.includes('background-color:#1d2025!important;'));
+assert.ok(overlays.includes('background-color:#292d34!important;'));
+assert.ok(overlays.includes('background-color:#263449!important;'),'Unread should retain a distinct subtle indicator');
+assert.ok(!overlays.includes('body.eplan-redesign.client-ui')&&!overlays.includes('[data-eplan-theme="light"]'));
+assert.ok(!/\b(?:padding|display|width|height|position|transform|overflow|z-index):/.test(overlays),'No modal layout/behavior changes');
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
