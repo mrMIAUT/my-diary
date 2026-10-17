@@ -68,7 +68,7 @@ const cssFiles=['base.css','components.css','refinements.css','redesign.css','th
  'client-graphite.css','client-graphite-polish.css','client-graphite-deep-qa.css',
  'client-graphite-inner-panels.css','client-graphite-semantic-accents.css',
  'client-graphite-active-diary.css','client-graphite-finishing-v252.css',
- 'client-graphite-components-v253.css','client-unified-dark-v268.css','client-training-v2.css'];
+ 'client-graphite-components-v253.css','client-unified-dark-v268.css','client-training-v2.css','client-training-v2-parity-v272.css'];
 const browser=await chromium.launch({headless:true});
 try{
  for(const theme of ['light','dark']){
@@ -89,11 +89,11 @@ try{
     return {bg,day,card,superset,grid,summaryCols,
       overflow:document.documentElement.scrollWidth>window.innerWidth+2};
    });
-   const bg=theme==='dark'?'rgb(32, 37, 44)':'rgb(255, 255, 255)';
+   const bg=theme==='dark'?'rgb(13, 32, 45)':'rgb(255, 255, 255)';
    assert.equal(result.bg,bg,width+'px '+theme+' hero');
    const rgb=result.card.match(/\d+/g)?.map(Number)||[];
    assert.ok(rgb.length===3&&(theme==='dark'?rgb.every(v=>v<85):rgb.every(v=>v>228)),width+'px '+theme+' exercise');
-   assert.equal(result.superset,'3px',width+'px superset accent');
+   assert.equal(result.superset,'1px',width+'px superset contained accent');
    assert.equal(result.summaryCols.split(' ').length,2,width+'px finish metrics two-column');
    assert.equal(result.overflow,false,width+'px '+theme+' must not overflow viewport');
    // Dedicated superset state is reversible with existing inputs intact.
