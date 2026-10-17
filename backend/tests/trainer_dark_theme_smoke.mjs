@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=29'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=30'));
   assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v259'"));
+assert.ok(sw.includes("const VERSION='eplan-v260'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -451,4 +451,28 @@ assert.ok(premium.includes('--tpo-panel:#171c24'),'Program page should match the
 assert.ok(!premium.includes('body.eplan-redesign.client-ui'),'Client UI must remain unchanged');
 assert.ok(!premium.includes('data-eplan-theme="light"'),'Trainer light UI must remain unchanged');
 assert.ok(!premium.includes('position:')&&!premium.includes('padding:')&&!premium.includes('width:')&&!premium.includes('transform:'),'Palette must not alter geometry');
+
+const unified=style.slice(style.indexOf('/* v30 — trainer dark mirrors'));
+assert.ok(unified.startsWith('/* v30 — trainer dark mirrors'));
+for(const k of ['--trainer-dark-bg:#000000;','--trainer-dark-surface:#1d2025;',
+ '--trainer-dark-raised:#292d34;','--trainer-dark-muted:#b6bdc8;',
+ '--trainer-dark-border:#383d46;','--trainer-dark-text:#f5f6f8;']){
+ assert.ok(unified.includes(k),'Missing unified palette '+k);
+}
+for(const s of ['.trainer-home-stats>button,','.trainer-client-row,',
+ '.trainer-template-card,','.trainer-library-group,','.trainer-nutrition-summary>div,',
+ '.trainer-review-card,','.trainer-workout-calendar-card,',
+ '.trainer-measurements-page .measurement-place-card,',
+ '.trainer-public-profile-editor .trainer-profile-editor-form',
+ '#trainerPendingReviewQueue .trainer-review-card,',
+ '.trainer-more-page .trainer-more-list.modern .trainer-more-item,',
+ '.trainer-client-page .trainer-program-root .trainer-program-day-card,']){
+ assert.ok(unified.includes(s),'Missing unified trainer surface '+s);
+}
+assert.ok(unified.includes('background-image:none!important;'));
+assert.ok(unified.includes('linear-gradient(135deg,#205da9 0%,#367bce 100%)'));
+assert.ok(unified.includes('--tpo-panel:#1d2025;'));
+assert.ok(unified.includes('.trainer-bottom-nav button.active'));
+assert.ok(!unified.includes('body.eplan-redesign.client-ui')&&!unified.includes('[data-eplan-theme="light"]'));
+assert.ok(!/\b(?:display|position|padding|margin|width|height|gap|transform|z-index):/.test(unified),'Palette must not alter geometry');
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
