@@ -17,7 +17,7 @@ function redesignTrainingExerciseRow(x,num,inSuperset=false,showRest=true){
       alts=timed?[]:exerciseAlternativeConfigs(x),mainTech=exerciseTechniqueUrl(x.exercise,x.technique_url),
       plan=timed?timedWorkoutPlanText(x):repeatPlanText(x);
   return '<div class="redesign-training-exercise '+(inSuperset?'is-superset-exercise':'')+'">'
-    +'<span>'+num+'</span>'
+    +'<span class="eplan-training-v2-index">'+num+'</span><span class="eplan-training-v2-thumb" aria-hidden="true">'+uiIcon('dumbbell')+'</span>'
     +'<div class="redesign-training-exercise-copy">'
       +'<div class="redesign-training-main-title-row"><strong>'+esc(x.exercise)+'</strong></div>'
       +(mainTech?'<div class="redesign-training-technique">'+techniqueLinkHTML(mainTech,'Техніка',true,'redesign-training-tech-link')+'</div>':'')
@@ -62,7 +62,7 @@ function redesignTrainingDayCard(d,cid,groups,day,index,cycle,todayCompletedDay=
   });
   let desc=muscleNames.slice(0,3).join(' · ')||title;
   let status=isTodayDone?'Виконано сьогодні':isDone?'Виконано':isNext?'Наступне':'За планом';
-  return '<article class="redesign-training-day '+(isNext?'is-next ':'')+(isDone?'is-done':'')+'">'
+  return '<article class="redesign-training-day eplan-training-v2-day '+(isNext?'is-next ':'')+(isDone?'is-done':'')+'">'
     +'<button class="redesign-training-day-main" data-day="'+esc(day)+'" onclick="toggleRedesignTrainingDay(this.dataset.day,this)">'
       +'<span class="redesign-training-day-index">'+(index+1)+'</span>'
       +'<span class="redesign-training-day-copy"><strong>'+esc(day)+'</strong><small>'+esc(title)+'</small><em>'+xs.length+' '+(xs.length===1?'вправа':xs.length<5?'вправи':'вправ')+' · '+esc(desc)+'</em></span>'
@@ -83,7 +83,7 @@ function redesignExtraTrainingDayCard(d,cid,groups,day,todayCompletedDay=''){
   let title=programDayTitle(d,day)||'Додаткове тренування';
   let until=String(m?.active_until||'').slice(0,10);
   let meta=programDayExtraModeLabel(m)+(until?' · до '+formatProgressDate(until):'');
-  return '<article class="redesign-training-day redesign-extra-training-day">'
+  return '<article class="redesign-training-day redesign-extra-training-day eplan-training-v2-day">'
     +'<button class="redesign-training-day-main" data-day="'+esc(day)+'" onclick="toggleRedesignTrainingDay(this.dataset.day,this)">'
       +'<span class="redesign-training-day-index extra">+</span>'
       +'<span class="redesign-training-day-copy"><strong>'+esc(day)+'</strong><small>'+esc(title)+'</small><em>'+xs.length+' '+(xs.length===1?'вправа':xs.length<5?'вправи':'вправ')+' · '+esc(meta)+'</em></span>'
@@ -121,8 +121,8 @@ function redesignTrainingProgramHTML(d,cid,groups){
   let summary=days.length?'<div class="redesign-training-summary"><div><span>Поточний цикл</span><strong>'+completed+' з '+days.length+'</strong></div><div class="redesign-training-cycle"><i style="width:'+pct+'%"></i></div><b>'+pct+'%</b></div>':'';
   let mainDays=days.length?'<div class="redesign-training-day-list">'+days.map(function(day,i){return redesignTrainingDayCard(d,cid,groups,day,i,cycle,todayCompletedDay)}).join('')+'</div>':'';
   let extraSection=extraDays.length?'<section class="redesign-extra-training-section"><div class="redesign-extra-training-head"><div><span>Додаткові тренування</span><small>Не впливають на основний цикл</small></div><b>'+extraDays.length+'</b></div><div class="redesign-training-day-list extra">'+extraDays.map(function(day){return redesignExtraTrainingDayCard(d,cid,groups,day,todayCompletedDay)}).join('')+'</div></section>':'';
-  return '<div class="redesign-training-overview">'+(todayBannerDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayBannerDay)+' виконано'+(todayDuration!==undefined&&todayDuration!==null?' · ⏱ '+esc(formatWorkoutDuration(todayDuration)):'')+'. Наступне тренування — за планом.</small></div></div>':'')
-    +summary
+  return '<div class="redesign-training-overview eplan-training-v2-overview">'+(todayBannerDay?'<div class="redesign-training-today-done"><span class="redesign-training-today-done-icon">✓</span><div><strong>Тренування на сьогодні завершено</strong><small>'+esc(todayBannerDay)+' виконано'+(todayDuration!==undefined&&todayDuration!==null?' · ⏱ '+esc(formatWorkoutDuration(todayDuration)):'')+'. Наступне тренування — за планом.</small></div></div>':'')
+    +'<div class="eplan-training-v2-hero"><div class="eplan-training-v2-hero-header"><div><span>Твоя програма</span><strong>'+days.length+' тренувальних днів</strong></div><span class="eplan-training-v2-hero-pct">'+pct+'%</span></div><div class="eplan-training-v2-progress"><i style="width:'+pct+'%"></i></div><div class="eplan-training-v2-hero-footer"><span>'+completed+' з '+days.length+' виконано</span><span>Поточний цикл</span></div></div>'
     +'<div class="redesign-training-help">'
       +'<button onclick="toggleClientPanel(\'trainingRulesBody\',this)"><span class="client-home-today-icon">'+uiIcon('run')+'</span><span><strong>Розминка та правила</strong><small>RIR, підходи, дроп-сети, суперсети</small></span><span class="redesign-training-rule-chevron">⌄</span></button>'
       +'<div id="trainingRulesBody" class="hidden redesign-training-help-body">'
@@ -207,7 +207,8 @@ window.showClientTraining = async function(cid){
     let cancelSeconds=Math.max(0,120-(+active.duration_seconds||0));
     let canCancel=!hasSavedSets&&cancelSeconds>0;
     let cancelHTML=canCancel?'<button type="button" class="workout-cancel-early" data-workout-cancel-button="1" onclick="cancelWorkout('+cid+','+active.id+',this)">Скасувати тренування</button>':'';
-    let activeBody='<div class="redesign-active-workout"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><h2>'+esc(active.day_name)+'</h2>'+cancelHTML+featuredRestTimerHTML(0,1,false,true)+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
+    let activeCount=(groups[active.day_name]||[]).length;
+    let activeBody='<div class="redesign-active-workout eplan-training-v2-live"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><div class="eplan-training-v2-live-summary"><div><h2>'+esc(active.day_name)+'</h2><small>'+esc(programDayTitle(d,active.day_name)||'Силове тренування')+'</small></div><span>'+activeCount+' '+(activeCount===1?'вправа':activeCount<5?'вправи':'вправ')+'</span></div>'+cancelHTML+featuredRestTimerHTML(0,1,false,true)+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
     app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+activeBody+'</div>');
     if(canCancel)setTimeout(()=>document.querySelector('[data-workout-cancel-button="1"]')?.remove(),cancelSeconds*1000+250);
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
