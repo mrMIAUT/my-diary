@@ -3961,7 +3961,7 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card{
 }
 
 
-/* v28 — trainer premium-contrast palette (COLORS ONLY).
+/* v29 — trainer premium-contrast palette (COLORS ONLY).
    Keep all existing layout, icons, interactions, black canvas and subtle v27
    reflections. Nothing here applies to client UI or trainer light mode. */
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
@@ -4041,10 +4041,12 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
 /* Clean vivid action/selection blue, without any change in sizes or position. */
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
   .trainer-home-stats>button em,
-  .trainer-home-section-head>button,
-  .trainer-hero-card .more-chevron
+  .trainer-home-section-head>button
 ){
   color:#4a86ff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-hero-card .more-chevron{
+  color:#f4f7fb!important;
 }
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
   .trainer-round-add,.trainer-page-title button,
