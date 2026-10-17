@@ -1,4 +1,4 @@
-const VERSION='eplan-v252';
+const VERSION='eplan-v253';
 const APP_SHELL_CACHE='eplan-app-shell-'+VERSION;
 const APP_SHELL_URLS=[
   '/',
@@ -22,6 +22,7 @@ const APP_SHELL_URLS=[
   '/static/css/client-graphite-semantic-accents.css?v=1',
   '/static/css/client-graphite-active-diary.css?v=1',
   '/static/css/client-graphite-finishing-v252.css?v=1',
+  '/static/css/client-graphite-components-v253.css?v=1',
   '/static/js/theme.js?v=2',
   '/static/js/core.js?v=174',
   '/static/js/auth.js?v=160',
