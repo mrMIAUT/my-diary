@@ -45,6 +45,8 @@ try{
   const page=await browser.newPage({viewport:{width,height:852},deviceScaleFactor:2});
   await page.setContent('<!doctype html><html lang="uk"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body class="eplan-redesign client-ui" data-eplan-theme="'+theme+'">'+html+'</body></html>');
   for(const css of files)await page.addStyleTag({content:fs.readFileSync(path.join(base,css),'utf8')});
+  // Evaluate the final settled palette, not colors interpolated during CSS animation.
+  await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
   const x=await page.evaluate(()=>{
    const color=s=>getComputedStyle(document.querySelector(s)).backgroundColor;
    const border=s=>getComputedStyle(document.querySelector(s)).borderTopColor;
