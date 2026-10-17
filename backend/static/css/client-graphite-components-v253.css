@@ -231,3 +231,40 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-lib
   color:#bcc9d6!important;
   box-shadow:none!important;
 }
+
+/* v254 — remove the square outer active-session slab and ghost dividers.
+   The active workout is a layout container, NOT another full-size card.
+   Child timers/exercises retain their own rounded boundaries. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-page > .card.redesign-active-workout{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-page > .redesign-active-workout > .redesign-active-workout-head,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-page > .redesign-active-workout > h2{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+/* An old v98 rule draws a full-width top line before the finish button. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .redesign-training-page:has(.training-live) .finish-workout-wrap{
+  border:0!important;
+  border-top:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  padding-top:0!important;
+}
