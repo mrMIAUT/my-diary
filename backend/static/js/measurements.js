@@ -174,7 +174,7 @@ function measurementHistoryCalendarHTML(xs,cid){
  return '<div class="card measurement-history-calendar-card '+(isOpen?'is-open':'')+'">'
   +'<button type="button" class="measurement-history-calendar-toggle" onclick="toggleMeasurementHistoryCalendar()"><span><strong>Історія замірів</strong><small>'+rows.length+' '+(rows.length===1?'запис':'записів')+'</small></span><b aria-hidden="true">⌄</b></button>'
   +'<div class="measurement-history-calendar-body '+(isOpen?'':'hidden')+'">'
-    +'<div class="measurement-calendar-head"><button type="button" aria-label="Попередній місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(-1)">‹</button><strong>'+esc(title)+'</strong><button type="button" aria-label="Наступний місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(1)">›</button></div>'
+    +'<div class="measurement-calendar-head"><button type="button" class="trainer-date-nav-button trainer-date-nav-prev" aria-label="Попередній місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(-1)">'+uiIcon('chevron-left')+'</button><strong>'+esc(title)+'</strong><button type="button" class="trainer-date-nav-button trainer-date-nav-next" aria-label="Наступний місяць" onclick="event.stopPropagation();shiftMeasurementHistoryMonth(1)">'+uiIcon('chevron-left')+'</button></div>'
     +'<div class="measurement-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
     +'<div class="measurement-calendar-grid">'+cells.join('')+'</div>'
     +(picked?'<div class="measurement-calendar-selected">'+measurementHistoryCard(picked,previous,cid)+'</div>':'<div class="measurement-calendar-hint">Обери дату із замірами, щоб переглянути запис.</div>')

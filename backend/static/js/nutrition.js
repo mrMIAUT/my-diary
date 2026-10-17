@@ -830,12 +830,12 @@ function trainerActualDiaryHTML(d){
   +'<div class="trainer-actual-diary-head"><div><small>ФАКТИЧНЕ ХАРЧУВАННЯ</small>'
   +'<h3>Щоденне КБЖУ клієнта</h3><p>Записи клієнта за обраний день — тільки перегляд.</p></div></div>'
   +'<div class="trainer-actual-diary-date">'
-  +'<button type="button" aria-label="Попередній день" onclick="trainerActualDiaryDateShift(-1)">‹</button>'
+  +'<button type="button" class="trainer-date-nav-button trainer-date-nav-prev" aria-label="Попередній день" onclick="trainerActualDiaryDateShift(-1)">'+uiIcon('chevron-left')+'</button>'
   +'<label><span>Дата</span><span class="trainer-actual-diary-date-display" aria-hidden="true">'
   +esc(new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))
   +'</span><input type="date" max="'+esc(today)+'" value="'+esc(day)+'"'
   +' aria-label="Дата фактичного харчування" onchange="selectTrainerActualDiaryDate(this.value)"></label>'
-  +'<button type="button" aria-label="Наступний день" '+(locked?'disabled ':'')+'onclick="trainerActualDiaryDateShift(1)">›</button></div>'
+  +'<button type="button" class="trainer-date-nav-button trainer-date-nav-next" aria-label="Наступний день" '+(locked?'disabled ':'')+'onclick="trainerActualDiaryDateShift(1)">'+uiIcon('chevron-left')+'</button></div>'
   +'<div id="trainerActualDiaryContent" class="trainer-actual-diary-content" role="status" aria-live="polite">'
   +'Завантаження фактичного харчування…</div>'
   +'</section>';

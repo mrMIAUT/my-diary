@@ -236,7 +236,7 @@ function trainerWorkoutCalendarHTML(d){
  let monthNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
  return '<section class="trainer-workout-calendar-card">'
    +'<div class="trainer-workout-calendar-title"><div><small>ІСТОРІЯ</small><h2>Календар тренувань</h2><p>Завершені тренування клієнта за датами.</p></div><span>'+dates.length+'</span></div>'
-   +'<div class="trainer-workout-calendar-nav"><button type="button" onclick="changeTrainerWorkoutCalendarMonth(-1)" aria-label="Попередній місяць">‹</button><strong>'+monthNames[mm-1]+' '+yy+' р.</strong><button type="button" onclick="changeTrainerWorkoutCalendarMonth(1)" aria-label="Наступний місяць">›</button></div>'
+   +'<div class="trainer-workout-calendar-nav"><button type="button" class="trainer-date-nav-button trainer-date-nav-prev" onclick="changeTrainerWorkoutCalendarMonth(-1)" aria-label="Попередній місяць">'+uiIcon('chevron-left')+'</button><strong>'+monthNames[mm-1]+' '+yy+' р.</strong><button type="button" class="trainer-date-nav-button trainer-date-nav-next" onclick="changeTrainerWorkoutCalendarMonth(1)" aria-label="Наступний місяць">'+uiIcon('chevron-left')+'</button></div>'
    +'<div class="trainer-workout-calendar-weekdays">'+['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(x=>'<span>'+x+'</span>').join('')+'</div>'
    +'<div class="trainer-workout-calendar-grid">'+cells+'</div>'
    +trainerProgressVolumePanelHTML(d)
