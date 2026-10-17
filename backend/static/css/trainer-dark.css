@@ -4344,3 +4344,66 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
   .trainer-home-stats>button em,.trainer-home-section-head>button,
   .trainer-page-title a
 ){color:#79adf7!important}
+
+
+/* v31 — high-specificity dark trainer editor/library/nutrition detail QA.
+   Keeps the same neutral paint across modal surfaces that still had old color
+   overrides. Maintain selection indicators, semantic states and original layout. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #programTemplateEditorModal .trainer-template-editor-card,
+  #programTemplateEditorModal .trainer-template-editor-item,
+  .trainer-new-client-modal .trainer-new-client-section,
+  .trainer-client-page .trainer-program-editor,
+  .trainer-client-page #profile>.card,
+  .trainer-client-page #nutrition .trainer-saved-plan,
+  .trainer-public-profile-editor .trainer-public-profile-card
+){
+  background-color:#1d2025!important;
+  background-image:none!important;
+  border-color:#383d46!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #programTemplateEditorModal .trainer-template-editor-item,
+  #programTemplateEditorModal .trainer-template-editor-day,
+  #programTemplateEditorModal .trainer-template-editor-meta,
+  .trainer-library-page .trainer-library-admin-body,
+  .trainer-library-page .library-muscle-admin-list>div,
+  .trainer-library-page .trainer-library-group-toggle,
+  .trainer-library-page .trainer-library-filter-chip,
+  .trainer-public-profile-editor .trainer-profile-collapsed-stats>div,
+  .trainer-new-client-modal .trainer-new-client-macros,
+  .trainer-client-page #nutrition .structured-daily-grid>span,
+  .trainer-client-page #nutrition .structured-meal-summary
+){
+  background-color:#292d34!important;
+  background-image:none!important;
+  border-color:#454b55!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #programTemplateEditorModal .trainer-template-editor-grid input,
+  #programTemplateEditorModal .trainer-template-editor-meta input,
+  .trainer-library-page .trainer-library-admin-form input,
+  .trainer-library-page .trainer-library-input-stack input,
+  .trainer-client-page #nutrition .structured-food-details input
+){
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+  color:#f5f6f8!important;
+  -webkit-text-fill-color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #programTemplateEditorModal .trainer-template-editor-actions{
+  background-color:rgba(29,32,37,.96)!important;
+  border-color:#383d46!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-actual-diary-date-display{
+  background-color:#292d34!important;
+  border-color:#454b55!important;
+  color:#f5f6f8!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  .trainer-public-profile-editor .trainer-profile-form-head strong,
+  .trainer-library-page .trainer-library-admin-section-head strong,
+  .trainer-client-page .trainer-program-editor strong,
+  #trainerPendingReviewQueue .trainer-review-main strong
+){color:#f5f6f8!important}
