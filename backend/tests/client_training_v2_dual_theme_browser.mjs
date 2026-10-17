@@ -11,7 +11,7 @@ const trainingSource=fs.readFileSync(path.join(root,'js/training-redesign.js'),'
 const workoutSource=fs.readFileSync(path.join(root,'js/workout.js'),'utf8');
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const context={
- window:{clientTrainingTab:'program',workoutExerciseChoices:{},exerciseLibrary:{exercises:[],muscles:[]}},
+ window:{addEventListener(){},clientTrainingTab:'program',workoutExerciseChoices:{},exerciseLibrary:{exercises:[],muscles:[]}},
  esc,uiIcon:()=>'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 3L20 20"></path></svg>',
  programRirEnabled:()=>false,isTimedWorkoutExercise:()=>false,
  timedRestLabel:()=>'',restLabel:()=> '2 хв',rirPlan:()=>[2],exerciseAlternativeConfigs:()=>[],
