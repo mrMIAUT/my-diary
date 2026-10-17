@@ -210,10 +210,12 @@ window.showClientTraining = async function(cid){
     let activeCount=(groups[active.day_name]||[]).length;
     let activeBody='<div class="redesign-active-workout eplan-training-v2-live"><div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>'+compactRestTimerHTML()+'</div><div class="eplan-training-v2-live-summary"><div><h2>'+esc(active.day_name)+'</h2><small>'+esc(programDayTitle(d,active.day_name)||'Силове тренування')+'</small></div><span>'+activeCount+' '+(activeCount===1?'вправа':activeCount<5?'вправи':'вправ')+'</span></div>'+cancelHTML+featuredRestTimerHTML(0,1,false,true)+activeExercisesHTML(groups[active.day_name]||[],d,cid)+'<div class="finish-workout-wrap"><button class="finish-workout-btn" onclick="finishWorkout('+cid+','+active.id+',this)">Завершити тренування</button></div></div>';
     app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+activeBody+'</div>');
+    if(window.eplanV2SupersetFocusId)requestAnimationFrame(()=>{let id=window.eplanV2SupersetFocusId;document.getElementById(id)?openEplanSupersetFocus(id):closeEplanSupersetFocus();});
     if(canCancel)setTimeout(()=>document.querySelector('[data-workout-cancel-button="1"]')?.remove(),cancelSeconds*1000+250);
     refreshNotificationBadge(cid,'client','clientNotifyBtn');return;
   }
 
+  if(window.eplanV2SupersetFocusId)closeEplanSupersetFocus();
   let body=window.clientTrainingTab==='activity'?cardioHTML(d,cid,false):window.clientTrainingTab==='stats'?redesignTrainingStatsHTML(d,cid,groups):redesignTrainingProgramHTML(d,cid,groups);
   let tabs='<div class="redesign-training-tabs">'+clientTrainingTabButton('program','Моя програма')+clientTrainingTabButton('activity','Активність')+clientTrainingTabButton('stats','Статистика')+'</div>';
   app.innerHTML=shell('<div class="client-section-page redesign-training-page"><h1>Тренування</h1>'+tabs+body+'</div>');
