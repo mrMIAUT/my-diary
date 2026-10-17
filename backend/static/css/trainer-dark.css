@@ -4818,3 +4818,246 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-worko
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block.skipped .trainer-review-skipped-badge{
  background:#554631!important;border:1px solid #82704e!important;color:#f4d4a2!important;
 }
+
+/* v36 — trainer-dark: high-clarity super-sets, unified blue, calendars and
+   progress decoration. SVGs reuse uiIcon; no metric/data logic changes. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+ --trainer-action-blue:#2676d3;
+ --trainer-action-blue-border:#438deb;
+ --trainer-action-text:#ffffff;
+}
+/* All primary action buttons, including those that had inherited dark paint,
+   use exactly the same blue as the "Перевірити прогрес" action. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-four-week-launch button,
+ .trainer-four-week-action,.trainer-four-week-proposal button,
+ .trainer-client-page #program .inner-actions>button.dark,
+ .trainer-client-page #program .trainer-extra-manager-create,
+ .trainer-client-page #nutrition .trainer-nutrition-edit,
+ .trainer-client-page #nutrition .trainer-nutrition-target-actions button:not(.dark),
+ .trainer-client-page .access-saved>button,
+ .trainer-client-page .trainer-private-note-save,
+ .trainer-client-page .trainer-program-root .trainer-program-mode-toggle,
+ .trainer-template-list.modern .trainer-template-actions button:nth-child(2),
+ .trainer-checkin-card>button,
+ .trainer-checkin-history-more
+){
+ background:#2676d3!important;
+ background-image:none!important;
+ border:1px solid #438deb!important;
+ color:#fff!important;
+ -webkit-text-fill-color:#fff!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-four-week-launch button,.trainer-four-week-action,
+ .trainer-client-page #program .inner-actions>button.dark,
+ .trainer-client-page #nutrition .trainer-nutrition-edit
+):focus-visible{outline:2px solid #afd4ff!important;outline-offset:2px!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .inner-actions>button.dark:active{
+ background:#1d5daf!important;
+}
+/* Clear single frame around the ENTIRE pair in the trainer program editor.
+   Avoid thick internal borders which could make two exercises look ungrouped. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .program-block.trainer-exercise-card.superset-block{
+ border:2px solid #77b9ff!important;
+ border-left:4px solid #68a8f1!important;
+ border-radius:18px!important;
+ background:#1d2632!important;
+ box-shadow:0 0 0 1px rgba(98,161,246,.10),inset 0 1px 0 rgba(255,255,255,.055)!important;
+ overflow:hidden!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .superset-block .trainer-superset-head{
+ background:#274360!important;
+ color:#b9dbff!important;
+ border-bottom:1px solid #648bb5!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .superset-block .trainer-superset-head>span:first-child{
+ color:#b4daff!important;font-weight:900!important;letter-spacing:.06em!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-client-page #program .superset-block .superset-inner+.superset-inner{
+ border-top:1px solid #566b83!important;
+}
+/* Three trainer calendars: same square button and centered drawn chevron.
+   Text glyph is visually suppressed but remains in DOM; aria-label remains. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-nav>button,
+ .trainer-measurements-page .measurement-calendar-head>button,
+ #nutrition .trainer-actual-diary-date>button
+){
+ display:grid!important;place-items:center!important;
+ background:#304968!important;border:1px solid #54759c!important;
+ color:#b6d6ff!important;
+ border-radius:12px!important;
+ font-size:0!important;line-height:0!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-nav>button,
+ .trainer-measurements-page .measurement-calendar-head>button,
+ #nutrition .trainer-actual-diary-date>button
+)::after{
+ content:"";display:block!important;
+ width:10px;height:10px;
+ border-top:3px solid currentColor;border-right:3px solid currentColor;
+ border-radius:1px;
+ transform:rotate(45deg);
+ margin-right:4px;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-nav>button:first-child,
+ .trainer-measurements-page .measurement-calendar-head>button:first-child,
+ #nutrition .trainer-actual-diary-date>button:first-child
+)::after{transform:rotate(-135deg);margin-left:4px;margin-right:0}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-nav>button,
+ .trainer-measurements-page .measurement-calendar-head>button,
+ #nutrition .trainer-actual-diary-date>button
+):disabled{opacity:.38!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-nav>button,
+ .trainer-measurements-page .measurement-calendar-head>button,
+ #nutrition .trainer-actual-diary-date>button
+):focus-visible{outline:2px solid #9dc7ff!important;outline-offset:2px!important}
+/* Available days and selected day are visibly distinct in both calendars. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-cell:not(.empty),
+ .trainer-measurements-page .measurement-calendar-day:not(.empty)
+){
+ background:#2c3440!important;
+ border:1px solid #485568!important;
+ color:#d4dce8!important;
+ opacity:1!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-cell.has-workout,
+ .trainer-measurements-page .measurement-calendar-day.has-data
+):not(.selected):not(.active){
+ background:#2e4566!important;
+ border-color:#577eb1!important;
+ color:#c2ddff!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-cell.selected,
+ .trainer-measurements-page .measurement-calendar-day.active
+){
+ background:#3168b3!important;
+ border:1.5px solid #91c5ff!important;
+ color:#fff!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.11)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-cell.has-workout i,
+ .trainer-measurements-page .measurement-calendar-day.has-data::after
+){background:#74acff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ #progress .trainer-workout-calendar-cell.selected i,
+ .trainer-measurements-page .measurement-calendar-day.active::after
+){background:#fff!important}
+/* Comparison appears as a compact continuation of the current set, rather
+   than a separate boxed previous-result card. Retain deltas and rest/RIR. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex-wrap:wrap!important;column-gap:8px!important;row-gap:4px!important;
+ padding:7px 3px 2px 11px!important;
+ margin-top:3px!important;margin-left:4px!important;
+ border:0!important;border-top:1px solid #445369!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+ min-height:0!important;white-space:normal!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous>span:first-child{
+ color:#9eb5d1!important;font-size:10px!important;flex:0 0 auto!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous>strong{
+ color:#d5e5fa!important;font-size:11px!important;min-width:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous .trainer-review-set-meta{
+ color:#afbed1!important;white-space:normal!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-deltas{
+ margin-left:auto!important;gap:4px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-deltas>i{
+ background:#29384b!important;border:1px solid #405575!important;
+ color:#c2d8f5!important;min-height:19px!important;padding:2px 6px!important;
+}
+/* Semantic value change colors remain only in the delta, never full-row tint. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-deltas>.delta-up{
+ color:#9ee7c4!important;border-color:#376a56!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-deltas>.delta-down{
+ color:#ffc0c5!important;border-color:#85515b!important;
+}
+/* SVG-based, color-keyed stat headings; no changed values or reading order. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-metric-label{
+ display:flex!important;align-items:center!important;gap:6px!important;
+ color:#c9d7e8!important;font-size:10.5px!important;line-height:1.25!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-metric-label .ui-icon{
+ display:block!important;width:18px!important;height:18px!important;flex:0 0 18px!important;
+ fill:none!important;stroke:currentColor!important;stroke-width:2px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div{
+ background:#2a303a!important;
+ border:1px solid #485568!important;
+ border-top:3px solid #73adfa!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div:nth-child(2),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div:nth-child(2){border-top-color:#66cfad!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div:nth-child(3),
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div:nth-child(3){border-top-color:#b89af2!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div:nth-child(1) .ui-icon,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div:nth-child(1) .ui-icon{color:#91c2ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div:nth-child(2) .ui-icon,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div:nth-child(2) .ui-icon{color:#90e1c2!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-summary>div:nth-child(3) .ui-icon,
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-stats>div:nth-child(3) .ui-icon{color:#cab0ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-title-icon{
+ display:flex!important;align-items:center!important;gap:9px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-title-icon .ui-icon{
+ width:24px!important;height:24px!important;flex:0 0 24px!important;
+ stroke:#83b7ff!important;fill:none!important;stroke-width:1.9px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-list>div{
+ background:#29323e!important;border:1px solid #486079!important;border-left:3px solid #608fcd!important;
+ gap:10px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-list>div:nth-child(2n){border-left-color:#69cbb0!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-entry-icon{
+ width:32px!important;height:32px!important;flex:0 0 32px!important;
+ display:grid!important;place-items:center!important;border-radius:10px!important;
+ background:#334c6b!important;color:#a5cfff!important;
+ font-style:normal!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-entry-icon.cardio{
+ background:#29493f!important;color:#a0e7cc!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-entry-icon .ui-icon{
+ width:19px!important;height:19px!important;stroke:currentColor!important;
+ fill:none!important;stroke-width:2px!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-activity-list>div>span:not(.trainer-progress-entry-icon){
+ flex:1 1 auto!important;min-width:0!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-pr-card{
+ background:#2a3039!important;border:1px solid #5a5345!important;
+ border-top:3px solid #e5af58!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-pr-card .trainer-progress-pr-mark{
+ display:inline-flex!important;align-items:center!important;gap:5px!important;
+ width:max-content!important;color:#ffd089!important;
+ border-color:#896537!important;background:#55412d!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-pr-card .trainer-progress-pr-mark .ui-icon{
+ display:block!important;width:14px!important;height:14px!important;
+ flex:0 0 14px!important;fill:none!important;stroke:currentColor!important;stroke-width:2px!important;
+}
+@media(max-width:390px){
+ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-metric-label{gap:4px!important;font-size:10px!important}
+ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-metric-label .ui-icon{width:15px!important;height:15px!important;flex-basis:15px!important}
+ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-progress-entry-icon{width:28px!important;height:28px!important;flex-basis:28px!important}
+}

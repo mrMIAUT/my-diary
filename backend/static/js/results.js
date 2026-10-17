@@ -446,13 +446,13 @@ function trainerProgressActivityHTML(d){
  let avgSteps=Math.round(totalSteps/Math.max(1,xs.length));
  let latest=xs[0]||{},expanded=!!window.trainerProgressActivityExpanded,shown=expanded?xs:xs.slice(0,3);
  return '<div class="trainer-progress-activity-stats">'
-   +'<div><span>Середні кроки</span><strong>'+avgSteps.toLocaleString('uk-UA')+'</strong><small>'+xs.length+' дн. з даними</small></div>'
-   +'<div><span>Кардіо</span><strong>'+totalMinutes+' хв</strong><small>'+cardio.length+' записів</small></div>'
-   +'<div><span>Остання активність</span><strong>'+esc(formatProgressDate(latest.day))+'</strong><small>'+(latest.cardio_type?esc(cardioDisplayType(latest.cardio_type)):((+latest.steps||0).toLocaleString('uk-UA')+' кроків'))+'</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('chart')+'Середні кроки</span><strong>'+avgSteps.toLocaleString('uk-UA')+'</strong><small>'+xs.length+' дн. з даними</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('run')+'Кардіо</span><strong>'+totalMinutes+' хв</strong><small>'+cardio.length+' записів</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('calendar')+'Остання активність</span><strong>'+esc(formatProgressDate(latest.day))+'</strong><small>'+(latest.cardio_type?esc(cardioDisplayType(latest.cardio_type)):((+latest.steps||0).toLocaleString('uk-UA')+' кроків'))+'</small></div>'
   +'</div>'
   +'<div class="trainer-progress-activity-list '+(expanded?'expanded':'')+'">'+shown.map(x=>{
     let detail=trainerProgressActivityDetail(x),steps=(+x.steps||0)?Number(x.steps).toLocaleString('uk-UA')+' кроків':'';
-    return '<div><span><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+esc(x.cardio_type?cardioDisplayType(x.cardio_type):'Кроки')+(detail?' · '+esc(detail):'')+'</small></span>'+(steps?'<b>'+steps+'</b>':'')+'</div>';
+    return '<div><i class="trainer-progress-entry-icon '+(x.cardio_type?'cardio':'steps')+'">'+uiIcon(x.cardio_type?'run':'chart')+'</i><span><strong>'+esc(formatProgressDate(x.day))+'</strong><small>'+esc(x.cardio_type?cardioDisplayType(x.cardio_type):'Кроки')+(detail?' · '+esc(detail):'')+'</small></span>'+(steps?'<b>'+steps+'</b>':'')+'</div>';
   }).join('')+'</div>'
   +(xs.length>3?'<button type="button" class="trainer-activity-more" onclick="toggleTrainerProgressActivity()">'+(expanded?'Згорнути':'Уся активність · '+xs.length)+'</button>':'');
 }
@@ -460,7 +460,7 @@ function trainerProgressActivityHTML(d){
 function trainerProgressPRHTML(d){
  let stats=trainerProgressExerciseStats(d).filter(x=>x.bestWeight>0);
  if(!stats.length)return '<div class="trainer-progress-empty">PR з’являться після перших тренувань із записаною вагою.</div>';
- return '<div class="trainer-progress-pr-grid">'+stats.slice(0,6).map(x=>'<div class="trainer-progress-pr-card"><span>PR</span><strong>'+esc(x.name)+'</strong><b>'+fmtProgress(x.bestWeight)+' кг'+(x.bestReps?' × '+x.bestReps:'')+'</b><small>'+esc(formatProgressDate(x.bestDay))+'</small></div>').join('')+'</div>';
+ return '<div class="trainer-progress-pr-grid">'+stats.slice(0,6).map(x=>'<div class="trainer-progress-pr-card"><span class="trainer-progress-pr-mark">'+uiIcon('chart')+'PR</span><strong>'+esc(x.name)+'</strong><b>'+fmtProgress(x.bestWeight)+' кг'+(x.bestReps?' × '+x.bestReps:'')+'</b><small>'+esc(formatProgressDate(x.bestDay))+'</small></div>').join('')+'</div>';
 }
 
 function trainerProgressCompareHTML(d){
@@ -476,9 +476,9 @@ function trainerProgressSummaryHTML(d){
  let sessions=(d.workout_sessions||[]).filter(x=>x.status==='finished'&&trainerProgressInPeriod(sessionDay(x)));
  let sets=trainerProgressSets(d),volume=trainerProgressVolume(sets),prs=trainerProgressExerciseStats(d).filter(x=>x.bestWeight>0).length;
  return '<div class="trainer-progress-summary">'
-   +'<div><span>Тренувань</span><strong>'+sessions.length+'</strong><small>за період</small></div>'
-   +'<div><span>Робочий обсяг</span><strong>'+volume.toLocaleString('uk-UA')+' кг</strong><small>вага × повтори</small></div>'
-   +'<div><span>PR вправ</span><strong>'+prs+'</strong><small>особисті максимуми</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('dumbbell')+'Тренувань</span><strong>'+sessions.length+'</strong><small>за період</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('chart')+'Робочий обсяг</span><strong>'+volume.toLocaleString('uk-UA')+' кг</strong><small>вага × повтори</small></div>'
+   +'<div><span class="trainer-progress-metric-label">'+uiIcon('scale')+'PR вправ</span><strong>'+prs+'</strong><small>особисті максимуми</small></div>'
   +'</div>';
 }
 
@@ -491,8 +491,8 @@ function trainerProgressHTML(d){
    +'</div>'
    +trainerProgressSummaryHTML(d)
    +'<div id="trainerWorkoutHistory">'+trainerWorkoutCalendarHTML(d)+'</div>'
-   +'<section id="trainerProgressActivity" class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
-   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3>Особисті рекорди</h3><p>Найбільша робоча вага по вправах.</p></div></div>'+trainerProgressPRHTML(d)+'</section>'
+   +'<section id="trainerProgressActivity" class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3 class="trainer-progress-title-icon">'+uiIcon('run')+'Активність</h3><p>Кроки та кардіо клієнта.</p></div></div>'+trainerProgressActivityHTML(d)+'</section>'
+   +'<section class="trainer-progress-section"><div class="trainer-progress-section-head"><div><h3 class="trainer-progress-title-icon">'+uiIcon('chart')+'Особисті рекорди</h3><p>Найбільша робоча вага по вправах.</p></div></div>'+trainerProgressPRHTML(d)+'</section>'
 
   +'</div>';
 }
