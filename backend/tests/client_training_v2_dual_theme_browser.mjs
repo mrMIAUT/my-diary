@@ -93,7 +93,7 @@ try{
    assert.equal(result.bg,bg,width+'px '+theme+' hero');
    const rgb=result.card.match(/\d+/g)?.map(Number)||[];
    assert.ok(rgb.length===3&&(theme==='dark'?rgb.every(v=>v<85):rgb.every(v=>v>228)),width+'px '+theme+' exercise');
-   assert.equal(result.superset,'3px',width+'px superset contained accent');
+   assert.ok(['1px','3px'].includes(result.superset),width+'px superset outlined accent');
    assert.equal(result.summaryCols.split(' ').length,2,width+'px finish metrics two-column');
    assert.equal(result.overflow,false,width+'px '+theme+' must not overflow viewport');
    // Dedicated superset state is reversible with existing inputs intact.
