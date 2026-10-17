@@ -219,11 +219,11 @@ assert.ok(style.includes('.trainer-more-page.modern.trainer-theme-settings{'));
 assert.match(trainer,/function showTrainerThemeSettings\(/);
 assert.match(trainer,/onclick="showTrainerThemeSettings\(\)"/);
 for(const shell of [index,sw]){
-  assert.ok(shell.includes('/static/css/trainer-dark.css?v=30'));
+  assert.ok(shell.includes('/static/css/trainer-dark.css?v=31'));
   assert.ok(shell.includes('/static/js/theme.js?v=3'));
   assert.ok(shell.includes('/static/js/trainer.js?v=322'));
 }
-assert.ok(sw.includes("const VERSION='eplan-v260'"));
+assert.ok(sw.includes("const VERSION='eplan-v261'"));
 
 const refined=style.slice(style.indexOf('/* v24 — follow-up dark trainer polish'));
 assert.ok(refined.includes('#nutrition .trainer-actual-diary-date>button{'));
@@ -475,4 +475,18 @@ assert.ok(unified.includes('--tpo-panel:#1d2025;'));
 assert.ok(unified.includes('.trainer-bottom-nav button.active'));
 assert.ok(!unified.includes('body.eplan-redesign.client-ui')&&!unified.includes('[data-eplan-theme="light"]'));
 assert.ok(!/\b(?:display|position|padding|margin|width|height|gap|transform|z-index):/.test(unified),'Palette must not alter geometry');
+
+const editors=style.slice(style.indexOf('/* v31 — high-specificity'));
+for(const s of [
+ '#programTemplateEditorModal .trainer-template-editor-card,',
+ '#programTemplateEditorModal .trainer-template-editor-day,',
+ '.trainer-library-page .trainer-library-admin-body,',
+ '.trainer-library-page .library-muscle-admin-list>div,',
+ '.trainer-new-client-modal .trainer-new-client-section,',
+ '.trainer-client-page #nutrition .structured-daily-grid>span,',
+ '#nutrition .trainer-actual-diary-date-display'
+]){
+ assert.ok(editors.includes(s),'Nested dark trainer screen missing '+s);
+}
+assert.ok(!editors.includes('body.eplan-redesign.client-ui'));
 console.log('PASS: trainer dark theme scope, theme picker and PWA assets');
