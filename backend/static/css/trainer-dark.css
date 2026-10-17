@@ -3,7 +3,7 @@
    No geometry, data, timer, or business logic is changed. */
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
   color-scheme:dark;
-  --trainer-dark-bg:#0b1117;
+  --trainer-dark-bg:#000000;
   --trainer-dark-surface:#151e27;
   --trainer-dark-raised:#1c2936;
   --trainer-dark-muted:#a7b7c9;
@@ -838,7 +838,7 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-saved-plan-acti
    Keep this block after v2: legacy dark overrides deliberately use !important.
    No changes to client styles, trainer layout, avatar tones, or semantic statuses. */
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
-  --trainer-dark-bg:#101114;
+  --trainer-dark-bg:#000000;
   --trainer-dark-surface:#1c1e23;
   --trainer-dark-raised:#282b31;
   --trainer-dark-muted:#aeb4bf;
@@ -3885,4 +3885,28 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #nutrition .trainer-actu
   background:#282c34!important;
   border-color:#46505f!important;
   color:#edf3fa!important;
+}
+
+
+/* v26 — black canvas for trainer dark mode only; preserve graphite content
+   cards, overlays, buttons, navigation, light mode and all client views. */
+html:has(> body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]){
+  background-color:#000000!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+  --trainer-dark-bg:#000000;
+  --bg:#000000;
+  background-color:#000000!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+  #app,.wrap.trainer-shell,
+  .trainer-home-page,.trainer-clients-page,.trainer-client-page,
+  .trainer-programs-page,.trainer-nutrition-page,.trainer-more-page,
+  .trainer-library-page,.trainer-progress-page,.trainer-measurements-page,
+  .trainer-checkins-page,.trainer-public-profile-page,.trainer-theme-settings
+){
+  background-color:#000000!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] .trainer-shell>.trainer-top{
+  background-color:transparent!important;
 }
