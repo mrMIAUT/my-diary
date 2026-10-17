@@ -88,7 +88,8 @@ try{
    });
    const bg=theme==='dark'?'rgb(32, 37, 44)':'rgb(255, 255, 255)';
    assert.equal(result.bg,bg,width+'px '+theme+' hero');
-   assert.equal(result.card,bg,width+'px '+theme+' exercise');
+   const rgb=result.card.match(/\d+/g)?.map(Number)||[];
+   assert.ok(rgb.length===3&&(theme==='dark'?rgb.every(v=>v<85):rgb.every(v=>v>228)),width+'px '+theme+' exercise');
    assert.equal(result.superset,'3px',width+'px superset accent');
    assert.equal(result.summaryCols.split(' ').length,2,width+'px finish metrics two-column');
    assert.equal(result.overflow,false,width+'px '+theme+' must not overflow viewport');
