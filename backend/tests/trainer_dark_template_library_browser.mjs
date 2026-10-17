@@ -97,13 +97,13 @@ try{
   await page.addStyleTag({content:'*,*::before,*::after{transition:none!important}'});
   const val=(sel,prop)=>page.locator(sel).first().evaluate((el,p)=>getComputedStyle(el)[p],prop);
   const check=async(sel,prop,expected)=>assert.equal(await val(sel,prop),expected,`${width}px ${sel} ${prop}`);
-  const clear='rgba(0, 0, 0, 0)',paper=rgb(28,30,35),raised=rgb(40,43,49),text=rgb(241,243,247);
+  const clear='rgba(0, 0, 0, 0)',paper=rgb(29,32,37),raised=rgb(41,45,52),text=rgb(241,243,247);
   // Template editing: no strips behind the title or group labels.
   await check('#programTemplateEditorModal .trainer-template-editor-card','backgroundColor',paper);
   await check('#programTemplateEditorModal .trainer-template-editor-top','backgroundColor',clear);
-  await check('#programTemplateEditorModal .trainer-template-editor-day','backgroundColor',rgb(32,36,43));
+  await check('#programTemplateEditorModal .trainer-template-editor-day','backgroundColor',raised);
   await check('#programTemplateEditorModal .trainer-template-editor-day-head','backgroundColor',clear);
-  await check('#programTemplateEditorModal .trainer-template-editor-item','backgroundColor',paper);
+  await check('#programTemplateEditorModal .trainer-template-editor-item','backgroundColor',raised);
   await check('#programTemplateEditorModal .trainer-template-editor-item-head','backgroundColor',clear);
   await check('#programTemplateEditorModal .trainer-template-editor-item-head>strong','color',text);
   await check('#programTemplateEditorModal .trainer-template-editor-grid','backgroundColor',clear);
@@ -115,11 +115,11 @@ try{
   await check('#programTemplateEditorModal .trainer-template-editor-actions .trainer-template-primary','backgroundColor',rgb(52,120,246));
 
   // Screenshot regression: admin muscle rows and nested form are fully graphite.
-  await check('.trainer-library-admin-body','backgroundColor',rgb(37,42,51));
+  await check('.trainer-library-admin-body','backgroundColor',raised);
   await check('.trainer-library-admin-section-head strong','color',rgb(243,244,246));
   await check('.trainer-library-admin-section-head small','color',rgb(169,184,202));
   await check('.trainer-library-admin-form input','backgroundColor',rgb(40,43,49));
-  await check('.library-muscle-admin-list>div','backgroundColor',rgb(45,50,59));
+  await check('.library-muscle-admin-list>div','backgroundColor',raised);
   await check('.library-muscle-admin-list>div>span','color',rgb(243,244,246));
   await check('.library-muscle-admin-list .library-delete-btn','backgroundColor',rgb(57,39,46));
   // Light mode must continue to use the existing white rows.
