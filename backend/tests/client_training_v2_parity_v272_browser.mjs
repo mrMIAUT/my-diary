@@ -12,7 +12,7 @@ const cssFiles=['base.css','components.css','refinements.css','redesign.css','th
  'client-graphite-inner-panels.css','client-graphite-semantic-accents.css',
  'client-graphite-active-diary.css','client-graphite-finishing-v252.css',
  'client-graphite-components-v253.css','client-unified-dark-v268.css',
- 'client-training-v2.css','client-training-v2-parity-v272.css'];
+ 'client-training-v2.css','client-training-v2-parity-v272.css','client-active-workout-graphite-v273.css'];
 const exercise=(showRir)=>`<section class="exercise workout-live-exercise"><button class="workout-live-toggle open">
  <span class="eplan-v2-title-content"><span class="eplan-v2-exercise-index">1</span>
  <span class="eplan-v2-exercise-icon">◼</span><span class="eplan-v2-exercise-text">
@@ -59,9 +59,9 @@ try{
   });
   const v=await read();
   const prefix=theme+' '+width+'px rir='+showRir;
-  const bg=theme==='dark'?'rgb(13, 32, 45)':'rgb(255, 255, 255)';
+  const bg=theme==='dark'?'rgb(30, 33, 38)':'rgb(255, 255, 255)';
   assert.equal(v.card.bg,bg,prefix+' proper card background');
-  assert.equal(v.content.bg,theme==='dark'?'rgb(12, 29, 42)':'rgb(255, 255, 255)',prefix+' opaque swipe content');
+  assert.equal(v.content.bg,theme==='dark'?'rgb(37, 40, 46)':'rgb(255, 255, 255)',prefix+' opaque swipe content');
   assert.equal(v.tray.visible,'hidden',prefix+' concealed skip action');
   assert.ok(v.row.height<=50,prefix+' compact input row, got '+v.row.height);
   assert.ok(v.pending.height<=94,prefix+' compact pending set, got '+v.pending.height);
@@ -77,5 +77,5 @@ try{
   assert.equal((await read()).tray.visible,'hidden',prefix+' swipe action concealed on close');
   await page.close();
  }
- console.log('PASS: v272 light/dark compact sets, swipe action visibility, completed green stripe, RIR on/off, 320/375/390/430px');
+ console.log('PASS: v273 graphite active + preserved light compact sets, swipe action visibility, completed green stripe, RIR on/off, 320/375/390/430px');
 }finally{await browser.close()}
