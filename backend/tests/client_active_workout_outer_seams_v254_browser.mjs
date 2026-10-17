@@ -40,7 +40,7 @@ const selectors={
  finish:'.redesign-active-workout>.finish-workout-wrap'
 };
 const actualMarkup=fs.readFileSync(path.join(root,'js/training-redesign.js'),'utf8');
-assert.ok(actualMarkup.includes('<div class="redesign-active-workout"><div class="redesign-active-workout-head">'),
+assert.ok((actualMarkup.includes('<div class="redesign-active-workout"><div class="redesign-active-workout-head">') || actualMarkup.includes('<div class="redesign-active-workout eplan-training-v2-live"><div class="redesign-active-workout-head">')),
  'live workout must NOT be emitted as a generic .card — the nested card caused the seam');
 const browser=await chromium.launch({headless:true});
 try{

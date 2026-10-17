@@ -38,7 +38,7 @@ class FeaturedRestTimerTests(unittest.TestCase):
     def test_pwa_assets(self):
         for source in (INDEX,SW):
             for asset in ("/static/js/timer.js?v=169",
-                          "/static/js/workout.js?v=188",
+                          "/static/js/workout.js?v=189",
                           "/static/css/redesign.css?v=263"):
                 self.assertIn(asset,source)
         self.assertIn("const VERSION='eplan-v226'",SW)

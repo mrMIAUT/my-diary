@@ -40,7 +40,7 @@ class ExtraSetRestTimerTests(unittest.TestCase):
 
     def test_pwa_asset_refresh(self):
         for src in (INDEX,SW):
-            for asset in ("/static/js/workout.js?v=188",
+            for asset in ("/static/js/workout.js?v=189",
                           "/static/js/timer.js?v=169",
                           "/static/css/redesign.css?v=263"):
                 self.assertIn(asset,src)

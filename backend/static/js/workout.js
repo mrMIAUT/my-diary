@@ -453,7 +453,39 @@ async function saveFinishWorkoutComment(cid,day,button=null){
  }
 }
 
+/* Training v2 summary shows only values recorded in the finished session.
+   No fabricated PRs, muscle percentages, coach reviews or goals. */
+function eplanWorkoutFinishMuscleRows(sets,d){
+ let lib=window.exerciseLibrary,exercises=lib?.exercises||[],muscles=lib?.muscles||[];
+ if(!exercises.length||!muscles.length)return '';
+ let byName=new Map(exercises.map(e=>[String(e.name||'').trim().toLocaleLowerCase('uk-UA'),e]));
+ let byId=new Map(muscles.map(m=>[+m.id,m.name]));
+ let totals=new Map(),identified=0;
+ const program=new Map((d.program||[]).map(p=>[+p.id,p]));
+ sets.forEach(row=>{
+  let w=+row.weight||0,reps=+row.reps||0,factor=['per_leg','per_arm','per_side'].includes(String(row.repeat_mode||''))?2:1;
+  let volume=Math.max(0,w)*Math.max(0,reps)*factor;
+  if(!volume)return;
+  let name=row.exercise||program.get(+row.program_id)?.exercise||'';
+  let matched=byName.get(String(name).trim().toLocaleLowerCase('uk-UA'))
+    ||byName.get(String(program.get(+row.program_id)?.exercise||'').trim().toLocaleLowerCase('uk-UA'));
+  let ids=[...new Set((matched?.primary_muscle_ids||[]).map(Number).filter(id=>byId.has(id)))];
+  if(!ids.length)return;
+  identified+=volume;
+  ids.forEach(id=>totals.set(byId.get(id),(totals.get(byId.get(id))||0)+volume/ids.length));
+ });
+ if(!identified)return '';
+ let ordered=[...totals].sort((a,b)=>b[1]-a[1]).slice(0,5);
+ return '<div class="eplan-v2-finish-muscles"><strong>Обсяг за групами м’язів</strong>'
+  +ordered.map(([name,volume])=>{
+   let pct=Math.round(volume/identified*100);
+   return '<div class="eplan-v2-finish-muscle"><span>'+esc(name)+'</span><i><b style="width:'+pct+'%"></b></i><em>'+pct+'%</em></div>';
+  }).join('')
+  +'</div>';
+}
+
 async function finishWorkout(cid,sid,button=null){
+ closeEplanSupersetFocus();
  if(button?.dataset.finishing==='1')return;
  if(!confirm('Завершити тренування?'))return;
  if(button){button.dataset.finishing='1';button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Завершуємо…'}
@@ -469,7 +501,33 @@ async function finishWorkout(cid,sid,button=null){
      totalSets=sets.length+timedSets.length,
      cycle=workoutCycleState(d,(d.program||[]).reduce((g,x)=>((g[x.day_name]??=[]).push(x),g),{})),canComment=!!clientAccess(d.client).features?.trainer_review;
  let workoutDay=sessionDay(s)||isoToday();
- document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="finishSummaryModal"><div class="card finish-summary"><h2>Тренування завершено ✓</h2><p class="muted">${esc(s.day_name||'Тренування')} автоматично надіслано тренеру на перевірку.</p>${workoutLoadPhaseLabel(s.load_phase)?'<div class="workout-finish-phase">'+esc(workoutLoadPhaseLabel(s.load_phase))+'</div>':''}<div class="finish-summary-grid workout-finish-summary-grid"><div><span class="muted">Вправ</span><div class="summary-number">${exercises}</div></div><div><span class="muted">Підходів</span><div class="summary-number">${totalSets}</div></div><div><span class="muted">Тривалість</span><div class="summary-number duration">${formatWorkoutDuration(s.duration_seconds||0)}</div></div></div>${cycle.next?`<p class="muted">Наступне за планом: <strong>${esc(cycle.next)}</strong></p>`:''}${canComment?`<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування? Щось боліло, було занадто легко або важко?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment(${cid},'${esc(workoutDay)}',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary(${cid})">Без коментаря</button></div></div>`:`<button style="width:100%" onclick="closeFinishWorkoutSummary(${cid})">Готово</button>`}<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById('finishSummaryModal')?.remove();openCompletedWorkoutEditor(${sid})">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout(${sid},this)">Скасувати завершення</button></div></div></div>`);
+ let totalVolume=sets.reduce((sum,row)=>{
+   let factor=['per_leg','per_arm','per_side'].includes(String(row.repeat_mode||''))?2:1;
+   return sum+Math.max(0,+row.weight||0)*Math.max(0,+row.reps||0)*factor;
+ },0);
+ let actualDate=workoutDay||isoToday(),actualDuration=formatWorkoutDuration(s.duration_seconds||0);
+ let muscleRows=eplanWorkoutFinishMuscleRows(sets,d);
+ let summaryComment=canComment
+  ?'<div class="finish-workout-comment"><div class="finish-workout-comment-head"><strong>Коментар тренеру</strong><span>необов’язково</span></div><textarea id="finishWorkoutComment" maxlength="5000" placeholder="Як пройшло тренування?"></textarea><div class="finish-workout-comment-actions"><button onclick="saveFinishWorkoutComment('+cid+',\''+esc(workoutDay)+'\',this)">Надіслати коментар</button><button class="dark" onclick="closeFinishWorkoutSummary('+cid+')">Без коментаря</button></div></div>'
+  :'';
+ let metric=(label,value)=>'<div class="eplan-v2-finish-metric"><span>'+label+'</span><strong>'+value+'</strong></div>';
+ document.body.insertAdjacentHTML('beforeend',
+  '<div class="modal" id="finishSummaryModal"><div class="card finish-summary eplan-training-v2-finish">'
+  +'<div class="eplan-v2-finish-title"><span class="eplan-v2-finish-trophy" aria-hidden="true">🏆</span><div><h2>Тренування завершено!</h2><small>'+esc(s.day_name||'Тренування')+' · '+esc(formatProgressDate(actualDate))+'</small></div></div>'
+  +'<div class="eplan-v2-finish-metrics">'
+   +metric('Тривалість',esc(actualDuration))
+   +metric('Виконано вправ',exercises)
+   +metric('Загальний обсяг',esc(Math.round(totalVolume).toLocaleString('uk-UA'))+' кг')
+   +metric('Робочих підходів',totalSets)
+  +'</div>'
+  +muscleRows
+  +(workoutLoadPhaseLabel(s.load_phase)?'<div class="workout-finish-phase">'+esc(workoutLoadPhaseLabel(s.load_phase))+'</div>':'')
+  +(cycle.next?'<p class="muted">Наступне за планом: <strong>'+esc(cycle.next)+'</strong></p>':'')
+  +summaryComment
+  +'<div class="eplan-v2-finish-actions"><button type="button" class="workout-confirm-primary" onclick="closeFinishWorkoutSummary('+cid+')">На головну тренувань</button><button type="button" class="dark" onclick="document.getElementById(\'finishSummaryModal\')?.remove();openProgressWorkout('+sid+')">Переглянути деталі</button></div>'
+  +'<div class="finish-summary-recovery-actions"><button type="button" class="dark" onclick="document.getElementById(\'finishSummaryModal\')?.remove();openCompletedWorkoutEditor('+sid+')">Редагувати тренування</button><button type="button" class="finish-summary-reopen" onclick="reopenCompletedWorkout('+sid+',this)">Скасувати завершення</button></div>'
+  +'</div></div>'
+ );
  }catch(e){
   alert(e?.message||'Не вдалося завершити тренування. Перевір інтернет і спробуй ще раз.');
   if(button){button.dataset.finishing='0';button.disabled=false;button.textContent=button.dataset.oldText||'Завершити тренування'}
@@ -686,6 +744,24 @@ function workoutSupersetIsLast(x,d=window.currentClientData||{}){
  let peers=workoutSupersetPeers(x,d);
  return peers.length>1&&+peers[peers.length-1].id===+x.id;
 }
+// Optional focused A1/A2 screen — preserves every existing set input/action.
+window.eplanV2SupersetFocusId=window.eplanV2SupersetFocusId||'';
+function closeEplanSupersetFocus(){
+ document.querySelectorAll('.eplan-superset-focus').forEach(el=>el.classList.remove('eplan-superset-focus'));
+ document.body.classList.remove('eplan-v2-superset-on');
+ window.eplanV2SupersetFocusId='';
+}
+function openEplanSupersetFocus(groupId){
+ const body=document.getElementById(groupId),group=body?.closest('.workout-live-superset');
+ if(!body||!group)return;
+ document.querySelectorAll('.eplan-superset-focus').forEach(el=>el.classList.remove('eplan-superset-focus'));
+ group.classList.add('eplan-superset-focus');
+ document.body.classList.add('eplan-v2-superset-on');
+ window.eplanV2SupersetFocusId=groupId;
+ body.classList.remove('hidden');
+ group.querySelector('.workout-live-superset-toggle')?.classList.add('open');
+ group.scrollTop=0;
+}
 function toggleWorkoutSuperset(id,btn){
  let body=document.getElementById(id);if(!body)return;
  let open=body.classList.contains('hidden');
@@ -741,11 +817,13 @@ function activeExercisesHTML(items,d,cid){
       rir=timed||!programRirEnabled(d)?'':'<span class="workout-plan-meta">RIR '+rirPlan(effective).join(' / ')+'</span>',
       swap=!timed&&exerciseAlternatives(x).length&&!todaySets(d,x.id).length?'<button class="swap-exercise-btn" onclick="chooseWorkoutExercise('+x.id+','+cid+')">⇄ Замінити вправу</button>':'',
       content=timed?timedExerciseHTML(effective,d,cid):completedExerciseHTML(effective,d,cid),
-      title='<span><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
+      number=items.findIndex(v=>+v.id===+x.id)+1,
+      label=grouped?'A'+(orderedSupersetItems(items.filter(y=>y.superset_group===x.superset_group)).findIndex(y=>+y.id===+x.id)+1):String(number),
+      title='<span class="eplan-v2-title-content"><span class="eplan-v2-exercise-index">'+esc(label)+'</span><span class="eplan-v2-exercise-icon" aria-hidden="true">'+uiIcon('dumbbell')+'</span><span class="eplan-v2-exercise-text"><span class="workout-exercise-title-line"><strong>'+esc(shownName)+'</strong></span>'
         +(shownTech?'<span class="workout-technique-row">'+techniqueLinkHTML(shownTech,'Техніка',true,'workout-live-tech-link')+'</span>':'')
         +(shownName!==x.exercise?'<span class="muted workout-replacement-note">Замість: '+esc(x.exercise)+'</span>':'')
         +'<span class="muted workout-plan-line"><span class="workout-plan-meta">'+effective.sets+' × '+esc(plan)+'</span>'
-        +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span>',
+        +(rest?'<span class="workout-plan-meta">Відпочинок '+esc(rest)+'</span>':'')+rir+'</span></span></span>',
       side='<span class="workout-live-toggle-side">'+(grouped?'':'<span class="arrow">⌄</span>')+(doneToday?'<span class="exercise-done-badge compact" title="Вправу завершено" aria-label="Вправу завершено">✓</span>':'')+'</span>';
   // The large rest display is presentation-only; never attached to timed exercises.
   if(grouped){
@@ -765,7 +843,7 @@ function activeExercisesHTML(items,d,cid){
        hasTimed=effectivePair.some(isTimedWorkoutExercise),rounds=Math.max(1,+effectivePair[0]?.sets||1),
        groupBodyId='workoutSupersetBody'+pair[0].id,
        groupDone=workoutSupersetAllExercisesDone(pair,d,activeDay);
-   html+=`<div class="workout-live-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
+   html+=`<div class="workout-live-superset eplan-training-v2-superset${hasTimed?' has-timed':''}${groupDone?' is-superset-complete':''}" data-superset-group="${esc(x.superset_group)}"><button type="button" class="workout-live-superset-head workout-live-superset-toggle" onclick="toggleWorkoutSuperset('${groupBodyId}',this)"><span class="workout-live-superset-copy"><strong>Суперсет</strong><span>виконати вправи по черзі${hasTimed?' · '+rounds+' кола':''}${superRest?' · Відпочинок '+esc(superRest):''}</span></span><span class="workout-live-superset-status">${groupDone?'<span class="exercise-done-badge compact" title="Суперсет завершено" aria-label="Суперсет завершено">✓</span>':''}<span class="workout-live-superset-arrow">⌄</span></span></button><div class="eplan-v2-superset-focus-bar"><button type="button" onclick="closeEplanSupersetFocus()" aria-label="Повернутися до тренування">‹ Назад</button><strong>Суперсет A</strong></div><button type="button" class="eplan-v2-superset-focus-open" onclick="openEplanSupersetFocus('${groupBodyId}')">↗ Відкрити суперсет</button><div id="${groupBodyId}" class="workout-live-superset-body hidden">${pair.map((y,i)=>card(y,true,false,true)+(i<pair.length-1?'<div class="workout-live-superset-divider"></div>':'')).join('')}</div></div>`;
   }else{used.add(x.id);html+=card(x,false,true,false)}
  }
  return html;
