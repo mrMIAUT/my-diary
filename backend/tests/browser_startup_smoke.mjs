@@ -681,3 +681,4 @@ await import('./client_graphite_semantic_icons_browser.mjs');
 await import('./client_graphite_active_diary_browser.mjs');
 await import('./client_graphite_finishing_v252_browser.mjs');
 await import('./client_graphite_components_v253_browser.mjs');
+await import('./client_active_workout_outer_seams_v254_browser.mjs');
