@@ -12,7 +12,7 @@ const sheets=['base.css','components.css','refinements.css','redesign.css','them
  'client-graphite-inner-panels.css','client-graphite-semantic-accents.css',
  'client-graphite-active-diary.css','client-graphite-finishing-v252.css'].map(f=>'css/'+f);
 const html=`<div id="app"><div class="client-section-page redesign-training-page">
- <h1>Тренування</h1><div class="card redesign-active-workout">
+ <h1>Тренування</h1><div class="redesign-active-workout">
   <div class="redesign-active-workout-head"><div class="training-live">Тренування триває</div>
    <button class="redesign-rest-timer-icon running">01:41</button></div>
   <h2>День 2</h2>
@@ -30,7 +30,7 @@ const html=`<div id="app"><div class="client-section-page redesign-training-page
  </div></div></div>`;
 const selectors={
  page:'.redesign-training-page',
- panel:'.redesign-training-page>.card.redesign-active-workout',
+ panel:'.redesign-training-page>.redesign-active-workout',
  head:'.redesign-active-workout>.redesign-active-workout-head',
  title:'.redesign-active-workout>h2',
  live:'.redesign-active-workout .training-live',
@@ -39,6 +39,9 @@ const selectors={
  exerciseBody:'.redesign-active-workout .workout-live-body',
  finish:'.redesign-active-workout>.finish-workout-wrap'
 };
+const actualMarkup=fs.readFileSync(path.join(root,'js/training-redesign.js'),'utf8');
+assert.ok(actualMarkup.includes('<div class="redesign-active-workout"><div class="redesign-active-workout-head">'),
+ 'live workout must NOT be emitted as a generic .card — the nested card caused the seam');
 const browser=await chromium.launch({headless:true});
 try{
  for(const width of [320,375,390,430]){
