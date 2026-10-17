@@ -420,3 +420,73 @@ body.eplan-redesign.client-ui #finishSummaryModal .eplan-v2-finish-actions>butto
   width:34px;height:38px;
  }
 }
+
+/* Focused A1/A2 view — same inputs, no duplicate workout state. */
+body.eplan-redesign.client-ui #app .eplan-training-v2-live .eplan-v2-superset-focus-open{
+ display:block!important;
+ width:calc(100% - 22px)!important;
+ margin:10px 11px!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:10px!important;
+ background:var(--ept-blue-light)!important;
+ color:var(--ept-blue)!important;
+ padding:9px 12px!important;font-size:12px!important;font-weight:800!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui #app .eplan-training-v2-live .eplan-v2-superset-focus-bar{
+ display:none;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-training-v2-superset.eplan-superset-focus{
+ position:fixed!important;
+ z-index:2200!important;
+ top:0!important;bottom:0!important;left:0!important;right:0!important;
+ width:100%!important;max-width:580px!important;
+ margin:0 auto!important;
+ height:100dvh!important;
+ border:0!important;border-radius:0!important;
+ background:var(--ept-page)!important;
+ overflow-y:auto!important;
+ overscroll-behavior:contain!important;
+ padding:calc(10px + env(safe-area-inset-top)) 12px calc(26px + env(safe-area-inset-bottom))!important;
+ box-sizing:border-box!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.eplan-v2-superset-focus-bar{
+ display:flex!important;align-items:center;gap:12px;
+ padding:6px 0 17px;
+ color:var(--ept-text);
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.eplan-v2-superset-focus-bar button{
+ background:var(--ept-raised)!important;
+ color:var(--ept-text)!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:11px!important;
+ padding:10px 12px!important;
+ box-shadow:none!important;
+ font-weight:800!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.eplan-v2-superset-focus-bar strong{
+ font-size:19px!important;color:var(--ept-text)!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.eplan-v2-superset-focus-open{
+ display:none!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.workout-live-superset-body{
+ display:block!important;
+ background:var(--ept-surface)!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:16px!important;
+ padding:8px!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .eplan-training-v2-live
+ .eplan-superset-focus>.workout-live-superset-head{
+ border-radius:12px!important;margin-bottom:11px!important;
+}
+body.eplan-redesign.client-ui.eplan-v2-superset-on #app .client-bottom-nav{
+ z-index:20!important;
+}
