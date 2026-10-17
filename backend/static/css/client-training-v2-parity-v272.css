@@ -1,0 +1,385 @@
+/* EPLAN v272 — client training parity with the approved dark/light reference.
+ * Keep all workout controls, native inputs, set swipe, save and rest logic.
+ * Loaded AFTER the legacy graphite and training v2 styles. */
+body.eplan-redesign.client-ui{
+ --ept-page:#f8fbff;
+ --ept-surface:#fff;
+ --ept-raised:#f2f6fd;
+ --ept-input:#fff;
+ --ept-border:#dce6f3;
+ --ept-subtle-border:#e6edf6;
+ --ept-text:#132845;
+ --ept-muted:#657a98;
+ --ept-blue:#087bfa;
+ --ept-blue-light:#e8f3ff;
+ --ept-green:#15a968;
+ --ept-green-light:#ecfbf3;
+ --ept-rail:#83b8fb;
+ --ept-shadow:0 5px 16px rgba(30,72,128,.055);
+ --ept-control:#e9f3ff;
+ --ept-row:#fff;
+ --ept-soft-row:#f7faff;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+ --ept-page:#06141e;
+ --ept-surface:#0d202d;
+ --ept-raised:#142b3b;
+ --ept-input:#0c1e2b;
+ --ept-border:#29485f;
+ --ept-subtle-border:#243a4b;
+ --ept-text:#f2f8ff;
+ --ept-muted:#b3c9db;
+ --ept-blue:#76baff;
+ --ept-blue-light:#123959;
+ --ept-green:#46d08d;
+ --ept-green-light:#113d2b;
+ --ept-rail:#287be1;
+ --ept-shadow:0 8px 22px rgba(0,0,0,.15);
+ --ept-control:#153551;
+ --ept-row:#0c1d2a;
+ --ept-soft-row:#132734;
+}
+/* Keep the theme localized to client training rather than changing the app shell. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-training-page:has(.eplan-training-v2-live),
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-training-page:has(.eplan-training-v2-overview){
+ background:var(--ept-page)!important;
+ color:var(--ept-text)!important;
+}
+/* No legacy outer frame. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live{
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ min-width:0!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .redesign-active-workout-head{
+ background:transparent!important;border:0!important;
+}
+/* Compact program cards and active exercise card — same two theme surfaces. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-hero,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-day,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live>.workout-live-exercise:not(.workout-live-exercise-inner){
+ background:var(--ept-surface)!important;
+ border:1px solid var(--ept-border)!important;
+ box-shadow:var(--ept-shadow)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live>.workout-live-exercise:not(.workout-live-exercise-inner){
+ margin:9px 0!important;
+ border-radius:16px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise>.workout-live-toggle,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise>.workout-live-toggle.open{
+ background:var(--ept-surface)!important;
+ border:0!important;
+ color:var(--ept-text)!important;
+ padding:11px 11px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise .workout-live-toggle strong{
+ color:var(--ept-text)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-v2-exercise-text :is(.workout-plan-line,.muted){
+ color:var(--ept-muted)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-exercise>.workout-live-body,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-superset .workout-live-exercise .workout-live-body{
+ background:var(--ept-surface)!important;
+ border-top:1px solid var(--ept-subtle-border)!important;
+ margin:0!important;
+ padding:10px 10px 12px!important;
+ color:var(--ept-text)!important;
+}
+/* Switch large pill tool buttons to slim reference-style actions. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .lyfta-workout-tools{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:8px!important;margin:0 0 9px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .lyfta-workout-tools button,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .swap-exercise-btn{
+ min-width:0!important;min-height:36px!important;height:auto!important;
+ padding:8px 7px!important;margin:0!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:10px!important;
+ background:var(--ept-raised)!important;color:var(--ept-text)!important;
+ font-size:11px!important;font-weight:750!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .lyfta-workout-tools button:only-child{
+ grid-column:1/-1!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .swap-exercise-btn{
+ background:var(--ept-control)!important;color:var(--ept-blue)!important;
+ width:100%!important;margin-bottom:8px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .lyfta-warmup-toggle{
+ min-height:36px!important;margin:0 0 10px!important;
+ background:var(--ept-soft-row)!important;
+ border:1px dashed var(--ept-border)!important;
+ border-radius:10px!important;color:var(--ept-muted)!important;
+}
+/* Table layout: column headings + tight, uninterrupted rows.
+ * Crucial: content MUST remain opaque to hide the orange swipe tray until swiped. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head.no-rir{
+ box-sizing:border-box!important;
+ display:grid!important;
+ grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 34px!important;
+ align-items:center!important;
+ gap:6px!important;
+ margin:0!important;
+ padding:7px 8px!important;
+ min-width:0!important;
+ background:var(--ept-raised)!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:10px 10px 0 0!important;
+ color:var(--ept-muted)!important;
+ font-size:10px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head:not(.no-rir){
+ grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 35px 34px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head span{
+ min-width:0!important;
+ white-space:nowrap!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap{
+ display:block!important;
+ box-sizing:border-box!important;
+ width:100%!important;
+ min-width:0!important;
+ margin:0!important;
+ padding:0!important;
+ border:1px solid var(--ept-border)!important;
+ border-top:0!important;
+ border-radius:0!important;
+ background:var(--ept-row)!important;
+ box-shadow:none!important;
+ overflow:hidden!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap:last-of-type{
+ border-radius:0 0 10px 10px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-swipe{
+ position:relative!important;
+ width:100%!important;
+ overflow:hidden!important;
+ border-radius:0!important;
+ background:var(--ept-row)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-swipe-content{
+ box-sizing:border-box!important;
+ width:100%!important;
+ position:relative!important;
+ z-index:2!important;
+ background:var(--ept-row)!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;
+ padding:6px 8px!important;
+ opacity:1!important;
+}
+/* The destructive orange tray must not bleed into the normal light theme.
+ * It appears only when the gesture has actually opened the action. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body
+ .lyfta-set-swipe:not(.open) .lyfta-set-action-tray{
+ visibility:hidden!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body
+ .lyfta-set-swipe.open .lyfta-set-action-tray{
+ visibility:visible!important;
+}
+/* Do not break swipe: the existing .open transform exposes the tray deliberately. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-swipe:not(.open) .lyfta-set-swipe-content{
+ transform:translateX(0)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-swipe.open .lyfta-set-swipe-content{
+ transform:translateX(-92px)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-prev-line{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex-wrap:wrap!important;gap:5px!important;
+ min-width:0!important;
+ margin:0 0 5px!important;padding:0!important;
+ min-height:0!important;line-height:1.2!important;
+ font-size:10px!important;color:var(--ept-muted)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-prev-line>strong{
+ color:var(--ept-text)!important;font-size:10px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-prev-line>button{
+ margin-left:auto!important;padding:3px 6px!important;
+ background:var(--ept-control)!important;color:var(--ept-blue)!important;
+ font-size:10px!important;border-radius:7px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row.no-rir{
+ display:grid!important;
+ grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 34px!important;
+ gap:6px!important;align-items:center!important;
+ min-width:0!important;
+ padding:1px 0 2px!important;
+ background:transparent!important;
+ opacity:1!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row:not(.no-rir){
+ grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 35px 34px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row .setnum{
+ color:var(--ept-text)!important;font-size:13px!important;font-weight:850!important;
+ min-width:0!important;text-align:center!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row input{
+ box-sizing:border-box!important;
+ display:block!important;
+ width:100%!important;min-width:0!important;
+ height:38px!important;min-height:38px!important;
+ margin:0!important;padding:0 5px!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:8px!important;
+ background:var(--ept-input)!important;color:var(--ept-text)!important;
+ font-size:13px!important;line-height:1.2!important;
+ text-align:center!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row input::placeholder{
+ color:var(--ept-muted)!important;opacity:.75!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-done{
+ box-sizing:border-box!important;
+ width:32px!important;height:32px!important;min-width:32px!important;
+ padding:0!important;
+ border:1px solid var(--ept-border)!important;
+ border-radius:50%!important;
+ background:var(--ept-raised)!important;
+ color:var(--ept-blue)!important;
+ box-shadow:none!important;
+ font-size:17px!important;
+ display:grid!important;place-items:center!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-done.done{
+ background:#1caa65!important;color:#fff!important;border-color:#1caa65!important;
+}
+/* Completed sets are a mild full-width row tint, never the previous heavy card. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap.is-complete{
+ margin:0!important;padding:0!important;
+ border:1px solid var(--ept-border)!important;border-top:0!important;
+ border-left:3px solid #34bf80!important;border-radius:0!important;
+ background:var(--ept-green-light)!important;
+ box-shadow:none!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap.is-complete :is(.lyfta-set-swipe,.lyfta-set-swipe-content){
+ background:var(--ept-green-light)!important;
+ border-radius:0!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-row input{
+ background:var(--ept-input)!important;color:var(--ept-text)!important;
+ border-color:var(--ept-border)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-drop-zone{
+ display:none!important;
+ padding:4px 0 0 0!important;
+ margin:4px 0 0 24px!important;
+ border:0!important;border-radius:0!important;
+ background:transparent!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-drop-zone.is-visible,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-wrap.is-complete .lyfta-drop-zone{
+ display:block!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-add-drop{
+ width:auto!important;min-height:26px!important;height:26px!important;
+ margin:0!important;padding:2px 8px!important;
+ border:1px solid var(--ept-border)!important;border-radius:8px!important;
+ background:var(--ept-raised)!important;color:var(--ept-muted)!important;
+ font-size:10px!important;font-weight:750!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-extra-set-actions{
+ margin:8px 0 0!important;padding-top:0!important;gap:4px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-extra-set-actions>.lyfta-add-set{
+ min-height:38px!important;width:100%!important;margin:0!important;
+ background:var(--ept-control)!important;color:var(--ept-blue)!important;
+ border:1px solid var(--ept-border)!important;border-radius:10px!important;
+ font-size:12px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-extra-set-actions>small{
+ color:var(--ept-muted)!important;font-size:9px!important;line-height:1.25!important;
+}
+/* Superset: colored header, contained children; no all-page blue rail. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset{
+ background:var(--ept-surface)!important;border:1px solid #4294ed!important;
+ border-radius:16px!important;overflow:hidden!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-superset-head{
+ background:var(--ept-raised)!important;
+ border:0!important;border-bottom:1px solid var(--ept-border)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-superset-body{
+ position:relative!important;
+ isolation:isolate!important;
+ margin:0!important;padding:8px!important;
+ background:var(--ept-surface)!important;
+ overflow:hidden!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-superset-body:before{
+ content:none!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-exercise-inner{
+ background:var(--ept-surface)!important;
+ border:0!important;box-shadow:none!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-grouped-exercise-head,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-grouped-body{
+ background:var(--ept-surface)!important;color:var(--ept-text)!important;
+ margin:0!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-grouped-body{
+ padding:9px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .eplan-training-v2-superset .workout-live-superset-divider{
+ background:var(--ept-border)!important;height:1px!important;margin:10px 0!important;
+}
+/* Session toolbar, rest, and training buttons match each theme. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-featured-rest,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-current-phase{
+ background:var(--ept-surface)!important;color:var(--ept-text)!important;
+ border:1px solid var(--ept-border)!important;border-radius:15px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-featured-rest button:not(.primary){
+ background:var(--ept-control)!important;color:var(--ept-text)!important;
+ border-color:var(--ept-border)!important;
+}
+/* Plan day content: remove legacy gray rectangles surrounding individual rows. */
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-day .redesign-training-day-body,
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-day .redesign-training-exercises{
+ background:var(--ept-surface)!important;border-color:var(--ept-subtle-border)!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-day .redesign-training-exercise{
+ background:var(--ept-surface)!important;
+ border:0!important;border-bottom:1px solid var(--ept-subtle-border)!important;
+ padding:10px 3px!important;
+}
+body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .eplan-training-v2-overview .eplan-training-v2-day .redesign-training-exercise-copy strong{
+ color:var(--ept-text)!important;
+}
+/* Finish modal inherits tokens from body, not stale dark/light inline defaults. */
+body.eplan-redesign.client-ui #finishSummaryModal .eplan-training-v2-finish{
+ background:var(--ept-page)!important;color:var(--ept-text)!important;
+ border:1px solid var(--ept-border)!important;
+}
+body.eplan-redesign.client-ui #finishSummaryModal :is(.eplan-v2-finish-title,.eplan-v2-finish-metric,.eplan-v2-finish-muscles){
+ background:var(--ept-surface)!important;border-color:var(--ept-border)!important;
+}
+/* Set four columns even on iPhone SE and small RIR layouts. */
+@media(max-width:374px){
+ body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head.no-rir,
+ body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row.no-rir{
+  grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 30px!important;
+  gap:4px!important;
+ }
+ body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-head:not(.no-rir),
+ body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-row:not(.no-rir){
+  grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 30px 30px!important;
+  gap:4px!important;
+ }
+ body.eplan-redesign.client-ui:is([data-eplan-theme="dark"],[data-eplan-theme="light"]) #app .redesign-active-workout.eplan-training-v2-live .workout-live-body .lyfta-set-done{
+  width:29px!important;height:29px!important;min-width:29px!important;
+ }
+}
