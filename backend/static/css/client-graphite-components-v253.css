@@ -1,0 +1,233 @@
+/* Client dark v253: tighten active workout hierarchy, calm completed sets,
+ * graphite exercise substitution/notifications and correct library counters.
+ * Client dark only; preserve behavior, light colors and trainer UI. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]{
+  --v253-main:#22252b;
+  --v253-raised:#2b2f36;
+  --v253-stroke:#3b424c;
+  --v253-accent:#8dbaf4;
+  --v253-success:#93d9b4;
+}
+/* Active workout: one card boundary, no nested hard-edged frame.
+   Exercise collapse/open actions, swipe controls and inputs stay interactive. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise:not(.workout-live-exercise-inner){
+  background:var(--v253-main)!important;
+  border:1px solid var(--v253-stroke)!important;
+  border-radius:19px!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise>.workout-live-toggle,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise>.workout-live-toggle.open{
+  background:var(--v253-main)!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-exercise>.workout-live-body{
+  background:var(--v253-main)!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+/* Completed set: graphite with a subtle mint edge instead of double green
+   nested outlines, large green fill and a second green drop zone. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete{
+  margin-left:0!important;
+  margin-right:0!important;
+  margin-top:6px!important;
+  margin-bottom:12px!important;
+  padding:0!important;
+  background:var(--v253-raised)!important;
+  border:1px solid #4b6459!important;
+  border-left:3px solid #6aaf8a!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete :is(.lyfta-set-swipe,.lyfta-set-swipe-content){
+  background:var(--v253-raised)!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-row input{
+  background:#292d33!important;
+  border:1px solid #49515c!important;
+  color:#f1f4f8!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete .lyfta-drop-zone{
+  background:var(--v253-raised)!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete .lyfta-add-drop{
+  background:#363d44!important;
+  border:1px solid #54605b!important;
+  color:#cfebdc!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-active-workout
+ .workout-live-body .lyfta-set-wrap.is-complete .lyfta-set-done.done{
+  background:#295241!important;
+  border:1px solid #3d785b!important;
+  color:#b5f1d0!important;
+  box-shadow:none!important;
+}
+/* Replace exercise modal is mounted directly beneath <body>, not within #app.
+   This is why earlier '#app .redesign-active-workout' styles never fixed it. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal{
+  background:rgba(0,0,0,.72)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal>.swap-choice-card{
+  background:#22262c!important;
+  color:#f1f5fa!important;
+  border:1px solid #4a525e!important;
+  border-radius:22px!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.42)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .edit-exercise-head h2,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .swap-scope-actions strong{
+  color:#f1f5fa!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ :is(.edit-exercise-head .muted,.swap-scope-actions span){
+  color:#b5c2d2!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .edit-exercise-close{
+  background:#303742!important;
+  border:1px solid #536173!important;
+  color:#e8f0f9!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .alternative-modal-list>button,
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .swap-scope-actions>button{
+  background:#2c323a!important;
+  border:1px solid #4b5663!important;
+  color:#eaf0f8!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .alternative-modal-list>button>small{
+  color:#bcc8d6!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .alternative-modal-list>button.alternative-current{
+  background:#293b4d!important;
+  border-color:#6b93bb!important;
+  color:#b7d9ff!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .alternative-modal-list>button.alternative-current>small{
+  color:#9fc4eb!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .swap-back-btn{
+  background:#303740!important;
+  border-color:#4b5562!important;
+  color:#cfdded!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #alternativeExerciseModal
+ .swap-step-label{
+  color:#9bc4f3!important;
+}
+/* Diary: add-product should look clearly actionable but not a bright blue
+   panel. Give it a restrained accent border while keeping a shared meal bg. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .nutrition-diary-meal .nutrition-diary-add{
+  background:#344250!important;
+  border:1px solid #66809c!important;
+  border-radius:13px!important;
+  color:#e3effe!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app
+ .nutrition-diary-meal .nutrition-diary-add:active{
+  background:#40566b!important;
+}
+/* Notification modal is also portaled to body. Neutral graphite, green only
+   for enabled push and subtle blue for unread indicators. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ :is(#notificationModal,#notificationDetailModal) .notification-modal-card{
+  background:#23262c!important;
+  border:1px solid #48515d!important;
+  color:#edf2f9!important;
+  box-shadow:0 20px 58px rgba(0,0,0,.4)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"]
+ :is(#notificationModal,#notificationDetailModal) .notification-close{
+  background:#323841!important;
+  border:1px solid #4b5663!important;
+  color:#e3edf8!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty{
+  background:#2a2e35!important;
+  border:1px dashed #4b535f!important;
+  color:#eaf0f8!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-empty .ui-icon{
+  color:#a9b9ca!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-swipe .notification-item{
+  background:#2b3037!important;
+  border:1px solid #454e59!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #notificationModal .notification-swipe .notification-item.unread{
+  background:#2b3947!important;
+  border-color:#6684a6!important;
+}
+/* Exercise library count: remove full rectangular blue background behind
+   the number AND chevron. Keep just a soft circular number badge. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library
+ .redesign-library-group-head .redesign-library-group-meta{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:auto!important;
+  height:auto!important;
+  min-width:0!important;
+  padding:0!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library
+ .redesign-library-group-head .redesign-library-group-meta b{
+  display:grid!important;
+  place-items:center!important;
+  min-width:32px!important;
+  height:30px!important;
+  background:#333a43!important;
+  border:1px solid #4e5b69!important;
+  border-radius:999px!important;
+  color:#d0e0ef!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-client-library
+ .redesign-library-group-head .redesign-library-group-meta i{
+  display:block!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  padding:0!important;
+  color:#bcc9d6!important;
+  box-shadow:none!important;
+}
