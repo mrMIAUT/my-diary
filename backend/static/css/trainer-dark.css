@@ -4726,3 +4726,95 @@ body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calen
 body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-calendar-day-volume>div:nth-child(2){
   border-top:3px solid #6dcca1!important;
 }
+
+/* v35 — trainer dark: unify semantic action buttons, quiet workout results.
+   Blue only for editing/creating/saving/adding; keep navigation, delete,
+   secondary and review status colors unchanged. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"]{
+ --trainer-action-blue:#2d70bd;
+ --trainer-action-blue-border:#4a8cdb;
+ --trainer-action-text:#f5f9ff;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-client-page .access-saved>button,
+ .trainer-client-page .access-primary,
+ .trainer-client-page .trainer-private-note-save,
+ .trainer-client-page #nutrition .trainer-nutrition-edit,
+ .trainer-client-page #nutrition .trainer-nutrition-target-actions button:not(.dark),
+ .trainer-client-page .trainer-program-root .trainer-program-mode-toggle,
+ .trainer-client-page .trainer-program-root .trainer-program-new-day,
+ .trainer-client-page .trainer-program-root .trainer-program-day-add button,
+ .trainer-extra-manager-create,.trainer-extra-day-save,.trainer-day-title-save,
+ .trainer-edit-exercise-primary,.trainer-program-add,
+ .trainer-extra-day-empty>button,.trainer-extra-action.promote,
+ .trainer-inline-superset-toggle,.trainer-program-alternative-add,
+ .trainer-library-primary-btn,.trainer-library-add-toggle,
+ .trainer-template-create,.trainer-template-primary,
+ .trainer-template-list.modern .trainer-template-actions button:first-child,
+ .trainer-template-list.modern .trainer-template-actions button:nth-child(2),
+ .trainer-template-editor-actions button,
+ .trainer-template-editor-add-exercise,.trainer-template-editor-add-day,
+ .trainer-nutrition-page .meal-plan-edit-open,
+ .trainer-nutrition-page .meal-autoplan-open,
+ .trainer-nutrition-page .meal-autoplan-save,
+ .trainer-nutrition-page .meal-actions button,
+ .trainer-nutrition-page .structured-start,
+ .trainer-nutrition-page .structured-add,
+ .auto-meal-primary,.trainer-profile-edit-toggle,
+ .trainer-public-profile-save,.trainer-new-client-submit,
+ .trainer-coach-request-actions button:first-child,
+ .activity-saved-edit
+){
+ background:var(--trainer-action-blue)!important;
+ background-image:none!important;
+ border:1px solid var(--trainer-action-blue-border)!important;
+ color:var(--trainer-action-text)!important;
+ -webkit-text-fill-color:var(--trainer-action-text)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-client-page .access-saved>button,.trainer-private-note-save,
+ .trainer-client-page #nutrition .trainer-nutrition-edit,
+ .trainer-program-mode-toggle,.trainer-extra-manager-create,
+ .trainer-template-create,.trainer-library-primary-btn,
+ .trainer-profile-edit-toggle,.activity-saved-edit,
+ .trainer-nutrition-page .meal-plan-edit-open
+) :is(svg,.ui-icon){
+ color:var(--trainer-action-text)!important;stroke:currentColor!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-client-page .access-saved>button,.trainer-client-page .access-primary,
+ .trainer-private-note-save,.trainer-client-page #nutrition .trainer-nutrition-edit,
+ .trainer-program-mode-toggle,.trainer-extra-manager-create,
+ .trainer-extra-day-save,.trainer-day-title-save,.trainer-edit-exercise-primary,
+ .trainer-program-add,.trainer-template-create,.trainer-template-primary,
+ .trainer-public-profile-save,.trainer-new-client-submit,
+ .trainer-library-primary-btn,.trainer-nutrition-page .meal-plan-edit-open,
+ .trainer-nutrition-page .meal-autoplan-open
+):active:not(:disabled){background:#245d9f!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] :is(
+ .trainer-program-mode-toggle,.trainer-extra-manager-create,
+ .trainer-extra-day-save,.trainer-day-title-save,.trainer-edit-exercise-primary,
+ .trainer-program-add,.trainer-template-create,.trainer-template-primary,
+ .trainer-client-page .access-saved>button,
+ .trainer-private-note-save,.trainer-client-page #nutrition .trainer-nutrition-edit
+):focus-visible{outline:2px solid #b6d5ff!important;outline-offset:2px!important}
+/* Finished sets: graphite with a narrow blue-gray cue, not a large green fill. */
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block:not(.skipped)>.trainer-review-set-current{
+ background:#303640!important;
+ background-image:none!important;
+ border:1px solid #536273!important;
+ border-left:3px solid #6d9ccb!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block:not(.skipped) .trainer-review-set-current>small{color:#bdcadc!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block:not(.skipped) .trainer-review-set-current>b{color:#f6f9ff!important;-webkit-text-fill-color:#f6f9ff!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block:not(.skipped) .trainer-review-set-meta :is(.trainer-review-rir,.trainer-review-rest){color:#b9c9dc!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-previous{background:#272e38!important;border:1px solid #414d5f!important}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block.skipped>.trainer-review-set-current.skipped{
+ background:#35333a!important;border:1px solid #56515b!important;
+ border-left:3px solid #b69a65!important;box-shadow:none!important;
+}
+body.eplan-redesign.trainer-ui[data-eplan-theme="dark"] #progress .trainer-workout-calendar-exercises .trainer-review-set-block.skipped .trainer-review-skipped-badge{
+ background:#554631!important;border:1px solid #82704e!important;color:#f4d4a2!important;
+}
