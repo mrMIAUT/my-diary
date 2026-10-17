@@ -175,6 +175,16 @@ body.eplan-redesign.client-ui #app .eplan-training-v2-live .workout-live-body .l
  padding:6px 8px!important;
  opacity:1!important;
 }
+/* The destructive orange tray must not bleed into the normal light theme.
+ * It appears only when the gesture has actually opened the action. */
+body.eplan-redesign.client-ui #app .eplan-training-v2-live .workout-live-body
+ .lyfta-set-swipe:not(.open) .lyfta-set-action-tray{
+ visibility:hidden!important;
+}
+body.eplan-redesign.client-ui #app .eplan-training-v2-live .workout-live-body
+ .lyfta-set-swipe.open .lyfta-set-action-tray{
+ visibility:visible!important;
+}
 /* Do not break swipe: the existing .open transform exposes the tray deliberately. */
 body.eplan-redesign.client-ui #app .eplan-training-v2-live .workout-live-body .lyfta-set-swipe:not(.open) .lyfta-set-swipe-content{
  transform:translateX(0)!important;
