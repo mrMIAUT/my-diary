@@ -26,6 +26,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:852},deviceScaleFactor:2});
   await page.setContent('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body class="eplan-redesign client-ui" data-eplan-theme="light">'+markup+'</body></html>');
   for(const sheet of sheets)await page.addStyleTag({content:sheet});
+  await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important}'});
   const inspect=()=>page.evaluate(()=>{
    const s=q=>getComputedStyle(document.querySelector(q)).backgroundColor;
    return {body:s('body'),card:s('.client-home-today-card'),training:s('.redesign-training-day'),done:s('.redesign-training-day.is-done'),
