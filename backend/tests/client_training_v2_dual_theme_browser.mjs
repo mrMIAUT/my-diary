@@ -22,7 +22,7 @@ const context={
  formatSetRest:()=> '60 сек',formatWorkoutDuration:()=> '01:00',
  programDayTitle:()=> 'Руки + Плечі',workoutCycleState:()=>({done:[],next:'День 2'}),
  isoToday:()=> '2026-10-18',programDayIsExtra:()=>false,programDayIsAvailable:()=>true,
- sessionDay:x=>x.workout_day||'',formatProgressDate:()=> '18 жовт.',
+ sessionDay:x=>x.workout_day||'',formatProgressDate:()=> '18 жовт.',uniqueResultSets:xs=>xs,
  loadExerciseLibrary:async()=>{},setInterval:()=>0,clearInterval:()=>{},setTimeout:()=>0,requestAnimationFrame:()=>0,
  document:{addEventListener:()=>{},removeEventListener:()=>{},querySelector:()=>null,getElementById:()=>null,body:{classList:{add(){},remove(){}}}},
 };
