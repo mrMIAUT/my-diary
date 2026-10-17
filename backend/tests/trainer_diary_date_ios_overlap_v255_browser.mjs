@@ -16,7 +16,7 @@ const makeMarkup=(date,today)=>vm.runInNewContext(
  nutrition.slice(start,end)+'\ntrainerActualDiaryHTML',
  {trainerActualDiaryState:()=>({day:date}),isoToday:()=>today,
   esc:(x)=>String(x).replaceAll('&','&amp;').replaceAll('"','&quot;'),
-  Intl,Date}
+  Intl,Date,uiIcon:()=>'<svg class="ui-icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>'}
 )({client:{id:1}});
 const sheets=['base.css','components.css','refinements.css','redesign.css','theme.css',
  'trainer-avatars.css','trainer-dark.css','trainer-program-overview.css',
