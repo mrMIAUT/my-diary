@@ -680,3 +680,4 @@ await import('./client_graphite_inner_panels_browser.mjs');
 await import('./client_graphite_semantic_icons_browser.mjs');
 await import('./client_graphite_active_diary_browser.mjs');
 await import('./client_graphite_finishing_v252_browser.mjs');
+await import('./client_graphite_components_v253_browser.mjs');
