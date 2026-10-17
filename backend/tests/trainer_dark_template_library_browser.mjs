@@ -118,7 +118,7 @@ try{
   await check('.trainer-library-admin-body','backgroundColor',raised);
   await check('.trainer-library-admin-section-head strong','color',rgb(243,244,246));
   await check('.trainer-library-admin-section-head small','color',rgb(169,184,202));
-  await check('.trainer-library-admin-form input','backgroundColor',rgb(40,43,49));
+  await check('.trainer-library-admin-form input','backgroundColor',raised);
   await check('.library-muscle-admin-list>div','backgroundColor',raised);
   await check('.library-muscle-admin-list>div>span','color',rgb(243,244,246));
   await check('.library-muscle-admin-list .library-delete-btn','backgroundColor',rgb(57,39,46));
@@ -132,7 +132,7 @@ try{
   await check('.trainer-library-page .trainer-library-filter-chip','backgroundColor',raised);
   await check('.trainer-library-page .trainer-library-filter-chip>strong','color',rgb(240,243,248));
   await check('.trainer-library-page .trainer-library-filter-chip>select','colorScheme','dark');
-  await check('.trainer-library-page .trainer-library-group-toggle','backgroundColor',rgb(40,48,58));
+  await check('.trainer-library-page .trainer-library-group-toggle','backgroundColor',raised);
   await check('.trainer-library-page .trainer-library-toggle-meta','backgroundColor',clear);
   await check('.trainer-library-page .trainer-library-toggle-meta>b','backgroundColor',rgb(51,68,85));
   await check('.trainer-library-page .trainer-library-exercise','backgroundColor',paper);
