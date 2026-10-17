@@ -138,9 +138,10 @@ try{
   assert.ok(darkCardShadow.includes('inset'),width+'px dark card needs an inner rim');
   await check('body','backgroundColor',rgb(0,0,0));
 
-  // Trainer-only v28 contrast palette. The existing card HTML and metrics remain untouched.
+  // Trainer-only v29 contrast palette. The existing card HTML and metrics remain untouched.
   await check('body','backgroundColor',rgb(0,0,0));
-  await check('#progress .trainer-workout-calendar-card','backgroundColor',rgb(23,28,36));
+  const trainerCardTone=await page.locator('body').evaluate(el=>getComputedStyle(el).getPropertyValue('--trainer-dark-surface').trim());
+  assert.equal(trainerCardTone,'#171c24','The trainer dark palette must use vivid graphite');
 
   // Light mode must remain the existing UI after switching the root flag.
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='light');
