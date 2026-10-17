@@ -100,14 +100,14 @@ try{
   await check('#nutrition .nutrition-meal-icon-breakfast','color',rgb(137,186,255));
   await check('#nutrition .nutrition-menu-v2-layout','backgroundColor','rgba(0, 0, 0, 0)');
   await check('#progress .trainer-progress-summary','backgroundColor','rgba(0, 0, 0, 0)');
-  await check('#progress .trainer-progress-summary>div','backgroundColor',rgb(40,43,49));
+  await check('#progress .trainer-progress-summary>div','backgroundColor',rgb(41,45,52));
   await check('#progress .trainer-progress-summary strong','color',rgb(240,243,248));
-  await check('#progress .trainer-progress-activity-stats>div','backgroundColor',rgb(40,43,49));
+  await check('#progress .trainer-progress-activity-stats>div','backgroundColor',rgb(41,45,52));
   await check('#progress .trainer-progress-activity-stats strong','color',rgb(240,243,248));
-  await check('#progress .trainer-progress-activity-list>div','backgroundColor',rgb(40,43,49));
+  await check('#progress .trainer-progress-activity-list>div','backgroundColor',rgb(41,45,52));
   await check('#progress .trainer-progress-activity-list b','color',rgb(237,242,248));
   await check('#progress .trainer-progress-pr-grid','backgroundColor','rgba(0, 0, 0, 0)');
-  await check('#progress .trainer-progress-pr-card','backgroundColor',rgb(32,35,41));
+  await check('#progress .trainer-progress-pr-card','backgroundColor',rgb(41,45,52));
   await check('#progress .trainer-progress-pr-card b','color',rgb(241,243,247));
   await check('#progress .trainer-workout-calendar-nav','backgroundColor','rgba(0, 0, 0, 0)');
   await check('#progress .trainer-workout-calendar-nav>button','backgroundColor',rgb(48,56,70));
@@ -133,7 +133,7 @@ try{
 
   // Subtle iOS-like curved reflections: no translucent overlay on any text.
   const darkCardImage=await get('#progress .trainer-workout-calendar-card','backgroundImage');
-  assert.ok(darkCardImage.includes('radial-gradient'),width+'px dark card needs a curved light edge');
+  assert.equal(darkCardImage,'none',width+'px trainer dark cards must no longer have the experimental lens');
   const darkCardShadow=await get('#progress .trainer-workout-calendar-card','boxShadow');
   assert.ok(darkCardShadow.includes('inset'),width+'px dark card needs an inner rim');
   await check('body','backgroundColor',rgb(0,0,0));
@@ -141,7 +141,7 @@ try{
   // Trainer-only v29 contrast palette. The existing card HTML and metrics remain untouched.
   await check('body','backgroundColor',rgb(0,0,0));
   const trainerCardTone=await page.locator('body').evaluate(el=>getComputedStyle(el).getPropertyValue('--trainer-dark-surface').trim());
-  assert.equal(trainerCardTone,'#171c24','The trainer dark palette must use vivid graphite');
+  assert.equal(trainerCardTone,'#1d2025','Trainer dark should match the neutral light-theme surface design');
 
   // Light mode must remain the existing UI after switching the root flag.
   await page.locator('body').evaluate(el=>el.dataset.eplanTheme='light');
