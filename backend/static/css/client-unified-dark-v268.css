@@ -66,3 +66,101 @@ body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#profileModal .profil
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#profileModal .profile-field,#completedWorkoutEditModal .completed-workout-edit-exercise,#myProductModal .my-food-row,#foodSearchModal .food-lookup-row,#notificationModal .notification-item){background-color:#2a3039!important;border-color:#485462!important}
 body.eplan-redesign.client-ui[data-eplan-theme="dark"] :is(#profileModal .profile-close,#notificationModal .notification-close,#notificationDetailModal .notification-close,#alternativeExerciseModal .edit-exercise-close){background:#303844!important;border-color:#526071!important;color:#e7f0fb!important}
 @media(max-width:360px){body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-training-row{padding-left:9px!important;padding-right:9px!important}}
+
+/* v269 — client dark frame cleanup. Only client dark mode.
+   Avoid double borders on expanded training days and the empty results panel.
+   Keep selected/complete semantic styling distinct from ordinary surfaces. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-workout-detail .completed-workout-reopen-btn{
+  background:#252d38!important;
+  background-image:none!important;
+  border:1px solid rgba(112,138,174,.34)!important;
+  color:#dce7f5!important;
+  -webkit-text-fill-color:#dce7f5!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-workout-detail .completed-workout-reopen-btn:active:not(:disabled){
+  background:#303a48!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app :is(
+  .progress-workout-detail-hero,
+  .progress-workout-detail-section,
+  .progress-workout-muscles,
+  .progress-workout-stat,
+  .redesign-more-subpage .redesign-settings-panel,
+  .redesign-training-day:not(.is-done):not(.is-next)
+){
+  border-color:rgba(112,138,174,.24)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-workout-detail .progress-workout-detail-section .redesign-empty-panel{
+  background:#23272e!important;
+  background-image:none!important;
+  border:1px dashed rgba(112,138,174,.19)!important;
+  color:#dce5f0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-progress-workout-detail .progress-workout-detail-section .redesign-empty-panel span{
+  color:#aebccb!important;
+}
+/* One exterior stroke for the day; subtle divider inside it.
+   Preserve the brighter border only for the next day and green completion. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-next{
+  border-color:rgba(116,165,231,.64)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day.is-done{
+  border-color:rgba(105,164,128,.43)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body{
+  background:#24272e!important;
+  border:0!important;
+  border-top:1px solid rgba(112,138,174,.13)!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body>.redesign-training-exercises{
+  background:transparent!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body .redesign-training-exercises>.redesign-training-exercise{
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid rgba(112,138,174,.15)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-training-day-body .redesign-training-exercises>.redesign-training-exercise:last-child{
+  border-bottom:0!important;
+}
+/* The theme selector was sitting on top of its own solid rectangular strip. */
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .redesign-more-subpage .redesign-settings-panel{
+  border-color:rgba(112,138,174,.24)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .eplan-theme-options{
+  background:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .eplan-theme-option:not([aria-checked="true"]){
+  background:#252d37!important;
+  border:1px solid rgba(112,138,174,.23)!important;
+  color:#d9e3ef!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] #app .eplan-theme-option[aria-checked="true"]{
+  background:#254669!important;
+  border:1px solid #478ce6!important;
+  color:#dcecff!important;
+  box-shadow:none!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav{
+  border:1px solid rgba(112,138,174,.23)!important;
+  box-shadow:0 10px 25px rgba(0,0,0,.39),inset 0 1px 0 rgba(255,255,255,.032)!important;
+}
+body.eplan-redesign.client-ui[data-eplan-theme="dark"] .client-bottom-nav::before{
+  background:linear-gradient(180deg,rgba(255,255,255,.028),transparent)!important;
+}

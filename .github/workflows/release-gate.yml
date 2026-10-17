@@ -57,6 +57,8 @@ jobs:
           npx playwright install chromium
       - name: Client unified dark UI across screens and 320–430px iPhones
         run: node backend/tests/client_unified_dark_v268_browser.mjs
+      - name: Client soft card borders and secondary button on iPhone
+        run: node backend/tests/client_dark_border_polish_v269_browser.mjs
       - name: Launch and calculator smoke in Chromium
         run: node backend/tests/browser_startup_smoke.mjs
       - name: Test integrated nutrition UI
